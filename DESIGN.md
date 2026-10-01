@@ -2,37 +2,37 @@
 name: Gym Log
 description: Local workout ledger and inspectable exercise progress.
 colors:
-  offwhite: "#f4f6f4"
-  white: "#fff"
-  graphite: "#202823"
-  forest: "#245c46"
-  muted: "#647269"
-  border: "#e0e6e0"
-  selected: "#eaf2ec"
-  focus: "#619c80"
-  danger: "#a23828"
-  danger-bg: "#fff1ef"
-  unchecked: "#88968b"
-  text-selection: "#c9dfd1"
+  offwhite: '#f4f6f4'
+  white: '#fff'
+  graphite: '#202823'
+  forest: '#245c46'
+  muted: '#647269'
+  border: '#e0e6e0'
+  selected: '#eaf2ec'
+  focus: '#619c80'
+  danger: '#a23828'
+  danger-bg: '#fff1ef'
+  unchecked: '#88968b'
+  text-selection: '#c9dfd1'
 typography:
   headline:
     fontFamily: "'Inter Variable', Inter, sans-serif"
-    fontSize: "30px"
+    fontSize: '30px'
     fontWeight: 650
     lineHeight: 1.25
-    letterSpacing: "-1.1px"
+    letterSpacing: '-1.1px'
   title:
-    fontSize: "16px"
+    fontSize: '16px'
     fontWeight: 650
-    letterSpacing: "-0.3px"
+    letterSpacing: '-0.3px'
   body:
-    fontSize: "13px"
+    fontSize: '13px'
     lineHeight: 1.65
 rounded:
-  input: "7px"
-  button: "8px"
-  card: "10px"
-  dialog: "12px"
+  input: '7px'
+  button: '8px'
+  card: '10px'
+  dialog: '12px'
 ---
 
 # Design System: Gym Log

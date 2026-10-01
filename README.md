@@ -1,53 +1,88 @@
 # Gym Log
 
-A local interactive workout-tracker prototype: editable set logging, repeatable workouts and inspectable exercise progress. The product name is temporary.
+A local-first mobile workout tracker with inspectable history, editable templates, preservation-aware Strong CSV import, and a separate privately hosted API. The name is temporary. The prototype baseline is preserved in local Git history; the current foundation is not yet an approved replacement for Strong.
 
 ## Run locally
 
-Requires a current Node.js release and npm.
+Requires compatible Node.js/npm, Google Chrome for browser tests, and Docker for the isolated PostgreSQL/API integration checks.
 
 ```sh
 npm ci --include=dev
+npm --prefix server ci --include=dev
 npm run dev
 ```
 
-Open http://127.0.0.1:5188. The initial dataset is clearly labelled synthetic demo data. Workouts and changes are saved only in this browser profile, not to a server or backup. Unreadable or unsupported saved data is preserved and blocks automatic saving; reset requires explicit confirmation. Cancel reset if the original needs recovery first.
+Open http://127.0.0.1:5188. An ordinary installation starts empty. `/?demo=1` is an explicit **development-only** synthetic demo; production builds ignore it. Do not synchronize demo profiles with personal history.
 
-To make a private Strong export available in the development preview:
+The local API setup and secure credential requirements are documented in `server/README.md`:
+
+```sh
+docker compose -f ops/compose.local.yml up -d --wait
+npm --prefix server run migration
+npm --prefix server run dev
+```
+
+Use a separate terminal for the API. Development Vite proxies same-origin `/api/v1` requests to loopback port 5190. The database is exclusively `gym-log-local` on loopback port 55439. These are local development resources, not production deployment. No usable default owner password exists; provision an owner hash through a secure local workflow before interactive authenticated use. Do not paste credentials into chat or tracked files.
+
+## Saving and synchronization
+
+- **Saved on this device** means the IndexedDB transaction committed. It is not protection against clearing browser storage, uninstalling the PWA, device loss, or physical disk failure.
+- An unfinished workout belongs to its starting browser installation. It is **not sent to the server**. A second same-origin tab is read-only until the writer closes and it is reloaded.
+- Finishing atomically stores valid explicitly completed sets, creates an immutable pending operation and removes the draft. Write failures retain the draft and report **Not saved**.
+- The private trial connects automatically using the owner's Tailscale identity, without an app password or manual sync setup. Completed history, imported history and templates synchronize while the app is open and connected. An expired session reconnects automatically.
+- Offline/pending mutations survive reopening; reconnect retries use the same operation identity so a lost response does not duplicate the server write. Previously trusted installations can continue logging offline. Android does not guarantee uploads while the PWA is closed.
+- **Synced** means server synchronization succeeded, not off-device disaster recovery. Rejected/conflicting operations remain visible and retained for recovery/export; there is no automatic merge UI.
+- Valid legacy `gym-log:v1` localStorage data migrates transactionally, retaining original bytes. Malformed or unsupported data blocks writes; explicit reset preserves recovery evidence rather than silently overwriting it.
+
+## Import and privacy
+
+The UI accepts a local Strong CSV with preview and explicit replacement of imported history. Native logged workouts and the draft are preserved. Exact file bytes determine source identity; repeated rows, exercise occurrences, original cells, blank-versus-zero values and wall-time timestamps are retained. Imported and native history have distinct server operation kinds so CSV replacement cannot remove native logged workouts.
+
+A private development input can also be made available explicitly:
 
 ```sh
 GYM_LOG_CSV=/absolute/path/to/strong-export.csv npm run dev
 ```
 
-The development server binds to loopback. The configured export is served only through a development-only route with caching disabled. Do not expose this server on a public or tailnet interface. Private exports must never be copied into `public/`, tracked files, screenshots for publication, or build output. `.local/source.json` records this machine's input location and is intentionally ignored. The UI also accepts a local CSV file with an import preview and explicit replacement.
+Then use `/?localCsv=1`. This loopback-only development route is not present in production output, and is not service-worker cached. Do not expose the development server publicly or on the tailnet. Private CSVs, `.local/`, ignored credentials, database dumps and personal screenshots must not enter tracked source, `public/`, build artifacts or external services. Only synthetic fixtures belong in tests.
+
+## Offline app shell
+
+Production builds include a manifest, icons and a finite service-worker app-shell cache. After a successful initial online load, the shell can reopen offline and use IndexedDB. API responses, private CSVs, JSON payloads and arbitrary runtime requests are not cached. Updates wait instead of silently refreshing the logger; no native background-sync or Android ongoing-notification guarantee is implied.
+
+## Recovery
+
+Versioned JSON recovery functions and the recovery surface export domain documents, original import evidence and a local draft without credentials/session secrets. Diagnostic pending operations are labelled, not replayed as old acknowledgements. A restore validates before writing, requires explicit confirmation to replace occupied local data and rebuilds create-only operations; it does not authorize overwriting newer server revisions.
+
+The server restore drill uses task-scoped plaintext custom-format PostgreSQL archives, excludes session data and targets only a new isolated validation database. See `ops/backup.sh`, `ops/restore-check.sh` and their real PostgreSQL test. Preserve archives privately. No backup scheduler, external destination or encryption-key recovery workflow has been configured; on-host archives do not protect against loss of this disk.
 
 ## Checks
 
 ```sh
 npm run test:run
 npm run typecheck
-npm run test:e2e
 npm run build
+npm run test:e2e
+npm run test:integration
+NODE_ENV=test npx playwright test --config playwright.pwa.config.ts
+NODE_ENV=test npx playwright test --config tests/recovery/playwright.config.ts
+npm --prefix server run typecheck
+npm --prefix server run build
+npm --prefix server run test:e2e
 ```
 
-Browser tests use the installed Google Chrome executable; see `playwright.config.ts` for the exact path and preview lifecycle. Domain tests use synthetic fixtures. No private export is required for tests or builds.
+Integration checks create migrated disposable databases and generate synthetic credentials in memory. They refuse occupied test ports rather than reusing or terminating unrelated processes. The ordinary `gym_log` database is not a fixture target. No private export is needed. Do not run two fixed-port integration harnesses concurrently.
 
-## Mobile workout logging
+## Mobile logger and analytics
 
-The active logger uses a compact editable-name/Finish header and full-width exercise sections. At 390px, the synthetic preview's first weight field begins at y=279.5px and is 137px wide; at 320px it is 102px wide. Set inputs are at least 16px, and logging controls retain 44px touch targets. Portrait and short phone landscape use four-column rows instead of a permanent trash column.
+The compact logger retains full-width exercise sections, explicit completion, large editable fields and keyboard-aware scrolling. Swipe left to **reveal** Delete, then tap it; the set-number action provides the keyboard/non-gesture alternative. Undo restores the latest deleted set without reverting later edits. It is transient within the logger view, not a persisted recovery stack.
 
-Swipe left on a row or its set-number/completion control to reveal Delete, then tap Delete explicitly. Tap the set-number action (or use keyboard Enter/Space) for the same non-gesture action. Input-started swipes remain native input interactions. Undo restores the latest deleted set, its order, values and completion without reverting subsequent edits. Undo is available within the current logger view only; it is not a persisted recovery stack. Desktop keeps a visible remove control.
+Prefilled numbers are targets. Editing clears completion. Finish excludes uncompleted/invalid sets. Historical comparison links expose actual source sets. Chromium touch/viewport tests do not prove comfort on the real phone keyboard; on-device validation is still required.
 
-Empty markers mean uncompleted targets; only explicit confirmation records a completed set, and changing values clears it. Finish still requires confirmation and excludes unfinished sets. Historical comparison links open the actual source workout.
+Weight is normalized to kg and distance to km while retaining source values. Epley estimates apply only to weighted sets of 2–10 reps; a single rep uses recorded load. Assistance/unweighted/duration work does not use resistance estimates. Recorded machine weights are not equated across equipment changes.
 
-While editing, mobile bottom navigation hides rather than covering the field. Focus and visualViewport resize/scroll keep the active input visible. Browser checks exercise actual Chromium touch dispatch, vertical scrolling, cancellation, keyboard actions, narrow/landscape layout and a resized viewport. They do **not** establish real phone keyboard behavior; on-device verification remains outstanding.
+## Remaining release gates
 
-## Boundaries
+Real phone installation/workout testing, off-device encrypted recovery and automated backups are not completed. The private mobile trial uses Tailscale Serve and owner identity authentication; it is not a complete production release. CI/CD implementation and deployment remain separate approval gates. Nearby-weight fallback, suspicious-set correction/exclusion UI, comprehensive exercise instructions/catalog, optional bodyweight tracking and broader cardio workflows remain separate product work.
 
-This is not yet a supported gym-logging replacement. No backend, authentication, server synchronization, installable/offline app shell, backup automation, deployment, comprehensive exercise instructions, health integration, or native active-workout indicator is implemented. Optional bodyweight tracking and full cardio support belong to the product scope, not necessarily this design prototype. Nearby-weight fallback, user-facing suspicious-set correction/exclusion controls and exporting newly logged workouts are not implemented yet.
-
-History retains imported source values and repeated row occurrences. Weight is normalized to kg and distance to km for analysis. Estimated 1RM uses Epley for weighted sets of 2–10 reps; a single rep uses its recorded load. This is an estimated performance proxy, not a measured maximum or training prescription. Assisted and bodyweight exercises do not use resistance-strength estimates. Recorded machine weights are not comparable across equipment changes.
-
-`AGENTS.md` contains workflow, privacy and architecture context. `PRODUCT.md` describes product scope. `DESIGN.md` describes the prototype's built visual language.
-
-Everything remains local. No GitHub remote or CI/CD has been configured.
+`PRODUCT.md` describes product scope; `DESIGN.md` describes the built visual system. Repository guidance remains in `AGENTS.md`. Source is maintained in a private GitHub repository. Personal history, credentials and recovery archives remain excluded.

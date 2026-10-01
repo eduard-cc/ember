@@ -1,0 +1,9 @@
+.env
+.postgres.env
+.env.*
+!.env.example
+node_modules/
+dist/
+coverage/
+*.dump
+*.sql

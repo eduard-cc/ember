@@ -1,0 +1,186 @@
+import {liveQuery} from 'dexie';
+import {useCallback, useEffect, useRef, useState} from 'react';
+
+import type {WorkoutRepository} from '../storage/repository';
+import {type Session, SessionExpired, SyncEngine} from './engine';
+
+export function useSync(
+  repository: WorkoutRepository,
+  ready: boolean,
+  enabled: boolean,
+  refresh: () => Promise<void>,
+  locallySaved = true,
+) {
+  const [session, setSession] = useState<Session | null>(null);
+  const current = useRef<Session | null>(null);
+  const [locked, setLocked] = useState(true);
+  const [status, setStatus] = useState('Connecting…');
+  const [pending, setPending] = useState(0);
+  const [issues, setIssues] = useState<
+    {operationId: string; entityId: string; errorCode?: string}[]
+  >([]);
+  const failures = useRef(0),
+    nextAttempt = useRef(0);
+  const running = useRef(false);
+  const paused = useRef(false);
+  const [syncing, setSyncing] = useState(false);
+  const inFlight = useRef<Promise<void> | null>(null);
+  const pause = useCallback(async () => {
+    paused.current = true;
+    await inFlight.current;
+    await repository.flush();
+  }, [repository]);
+  const resume = useCallback(() => {
+    paused.current = false;
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+    const sub = liveQuery(async () => ({
+      pending: await repository.db.outbox.count(),
+      owner: (await repository.db.meta.get('ownerId'))?.value,
+      trust: (await repository.db.meta.get('local-trust'))?.value,
+      issues: (await repository.db.syncState.toArray())
+        .filter((r) => r.key.startsWith('issue:'))
+        .map((r) => r.value as {operationId: string; entityId: string; errorCode?: string}),
+    })).subscribe({
+      next: (state) => {
+        setPending(state.pending);
+        setIssues(state.issues);
+        setLocked(!!state.owner && !state.trust);
+      },
+    });
+    return () => sub.unsubscribe();
+  }, [ready, repository]);
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+  const savedRef = useRef(locallySaved);
+  savedRef.current = locallySaved;
+  const sync = useCallback(async () => {
+    if (paused.current || running.current || !ready || !enabled) return;
+    running.current = true;
+    setSyncing(true);
+    setStatus('Syncing…');
+    const job = (async () => {
+      try {
+        await repository.flush();
+        if ((await repository.db.meta.get('demo-installation'))?.value === true) {
+          setStatus('Local only');
+          return;
+        }
+        if (!savedRef.current) {
+          setStatus('Not saved locally · unsaved changes are not synchronized');
+          return;
+        }
+        if (
+          (await repository.db.meta.get('ownerId'))?.value &&
+          !(await repository.db.meta.get('local-trust'))?.value
+        ) {
+          current.current = null;
+          setSession(null);
+        }
+        for (let attempt = 0; attempt < 2; attempt++) {
+          if (!current.current) {
+            let response = await fetch('/api/v1/session', {credentials: 'same-origin'});
+            if (response.status === 401)
+              response = await fetch('/api/v1/session', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: '{}',
+              });
+            if (!response.ok) throw new Error('Could not connect');
+            const next: Session = await response.json();
+            if (next.ownerId !== 'owner' || typeof next.csrfToken !== 'string' || !next.csrfToken)
+              throw new Error('Invalid server session');
+            if (paused.current) return;
+            const owner = (await repository.db.meta.get('ownerId'))?.value;
+            if (owner && owner !== next.ownerId)
+              throw new Error(
+                'This installation belongs to a different owner; data was not changed',
+              );
+            await repository.bootstrapSync();
+            await repository.db.meta.put({key: 'ownerId', value: next.ownerId});
+            await repository.db.meta.put({key: 'local-trust', value: true});
+            current.current = next;
+            setSession(next);
+            setLocked(false);
+          }
+          if (
+            (await repository.db.meta.get('ownerId'))?.value &&
+            !(await repository.db.meta.get('local-trust'))?.value
+          )
+            return;
+          try {
+            await new SyncEngine(repository).sync(current.current);
+            break;
+          } catch (error) {
+            if (!(error instanceof SessionExpired) || attempt === 1) throw error;
+            current.current = null;
+            setSession(null);
+            if (paused.current || !savedRef.current) return;
+          }
+        }
+        await refreshRef.current();
+        failures.current = 0;
+        nextAttempt.current = 0;
+        const issues = (await repository.db.syncState.toArray()).filter((r) =>
+          r.key.startsWith('issue:'),
+        );
+        const pending = await repository.db.outbox.count();
+        setStatus(
+          issues.length
+            ? 'Sync conflict or rejection · local changes kept for review/export'
+            : pending
+              ? `${pending} changes pending`
+              : 'Synced',
+        );
+      } catch (error) {
+        failures.current++;
+        nextAttempt.current =
+          Date.now() + Math.min(60000, 1000 * 2 ** Math.min(failures.current, 6));
+        if (error instanceof SessionExpired) {
+          current.current = null;
+          setSession(null);
+          setStatus('Reconnecting · pending changes kept');
+        } else setStatus('Offline or server unavailable · changes pending');
+      } finally {
+        running.current = false;
+        setSyncing(false);
+      }
+    })();
+    inFlight.current = job;
+    await job;
+  }, [repository, ready, enabled]);
+  useEffect(() => {
+    if (!ready || !enabled) return;
+    void sync();
+    const onWake = () => void sync();
+    window.addEventListener('online', onWake);
+    window.addEventListener('focus', onWake);
+    const timer = setInterval(() => {
+      if (Date.now() >= nextAttempt.current) void sync();
+    }, 5000);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('online', onWake);
+      window.removeEventListener('focus', onWake);
+    };
+  }, [ready, enabled, sync]);
+  return {
+    session,
+    locked,
+    pending,
+    issues,
+    pause,
+    resume,
+    syncing,
+    status: !enabled
+      ? 'Local only'
+      : !locallySaved && status === 'Synced'
+        ? 'Not saved locally · unsaved changes are not synchronized'
+        : pending && status === 'Synced'
+          ? `${pending} changes pending`
+          : status,
+    sync,
+  };
+}
