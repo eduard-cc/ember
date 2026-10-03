@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - '.hermes/**'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - '.hermes/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# Jobs are billed per started minute, so cheap checks share one job and setup.
+jobs:
+  checks:
+    name: Format, typecheck, unit tests and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+      - run: npm ci --include=dev && npm --prefix server ci --include=dev
+      # Root Prettier also reads server/.prettierrc for server files.
+      - run: npm run format:check
+      - run: npm --prefix server run typecheck
+      - run: npm run test:run
+      # The web build typechecks the root first. The server build runs in server-e2e.
+      - run: npm run build
+
+  server-e2e:
+    name: Server build and E2E (disposable PostgreSQL)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17.6-bookworm
+        env:
+          POSTGRES_USER: gym_log_ci
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: gym_log_dev
+        ports:
+          - '127.0.0.1:55439:5432'
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U gym_log_ci -d gym_log_dev"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DOTENV_CONFIG_PATH: /dev/null
+      GYM_LOG_HOST: 127.0.0.1
+      GYM_LOG_PORT: '5190'
+      GYM_LOG_ORIGIN: http://127.0.0.1:5188
+      GYM_LOG_SESSION_SECURE: 'false'
+      GYM_LOG_SESSION_TTL_SECONDS: '86400'
+      GYM_LOG_AUTH_MODE: password
+      GYM_LOG_DATABASE_URL: postgres://gym_log_ci:synthetic-ci-only@127.0.0.1:55439/gym_log_dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+      # The backup/restore regression test deliberately verifies this exact name,
+      # image and loopback port. Do not weaken the host-side isolation checks.
+      - name: Name the isolated test service
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: docker rename "$POSTGRES_CONTAINER" gym-log-local-postgres
+      # The server date-contract tests also exercise shared frontend schemas.
+      - run: npm ci --include=dev && npm --prefix server ci --include=dev
+      # pretest:e2e builds the server first.
+      - run: npm --prefix server run test:e2e
+        env:
+          TMPDIR: ${{ runner.temp }}
+
+  playwright:
+    name: Playwright (desktop and mobile)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --include=dev
+      - name: Read Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright Chromium
+        id: playwright-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-chromium-shell
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: npm run test:e2e
+      # The HTML report embeds failure traces and screenshots. Timeouts count as
+      # cancelled, not failed, so they upload nothing.
+      - name: Retain synthetic browser diagnostics only on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: playwright-report/
+          retention-days: 3
+          if-no-files-found: ignore

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
 import {mkdtempSync, rmSync, statSync, writeFileSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {test} from 'node:test';
 
@@ -22,7 +23,7 @@ test('isolated pg_dump archive restores logical documents and ledger into a fres
 	const admin = await database(adminUrl.toString()).initialize();
 	const sourceName = `gym_log_backup_test_${process.pid}`;
 	const targetName = `gym_log_restore_validation_${process.pid}`;
-	const dir = mkdtempSync(join(process.env.TMPDIR || '/tmp', 'gym-backup-'));
+	const dir = mkdtempSync(join(tmpdir(), 'gym-backup-'));
 	const dump = join(dir, 'synthetic.dump');
 	let source: ReturnType<typeof database> | undefined;
 	let restored: ReturnType<typeof database> | undefined;

@@ -68,11 +68,16 @@ test('phone landscape keeps first editable set in the usable viewport', async ({
   test.skip(info.project.name !== 'mobile');
   await page.setViewportSize({width: 844, height: 390});
   await page.goto('/?demo=1');
-  const field = (await page
-    .getByLabel(/Weight for .* set 1/)
-    .first()
-    .boundingBox())!;
-  const nav = (await page.getByRole('navigation', {name: 'Main navigation'}).boundingBox())!;
+  const weight = page.getByLabel(/Weight for .* set 1/).first();
+  // Load can finish while the logger is still hidden and disabled behind hydration/sync lock.
+  await expect(weight).toBeVisible();
+  await expect(weight).toBeEnabled();
+  await page.evaluate(() => document.fonts.ready);
+  const field = (await weight.boundingBox())!;
+  const navigation = page.getByRole('navigation', {name: 'Main navigation'});
+  await expect(navigation).toBeVisible();
+  const nav = (await navigation.boundingBox())!;
+  expect(field.y).toBeGreaterThanOrEqual(0);
   expect(field.y + field.height).toBeLessThanOrEqual(nav.y);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(844);
 });
@@ -90,6 +95,8 @@ test('real touch swipe from completion reveals actions without confirming and ve
   await page.goto('http://127.0.0.1:5188/?demo=1');
   const row = page.locator('.set-row:not(.set-head)').first();
   const done = row.getByRole('button', {name: /Complete/});
+  // The logger stays hidden and disabled until storage hydrates and the sync lock clears.
+  await expect(done).toBeEnabled();
   const box = (await done.boundingBox())!;
   const cdp = await context.newCDPSession(page);
   const touch = async (x: number, y: number, dx: number, dy: number) => {
