@@ -83,6 +83,6 @@ Weight is normalized to kg and distance to km while retaining source values. Epl
 
 ## Remaining release gates
 
-Real phone installation/workout testing, off-device encrypted recovery and automated backups are not completed. The private mobile trial uses Tailscale Serve and owner identity authentication; it is not a complete production release. CI/CD implementation and deployment remain separate approval gates. Nearby-weight fallback, suspicious-set correction/exclusion UI, comprehensive exercise instructions/catalog, optional bodyweight tracking and broader cardio workflows remain separate product work.
+Real phone installation/workout testing, off-device encrypted recovery and automated backups are not completed. The private mobile trial uses Tailscale Serve and owner identity authentication; it is not a complete production release. CI/CD and deployment are owned by Hermes (see AGENTS.md). Nearby-weight fallback, suspicious-set correction/exclusion UI, comprehensive exercise instructions/catalog, optional bodyweight tracking and broader cardio workflows remain separate product work.
 
 `PRODUCT.md` describes product scope; `DESIGN.md` describes the built visual system. Repository guidance remains in `AGENTS.md`. Source is maintained in a private GitHub repository. Personal history, credentials and recovery archives remain excluded.

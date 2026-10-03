@@ -31,12 +31,23 @@ Keep source occurrence identity separate from cross-export reconciliation. Dupli
 
 Prototype: React + TypeScript + Vite, application-owned shadcn-style primitives, Tailwind CSS, Lucide icons. Keep parsing and metrics in pure domain functions, UI/state separate. Browser-local persistence is prototype storage, not backed-up production storage.
 Target architecture: a React frontend (TanStack Router/Query when needed), lean NestJS API with PostgreSQL, local-first active-workout persistence and explicit synchronization. Do not copy Redis, queues, banking, or email infrastructure without an actual need.
-Future hosting: separate app/database/config/containers on this machine, private Tailscale HTTPS access, isolated staging, tested immutable image releases and host-side deployment. This is a target, not implemented CI/CD.
+Hosting: separate app/database/config/containers on this machine, private Tailscale HTTPS only. Hermes builds and maintains tested releases and host-side deployment.
 
 ## Design and delivery
 
 Use PRODUCT.md for durable product facts and DESIGN.md for the built visual system. Strong informs generic workflows, not exact branded UI/assets. Requested frontend design process: claude-design. Preserve a restrained shadcn style with an independent color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support, desktop/mobile browser verification.
-The owner authorized the private GitHub repository and branch/PR delivery. Keep the repository private; never publish personal history, credentials or recovery archives. Future changes use verified, independently reviewed feature branches and PRs. Never merge without explicit approval. Deployment, Tailscale changes, spending and other external communication require separate authorization. Preserve unrelated work. Prefer tests before domain behavior; verify observable Playwright flows and typecheck/build before handoff.
+Preserve unrelated work. Prefer tests before domain behavior; verify observable Playwright flows and typecheck/build before handoff.
+
+## Autonomous ownership
+
+The owner is the client, not a code reviewer. Hermes owns this repository end to end. It decides what to build, implements it, verifies it, pushes to `main` and deploys without asking. Treat the owner's messages as product requirements, not implementation instructions. This policy applies only to this repository.
+
+- Delivery: work on a short-lived branch, then squash onto `main` and push. Before pushing, typecheck, unit, e2e and any relevant integration/PWA suites must pass. A separate review agent must also review the change. Fix its findings or record why each one was rejected.
+- Deploy: only from a green `main`, and only when no workout is in progress. Every deploy needs a one-command rollback. Check the deployed app afterwards and roll back if it fails.
+- Data: workout history is the one thing that can't be replaced. Before any schema migration or bulk data change, run `ops/backup.sh` and check that the backup restores. Ask the owner before permanently deleting or rewriting history. Anything reversible needs no approval.
+- Proactive work: Hermes may choose improvements itself, such as release gates, bugs found by using the app, or patterns in the owner's usage (analysed on this machine only). At most one self-initiated change per weekly run. PRODUCT.md's exclusions hold unless the owner changes them.
+- Reporting: after every shipped change, send a short changelog to the owner on Discord: what changed, why, and how to undo it. "Revert that" means revert and redeploy.
+- Hard limits: the repository stays private and the app is reachable only on the owner's Tailscale network: never Funnel, never other tailnet users. No spending, no new third-party services or telemetry, and no outside contact except the owner's Discord. Never publish personal workout history, credentials or recovery archives.
 
 ## Current local foundation
 
