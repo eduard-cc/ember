@@ -18,11 +18,12 @@ The local API setup and secure credential requirements are documented in `server
 
 ```sh
 docker compose -f ops/compose.local.yml up -d --wait
+docker exec gym-log-local-postgres sh -c 'createdb -U "$POSTGRES_USER" gym_log_dev'  # once
 npm --prefix server run migration
 npm --prefix server run dev
 ```
 
-Use a separate terminal for the API. Development Vite proxies same-origin `/api/v1` requests to loopback port 5190. The database is exclusively `gym-log-local` on loopback port 55439. These are local development resources, not production deployment. No usable default owner password exists; provision an owner hash through a secure local workflow before interactive authenticated use. Do not paste credentials into chat or tracked files.
+Use a separate terminal for the API. Development Vite proxies same-origin `/api/v1` requests to loopback port 5190. Development and tests use the `gym_log_dev` database in `gym-log-local` on loopback port 55439; test databases are created from it. The live private trial alone uses the `gym_log` database and port 5191, configured outside the repository; never point development at it. These are local development resources, not production deployment. No usable default owner password exists; provision an owner hash through a secure local workflow before interactive authenticated use. Do not paste credentials into chat or tracked files.
 
 ## Saving and synchronization
 
@@ -71,7 +72,7 @@ npm --prefix server run build
 npm --prefix server run test:e2e
 ```
 
-Integration checks create migrated disposable databases and generate synthetic credentials in memory. They refuse occupied test ports rather than reusing or terminating unrelated processes. The ordinary `gym_log` database is not a fixture target. No private export is needed. Do not run two fixed-port integration harnesses concurrently.
+Integration checks create migrated disposable databases and generate synthetic credentials in memory. They refuse occupied test ports rather than reusing or terminating unrelated processes. Test harnesses refuse any admin database other than `gym_log_dev`; the live `gym_log` database is never a fixture target. No private export is needed. Do not run two fixed-port integration harnesses concurrently.
 
 ## Mobile logger and analytics
 

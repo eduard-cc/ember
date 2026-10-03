@@ -3,14 +3,27 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {randomBytes, randomUUID} from 'node:crypto';
 import {once} from 'node:events';
+import {createServer} from 'node:net';
 import {test} from 'node:test';
 
 import './bootstrap';
 
+async function freePort() {
+	const server = createServer();
+	server.listen(0, '127.0.0.1');
+	await once(server, 'listening');
+	const address = server.address();
+	assert.ok(address && typeof address !== 'string');
+	const port = address.port;
+	await new Promise<void>((done, reject) => server.close((error) => (error ? reject(error) : done())));
+	return port;
+}
+// The live app owns its own port; never assume the development port is free.
 test('compiled API binds loopback and serves auth, replay and readiness over TCP', async () => {
 	const password = randomBytes(32).toString('hex');
+	const port = await freePort();
 	const child = spawn(process.execPath, ['dist/main.js'], {
-		env: {...process.env, GYM_LOG_OWNER_PASSWORD_HASH: await argon2.hash(password)},
+		env: {...process.env, GYM_LOG_PORT: String(port), GYM_LOG_OWNER_PASSWORD_HASH: await argon2.hash(password)},
 		stdio: ['ignore', 'pipe', 'pipe'],
 	});
 	let output = '';
@@ -23,8 +36,8 @@ test('compiled API binds loopback and serves auth, replay and readiness over TCP
 			if (child.exitCode !== null) throw new Error('API process exited during startup');
 			await new Promise((r) => setTimeout(r, 10));
 		}
-		assert.match(output, /127\.0\.0\.1:5190/);
-		const url = 'http://127.0.0.1:5190/api/v1';
+		assert.match(output, new RegExp(`127\\.0\\.0\\.1:${port}\\b`));
+		const url = `http://127.0.0.1:${port}/api/v1`;
 		const origin = process.env.GYM_LOG_ORIGIN!;
 		const health = await fetch(url + '/health');
 		assert.equal(health.status, 200);

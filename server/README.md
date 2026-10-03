@@ -10,12 +10,15 @@ Run from repository root:
 
 ```sh
 docker compose -f ops/compose.local.yml up -d --wait
+# Once: the development database (Compose itself only creates the live gym_log database)
+docker exec gym-log-local-postgres sh -c 'createdb -U "$POSTGRES_USER" gym_log_dev'
 npm --prefix server ci --include=dev
 npm --prefix server run migration
 npm --prefix server run dev
 ```
 
-API binds **127.0.0.1:5190 only**. Origin is `http://127.0.0.1:5188`;
+Development API binds **127.0.0.1:5190 only** and uses the `gym_log_dev` database; the live
+private trial uses port 5191 and the `gym_log` database from external config. Origin is `http://127.0.0.1:5188`;
 frontend must proxy `/api/v1` to the API or access it same-origin. No CORS is enabled.
 Compose project `gym-log-local`; container `gym-log-local-postgres`;
 image `postgres:17.6-bookworm`; port `127.0.0.1:55439`; named volume
@@ -32,7 +35,8 @@ npm --prefix server run build
 
 Tests compile first, enumerate actual test files, and fail on a missing file.
 Each database integration test file creates and destroys its own
-`gym_log_test_<pid>` database inside the task-owned container. Fault/delay triggers
+`gym_log_test_<pid>` database inside the task-owned container, administered through
+`gym_log_dev`. Test setup refuses any other configured database, including live `gym_log`. Fault/delay triggers
 never touch the ordinary database. HTTP requests are real loopback requests;
 compiled-process coverage exercises TCP, authentication and replay, then stops the process.
 Migrations are applied to empty test databases, not schema synchronization.

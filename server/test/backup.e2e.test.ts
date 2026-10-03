@@ -16,6 +16,7 @@ test('isolated pg_dump archive restores logical documents and ledger into a fres
 	const url = new URL(process.env.GYM_LOG_DATABASE_URL!);
 	assert.equal(url.hostname, '127.0.0.1');
 	assert.equal(url.port, '55439');
+	assert.equal(url.pathname, '/gym_log_dev', 'tests never run against the live gym_log database');
 	const adminUrl = new URL(url);
 	adminUrl.pathname = '/postgres';
 	const admin = await database(adminUrl.toString()).initialize();

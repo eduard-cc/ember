@@ -11,8 +11,14 @@ const {Pool} = require('pg'),
 const root = new URL('../', import.meta.url).pathname;
 const config = dotenv.parse(readFileSync(root + 'server/.env'));
 const url = new URL(config.GYM_LOG_DATABASE_URL);
-if (url.hostname !== '127.0.0.1' || url.port !== '55439' || url.pathname !== '/gym_log')
-  throw Error('Expected isolated Gym Log admin database');
+if (
+  url.href.includes('?') ||
+  url.href.includes('#') ||
+  url.hostname !== '127.0.0.1' ||
+  url.port !== '55439' ||
+  url.pathname !== '/gym_log_dev'
+)
+  throw Error('Expected the isolated gym_log_dev admin database, never the live gym_log database');
 const admin = new Pool({connectionString: url.toString()});
 const apiPort = process.env.GYM_LOG_TEST_API_PORT ?? '5190';
 if (!/^\d+$/.test(apiPort) || Number(apiPort) < 1024 || Number(apiPort) > 65535)

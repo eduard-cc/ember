@@ -7,8 +7,14 @@ const original = process.env.GYM_LOG_DATABASE_URL!;
 const name = `gym_log_test_${process.pid}`;
 before(async () => {
 	const url = new URL(original);
-	if (url.hostname !== '127.0.0.1' || url.port !== '55439' || url.pathname !== '/gym_log')
-		throw new Error('Integration tests require the isolated gym-log-local database');
+	if (
+		url.href.includes('?') ||
+		url.href.includes('#') ||
+		url.hostname !== '127.0.0.1' ||
+		url.port !== '55439' ||
+		url.pathname !== '/gym_log_dev'
+	)
+		throw new Error('Integration tests require the gym_log_dev database, never the live gym_log database');
 	const admin = await database(original).initialize();
 	try {
 		await admin.query(`CREATE DATABASE "${name}"`);
