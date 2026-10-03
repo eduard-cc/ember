@@ -1,10 +1,12 @@
 import {expect, test} from '@playwright/test';
 
+import {navigate, openImport} from '../navigation';
+
 const csv =
   'Date;Workout Name;Exercise Name;Set Order;Weight;Weight Unit;Reps;Seconds;Workout Duration\n2026-01-10 12:00:00;Synthetic import;Synthetic Press;1;30;kg;8;;40m';
 test('templates can be created edited started and deleted', async ({page}) => {
   await page.goto('/?demo=1');
-  await page.getByRole('button', {name: 'Templates', exact: true}).click();
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template'}).click();
   await page.getByLabel('Template name').fill('My test session');
   await page.getByLabel('Exercise name').fill('Custom Press');
@@ -17,7 +19,7 @@ test('templates can be created edited started and deleted', async ({page}) => {
   await page.getByRole('button', {name: 'Start template Edited session', exact: true}).click();
   await page.getByRole('button', {name: 'Replace active draft'}).click();
   await expect(page.getByLabel('workout name', {exact: false})).toHaveValue('Edited session');
-  await page.getByRole('button', {name: 'Templates', exact: true}).click();
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Delete template Edited session'}).click();
   await page.getByRole('button', {name: 'Confirm delete template'}).click();
   await expect(page.getByRole('heading', {name: 'Edited session'})).toHaveCount(0);
@@ -26,15 +28,30 @@ test('CSV previews require explicit replacement and malformed files preserve his
   page,
 }) => {
   await page.goto('/?demo=1');
-  await page.getByRole('button', {name: 'Import CSV'}).click();
+  await openImport(page);
   await page
     .getByLabel('Choose CSV file')
     .setInputFiles({name: 'synthetic.csv', mimeType: 'text/csv', buffer: Buffer.from(csv)});
   await expect(page.getByText('1 workout · 1 set · 1 exercise')).toBeVisible();
-  await expect(page.getByText('Demo data', {exact: true}).first()).toBeVisible();
+  expect(
+    await page.evaluate(async () => {
+      const path = '/src/storage/repository.ts';
+      const {WorkoutRepository} = await import(path);
+      const repository = new WorkoutRepository();
+      try {
+        return (await repository.readState()).dataset?.sourceLabel;
+      } finally {
+        repository.close();
+      }
+    }),
+  ).toBe('Demo data');
   await page.getByRole('button', {name: 'Replace history', exact: true}).click();
-  await expect(page.getByText('Strong CSV', {exact: true}).first()).toBeVisible();
-  await page.getByRole('button', {name: 'Import CSV'}).click();
+  await expect(
+    page
+      .getByRole('dialog', {name: 'Settings'})
+      .getByText('History replaced. Your draft and finished workouts were kept.', {exact: true}),
+  ).toBeVisible();
+  await openImport(page);
   await page.getByLabel('Choose CSV file').setInputFiles({
     name: 'broken.csv',
     mimeType: 'text/csv',
@@ -42,13 +59,14 @@ test('CSV previews require explicit replacement and malformed files preserve his
   });
   await expect(page.getByRole('alert')).toContainText('not a supported Strong export');
   await page.getByRole('button', {name: 'Close import'}).click();
-  await page.getByRole('button', {name: 'History', exact: true}).click();
+  await page.getByRole('button', {name: 'Close settings'}).click();
+  await navigate(page, 'History');
   await expect(page.getByRole('heading', {name: 'Synthetic import'})).toBeVisible();
 });
 test('a failed template commit never announces that it was saved', async ({page}) => {
   await page.goto('/?demo=1');
   await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
-  await page.getByRole('button', {name: 'History', exact: true}).click();
+  await navigate(page, 'History');
   await page.evaluate(() => {
     const add = IDBObjectStore.prototype.add;
     IDBObjectStore.prototype.add = function (...args) {

@@ -1,8 +1,10 @@
 import {expect, test} from '@playwright/test';
 
+import {navigate, openImport} from '../navigation';
+
 test('historical workouts repeat as editable uncompleted targets', async ({page}) => {
   await page.goto('/?demo=1');
-  await page.getByRole('button', {name: 'History', exact: true}).click();
+  await navigate(page, 'History');
   await expect(page.getByRole('heading', {name: 'Workout history'})).toBeVisible();
   await page
     .getByRole('button', {name: /Repeat workout/})
@@ -18,7 +20,7 @@ test('historical workouts repeat as editable uncompleted targets', async ({page}
 });
 test('progress exposes source sets and selectable metrics', async ({page}) => {
   await page.goto('/?demo=1');
-  await page.getByRole('button', {name: 'Progress', exact: true}).click();
+  await navigate(page, 'Exercises');
   await expect(page.getByRole('heading', {name: 'Exercise progress'})).toBeVisible();
   await page.getByLabel('Search exercises').fill('Bench');
   await page.getByRole('button', {name: 'Estimated 1RM', exact: true}).click();

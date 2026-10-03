@@ -1,6 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import {demoTemplates} from '../../src/domain/demo';
+import {navigate, openSettings} from '../navigation';
 import {login, revokeAndLock, syncNow} from './helpers';
 
 const active = {
@@ -45,9 +46,9 @@ test('offline finish survives reopen and fresh independent peer sees only comple
   await fresh.goto('/');
   await login(fresh);
   await expect(fresh.getByText('Synced', {exact: true})).toBeVisible();
-  await fresh.getByRole('button', {name: 'History', exact: true}).click();
+  await navigate(fresh, 'History');
   await expect(fresh.getByText('Offline finished', {exact: true}).first()).toBeVisible();
-  await fresh.getByRole('button', {name: 'Workout', exact: true}).click();
+  await navigate(fresh, 'Workouts');
   await expect(fresh.getByRole('heading', {name: 'Ready for your next workout'})).toBeVisible();
   await peer.close();
 });
@@ -105,7 +106,8 @@ test('revoked legacy session retains pending changes and untrusted local data st
   await page.goto('/');
   await expect(page.locator('main')).toBeHidden();
   await context.setOffline(true);
-  await page.getByRole('button', {name: 'History', exact: true}).click();
+  // Navigation lives inside the locked workspace, so no view of retained data is reachable.
+  await expect(page.getByRole('navigation', {name: 'Main navigation'})).toBeHidden();
   await expect(page.locator('main')).toBeHidden();
   await context.setOffline(false);
   await login(page);
@@ -124,4 +126,28 @@ test('revoked local trust hides retained data in a second same-origin tab too', 
   await expect(follower.locator('main')).toBeVisible();
   await revokeAndLock(page);
   await expect(follower.locator('main')).toBeHidden();
+});
+test('an open Previous evidence dialog closes when local trust is revoked mid-workout', async ({
+  page,
+}) => {
+  await page.addInitScript(
+    (active) =>
+      localStorage.setItem(
+        'gym-log:v1',
+        JSON.stringify({version: 1, dataset: null, active, finished: [], templates: []}),
+      ),
+    {...active, id: 'evidence-' + crypto.randomUUID(), name: 'Evidence while locked'},
+  );
+  await page.goto('/');
+  await login(page);
+  await page
+    .getByRole('button', {name: /^Previous for .* set 1$/})
+    .first()
+    .click();
+  const evidence = page.getByRole('dialog');
+  await expect(evidence).toBeVisible();
+  await revokeAndLock(page);
+  await expect(page.locator('main')).toBeHidden();
+  // Portaled dialogs escape <main hidden>; locked history must not stay on screen.
+  await expect(evidence).toHaveCount(0);
 });

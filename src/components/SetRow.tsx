@@ -27,7 +27,9 @@ export function SetRow({
         suppressClick.current = false;
         if (
           event.button !== 0 ||
-          (event.target as HTMLElement).closest('input,button:not(.set-index):not(.set-check)')
+          (event.target as HTMLElement).closest(
+            'input,button:not(.set-index):not(.set-check):not(.set-previous)',
+          )
         )
           return;
         gesture.current = {id: event.pointerId, x: event.clientX, y: event.clientY, left: false};

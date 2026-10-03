@@ -74,16 +74,16 @@ test('phone landscape keeps first editable set in the usable viewport', async ({
   await expect(weight).toBeEnabled();
   await page.evaluate(() => document.fonts.ready);
   const field = (await weight.boundingBox())!;
-  const navigation = page.getByRole('navigation', {name: 'Main navigation'});
-  await expect(navigation).toBeVisible();
-  const nav = (await navigation.boundingBox())!;
-  expect(field.y).toBeGreaterThanOrEqual(0);
-  expect(field.y + field.height).toBeLessThanOrEqual(nav.y);
+  // The expanded workout sheet covers the main navigation.
+  await expect(page.getByRole('navigation', {name: 'Main navigation'})).toBeHidden();
+  expect(field.y).toBeGreaterThanOrEqual(100);
+  expect(field.y + field.height).toBeLessThanOrEqual(390);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(844);
 });
 
 test('real touch swipe from completion reveals actions without confirming and vertical touch scrolls', async ({
   browser,
+  baseURL,
 }, info) => {
   test.skip(info.project.name !== 'mobile');
   const context = await browser.newContext({
@@ -92,7 +92,7 @@ test('real touch swipe from completion reveals actions without confirming and ve
     hasTouch: true,
   });
   const page = await context.newPage();
-  await page.goto('http://127.0.0.1:5188/?demo=1');
+  await page.goto(`${baseURL}/?demo=1`);
   const row = page.locator('.set-row:not(.set-head)').first();
   const done = row.getByRole('button', {name: /Complete/});
   // The logger stays hidden and disabled until storage hydrates and the sync lock clears.
@@ -114,7 +114,9 @@ test('real touch swipe from completion reveals actions without confirming and ve
   await expect(done).toHaveAttribute('aria-pressed', 'false');
   await row.getByRole('button', {name: 'Cancel', exact: true}).click();
   await touch(200, 650, 0, -200);
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(50);
+  await expect
+    .poll(() => page.locator('.workout-scroll').evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(50);
   await context.close();
 });
 
@@ -127,8 +129,9 @@ test('mobile ledger reaches first set quickly with wide fields and explicit empt
   await expect(weight).toBeEnabled();
   const box = (await weight.boundingBox())!;
   expect(box.y).toBeLessThan(300);
-  expect(box.width).toBeGreaterThanOrEqual(120);
-  expect(await weight.evaluate((el) => getComputedStyle(el).fontSize)).toBe('16px');
+  // Approved five-column ledger trades the previous two wide fields for source evidence.
+  expect(box.width).toBeGreaterThanOrEqual(72);
+  expect(await weight.evaluate((el) => getComputedStyle(el).fontSize)).toBe('18px');
   const row = page.locator('.set-row:not(.set-head)').first();
   await expect(row.getByRole('button', {name: /Complete/})).toHaveAttribute(
     'aria-pressed',
@@ -171,6 +174,7 @@ test('focused mobile field stays above resized viewport and navigation returns a
     'false',
   );
   await weight.evaluate((el) => (el as HTMLInputElement).blur());
+  await page.getByRole('button', {name: 'Minimize workout'}).click();
   await expect(page.getByRole('navigation', {name: 'Main navigation'})).toBeVisible();
 });
 

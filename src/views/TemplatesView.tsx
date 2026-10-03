@@ -2,6 +2,7 @@ import {Pencil, Play, Plus, Trash2, X} from 'lucide-react';
 import {useState} from 'react';
 
 import {Button, Input} from '../components/ui';
+import {historyTargets} from '../components/workout-targets';
 import {getExercises} from '../domain/model';
 import type {Dataset, ExerciseType, Workout} from '../domain/types';
 import {newWorkout} from '../state/workout';
@@ -31,28 +32,14 @@ export function TemplatesView({
     const type = known?.type ?? exerciseType;
     setEditing({
       ...editing,
-      exercises: [
-        ...editing.exercises,
-        {
-          name: exerciseName.trim(),
-          type,
-          sets: Array.from({length: type === 'cardio' || type === 'duration' ? 1 : 3}, () => ({
-            id: crypto.randomUUID(),
-            weight: type === 'weighted' || type === 'assisted' ? 20 : null,
-            reps: type === 'weighted' || type === 'assisted' || type === 'bodyweight' ? 8 : null,
-            seconds: type === 'duration' || type === 'cardio' ? 60 : null,
-            distance: type === 'cardio' ? 1 : null,
-            completed: false,
-          })),
-        },
-      ],
+      exercises: [...editing.exercises, historyTargets(dataset, exerciseName.trim(), type)],
     });
     setExerciseName('');
   };
   return (
     <div className='templates-view'>
       <div className='list-toolbar'>
-        <p>Editable targets, not completed sets. Synthetic presets are a starting point.</p>
+        <p>Routines · editable targets, not completed sets.</p>
         <Button
           variant='primary'
           onClick={() => {

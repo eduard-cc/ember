@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {getExercises} from '../domain/model';
 import type {Dataset, ExerciseLog, ExerciseType} from '../domain/types';
 import {Button, Input} from './ui';
+import {historyTargets} from './workout-targets';
 
 export function AddExercise({
   dataset,
@@ -74,20 +75,7 @@ export function AddExercise({
         className='adder-save'
         disabled={!name.trim()}
         onClick={() => {
-          onAdd({
-            name: name.trim(),
-            type,
-            sets: [
-              {
-                id: crypto.randomUUID(),
-                weight: null,
-                reps: null,
-                seconds: null,
-                distance: type === 'cardio' ? 0 : null,
-                completed: false,
-              },
-            ],
-          });
+          onAdd(historyTargets(dataset, name.trim(), type));
           setOpen(false);
           setName('');
         }}

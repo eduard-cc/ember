@@ -1,5 +1,7 @@
 import {type Page, expect} from '@playwright/test';
 
+import {openSettings} from '../navigation';
+
 // Legacy password-mode coverage authenticates via the API, never app password UI.
 export async function login(page: Page) {
   const response = await page.request.post('/api/v1/session', {
@@ -13,10 +15,10 @@ export async function login(page: Page) {
   );
 }
 
-export async function syncNow(page: Page) {
-  if (!(await page.getByRole('button', {name: 'Sync now', exact: true}).isVisible()))
-    await page.getByRole('button', {name: 'Recovery settings'}).click();
+export async function syncNow(page: Page, keepSettingsOpen = false) {
+  await openSettings(page);
   await page.getByRole('button', {name: 'Sync now', exact: true}).click();
+  if (!keepSettingsOpen) await page.getByRole('button', {name: 'Close settings'}).click();
 }
 
 export async function revokeAndLock(page: Page) {

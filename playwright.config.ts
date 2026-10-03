@@ -1,5 +1,7 @@
 import {defineConfig} from '@playwright/test';
 
+const port = Number(process.env.GYM_LOG_E2E_PORT ?? 5188);
+const baseURL = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -7,7 +9,7 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [['line'], ['html', {open: 'never'}]] : 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5188',
+    baseURL,
     launchOptions: {
       executablePath: process.env.CI ? undefined : '/usr/bin/google-chrome',
       args: ['--no-sandbox'],
@@ -19,9 +21,10 @@ export default defineConfig({
     {name: 'desktop', use: {viewport: {width: 1440, height: 1000}}},
     {name: 'mobile', use: {viewport: {width: 390, height: 844}}},
   ],
+  // A dedicated strict-port server: reusing another checkout's dev server silently tests the wrong source.
   webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:5188',
-    reuseExistingServer: !process.env.CI,
+    command: `NODE_ENV=development npx vite --host 127.0.0.1 --port ${port} --strictPort`,
+    url: baseURL,
+    reuseExistingServer: false,
   },
 });

@@ -1,5 +1,7 @@
 import {expect, test} from '@playwright/test';
 
+import {navigate, openImport} from '../navigation';
+
 test('fresh installation connects automatically without an app password or permanent sync card', async ({
   page,
 }) => {
@@ -103,7 +105,7 @@ test('unavailable server keeps trusted local drafts and pending edits across reo
   await page.getByRole('button', {name: 'Start empty workout', exact: true}).click();
   await page.getByLabel('WORKOUT NAME').fill('Offline retained draft');
   await page.getByLabel('WORKOUT NAME').blur();
-  await page.getByRole('button', {name: 'Templates', exact: true}).click();
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Offline retained template');
   await page.getByLabel('Exercise name', {exact: true}).fill('Press');
@@ -115,7 +117,7 @@ test('unavailable server keeps trusted local drafts and pending edits across reo
   await expect(
     page.getByText('Offline or server unavailable · changes pending', {exact: true}),
   ).toBeVisible();
-  await page.getByRole('button', {name: 'Templates', exact: true}).click();
+  await navigate(page, 'Workouts');
   await expect(
     page.getByRole('heading', {name: 'Offline retained template', exact: true}),
   ).toBeVisible();

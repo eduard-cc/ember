@@ -1,6 +1,8 @@
 import {expect, test} from '@playwright/test';
 import {readFile, writeFile} from 'node:fs/promises';
 
+import {openSettings} from '../navigation';
+
 test('real recovery control confirms activation without reload and defers updates during local or cross-tab drafts', async ({
   page,
   context,
@@ -9,7 +11,7 @@ test('real recovery control confirms activation without reload and defers update
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));
   await page.reload();
   await expect(page.getByRole('button', {name: 'Start empty workout'})).toBeEnabled();
-  await page.getByRole('button', {name: 'Recovery settings'}).click();
+  await openSettings(page);
   const file = new URL('../../dist/sw.js', import.meta.url);
   const original = await readFile(file, 'utf8');
   await writeFile(
@@ -57,11 +59,13 @@ test('real recovery control confirms activation without reload and defers update
         page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.waiting),
       )
       .toBe(true);
+    await page.getByRole('button', {name: 'Close settings'}).click();
     await page.getByRole('button', {name: 'Start empty workout'}).click();
+    await openSettings(page);
     await expect(page.getByRole('button', {name: 'Apply shell update'})).toBeDisabled();
     const follower = await context.newPage();
     await follower.goto('/');
-    await follower.getByRole('button', {name: 'Recovery settings'}).click();
+    await openSettings(follower);
     await expect(follower.getByRole('button', {name: 'Apply shell update'})).toBeDisabled();
     await expect(follower.getByRole('button', {name: 'Export local backup'})).toBeDisabled();
     expect(

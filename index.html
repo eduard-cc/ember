@@ -2,9 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f4f6f4" />
-    <title>Gym Log · local prototype</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6f1e8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Gym Log</title>
+    <script>
+      // Apply the saved theme before first paint so dark phones do not flash Paper.
+      try {
+        var a = JSON.parse(localStorage.getItem('gym-log:appearance:v1') || 'null');
+        var t = a && a.version === 1 ? a.theme : 'system';
+        var dark =
+          t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        if (a && ['pine', 'ocean', 'copper'].indexOf(a.accent) >= 0)
+          document.documentElement.dataset.accent = a.accent;
+        if (dark)
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#17161b');
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

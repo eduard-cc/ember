@@ -1,5 +1,7 @@
 import {expect, test} from '@playwright/test';
 
+import {navigate, openImport} from '../navigation';
+
 test('empty workouts accept an exercise with duration units and completed sets', async ({page}) => {
   await page.goto('/?demo=1');
   await page.getByRole('button', {name: 'Start empty', exact: true}).click();
@@ -18,7 +20,7 @@ test('assistance progress excludes resistance estimates and source link opens se
   page,
 }) => {
   await page.goto('/?demo=1');
-  await page.getByRole('button', {name: 'Progress', exact: true}).click();
+  await navigate(page, 'Exercises');
   await page.getByLabel('Search exercises').fill('Assisted');
   await page.getByRole('button', {name: 'Pull Up (Assisted)', exact: true}).click();
   await page.getByRole('button', {name: 'Assistance (less is better)', exact: true}).click();
@@ -36,17 +38,13 @@ test('all navigation screens fit their viewport without horizontal overflow', as
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/?demo=1');
-  for (const view of ['Workout', 'Progress', 'History', 'Templates']) {
-    await page.getByRole('button', {name: view, exact: true}).click();
+  await page.screenshot({path: `.impeccable/review/workout-${testInfo.project.name}.png`});
+  for (const view of ['Workouts', 'Exercises', 'History'] as const) {
+    await navigate(page, view);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
-    if (view === 'Workout')
-      await page.screenshot({
-        path: `.impeccable/review/workout-${testInfo.project.name}.png`,
-        fullPage: false,
-      });
-    if (view === 'Progress')
+    if (view === 'Exercises')
       await page.screenshot({
         path: `.impeccable/review/progress-${testInfo.project.name}.png`,
         fullPage: false,

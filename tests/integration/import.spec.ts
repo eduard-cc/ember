@@ -1,5 +1,6 @@
 import {expect, test} from '@playwright/test';
 
+import {openImport} from '../navigation';
 import {login, syncNow} from './helpers';
 
 const csv =
@@ -49,7 +50,7 @@ test('Strong import roundtrip preserves source occurrences and identical-file no
   await login(page);
   await expect(page.getByText('Synced', {exact: true})).toBeVisible();
   const replace = async (text: string) => {
-    await page.getByRole('button', {name: 'Import CSV', exact: true}).click();
+    await openImport(page);
     await page
       .getByLabel('Choose CSV file')
       .setInputFiles({name: 'synthetic.csv', mimeType: 'text/csv', buffer: Buffer.from(text)});
@@ -138,7 +139,7 @@ test('interrupted Strong import resumes bounded immutable batches after reopenin
     uploaded = true;
     await route.abort('failed');
   });
-  await page.getByRole('button', {name: 'Import CSV', exact: true}).click();
+  await openImport(page);
   await page
     .getByLabel('Choose CSV file')
     .setInputFiles({name: 'chunks.csv', mimeType: 'text/csv', buffer: Buffer.from(text)});

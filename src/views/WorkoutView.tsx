@@ -1,9 +1,9 @@
 import {Check, Plus, Trash2} from 'lucide-react';
 import {useRef, useState} from 'react';
 
+import {PreviousSet} from '../components/PreviousSet';
 import {SetRow} from '../components/SetRow';
 import {Button, Input} from '../components/ui';
-import {bestComparable} from '../domain/model';
 import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
 
 export function dateLabel(date: string) {
@@ -145,14 +145,31 @@ export function WorkoutView({
         </div>
       )}
       {workout.exercises.map((ex, ei) => {
-        const comparable = bestComparable(dataset, ex.name, ex.sets[0]?.weight ?? null);
         const timed = ex.type === 'cardio' || ex.type === 'duration';
+        const checked = ex.sets.filter((set) => set.completed && validSet(set, ex.type)).length;
+        const done = ex.sets.length > 0 && checked === ex.sets.length;
         return (
           <section className='exercise-card' key={identity(ex)}>
             <header className='exercise-heading'>
               <div>
                 <span className='exercise-number'>{String(ei + 1).padStart(2, '0')}</span>
                 <h2>{ex.name}</h2>
+                {!targetsOnly && (
+                  <span
+                    role='status'
+                    aria-label='Exercise completion'
+                    className={done ? 'exercise-done' : 'exercise-count'}
+                  >
+                    {done ? (
+                      <>
+                        <Check size={14} />
+                        Done
+                      </>
+                    ) : (
+                      `${checked} / ${ex.sets.length} sets`
+                    )}
+                  </span>
+                )}
                 <p>
                   {ex.type === 'assisted'
                     ? 'Assistance in kg · less is better'
@@ -178,27 +195,10 @@ export function WorkoutView({
                 <Trash2 size={17} />
               </Button>
             </header>
-            {!timed && !targetsOnly && (
-              <div className='previous'>
-                <span>
-                  BEST AT{' '}
-                  {ex.sets[0]?.weight === null ? 'BODYWEIGHT' : `${ex.sets[0]?.weight ?? '—'} KG`}
-                </span>
-                {comparable ? (
-                  <button onClick={() => onSource(comparable.workoutId)}>
-                    {comparable.set.reps} reps{' '}
-                    <span>
-                      · {dateLabel(comparable.date)} · {comparable.workoutName} ↗
-                    </span>
-                  </button>
-                ) : (
-                  <span className='no-record'>No exact-weight history</span>
-                )}
-              </div>
-            )}
             <div className='set-table'>
               <div className='set-row set-head'>
                 <span>Set</span>
+                <span>Previous</span>
                 <span>{timed ? 'Seconds' : ex.type === 'assisted' ? 'Assist. kg' : 'kg'}</span>
                 <span>{ex.type === 'duration' ? '' : timed ? 'km' : 'Reps'}</span>
                 <span>{targetsOnly ? '' : 'Done'}</span>
@@ -212,8 +212,34 @@ export function WorkoutView({
                   label={`${ex.name} set ${si + 1}`}
                   onDelete={() => removeSet(ex, si)}
                 >
+                  {targetsOnly ? (
+                    <span />
+                  ) : (
+                    <PreviousSet
+                      dataset={dataset}
+                      exercise={ex}
+                      set={set}
+                      index={si}
+                      onSource={onSource}
+                    />
+                  )}
                   <Input
                     type='number'
+                    onFocus={(event) => event.currentTarget.select()}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter' || targetsOnly) return;
+                      event.preventDefault();
+                      if (ex.type === 'duration') {
+                        if (!set.completed && validSet(set, ex.type))
+                          edit(ei, si, {completed: true});
+                        event.currentTarget.blur();
+                      } else {
+                        const row = event.currentTarget.closest('.set-row');
+                        (
+                          row?.querySelectorAll('input')[1] as HTMLInputElement | undefined
+                        )?.focus();
+                      }
+                    }}
                     inputMode={timed ? 'numeric' : 'decimal'}
                     min={timed ? 1 : 0}
                     max={timed ? 86400 : 2000}
@@ -233,6 +259,14 @@ export function WorkoutView({
                   ) : (
                     <Input
                       type='number'
+                      onFocus={(event) => event.currentTarget.select()}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' || targetsOnly) return;
+                        event.preventDefault();
+                        if (!set.completed && validSet(set, ex.type))
+                          edit(ei, si, {completed: true});
+                        event.currentTarget.blur();
+                      }}
                       inputMode={timed ? 'decimal' : 'numeric'}
                       min={timed ? 0 : 1}
                       max='1000'

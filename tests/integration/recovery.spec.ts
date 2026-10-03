@@ -1,6 +1,7 @@
 import {type Page, expect, test} from '@playwright/test';
 
 import {demoTemplates} from '../../src/domain/demo';
+import {openSettings} from '../navigation';
 import {login, syncNow} from './helpers';
 
 const synthetic = (id: string, name: string) => ({
@@ -63,7 +64,7 @@ test('real app backup file restore authenticates safely and preserves imported/n
   await page.goto('/');
   await login(page);
   await expect(page.getByText('Synced', {exact: true})).toBeVisible();
-  await page.getByRole('button', {name: 'Recovery settings'}).click();
+  await openSettings(page);
   const downloading = page.waitForEvent('download');
   await page.getByRole('button', {name: 'Export local backup'}).click();
   const file = await downloading;
@@ -73,7 +74,7 @@ test('real app backup file restore authenticates safely and preserves imported/n
   await clone.getByRole('button', {name: 'Start empty workout'}).click();
   await clone.getByLabel('WORKOUT NAME').fill('Prior local draft');
   await expect(clone.getByText('Saved on this device', {exact: true})).toBeVisible();
-  await clone.getByRole('button', {name: 'Recovery settings'}).click();
+  await openSettings(clone);
   await clone.getByLabel('Import backup JSON').setInputFiles((await file.path())!);
   await clone
     .getByLabel('I understand this replaces local data and resets draft ownership')
@@ -130,12 +131,14 @@ test('restore waits for a real in-flight sync response and prevents edits until 
   await page.goto('/');
   await login(page);
   await expect(page.getByText('Synced', {exact: true})).toBeVisible();
-  await page.getByRole('button', {name: 'Recovery settings'}).click();
+  await openSettings(page);
   const downloading = page.waitForEvent('download');
   await page.getByRole('button', {name: 'Export local backup'}).click();
   const file = await downloading;
+  await page.getByRole('button', {name: 'Close settings'}).click();
   await page.getByLabel('WORKOUT NAME').fill('Draft before restore');
   await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await openSettings(page);
   await page.getByLabel('Import backup JSON').setInputFiles((await file.path())!);
   await page.getByLabel('I understand this replaces local data and resets draft ownership').check();
   let release!: () => void;
@@ -152,7 +155,7 @@ test('restore waits for a real in-flight sync response and prevents edits until 
     await route.continue();
   });
   try {
-    await syncNow(page);
+    await syncNow(page, true);
     await started;
     await page.getByRole('button', {name: 'Restore backup locally'}).click();
     await expect(page.getByLabel('WORKOUT NAME')).toBeDisabled();
@@ -178,14 +181,14 @@ test('downloaded recovery file creates exact imported/native records on an empty
     }
   }, state);
   await page.goto('/');
-  await page.getByRole('button', {name: 'Recovery settings'}).click();
+  await openSettings(page);
   const downloading = page.waitForEvent('download');
   await page.getByRole('button', {name: 'Export local backup'}).click();
   const file = await downloading;
   const context = await browser.newContext();
   const clone = await context.newPage();
   await clone.goto('/');
-  await clone.getByRole('button', {name: 'Recovery settings'}).click();
+  await openSettings(clone);
   await clone.getByLabel('Import backup JSON').setInputFiles((await file.path())!);
   await clone
     .getByLabel('I understand this replaces local data and resets draft ownership')
