@@ -1,0 +1,23 @@
+# User unit installed by ops/install.sh. Serves the release `current` points at;
+# ops/deploy.sh and ops/rollback.sh switch the link and restart this unit.
+[Unit]
+Description=Gym Log (private, Tailscale Serve only)
+After=network.target
+# Five starts within five minutes means it is crash-looping: give up and alert.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+OnFailure=gym-log-notify-failure@%n.service
+
+[Service]
+Type=simple
+Environment=NODE_ENV=production
+WorkingDirectory=%h/.local/share/gym-log/current/server
+EnvironmentFile=%h/.config/gym-log/runtime.env
+ExecStart=%h/.local/bin/node %h/.local/share/gym-log/current/server/dist/trial.js
+Restart=on-failure
+RestartSec=5
+# Alert once when systemd gives up, not on every automatic restart.
+RestartMode=direct
+
+[Install]
+WantedBy=default.target

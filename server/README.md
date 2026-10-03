@@ -21,7 +21,7 @@ npm --prefix server run dev
 ```
 
 Development API binds **127.0.0.1:5190 only** and uses the `gym_log_dev` database; the live
-private trial uses port 5191 and the `gym_log` database from external config. Origin is `http://127.0.0.1:5188`;
+app (`gym-log.service`) uses port 5191 and the `gym_log` database from external config. Origin is `http://127.0.0.1:5188`;
 frontend must proxy `/api/v1` to the API or access it same-origin. No CORS is enabled.
 Compose project `gym-log-local`; container `gym-log-local-postgres`;
 image `postgres:17.6-bookworm`; port `127.0.0.1:55439`; named volume

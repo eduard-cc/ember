@@ -23,7 +23,7 @@ npm --prefix server run migration
 npm --prefix server run dev
 ```
 
-Use a separate terminal for the API. Development Vite proxies same-origin `/api/v1` requests to loopback port 5190. Development and tests use the `gym_log_dev` database in `gym-log-local` on loopback port 55439; test databases are created from it. The live private trial alone uses the `gym_log` database and port 5191, configured outside the repository; never point development at it. These are local development resources, not production deployment. No usable default owner password exists; provision an owner hash through a secure local workflow before interactive authenticated use. Do not paste credentials into chat or tracked files.
+Use a separate terminal for the API. Development Vite proxies same-origin `/api/v1` requests to loopback port 5190. Development and tests use the `gym_log_dev` database in `gym-log-local` on loopback port 55439; test databases are created from it. The live app alone uses the `gym_log` database and port 5191, configured outside the repository (see Deploy and rollback); never point development at it. These are local development resources, not production deployment. No usable default owner password exists; provision an owner hash through a secure local workflow before interactive authenticated use. Do not paste credentials into chat or tracked files.
 
 ## Saving and synchronization
 
@@ -86,6 +86,21 @@ The integration, PWA and recovery suites stay **local-only** to save Actions min
 The budget is at most 1,000 Gym Log Linux runner-minutes/month, shared within the account's 2,000-minute free allowance. Before pushing, query the account's billing usage API and total month-to-date Actions minutes by repository. At 800 Gym Log minutes or 1,600 account-wide, stop triggering CI, verify locally instead, and mention the budget pause in the Discord report. The target is under 15 aggregate runner-minutes per code push, not just elapsed wall time; use the real job start/completion timestamps to measure it.
 
 Measured: the first `main` run (3 October 2026, cold caches) took 2m50s wall time. Jobs took 44s (checks), 1m21s (server E2E) and 2m45s (Playwright), 4m50s of runner time billed as 6 minutes. That allows roughly 160 code pushes a month within the Gym Log budget.
+
+## Deploy and rollback
+
+The live app runs from built releases, never from a checkout, so source can be edited and built freely. The `gym-log.service` user unit (`ops/systemd/`, installed with `ops/install.sh`) serves `~/.local/share/gym-log/current`, a symlink to `releases/<commit>/`. Runtime settings and secrets live in `~/.config/gym-log/runtime.env` (mode 0600, outside the repository) with `GYM_LOG_WEB_ROOT` set to the absolute path of `~/.local/share/gym-log/current/dist` (systemd does not expand `~`). Tailscale Serve on port 8444 proxies to the service on loopback.
+
+```sh
+ops/deploy.sh <commit>   # build, switch, restart, health-check; rolls back on failure
+ops/rollback.sh          # switch back to the previous healthy release
+```
+
+`ops/deploy.sh` refuses commits that are not on `origin/main` or whose latest code commit lacks a successful push CI run (docs-only commits skip CI, so their nearest code ancestor is checked; cancelled runs do not count). It builds a `git archive` export of the commit, keeping only the web shell and the compiled server with production dependencies, then switches `current` atomically and restarts the unit. It then checks that the unit's own process owns the port, `/api/v1/health` on loopback (waiting up to two minutes for startup migrations) and through Serve, and that Serve returns this release's `index.html`. If any check fails it rolls back automatically and alerts Discord. A lock prevents overlapping deploys and rollbacks. The newest five deployed releases are kept, and `history` records healthy deploys for rollback.
+
+The server applies migrations on startup. If a release adds migrations the live `gym_log` database has not applied, the deploy first takes a backup with `ops/backup.sh` into `~/.local/share/gym-log-backups/`, restores it into a validation database, compares record and migration counts with `gym_log`, and drops the copy; any failure cancels the deploy. Writes between the backup and the restart are not in it. Rollback cannot undo a migration, so the newest three pre-deploy backups are kept; manual archives there are never rotated. A release that lacks migrations the database already has is refused, so old code never runs on a newer schema.
+
+If the service crash-loops (five starts in five minutes), systemd stops it and `gym-log-notify-failure@` sends a Discord alert. User units cannot trigger the root `notify-failure@` unit, so this is a user-level equivalent. `ops/test-release-switch.sh` exercises the switch, health check and rollback against synthetic releases and a throwaway unit; it needs systemd and is local-only.
 
 ## Mobile logger and analytics
 
