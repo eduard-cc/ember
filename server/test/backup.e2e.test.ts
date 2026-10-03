@@ -13,6 +13,24 @@ import {SyncService} from '../src/sync/service';
 function run(script: string, ...args: string[]) {
 	return spawnSync('bash', [resolve('../ops', script), ...args], {encoding: 'utf8', env: process.env});
 }
+// restore-check.sh restores as the container superuser, like a real drill, so the unprivileged
+// development role needs explicit read access to compare and cannot drop the copy itself.
+function asSuperuser(name: string, command: string, ...args: string[]) {
+	assert.match(name, /^gym_log_restore_validation_[0-9]+$/);
+	const result = spawnSync('docker', ['exec', 'gym-log-local-postgres', 'sh', '-c', command, 'sh', name, ...args], {
+		encoding: 'utf8',
+	});
+	assert.equal(result.status, 0, result.stderr);
+}
+function grantValidationRead(name: string, role: string) {
+	assert.match(role, /^gym_log_[a-z_]+$/);
+	asSuperuser(
+		name,
+		'exec psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -qc "GRANT SELECT ON ALL TABLES IN SCHEMA public TO $2"',
+		role,
+	);
+}
+const dropValidation = (name: string) => asSuperuser(name, 'exec dropdb -U "$POSTGRES_USER" "$1"');
 test('isolated pg_dump archive restores logical documents and ledger into a fresh validation database', async () => {
 	const url = new URL(process.env.GYM_LOG_DATABASE_URL!);
 	assert.equal(url.hostname, '127.0.0.1');
@@ -106,6 +124,7 @@ test('isolated pg_dump archive restores logical documents and ledger into a fres
 		const restoredResult = run('restore-check.sh', dump, targetName);
 		assert.equal(restoredResult.status, 0, restoredResult.stderr);
 		targetCreated = true;
+		grantValidationRead(targetName, url.username);
 		url.pathname = '/' + targetName;
 		restored = await database(url.toString()).initialize();
 		for (const table of ['records', 'changes', 'owner_sequences', 'operation_ledger', 'migrations'])
@@ -141,9 +160,12 @@ test('isolated pg_dump archive restores logical documents and ledger into a fres
 		await restored?.destroy();
 		await source?.destroy();
 		// Only test-created names; never drop default or other application databases.
-		if (targetCreated) await admin.query(`DROP DATABASE ${targetName}`);
-		if (sourceCreated) await admin.query(`DROP DATABASE ${sourceName}`);
-		await admin.destroy();
-		rmSync(dir, {recursive: true, force: true});
+		try {
+			if (targetCreated) dropValidation(targetName);
+		} finally {
+			if (sourceCreated) await admin.query(`DROP DATABASE ${sourceName}`);
+			await admin.destroy();
+			rmSync(dir, {recursive: true, force: true});
+		}
 	}
 });

@@ -10,8 +10,11 @@ Run from repository root:
 
 ```sh
 docker compose -f ops/compose.local.yml up -d --wait
-# Once: the development database (Compose itself only creates the live gym_log database)
-docker exec gym-log-local-postgres sh -c 'createdb -U "$POSTGRES_USER" gym_log_dev'
+# Once: the unprivileged development role and database (Compose itself only creates the
+# live gym_log database). Generate the role password locally; it goes only in server/.env.
+docker exec -it gym-log-local-postgres sh -c 'createuser -U "$POSTGRES_USER" --createdb --pwprompt gym_log_dev &&
+  createdb -U "$POSTGRES_USER" -O gym_log_dev gym_log_dev &&
+  psql -U "$POSTGRES_USER" -d postgres -c "REVOKE CONNECT, TEMPORARY ON DATABASE gym_log FROM PUBLIC"'
 npm --prefix server ci --include=dev
 npm --prefix server run migration
 npm --prefix server run dev
@@ -40,13 +43,19 @@ Each database integration test file creates and destroys its own
 never touch the ordinary database. HTTP requests are real loopback requests;
 compiled-process coverage exercises TCP, authentication and replay, then stops the process.
 Migrations are applied to empty test databases, not schema synchronization.
-The configured local DB user needs database-creation permission for this local test harness;
-this Compose user is for isolated development, not a production least-privilege design.
+Development and tests connect as the `gym_log_dev` role: it owns `gym_log_dev`, may create
+and drop its own test databases, is not a superuser and cannot connect to live `gym_log`.
+Only the backup/restore scripts, and the backup test's cleanup of their validation copy, use
+the Compose superuser, through `docker exec`. CI creates the same unprivileged role.
+An existing setup with a superuser-owned `gym_log_dev` needs `createuser` plus
+`ALTER DATABASE gym_log_dev OWNER TO gym_log_dev` instead of `createdb`. Percent-encode
+reserved characters in the role password when writing the URL.
 
 ## Secret provisioning
 
-`server/.env` contains the nonsecret settings in `.env.example` plus the database URL
-and externally provisioned encoded Argon2id hash. `server/.postgres.env` contains only
+`server/.env` contains the nonsecret settings in `.env.example` plus the `gym_log_dev` role's
+database URL and externally provisioned encoded Argon2id hash; it never holds the superuser
+password. `server/.postgres.env` contains only
 `POSTGRES_USER=gym_log`, `POSTGRES_DB=gym_log`, and the generated database password.
 Both are ignored and mode 0600. No plaintext owner password is stored.
 The initial local hash was generated from a discarded random synthetic password;

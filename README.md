@@ -18,7 +18,7 @@ The local API setup and secure credential requirements are documented in `server
 
 ```sh
 docker compose -f ops/compose.local.yml up -d --wait
-docker exec gym-log-local-postgres sh -c 'createdb -U "$POSTGRES_USER" gym_log_dev'  # once
+# once: create the gym_log_dev role and database, see server/README.md
 npm --prefix server run migration
 npm --prefix server run dev
 ```
