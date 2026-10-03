@@ -85,6 +85,8 @@ The integration, PWA and recovery suites stay **local-only** to save Actions min
 
 The budget is at most 1,000 Gym Log Linux runner-minutes/month, shared within the account's 2,000-minute free allowance. Before pushing, query the account's billing usage API and total month-to-date Actions minutes by repository. At 800 Gym Log minutes or 1,600 account-wide, stop triggering CI, verify locally instead, and mention the budget pause in the Discord report. The target is under 15 aggregate runner-minutes per code push, not just elapsed wall time; use the real job start/completion timestamps to measure it.
 
+Measured: the first `main` run (3 October 2026, cold caches) took 2m50s wall time. Jobs took 44s (checks), 1m21s (server E2E) and 2m45s (Playwright), 4m50s of runner time billed as 6 minutes. That allows roughly 160 code pushes a month within the Gym Log budget.
+
 ## Mobile logger and analytics
 
 The compact logger retains full-width exercise sections, explicit completion, large editable fields and keyboard-aware scrolling. Swipe left to **reveal** Delete, then tap it; the set-number action provides the keyboard/non-gesture alternative. Undo restores the latest deleted set without reverting later edits. It is transient within the logger view, not a persisted recovery stack.
