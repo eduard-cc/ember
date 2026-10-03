@@ -1,7 +1,7 @@
 import {ArrowUpRight, ChevronDown, ChevronUp, RotateCcw} from 'lucide-react';
 import {useState} from 'react';
 
-import {Button, Input} from '../components/ui';
+import {Button, Input, plural} from '../components/ui';
 import type {Workout} from '../domain/types';
 import {dateLabel} from './WorkoutView';
 
@@ -66,7 +66,7 @@ export function HistoryView({
             setLimit(20);
           }}
         />
-        <span>{filtered.length} sessions</span>
+        <span>{plural(filtered.length, 'session')}</span>
       </div>
       {ordered.slice(0, limit).map((workout) => {
         const open = expanded === workout.id || focusedId === workout.id;

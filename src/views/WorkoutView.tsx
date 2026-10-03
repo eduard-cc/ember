@@ -3,7 +3,7 @@ import {useRef, useState} from 'react';
 
 import {PreviousSet} from '../components/PreviousSet';
 import {SetRow} from '../components/SetRow';
-import {Button, Input} from '../components/ui';
+import {Button, Input, plural} from '../components/ui';
 import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
 
 export function dateLabel(date: string) {
@@ -166,7 +166,7 @@ export function WorkoutView({
                         Done
                       </>
                     ) : (
-                      `${checked} / ${ex.sets.length} sets`
+                      `${checked} / ${plural(ex.sets.length, 'set')}`
                     )}
                   </span>
                 )}

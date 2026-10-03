@@ -1,7 +1,7 @@
 import {ArrowUpRight, Search} from 'lucide-react';
 import {useState} from 'react';
 
-import {Button, Input} from '../components/ui';
+import {Button, Input, plural} from '../components/ui';
 import {getExercises, getHistory, getTrend} from '../domain/model';
 import type {Dataset, Metric} from '../domain/types';
 import {dateLabel} from './WorkoutView';
@@ -68,7 +68,7 @@ export function ProgressView({
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <span className='picker-label'>{matching.length} EXERCISES</span>
+        <span className='picker-label'>{plural(matching.length, 'EXERCISE')}</span>
         <div className='exercise-options'>
           {matching.map((ex) => (
             <button
@@ -137,7 +137,7 @@ export function ProgressView({
               className='trend-chart'
               viewBox='0 0 750 235'
               role='img'
-              aria-label={`${metricLabel} for ${name}. ${points.length} sessions. Exact values in the table below.`}
+              aria-label={`${metricLabel} for ${name}. ${plural(points.length, 'session')}. Exact values in the table below.`}
             >
               <title>{metricLabel} over time</title>
               {[0, 0.5, 1].map((f, i) => {
@@ -232,7 +232,7 @@ export function ProgressView({
         <section className='analytics-card source-sessions'>
           <div className='section-heading'>
             <h2>Every recorded set</h2>
-            <span>{sessions.length} sessions</span>
+            <span>{plural(sessions.length, 'session')}</span>
           </div>
           {sessions.slice(0, sessionLimit).map((session, i) => (
             <article key={`${session.workoutId}-${i}`}>

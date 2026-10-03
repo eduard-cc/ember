@@ -13,6 +13,8 @@ test('templates can be created edited started and deleted', async ({page}) => {
   await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.getByRole('heading', {name: 'My test session'})).toBeVisible();
+  const card = page.locator('.template-card', {hasText: 'My test session'});
+  await expect(card.locator('.eyebrow')).toHaveText('1 EXERCISE · 3 TARGET SETS');
   await page.getByRole('button', {name: 'Edit template My test session', exact: true}).click();
   await page.getByLabel('Template name').fill('Edited session');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();

@@ -19,7 +19,7 @@ import {ImportPanel} from './components/ImportPanel';
 import {RecoveryPanel} from './components/RecoveryPanel';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
-import {Button, Input} from './components/ui';
+import {Button, Input, plural} from './components/ui';
 import {routineTargets} from './components/workout-targets';
 import {parseStrongCsv} from './domain/model';
 import type {Workout} from './domain/types';
@@ -411,7 +411,7 @@ export default function App() {
               <div>
                 <strong>{state.active.name}</strong>
                 <span>
-                  {completed} / {sets.length} sets completed · Resume workout
+                  {completed} / {plural(sets.length, 'set')} completed · Resume workout
                 </span>
               </div>
               <ChevronUp size={20} />
@@ -479,7 +479,7 @@ export default function App() {
                       <strong>
                         {completed} / {sets.length}
                       </strong>{' '}
-                      sets completed
+                      {sets.length === 1 ? 'set' : 'sets'} completed
                     </span>
                     <span className='saved-status' role='status'>
                       {savedLabel}

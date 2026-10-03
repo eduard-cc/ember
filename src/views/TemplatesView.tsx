@@ -1,7 +1,7 @@
 import {Pencil, Play, Plus, Trash2, X} from 'lucide-react';
 import {useState} from 'react';
 
-import {Button, Input} from '../components/ui';
+import {Button, Input, plural} from '../components/ui';
 import {historyTargets} from '../components/workout-targets';
 import {getExercises} from '../domain/model';
 import type {Dataset, ExerciseType, Workout} from '../domain/types';
@@ -163,15 +163,18 @@ export function TemplatesView({
           {templates.map((template) => (
             <article className='template-card' key={template.id}>
               <span className='eyebrow'>
-                {template.exercises.length} EXERCISES ·{' '}
-                {template.exercises.reduce((n, ex) => n + ex.sets.length, 0)} TARGET SETS
+                {plural(template.exercises.length, 'EXERCISE')} ·{' '}
+                {plural(
+                  template.exercises.reduce((n, ex) => n + ex.sets.length, 0),
+                  'TARGET SET',
+                )}
               </span>
               <h2>{template.name}</h2>
               <div className='template-exercises'>
                 {template.exercises.map((ex, i) => (
                   <div key={`${ex.name}-${i}`}>
                     <span>{ex.name}</span>
-                    <small>{ex.sets.length} sets</small>
+                    <small>{plural(ex.sets.length, 'set')}</small>
                   </div>
                 ))}
               </div>
