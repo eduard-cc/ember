@@ -20,6 +20,7 @@ export function TemplatesView({
   onStart: (workout: Workout) => void;
 }) {
   const [editing, setEditing] = useState<Workout | null>(null);
+  const [deletingSets, setDeletingSets] = useState(false);
   const [editingBase, setEditingBase] = useState<Workout | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [exerciseName, setExerciseName] = useState('');
@@ -125,7 +126,12 @@ export function TemplatesView({
             targetsOnly
             workout={editing}
             dataset={dataset}
-            onChange={setEditing}
+            onChange={(update) =>
+              setEditing(
+                (current) => current && (typeof update === 'function' ? update(current) : update),
+              )
+            }
+            onDeletingChange={setDeletingSets}
             onSource={() => {}}
           />
           <div className='editor-footer'>
@@ -133,11 +139,13 @@ export function TemplatesView({
             <Button
               variant='primary'
               disabled={
+                deletingSets ||
                 !editing.name.trim() ||
                 editing.name === 'Untitled workout' ||
                 !editing.exercises.length
               }
               onClick={async () => {
+                if (deletingSets) return;
                 const clean = {
                   ...editing,
                   exercises: editing.exercises.map((ex) => ({

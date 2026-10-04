@@ -112,7 +112,10 @@ test('real touch swipe from completion reveals actions without confirming and ve
   await touch(box.x + 22, box.y + 22, -100, 0);
   await expect(row.getByRole('button', {name: /Delete/})).toBeVisible();
   await expect(done).toHaveAttribute('aria-pressed', 'false');
-  await row.getByRole('button', {name: 'Cancel', exact: true}).click();
+  // Tapping the slid row closes it again, without toggling completion.
+  await row.locator('.set-swipe-content').click({position: {x: 200, y: 20}});
+  await expect(row.getByRole('button', {name: /Delete/})).toBeHidden();
+  await expect(done).toHaveAttribute('aria-pressed', 'false');
   await touch(200, 650, 0, -200);
   await expect
     .poll(() => page.locator('.workout-scroll').evaluate((el) => el.scrollTop))
@@ -209,8 +212,11 @@ test('number swipe works while vertical, canceled and input drags do not reveal 
   await expect(number).toHaveAttribute('aria-expanded', 'false');
   await drag(row, -100, 0, true);
   await expect(number).toHaveAttribute('aria-expanded', 'false');
+  // A focused field keeps horizontal drags for caret movement.
+  await row.locator('input').first().focus();
   await drag(row.locator('input').first(), -100, 0);
   await expect(number).toHaveAttribute('aria-expanded', 'false');
+  await row.locator('input').first().blur();
   await drag(number, -100, 0);
   await expect(number).toHaveAttribute('aria-expanded', 'true');
   expect(await row.evaluate((el) => getComputedStyle(el).touchAction)).toBe('pan-y');
@@ -271,7 +277,10 @@ test('left swipe reveals Delete without deleting; undo restores values, order an
   });
   await expect(row.getByRole('button', {name: /Delete .* set 1/})).toBeVisible();
   await expect(weights.first()).toHaveValue('42.5');
+  const before = await weights.count();
   await row.getByRole('button', {name: /Delete .* set 1/}).click();
+  // The row slides out and collapses before it leaves the workout.
+  await expect(weights).toHaveCount(before - 1);
   await weights.first().fill('51');
   await page.getByRole('button', {name: 'Undo', exact: true}).click();
   await expect(weights.nth(0)).toHaveValue('42.5');
@@ -280,4 +289,68 @@ test('left swipe reveals Delete without deleting; undo restores values, order an
     'aria-pressed',
     'true',
   );
+});
+
+test('swipe follows the finger from the weight field, settles open, and a long swipe deletes', async ({
+  browser,
+  baseURL,
+}, info) => {
+  test.skip(info.project.name !== 'mobile');
+  const context = await browser.newContext({
+    viewport: {width: 390, height: 844},
+    isMobile: true,
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await page.goto(`${baseURL}/?demo=1`);
+  const rows = page.locator('.set-row:not(.set-head)');
+  const row = rows.first();
+  const weight = row.getByLabel(/Weight for .* set 1/);
+  await expect(weight).toBeEnabled();
+  const count = await rows.count();
+  const cdp = await context.newCDPSession(page);
+  const shift = () =>
+    row
+      .locator('.set-swipe-content')
+      .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
+  const box = (await weight.boundingBox())!;
+  const x = box.x + box.width / 2,
+    y = box.y + box.height / 2;
+  await cdp.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: [{x, y, id: 1}]});
+  for (let step = 1; step <= 4; step++)
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{x: x - step * 10, y, id: 1}],
+    });
+  await expect(weight).not.toBeFocused();
+  // Mid-gesture, the row tracks the finger instead of waiting for a threshold.
+  expect(await shift()).toBeLessThan(-25);
+  expect(await shift()).toBeGreaterThan(-45);
+  // A slow release before halfway snaps back; past halfway it settles open.
+  for (let step = 5; step <= 7; step++)
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{x: x - step * 10, y, id: 1}],
+    });
+  await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+  await expect(row.getByRole('button', {name: /^Delete /})).toBeVisible();
+  await expect.poll(shift).toBeLessThan(-80);
+  await expect(weight).not.toBeFocused();
+  // Continuing from the open position past most of the row deletes outright, with Undo.
+  const start = (await row.boundingBox())!;
+  const sx = start.x + start.width - 40;
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{x: sx, y, id: 2}],
+  });
+  for (let step = 1; step <= 10; step++)
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{x: sx - step * 28, y, id: 2}],
+    });
+  await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+  await expect(rows).toHaveCount(count - 1);
+  await page.getByRole('button', {name: 'Undo', exact: true}).click();
+  await expect(rows).toHaveCount(count);
+  await context.close();
 });

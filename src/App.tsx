@@ -73,6 +73,7 @@ export default function App() {
     return () => media.removeEventListener('change', update);
   }, []);
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [deletingSets, setDeletingSets] = useState(false);
   const [pendingWorkout, setPendingWorkout] = useState<Workout | null>(null);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
@@ -223,7 +224,7 @@ export default function App() {
       0,
     ) ?? 0;
   const finish = async () => {
-    if (!completed) return;
+    if (!completed || deletingSets) return;
     const workout = await finishWorkout();
     if (workout) {
       setConfirmFinish(false);
@@ -468,7 +469,7 @@ export default function App() {
                   <Button
                     variant='primary'
                     aria-label='Finish workout'
-                    disabled={disabled || !completed}
+                    disabled={disabled || deletingSets || !completed}
                     onClick={() => setConfirmFinish(true)}
                   >
                     Finish
@@ -509,7 +510,14 @@ export default function App() {
                     key={state.active.id}
                     workout={state.active}
                     dataset={allDataset}
-                    onChange={(active) => setState((s) => ({...s, active}))}
+                    onChange={(update) =>
+                      setState((s) =>
+                        s.active
+                          ? {...s, active: typeof update === 'function' ? update(s.active) : update}
+                          : s,
+                      )
+                    }
+                    onDeletingChange={setDeletingSets}
                     onSource={source}
                   />
                   <div className='logger-tools'>
@@ -726,7 +734,11 @@ export default function App() {
               <Dialog.Close asChild>
                 <Button>Keep logging</Button>
               </Dialog.Close>
-              <Button variant='primary' disabled={disabled || !completed} onClick={finish}>
+              <Button
+                variant='primary'
+                disabled={disabled || deletingSets || !completed}
+                onClick={finish}
+              >
                 Save finished workout
               </Button>
             </div>

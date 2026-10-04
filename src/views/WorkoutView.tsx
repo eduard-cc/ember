@@ -1,5 +1,5 @@
 import {Check, Plus, Trash2} from 'lucide-react';
-import {useRef, useState} from 'react';
+import {useCallback, useRef, useState} from 'react';
 
 import {PreviousSet} from '../components/PreviousSet';
 import {SetRow} from '../components/SetRow';
@@ -29,14 +29,26 @@ export function WorkoutView({
   dataset,
   onChange,
   onSource,
+  onDeletingChange,
   targetsOnly = false,
 }: {
   workout: Workout;
   dataset: Dataset;
-  onChange: (workout: Workout) => void;
+  onChange: (update: Workout | ((current: Workout) => Workout)) => void;
   onSource: (id: string) => void;
+  onDeletingChange: (deleting: boolean) => void;
   targetsOnly?: boolean;
 }) {
+  // Save/Finish must wait for every exit, not just the first animated deletion.
+  const deletingSets = useRef(new Set<string>());
+  const setDeleting = useCallback(
+    (id: string, deleting: boolean) => {
+      if (deleting) deletingSets.current.add(id);
+      else deletingSets.current.delete(id);
+      onDeletingChange(deletingSets.current.size > 0);
+    },
+    [onDeletingChange],
+  );
   const identities = useRef(new WeakMap<ExerciseLog, string>());
   const identity = (exercise: ExerciseLog) => {
     let id = identities.current.get(exercise);
@@ -70,17 +82,20 @@ export function WorkoutView({
       before: exercise.sets[index - 1]?.id,
       after: exercise.sets[index + 1]?.id,
     });
-    onChange({
-      ...workout,
-      exercises: workout.exercises.map((ex) =>
-        ex === exercise
+    const exerciseId = identity(exercise);
+    const setId = exercise.sets[index].id;
+    // Exits can finish in the same frame. Apply each deletion to the current draft.
+    onChange((current) => ({
+      ...current,
+      exercises: current.exercises.map((ex) =>
+        identity(ex) === exerciseId
           ? changeExercise(
               ex,
-              ex.sets.filter((_, i) => i !== index),
+              ex.sets.filter((set) => set.id !== setId),
             )
           : ex,
       ),
-    });
+    }));
   };
   // identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use.
   const canUndo =
@@ -214,6 +229,7 @@ export function WorkoutView({
                   number={si + 1}
                   label={`${ex.name} set ${si + 1}`}
                   onDelete={() => removeSet(ex, si)}
+                  onDeletingChange={(deleting) => setDeleting(set.id, deleting)}
                 >
                   {targetsOnly ? (
                     <span />
