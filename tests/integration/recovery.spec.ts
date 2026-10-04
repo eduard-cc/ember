@@ -75,7 +75,7 @@ test('real app backup file restore authenticates safely and preserves imported/n
   await clone.getByLabel('WORKOUT NAME').fill('Prior local draft');
   await expect(clone.getByText('Saved on this device', {exact: true})).toBeVisible();
   await openSettings(clone);
-  await clone.getByLabel('Import backup JSON').setInputFiles((await file.path())!);
+  await clone.getByLabel('Import backup JSON').setInputFiles(await file.path());
   await clone
     .getByLabel('I understand this replaces local data and resets draft ownership')
     .check();
@@ -139,7 +139,7 @@ test('restore waits for a real in-flight sync response and prevents edits until 
   await page.getByLabel('WORKOUT NAME').fill('Draft before restore');
   await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
   await openSettings(page);
-  await page.getByLabel('Import backup JSON').setInputFiles((await file.path())!);
+  await page.getByLabel('Import backup JSON').setInputFiles(await file.path());
   await page.getByLabel('I understand this replaces local data and resets draft ownership').check();
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -189,7 +189,7 @@ test('downloaded recovery file creates exact imported/native records on an empty
   const clone = await context.newPage();
   await clone.goto('/');
   await openSettings(clone);
-  await clone.getByLabel('Import backup JSON').setInputFiles((await file.path())!);
+  await clone.getByLabel('Import backup JSON').setInputFiles(await file.path());
   await clone
     .getByLabel('I understand this replaces local data and resets draft ownership')
     .check();

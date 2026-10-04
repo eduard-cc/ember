@@ -47,7 +47,9 @@ async function ready(endpoint, child) {
     if (child.exitCode !== null || child.signalCode !== null) throw Error('Owned service exited');
     try {
       if ((await fetch(endpoint)).ok) return;
-    } catch {}
+    } catch {
+      // Not listening yet.
+    }
     await new Promise((r) => setTimeout(r, 100));
   }
   throw Error('Owned service readiness timeout');

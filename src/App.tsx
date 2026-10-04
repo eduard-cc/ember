@@ -1,7 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   Activity,
-  Check,
   ChevronDown,
   ChevronUp,
   Dumbbell,
@@ -161,13 +160,15 @@ export default function App() {
           throw new Error('Could not read configured local history. Demo data remains available.');
         const parsed = parseStrongCsv(await response.text());
         if (!controller.signal.aborted && !importedManually.current)
-          setState((s) => (s.dataset ? s : {...s, dataset: parsed}));
+          void setState((s) => (s.dataset ? s : {...s, dataset: parsed}));
       })
       .catch((error) => {
         if (!controller.signal.aborted)
           setNotice(error instanceof Error ? error.message : 'Could not load local history.');
       });
     return () => controller.abort();
+    // Keeps the existing run-once-after-hydration behavior for the configured CSV.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setState, hydrated]);
   const dataset = useMemo(
     () =>
@@ -197,7 +198,7 @@ export default function App() {
   const start = (workout: Workout) => {
     if (state.active) setPendingWorkout(workout);
     else {
-      setState((s) => ({...s, active: newWorkout(workout)}));
+      void setState((s) => ({...s, active: newWorkout(workout)}));
       setView('Workouts');
       setExpanded(true);
     }
@@ -687,7 +688,7 @@ export default function App() {
                 disabled={disabled}
                 onClick={() => {
                   if (!pendingWorkout) return;
-                  setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
+                  void setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
                   setPendingWorkout(null);
                   setExpanded(true);
                 }}

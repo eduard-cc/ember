@@ -21,7 +21,7 @@ concurrency:
 # Jobs are billed per started minute, so cheap checks share one job and setup.
 jobs:
   checks:
-    name: Format, typecheck, unit tests and build
+    name: Format, lint, typecheck, unit tests and build
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -38,6 +38,8 @@ jobs:
       - run: npm ci --include=dev && npm --prefix server ci --include=dev
       # Root Prettier also reads server/.prettierrc for server files.
       - run: npm run format:check
+      - run: npm run lint:check
+      - run: npm --prefix server run lint:check
       - run: npm --prefix server run typecheck
       - run: npm run test:run
       # The web build typechecks the root first. The server build runs in server-e2e.

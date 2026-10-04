@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {navigate, openImport} from '../navigation';
+import {navigate} from '../navigation';
 
 test('empty workouts accept an exercise with duration units and completed sets', async ({page}) => {
   await page.goto('/?demo=1');

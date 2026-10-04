@@ -214,7 +214,7 @@ export function TemplatesView({
                     variant='danger'
                     aria-label='Confirm delete template'
                     onClick={() => {
-                      onChange(templates.filter((t) => t.id !== template.id));
+                      void onChange(templates.filter((t) => t.id !== template.id));
                       setDeleteId(null);
                     }}
                   >

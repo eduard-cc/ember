@@ -61,6 +61,7 @@ The server restore drill uses task-scoped plaintext custom-format PostgreSQL arc
 
 ```sh
 npm run format:check
+npm run lint:check
 npm run test:run
 npm run typecheck
 npm run build
@@ -68,16 +69,19 @@ npm run test:e2e
 npm run test:integration
 NODE_ENV=test npx playwright test --config playwright.pwa.config.ts
 NODE_ENV=test npx playwright test --config tests/recovery/playwright.config.ts
+npm --prefix server run lint:check
 npm --prefix server run typecheck
 npm --prefix server run build
 npm --prefix server run test:e2e
 ```
 
+`npm run lint` and `npm --prefix server run lint` apply ESLint's automatic fixes. Both configs use type-aware `typescript-eslint` and React hooks rules for the web app, `typescript-eslint` recommended for the server; each rule turned off or narrowed carries a one-line reason in the config.
+
 Integration checks create migrated disposable databases and generate synthetic credentials in memory. They refuse occupied test ports rather than reusing or terminating unrelated processes. Test harnesses refuse any admin database other than `gym_log_dev`; the live `gym_log` database is never a fixture target. No private export is needed. Do not run two fixed-port integration harnesses concurrently.
 
 ### GitHub Actions CI
 
-`.github/workflows/ci.yml` runs format checks, web/server typechecks and builds, unit tests, server E2E against a disposable PostgreSQL 17.6 service on `127.0.0.1:55439`, and Playwright desktop/mobile E2E. The service starts with a throwaway `gym_log_dev` database; tests create and remove their own migrated databases. All inputs are synthetic, with no host credentials or private exports.
+`.github/workflows/ci.yml` runs format and lint checks, web/server typechecks and builds, unit tests, server E2E against a disposable PostgreSQL 17.6 service on `127.0.0.1:55439`, and Playwright desktop/mobile E2E. The service starts with a throwaway `gym_log_dev` database; tests create and remove their own migrated databases. All inputs are synthetic, with no host credentials or private exports.
 
 CI uses Linux runners, the Node.js major in `.nvmrc` (matching the live service), SHA-pinned actions, npm and Playwright Chromium caches, and a timeout on every job. Cheap checks share one job because GitHub bills each job per started minute. New commits cancel superseded runs for the same branch/PR, so a cancelled `main` run is not a green one. Pushes run only on `main`; PRs run separately. Markdown-only changes and agent plans skip CI, so run `npm run format:check` locally before pushing docs. Browser reports, screenshots and traces upload only on failure and expire after three days; no build artifacts or container images are published. Local browser tests still use installed Google Chrome; `CI=true` selects Playwright's bundled Chromium and two workers without retries.
 

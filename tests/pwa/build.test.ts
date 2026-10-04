@@ -5,9 +5,12 @@ import {pwaShell} from '../../scripts/pwa-build';
 
 function emittedWorker(bundle: Record<string, unknown>): string {
   const plugin = pwaShell();
-  (plugin.configResolved as Function)({root: process.cwd(), base: '/'});
+  (plugin.configResolved as (config: {root: string; base: string}) => void)({
+    root: process.cwd(),
+    base: '/',
+  });
   let source = '';
-  (plugin.generateBundle as Function).call(
+  (plugin.generateBundle as (...args: unknown[]) => void).call(
     {
       emitFile: (asset: {source: string}) => {
         source = asset.source;

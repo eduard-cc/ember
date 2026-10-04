@@ -82,8 +82,10 @@ export function WorkoutView({
       ),
     });
   };
+  // identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use.
   const canUndo =
     removed?.workoutId === workout.id &&
+    // eslint-disable-next-line react-hooks/refs
     workout.exercises.some((ex) => identity(ex) === removed.exerciseId);
   const undo = () => {
     if (!removed || !canUndo) return;
@@ -144,6 +146,7 @@ export function WorkoutView({
           />
         </div>
       )}
+      {/* eslint-disable-next-line react-hooks/refs -- identity() keys, see canUndo */}
       {workout.exercises.map((ex, ei) => {
         const timed = ex.type === 'cardio' || ex.type === 'duration';
         const checked = ex.sets.filter((set) => set.completed && validSet(set, ex.type)).length;
@@ -235,9 +238,7 @@ export function WorkoutView({
                         event.currentTarget.blur();
                       } else {
                         const row = event.currentTarget.closest('.set-row');
-                        (
-                          row?.querySelectorAll('input')[1] as HTMLInputElement | undefined
-                        )?.focus();
+                        row?.querySelectorAll('input')[1]?.focus();
                       }
                     }}
                     inputMode={timed ? 'numeric' : 'decimal'}

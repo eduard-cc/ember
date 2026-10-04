@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {navigate, openImport} from '../navigation';
+import {navigate} from '../navigation';
 
 test('historical workouts repeat as editable uncompleted targets', async ({page}) => {
   await page.goto('/?demo=1');

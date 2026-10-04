@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {navigate, openImport} from '../navigation';
+import {navigate} from '../navigation';
 
 test('fresh installation connects automatically without an app password or permanent sync card', async ({
   page,

@@ -11,7 +11,9 @@
 		"start:trial": "node dist/trial.js",
 		"migration": "tsx src/migrate.ts",
 		"format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-		"format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\""
+		"format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+		"lint": "eslint \"{src,test}/**/*.ts\" --report-unused-disable-directives --max-warnings 0 --fix",
+		"lint:check": "eslint \"{src,test}/**/*.ts\" --report-unused-disable-directives --max-warnings 0"
 	},
 	"dependencies": {
 		"@nestjs/common": "11.2.7",
@@ -29,6 +31,10 @@
 		"@types/express": "5.0.3",
 		"@types/node": "24.7.2",
 		"@types/supertest": "6.0.3",
+		"@typescript-eslint/eslint-plugin": "8.71.0",
+		"@typescript-eslint/parser": "8.71.0",
+		"eslint": "10.12.0",
+		"eslint-config-prettier": "10.1.8",
 		"supertest": "7.1.4",
 		"tsx": "4.23.15",
 		"typescript": "5.9.3"

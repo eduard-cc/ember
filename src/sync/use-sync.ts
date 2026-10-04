@@ -51,9 +51,12 @@ export function useSync(
     });
     return () => sub.unsubscribe();
   }, [ready, repository]);
+  // Latest-value refs read by the stable sync callback; no React Compiler is in use.
   const refreshRef = useRef(refresh);
+  // eslint-disable-next-line react-hooks/refs
   refreshRef.current = refresh;
   const savedRef = useRef(locallySaved);
+  // eslint-disable-next-line react-hooks/refs
   savedRef.current = locallySaved;
   const sync = useCallback(async () => {
     if (paused.current || running.current || !ready || !enabled) return;
@@ -89,7 +92,7 @@ export function useSync(
                 body: '{}',
               });
             if (!response.ok) throw new Error('Could not connect');
-            const next: Session = await response.json();
+            const next = (await response.json()) as Session;
             if (next.ownerId !== 'owner' || typeof next.csrfToken !== 'string' || !next.csrfToken)
               throw new Error('Invalid server session');
             if (paused.current) return;

@@ -12,7 +12,9 @@ export default defineConfig({
       name: 'private-local-csv',
       apply: 'serve',
       configureServer(server) {
-        server.middlewares.use(localCsvMiddleware(process.env.GYM_LOG_CSV));
+        const localCsv = localCsvMiddleware(process.env.GYM_LOG_CSV);
+        // Connect ignores returned promises; the middleware handles its own read errors.
+        server.middlewares.use((req, res, next) => void localCsv(req, res, next));
       },
     },
   ],

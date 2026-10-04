@@ -11,13 +11,15 @@ interface Appearance {
 }
 const key = 'gym-log:appearance:v1';
 const defaults: Appearance = {version: 1, theme: 'system', accent: 'pine'};
+const oneOf = <T extends string>(values: readonly T[], value: unknown): value is T =>
+  values.includes(value as T);
 export function parseAppearance(raw: string | null): Appearance {
   try {
-    const value = JSON.parse(raw ?? 'null');
+    const value = JSON.parse(raw ?? 'null') as Partial<Record<keyof Appearance, unknown>> | null;
     if (
       value?.version === 1 &&
-      ['system', 'light', 'dark'].includes(value.theme) &&
-      ['pine', 'ocean', 'copper'].includes(value.accent)
+      oneOf<Theme>(['system', 'light', 'dark'], value.theme) &&
+      oneOf<Accent>(['pine', 'ocean', 'copper'], value.accent)
     )
       return {version: 1, theme: value.theme, accent: value.accent};
   } catch {

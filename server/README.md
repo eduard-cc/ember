@@ -32,6 +32,7 @@ npm --prefix server run test:e2e
 npm --prefix server run test:e2e -- test/auth.e2e.test.ts
 npm --prefix server run test:e2e -- test/sync.e2e.test.ts
 npm --prefix server run test:e2e -- test/process.e2e.test.ts
+npm --prefix server run lint:check
 npm --prefix server run typecheck
 npm --prefix server run build
 ```

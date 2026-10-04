@@ -102,7 +102,7 @@ export function useWorkoutState() {
     let cancelled = false;
     let lock: DraftLock | undefined;
     const controller = new AbortController();
-    (async () => {
+    void (async () => {
       try {
         lock = await acquireDraftLock(controller.signal);
         if (cancelled) {

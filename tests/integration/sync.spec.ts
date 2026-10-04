@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import {demoTemplates} from '../../src/domain/demo';
-import {navigate, openSettings} from '../navigation';
+import {navigate} from '../navigation';
 import {login, revokeAndLock, syncNow} from './helpers';
 
 const active = {
