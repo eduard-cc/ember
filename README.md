@@ -55,7 +55,25 @@ Production builds include a manifest, icons and a finite service-worker app-shel
 
 Versioned JSON recovery functions and the recovery surface export domain documents, original import evidence and a local draft without credentials/session secrets. Diagnostic pending operations are labelled, not replayed as old acknowledgements. A restore validates before writing, requires explicit confirmation to replace occupied local data and rebuilds create-only operations; it does not authorize overwriting newer server revisions.
 
-The server restore drill uses task-scoped plaintext custom-format PostgreSQL archives, excludes session data and targets only a new isolated validation database. See `ops/backup.sh`, `ops/restore-check.sh` and their real PostgreSQL test. Preserve archives privately. No backup scheduler, external destination or encryption-key recovery workflow has been configured; on-host archives do not protect against loss of this disk.
+The server restore drill uses task-scoped plaintext custom-format PostgreSQL archives, excludes session data and targets only a new isolated validation database. See `ops/backup.sh`, `ops/restore-check.sh` and their real PostgreSQL test. Preserve archives privately. Archives under `~/.local/share/gym-log-backups/` stay on this disk.
+
+### Off-device backup
+
+A nightly root-owned backup job outside this repository dumps the live `gym_log` database with `pg_dump -Fc` and stores the dump in an encrypted off-device backup. Check that the newest off-device dump restores without touching the live database:
+
+```sh
+# Fetch the newest dump read-only with the off-device backup's own tooling (outside this repository).
+s=$(mktemp -d) db=gym_log_restore_validation_$(date +%Y%m%d%H%M%S)
+<fetch the newest off-device dump> > "$s/gym-log.dump"
+ops/restore-check.sh "$s/gym-log.dump" "$db"
+# compare "$db" with gym_log (below), then:
+ops/docker.sh exec gym-log-local-postgres dropdb -U gym_log "$db"
+shred -u "$s/gym-log.dump" && rmdir "$s"
+```
+
+`--no-lock` keeps the drill read-only on the repository; never run `forget`, `prune` or `unlock` by hand. Unlike `ops/backup.sh` archives, this dump is a full `pg_dump` that includes the `sessions` table, so treat the validation database and the local file as secret and remove them promptly. Before dropping it, compare every table of the validation database with `gym_log` (row count and an ordered `md5` of all rows, plus the schema from `pg_dump -s`); differences must be explained by writes after the snapshot time, typically new sessions or synced records.
+
+Last verified: snapshot `<latest>` restored, and all six tables, the migration sequence and the schema matched live exactly. Recovery on a rebuilt machine has not been rehearsed.
 
 ## Checks
 
@@ -129,6 +147,6 @@ Weight is normalized to kg and distance to km while retaining source values. Epl
 
 ## Remaining release gates
 
-Real phone installation/workout testing, off-device encrypted recovery and automated backups are not completed. The private mobile trial uses Tailscale Serve and owner identity authentication; it is not a complete production release. CI/CD and deployment are owned by Hermes (see AGENTS.md). Nearby-weight fallback, suspicious-set correction/exclusion UI, comprehensive exercise instructions/catalog, optional bodyweight tracking and broader cardio workflows remain separate product work.
+Real phone installation/workout testing is not completed. Nightly encrypted off-device backups run and a restore from remote has been verified on this host (see Off-device backup); a recovery rehearsal on a rebuilt machine has not been done. Repeat the drill after database changes. The private mobile trial uses Tailscale Serve and owner identity authentication; it is not a complete production release. CI/CD and deployment are owned by Hermes (see AGENTS.md). Nearby-weight fallback, suspicious-set correction/exclusion UI, comprehensive exercise instructions/catalog, optional bodyweight tracking and broader cardio workflows remain separate product work.
 
 `PRODUCT.md` describes product scope; `DESIGN.md` describes the built visual system. Repository guidance remains in `AGENTS.md`. Source is maintained in a private GitHub repository. Personal history, credentials and recovery archives remain excluded.

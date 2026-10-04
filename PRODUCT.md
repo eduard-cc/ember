@@ -25,7 +25,7 @@ Start a template or repeat a historical workout. Adjust prefilled weight/repetit
 ## Capabilities and Constraints
 
 Unlimited templates, custom exercises, repeat-from-history, resilient active-workout saving, per-exercise analytics, CSV migration, optional bodyweight and basic cardio. No rest timers, notifications required for core use, nutrition, body-part measurements, social features, or watch support initially. Silent Android active-workout notifications remain optional and unverified on-device.
-The private mobile trial uses the owner's Tailscale identity with no separate app password. Completed history and templates sync automatically while connected; unfinished workouts remain device-local. Sync is not off-device backup. Conflict merge, encrypted off-device recovery and real phone acceptance remain incomplete.
+The private mobile trial uses the owner's Tailscale identity with no separate app password. Completed history and templates sync automatically while connected; unfinished workouts remain device-local. Sync is not off-device backup; the server database is backed up nightly, encrypted, off-device, and a restore from it has been verified on this host. Conflict merge, a recovery rehearsal on a rebuilt machine and real phone acceptance remain incomplete.
 
 ## Brand Commitments
 
@@ -45,4 +45,4 @@ A private Strong CSV is available outside the repository. Its historical set row
 
 ## Open Decisions
 
-Permanent product name and palette approval; conflict-resolution UX and encrypted off-device recovery; future watch or health integration.
+Permanent product name and palette approval; conflict-resolution UX; future watch or health integration.
