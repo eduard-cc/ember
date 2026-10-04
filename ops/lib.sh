@@ -94,6 +94,78 @@ restart_and_check() {
 	healthy
 }
 
+# Read-only probes of the extra health endpoints bracket every gym switch.
+extra_urls() {
+	if [[ -n ${GYM_LOG_EXTRA_HEALTH_URLS:-} ]]; then
+		echo "$GYM_LOG_EXTRA_HEALTH_URLS"
+		return
+	fi
+	local origin host
+	origin=$(setting GYM_LOG_ORIGIN)
+	echo 'http://127.0.0.1:<port>/api/health'
+		if [[ $origin == https://* ]]; then
+		host=${origin#https://}
+		echo "https://${host%%[:/]*}/api/health"
+	fi
+}
+
+extra_healthy() {
+	local url urls
+	read -ra urls <<<"$(extra_urls)"
+	for url in "${urls[@]}"; do
+		curl -fsS --max-time 10 --output /dev/null "$url" 2>/dev/null || return 1
+	done
+}
+
+# An extra endpoint may restart on its own, so give it time to come back before
+# blaming the gym switch.
+extra_recovered() {
+	local deadline=$((SECONDS + ${GYM_LOG_EXTRA_GRACE:-90}))
+	until extra_healthy; do
+		((SECONDS < deadline)) || return 1
+		sleep 5
+	done
+}
+
+# Switch to a built release and check it. If the extra endpoints were healthy before
+# ($2 == true), also check that they still are. A failed check rolls back and alerts Discord.
+# Returns 0 when live and healthy, 1 after a successful rollback, 2 when the rollback
+# failed too, 3 when the link could not be switched (nothing changed), and 4 when only
+# an extra endpoint failed but the release applied migrations ($3 == true): rolling back would run
+# old code on a newer schema, so it stays live and Discord is told instead.
+switch_release() {
+	local sha=$1 extra_before=$2 migrated=${3:-false} problem extra_after= now
+	now=$(current_release)
+	log "switching ${now:-nothing} -> $sha"
+	# Callers test this function, which disables errexit inside it: check each step.
+	point_current "$sha" || {
+		log 'could not switch the current link; nothing changed' >&2
+		return 3
+	}
+	if ! restart_and_check; then
+		problem="Deploy of ${sha:0:12} failed its health check"
+	elif [[ $extra_before == true ]] && ! extra_recovered; then
+		# Correlation, not proof: an endpoint may also restart on its own.
+		problem="The extra health endpoints stopped responding after Gym Log deployed ${sha:0:12}"
+		if [[ $migrated == true ]]; then
+			notify "$problem. Gym Log was NOT rolled back because this release applied database migrations the previous one does not know. Check them first; roll Gym Log back by hand only if it is the cause."
+			return 4
+		fi
+	else
+		return 0
+	fi
+	log "$problem; rolling back" >&2
+	if ! roll_back; then
+		notify "$problem and the ROLLBACK FAILED. Gym Log needs attention: journalctl --user -u $GYM_LOG_UNIT -n 50"
+		return 2
+	fi
+	if [[ $extra_before == true ]]; then
+		if extra_recovered; then extra_after=' The extra endpoints are healthy again.'; else extra_after=' The extra endpoints are STILL unhealthy and need attention.'; fi
+	fi
+	notify "$problem, so it was rolled back to $(current_release).$extra_after Migrations are not rolled back. Details: journalctl --user -u $GYM_LOG_UNIT -n 50"
+	return 1
+}
+
 write_history() {
 	if (($#)); then printf '%s\n' "$@" | tail -n 50 >"$HISTORY.tmp"; else : >"$HISTORY.tmp"; fi &&
 		mv -T -- "$HISTORY.tmp" "$HISTORY"

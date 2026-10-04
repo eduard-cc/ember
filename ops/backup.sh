@@ -8,6 +8,8 @@ db=$1; output=$2
 [[ ! -e "$output" && ! -L "$output" ]] || { printf '%s\n' 'Refusing to overwrite an archive.' >&2; exit 1; }
 parent=$(dirname -- "$output")
 [[ -d "$parent" && $(stat -c %a "$parent") == 700 ]] || { printf '%s\n' 'Archive parent must be a private 0700 directory.' >&2; exit 1; }
+# shellcheck source=ops/docker-host.sh
+source "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/docker-host.sh"
 container=gym-log-local-postgres
 actual=$(docker inspect --format '{{.Config.Image}} {{.State.Health.Status}} {{range (index .NetworkSettings.Ports "5432/tcp")}}{{.HostIp}}:{{.HostPort}}{{end}}' "$container")
 [[ "$actual" == 'postgres:17.6-bookworm healthy 127.0.0.1:55439' ]] || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }

@@ -72,6 +72,8 @@ jobs:
       GYM_LOG_SESSION_TTL_SECONDS: '86400'
       GYM_LOG_AUTH_MODE: password
       GYM_LOG_DATABASE_URL: postgres://gym_log_dev:synthetic-ci-only@127.0.0.1:55439/gym_log_dev
+      # Locally the backup scripts use Gym Log's own rootless Docker daemon; here the runner's.
+      GYM_LOG_DOCKER_HOST: unix:///var/run/docker.sock
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:

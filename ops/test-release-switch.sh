@@ -88,4 +88,47 @@ serving aaa || fail 'a refused rollback must leave aaa serving'
 deploy bbb && deploy ccc || fail 'redeploys'
 rm -f -- "$GYM_LOG_HOME/releases/bbb/.complete"
 roll_back >/dev/null && serving aaa || fail 'rollback should skip incomplete bbb'
+
+# Extra-endpoint tripwire. A file stands in for an extra health endpoint; the "harmful" release
+# removes it on startup, as if the gym switch had taken it down.
+touch "$GYM_LOG_HOME/releases/bbb/.complete"
+deploy bbb || fail 'redeploy bbb'
+export GYM_LOG_EXTRA_HEALTH_URLS="file://$sandbox/extra-health" GYM_LOG_EXTRA_GRACE=4
+release harmful
+sed -i "1i require('node:fs').rmSync('$sandbox/extra-health', {force: true});" \
+	"$GYM_LOG_HOME/releases/harmful/server/dist/trial.js"
+alerts=$sandbox/alerts
+notify() { echo "$1" >>"$alerts"; }
+switched() { # <sha> <extra_before>; prints switch_release's exit status
+	local rc=0
+	switch_release "$@" >/dev/null 2>&1 || rc=$?
+	echo "$rc"
+}
+touch "$sandbox/extra-health"
+extra_healthy || fail 'the fake extra endpoint should start healthy'
+[[ $(switched harmful true) == 1 ]] || fail 'a switch that breaks the extra endpoints must roll back'
+[[ $(current_release) == bbb ]] && serving bbb || fail 'extra-endpoint breakage should roll back to bbb'
+grep -q 'The extra health endpoints stopped responding after Gym Log deployed harmful.*rolled back to bbb.*STILL unhealthy' "$alerts" ||
+	fail 'extra-endpoint breakage must alert Discord'
+# Extra endpoints already down before the deploy: they cannot gate the switch.
+[[ $(switched ccc false) == 0 ]] && serving ccc || fail 'unhealthy extra endpoints before the deploy must not block it'
+touch "$sandbox/extra-health"
+# A crashing release still rolls back through the same path, and says so.
+: >"$alerts"
+[[ $(switched bad true) == 1 && $(current_release) == bbb ]] || fail 'a broken release must roll back'
+grep -q 'failed its health check, so it was rolled back to bbb. The extra endpoints are healthy again' "$alerts" ||
+	fail 'a broken release must alert Discord'
+[[ $(switched ccc true) == 0 ]] && serving ccc || fail 'a harmless switch with the extra endpoints healthy should pass'
+# A release that applied migrations is never rolled back onto the old schema for the
+# extra endpoints' sake: it stays live and Discord is asked to check.
+: >"$alerts"
+[[ $(switched harmful true true) == 4 ]] || fail 'a migrated release must not roll back for the extra endpoints'
+[[ $(current_release) == harmful ]] && serving harmful || fail 'the migrated release should stay live'
+grep -q 'NOT rolled back because this release applied database migrations' "$alerts" ||
+	fail 'a migrated release must still alert Discord'
+touch "$sandbox/extra-health"
+# A link that cannot be switched changes nothing and does not roll back.
+mkdir -p "$GYM_LOG_HOME/current.tmp/blocker"
+[[ $(switched ccc true) == 3 && $(current_release) == harmful ]] || fail 'a failed link switch must leave the release alone'
+rm -rf -- "$GYM_LOG_HOME/current.tmp"
 echo 'release switch checks passed'

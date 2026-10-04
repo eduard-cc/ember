@@ -4,7 +4,7 @@ A local-first mobile workout tracker with inspectable history, editable template
 
 ## Run locally
 
-Requires compatible Node.js/npm, Google Chrome for browser tests, and Docker for the isolated PostgreSQL/API integration checks.
+Requires compatible Node.js/npm, Google Chrome for browser tests, and Gym Log's own rootless Docker daemon (see Host isolation) for the isolated PostgreSQL/API integration checks.
 
 ```sh
 npm ci --include=dev
@@ -17,7 +17,7 @@ Open http://127.0.0.1:5188. An ordinary installation starts empty. `/?demo=1` is
 The local API setup and secure credential requirements are documented in `server/README.md`:
 
 ```sh
-docker compose -f ops/compose.local.yml up -d --wait
+ops/docker.sh compose -f ops/compose.local.yml up -d --wait
 # once: create the gym_log_dev role and database, see server/README.md
 npm --prefix server run migration
 npm --prefix server run dev
@@ -105,6 +105,19 @@ ops/rollback.sh          # switch back to the previous healthy release
 The server applies migrations on startup. If a release adds migrations the live `gym_log` database has not applied, the deploy first takes a backup with `ops/backup.sh` into `~/.local/share/gym-log-backups/`, restores it into a validation database, compares record and migration counts with `gym_log`, and drops the copy; any failure cancels the deploy. Writes between the backup and the restart are not in it. Rollback cannot undo a migration, so the newest three pre-deploy backups are kept; manual archives there are never rotated. A release that lacks migrations the database already has is refused, so old code never runs on a newer schema.
 
 If the service crash-loops (five starts in five minutes), systemd stops it and `gym-log-notify-failure@` sends a Discord alert. User units cannot trigger the root `notify-failure@` unit, so this is a user-level equivalent. `ops/test-release-switch.sh` exercises the switch, health check and rollback against synthetic releases and a throwaway unit; it needs systemd and is local-only.
+
+## Host isolation
+
+Gym Log runs its PostgreSQL container in its own rootless Docker daemon, `gym-log-docker.service`, with the socket at `$XDG_RUNTIME_DIR/gym-log/docker.sock` and data under `~/.local/share/gym-log-docker`. Nothing using that socket can see other daemons' containers. Use `ops/docker.sh` (the Docker CLI pointed at that socket, ignoring any exported `DOCKER_HOST`) for every gym container command; `ops/backup.sh`, `ops/restore-check.sh`, `ops/deploy.sh` and the backup test use it too. CI points `GYM_LOG_DOCKER_HOST` at its runner's daemon instead.
+
+The nightly off-device backup dumps `gym_log` through that socket and skips the daemon's raw data directory, which carries a `CACHEDIR.TAG`. Keep the container, database and socket names stable.
+
+Resource limits (installed by `ops/install.sh`, units in `ops/systemd/`):
+
+- `gym-log-live.slice` holds `gym-log.service`, the Docker daemon and the PostgreSQL container: at most 2 CPUs, 1.5 GiB memory (throttled from 1 GiB) and 512 MiB swap. The app and daemon run at nice 5 with low best-effort I/O priority.
+- `gym-log-jobs.slice` holds test runs: the npm `test:*` scripts and `server` `test:e2e` start through `ops/limited.sh` (nice 10, low I/O priority), browsers, dev servers and test API processes included. At most 4 CPUs, 4 GiB memory and 1 GiB swap. The server build in `pretest:e2e` runs outside it, and the database work tests cause counts against the live slice, since PostgreSQL runs there. CI runs the commands directly.
+
+System services sit outside the user manager, so these hard caps, not CPU weights, are what protect them. The I/O priority only takes effect under a priority-aware disk scheduler, and the user manager has no I/O controller; disks without such a scheduler (common for NVMe) leave disk I/O uncapped.
 
 ## Mobile logger and analytics
 

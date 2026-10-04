@@ -1,8 +1,11 @@
+# Runs on Gym Log's own rootless Docker daemon: use ops/docker.sh compose -f ops/compose.local.yml ...
 name: gym-log-local
 services:
   postgres:
     image: postgres:17.6-bookworm
     container_name: gym-log-local-postgres
+    # The live app depends on it: start with gym-log-docker.service after a reboot.
+    restart: unless-stopped
     env_file: ../server/.postgres.env
     ports:
       - '127.0.0.1:55439:5432'

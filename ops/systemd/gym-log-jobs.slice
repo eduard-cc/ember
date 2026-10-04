@@ -1,0 +1,13 @@
+# User slice installed by ops/install.sh. ops/limited.sh runs the gym test suites here
+# (browsers, dev servers and test API processes included), so a runaway run cannot starve
+# other services on the host. See gym-log-live.slice for why the caps, not the weight, matter.
+[Unit]
+Description=Gym Log test runs (capped)
+
+[Slice]
+CPUWeight=20
+CPUQuota=400%
+MemoryHigh=3500M
+MemoryMax=4G
+MemorySwapMax=1G
+TasksMax=4096

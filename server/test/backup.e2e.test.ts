@@ -17,9 +17,11 @@ function run(script: string, ...args: string[]) {
 // development role needs explicit read access to compare and cannot drop the copy itself.
 function asSuperuser(name: string, command: string, ...args: string[]) {
 	assert.match(name, /^gym_log_restore_validation_[0-9]+$/);
-	const result = spawnSync('docker', ['exec', 'gym-log-local-postgres', 'sh', '-c', command, 'sh', name, ...args], {
-		encoding: 'utf8',
-	});
+	const result = spawnSync(
+		resolve('../ops/docker.sh'),
+		['exec', 'gym-log-local-postgres', 'sh', '-c', command, 'sh', name, ...args],
+		{encoding: 'utf8'},
+	);
 	assert.equal(result.status, 0, result.stderr);
 }
 function grantValidationRead(name: string, role: string) {

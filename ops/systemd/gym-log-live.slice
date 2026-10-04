@@ -1,0 +1,16 @@
+# User slice installed by ops/install.sh. Holds the live app (gym-log.service), Gym Log's
+# Docker daemon and its PostgreSQL container, so a runaway gym process cannot starve other services on the host.
+# System services sit outside the user manager, whose CPU weights do not reach them, so
+# the hard caps are what protect them; the low weight only yields to other user work.
+# I/O weights need the io controller, which this host does not delegate to user units.
+# Most of the memory in use is reclaimable page cache; the app and database need ~200 MB.
+[Unit]
+Description=Gym Log live app and database (capped)
+
+[Slice]
+CPUWeight=20
+CPUQuota=200%
+MemoryHigh=1G
+MemoryMax=1536M
+MemorySwapMax=512M
+TasksMax=1024

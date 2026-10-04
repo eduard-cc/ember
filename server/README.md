@@ -9,10 +9,10 @@ All fixtures are synthetic. The ordinary database is empty after foundation veri
 Run from repository root:
 
 ```sh
-docker compose -f ops/compose.local.yml up -d --wait
+ops/docker.sh compose -f ops/compose.local.yml up -d --wait
 # Once: the unprivileged development role and database (Compose itself only creates the
 # live gym_log database). Generate the role password locally; it goes only in server/.env.
-docker exec -it gym-log-local-postgres sh -c 'createuser -U "$POSTGRES_USER" --createdb --pwprompt gym_log_dev &&
+ops/docker.sh exec -it gym-log-local-postgres sh -c 'createuser -U "$POSTGRES_USER" --createdb --pwprompt gym_log_dev &&
   createdb -U "$POSTGRES_USER" -O gym_log_dev gym_log_dev &&
   psql -U "$POSTGRES_USER" -d postgres -c "REVOKE CONNECT, TEMPORARY ON DATABASE gym_log FROM PUBLIC"'
 npm --prefix server ci --include=dev
@@ -25,7 +25,8 @@ app (`gym-log.service`) uses port 5191 and the `gym_log` database from external 
 frontend must proxy `/api/v1` to the API or access it same-origin. No CORS is enabled.
 Compose project `gym-log-local`; container `gym-log-local-postgres`;
 image `postgres:17.6-bookworm`; port `127.0.0.1:55439`; named volume
-`gym-log-local-data`; independent project network `gym-log-local_default`.
+`gym-log-local-data`; independent project network `gym-log-local_default`; all inside Gym Log's own
+rootless Docker daemon (`gym-log-docker.service`, reached through `ops/docker.sh`).
 
 ```sh
 npm --prefix server run test:e2e
@@ -47,7 +48,7 @@ Migrations are applied to empty test databases, not schema synchronization.
 Development and tests connect as the `gym_log_dev` role: it owns `gym_log_dev`, may create
 and drop its own test databases, is not a superuser and cannot connect to live `gym_log`.
 Only the backup/restore scripts, and the backup test's cleanup of their validation copy, use
-the Compose superuser, through `docker exec`. CI creates the same unprivileged role.
+the Compose superuser, through `ops/docker.sh exec`. CI creates the same unprivileged role.
 An existing setup with a superuser-owned `gym_log_dev` needs `createuser` plus
 `ALTER DATABASE gym_log_dev OWNER TO gym_log_dev` instead of `createdb`. Percent-encode
 reserved characters in the role password when writing the URL.
