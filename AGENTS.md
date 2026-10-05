@@ -64,4 +64,4 @@ The owner is the client, not a code reviewer. Hermes owns this repository end to
 
 ## Development
 
-See package.json and README.md for verified commands: npm ci --include=dev, npm run dev, npm run typecheck, npm run test:run, npm run test:e2e, npm run test:integration, npm run test:recovery, npm run test:pwa, npm run build. Server checks use npm --prefix server run typecheck/build/test:e2e. Do not run fixed-port integration suites concurrently. Fixtures are synthetic and databases disposable. Do not invent successful check output; state production gaps explicitly.
+See package.json and README.md for verified commands: npm ci --include=dev, npm run dev, npm run typecheck, npm run test:run, npm run test:e2e, npm run test:integration, npm run test:pwa, npm run build. Server checks use npm --prefix server run typecheck/build/test:e2e. Do not run fixed-port integration suites concurrently. Fixtures are synthetic and databases disposable. Do not invent successful check output; state production gaps explicitly.
