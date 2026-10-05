@@ -1,6 +1,7 @@
 import {Check, Plus, Trash2} from 'lucide-react';
 import {useCallback, useRef, useState} from 'react';
 
+import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
 import {SetRow} from '../components/SetRow';
 import {Button, Input, plural} from '../components/ui';
@@ -169,8 +170,8 @@ export function WorkoutView({
         return (
           <section className='exercise-card' key={identity(ex)}>
             <header className='exercise-heading'>
+              <ExerciseThumb name={ex.name} />
               <div>
-                <span className='exercise-number'>{String(ei + 1).padStart(2, '0')}</span>
                 <h2>{ex.name}</h2>
                 {!targetsOnly && (
                   <span

@@ -14,10 +14,11 @@ test('templates can be created edited started and deleted', async ({page}) => {
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.getByRole('heading', {name: 'My test session'})).toBeVisible();
   const card = page.locator('.template-card', {hasText: 'My test session'});
-  await expect(card.locator('.eyebrow')).toHaveText('1 EXERCISE · 3 TARGET SETS');
+  await expect(card.locator('.template-open li')).toHaveText(['3 × Custom Press']);
   await page.getByRole('button', {name: 'Edit template My test session', exact: true}).click();
   await page.getByLabel('Template name').fill('Edited session');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
+  await page.getByRole('button', {name: 'Open template Edited session', exact: true}).click();
   await page.getByRole('button', {name: 'Start template Edited session', exact: true}).click();
   await page.getByRole('button', {name: 'Replace active draft'}).click();
   await expect(page.getByLabel('workout name', {exact: false})).toHaveValue('Edited session');
@@ -67,7 +68,7 @@ test('CSV previews require explicit replacement and malformed files preserve his
 });
 test('a failed template commit never announces that it was saved', async ({page}) => {
   await page.goto('/?demo=1');
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await navigate(page, 'History');
   await page.evaluate(() => {
     const add = IDBObjectStore.prototype.add;
@@ -85,7 +86,7 @@ test('a failed template commit never announces that it was saved', async ({page}
 });
 test('IndexedDB quota-error injection retains memory and never reports saved', async ({page}) => {
   await page.goto('/?demo=1');
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   // Chromium's incognito IDB backend ignores CDP quota overrides. Inject the
   // platform error at the real IDB write boundary; hydration/happy path are real.
   await page.evaluate(() => {
@@ -98,7 +99,7 @@ test('IndexedDB quota-error injection retains memory and never reports saved', a
   });
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Unsaved edit '.repeat(10000));
   await expect(page.getByRole('alert')).toContainText('Could not save on this device');
-  await expect(page.getByText('Not saved', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
   await expect(page.getByLabel('WORKOUT NAME', {exact: true})).toHaveValue(
     'Unsaved edit '.repeat(10000),
   );

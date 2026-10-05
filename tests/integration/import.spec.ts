@@ -48,7 +48,7 @@ test('Strong import roundtrip preserves source occurrences and identical-file no
   });
   await page.goto('/');
   await login(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const replace = async (text: string) => {
     await openImport(page);
     await page
@@ -58,7 +58,7 @@ test('Strong import roundtrip preserves source occurrences and identical-file no
   };
   await replace(csv);
   await syncNow(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const local = await readHistory(page);
   expect(local.dataset?.workouts).toHaveLength(2);
   expect(local.active).toEqual(draft);
@@ -67,7 +67,7 @@ test('Strong import roundtrip preserves source occurrences and identical-file no
   const fresh = await peer.newPage();
   await fresh.goto('/');
   await login(fresh);
-  await expect(fresh.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(fresh.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   expect((await readHistory(fresh)).dataset?.workouts).toEqual(local.dataset?.workouts);
   expect((await readHistory(fresh)).active).toBeNull();
   await replace(csv);
@@ -76,9 +76,9 @@ test('Strong import roundtrip preserves source occurrences and identical-file no
   ).toBeVisible();
   await replace(csv.replaceAll('Collision', 'Replacement'));
   await syncNow(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await syncNow(fresh);
-  await expect(fresh.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(fresh.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const replaced = await readHistory(fresh);
   expect(replaced.dataset?.workouts).toHaveLength(2);
   expect(replaced.dataset?.workouts.every((w) => w.name === 'Replacement')).toBe(true);
@@ -89,9 +89,9 @@ test('Strong import roundtrip preserves source occurrences and identical-file no
     page.getByText('History replaced. Your draft and finished workouts were kept.', {exact: true}),
   ).toBeVisible();
   await syncNow(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await syncNow(fresh);
-  await expect(fresh.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(fresh.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   expect((await readHistory(fresh)).dataset?.workouts).toEqual(local.dataset?.workouts);
   const feed = await fresh.evaluate(
     async () => await (await fetch('/api/v1/sync/changes?after=0')).json(),
@@ -129,7 +129,7 @@ test('interrupted Strong import resumes bounded immutable batches after reopenin
     ).join('\n');
   await page.goto('/');
   await login(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   let uploaded = false;
   await page.route('**/api/v1/sync/operations', async (route) => {
     const ops = route.request().postDataJSON().operations;
@@ -144,21 +144,22 @@ test('interrupted Strong import resumes bounded immutable batches after reopenin
     .getByLabel('Choose CSV file')
     .setInputFiles({name: 'chunks.csv', mimeType: 'text/csv', buffer: Buffer.from(text)});
   await page.getByRole('button', {name: 'Replace history', exact: true}).click();
-  await expect(
-    page.getByText('Offline or server unavailable · changes pending', {exact: true}),
-  ).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute(
+    'data-sync',
+    'Offline or server unavailable · changes pending',
+  );
   expect(uploaded).toBe(true);
   const before = await readHistory(page);
   expect(before.dataset?.workouts).toHaveLength(51);
   await page.close();
   const reopened = await context.newPage();
   await reopened.goto('/');
-  await expect(reopened.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(reopened.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const peer = await browser.newContext();
   const fresh = await peer.newPage();
   await fresh.goto('/');
   await login(fresh);
-  await expect(fresh.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(fresh.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   expect((await readHistory(fresh)).dataset?.workouts).toEqual(before.dataset?.workouts);
   const feed = await fresh.evaluate(
     async () => await (await fetch('/api/v1/sync/changes?after=0')).json(),

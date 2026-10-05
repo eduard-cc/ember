@@ -12,13 +12,13 @@ test('explicit set completion persists targets and finishes only completed sets'
     .getByRole('button', {name: /Complete .* set 1/})
     .first()
     .click();
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
   await expect(weight).toHaveValue('42.5');
-  await expect(page.getByText('Saved on this device').first()).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Finish workout'}).click();
   await expect(page.getByRole('dialog')).toContainText('uncompleted sets will be excluded');
   await page.getByRole('button', {name: 'Save finished workout'}).click();
-  await expect(page.getByRole('heading', {name: 'Workout history'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   await expect(page.getByText('1 completed set', {exact: true}).first()).toBeVisible();
 });

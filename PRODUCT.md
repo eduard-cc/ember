@@ -24,8 +24,19 @@ Start a template or repeat a historical workout. Adjust prefilled weight/repetit
 
 ## Capabilities and Constraints
 
-Unlimited templates, custom exercises, repeat-from-history, resilient active-workout saving, per-exercise analytics, CSV migration, optional bodyweight and basic cardio. No rest timers, notifications required for core use, nutrition, body-part measurements, social features, or watch support initially. Silent Android active-workout notifications remain optional and unverified on-device.
-The private mobile trial uses the owner's Tailscale identity with no separate app password. Completed history and templates sync automatically while connected; unfinished workouts remain device-local. Sync is not off-device backup; the server database is backed up nightly, encrypted, off-device, and a restore from it has been verified on this host. Conflict merge, a recovery rehearsal on a rebuilt machine and real phone acceptance remain incomplete.
+Implemented: unlimited editable templates, empty start, custom exercises, repeat-from-history, resilient device-local active-workout saving, per-exercise analytics and CSV migration. Weighted, assisted, bodyweight, duration and cardio exercise rows are supported; separate bodyweight tracking and broader cardio workflows remain future scope. No rest timers, notifications required for core use, nutrition, body-part measurements, social features, or watch support initially. Silent Android active-workout notifications remain optional and unverified on-device.
+The private mobile trial uses the owner's Tailscale identity with no separate app password. Completed history and templates sync automatically while connected; unfinished workouts remain device-local. Sync is not off-device backup; the server database is backed up nightly, encrypted, off-device, and a restore from it has been verified on this host. Routine sync is silent, with no manual Sync Now or Backup & Recovery panel; actionable failures remain visible. Storage recovery APIs and database backup safeguards remain intact. Conflict merge, a recovery rehearsal on a rebuilt machine and real phone acceptance remain incomplete.
+
+### Implemented Phase 2 navigation and evidence
+
+- **Profile:** workout/set totals, this week's workout count, a 12-week frequency chart, Settings and Credits and licenses.
+- **History:** complete source details, search/pagination, Repeat and Save as template.
+- **Workout:** empty start and editable templates. Targets remain unchecked until completed; minimize/resume keeps the local draft and shows elapsed time and completed/total sets.
+- **Exercises:** searchable catalog and exact recorded/custom names, body-part filters and recent exercises. Details have **About / History / Charts / Records**, with available instructional content, actual sets, exact trend tables and source-linked records.
+
+Weighted charts show best reps, best load, session volume and bounded Epley estimates; assistance uses least assistance and reps, not resistance formulas. Best reps/load may come from different weights/rep counts and are not automatically comparable strength gains. Records include heaviest weight by exact rep count. Excluded sets do not count; suspicious-set correction/exclusion UI and nearby-weight fallback remain incomplete. Duration/distance-specific charts are not implemented. Volume is recorded load × reps, not evidence of hypertrophy; machine loads are not equated across gyms.
+
+Catalog drawings, instructions and muscle data use attributable Everkinetic/wger content. About and Credits and licenses expose item-level title, author, source/license URLs and adaptations. Preserve original licenses and applicable attribution/share-alike obligations. Coverage varies; a custom exercise without instructions still retains its history and analytics.
 
 ## Brand Commitments
 
@@ -41,8 +52,8 @@ A private Strong CSV is available outside the repository. Its historical set row
 - Actual performance comes before estimated strength.
 - Every metric is named precisely and traceable to its sets.
 - Preserve imported evidence and make uncertainty visible.
-- Private data stays local; the owner can export their data again.
+- Private data stays on the owner's device and private infrastructure, with encrypted off-device backup; no telemetry or external processing of workout history. Storage export/recovery functions remain technical capabilities, not a current user-facing export flow.
 
 ## Open Decisions
 
-Permanent product name and palette approval; conflict-resolution UX; future watch or health integration.
+Permanent product name; conflict-resolution UX; future watch or health integration. Pine is the approved default accent, with Ocean and Copper options.

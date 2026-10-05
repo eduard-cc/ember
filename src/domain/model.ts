@@ -34,7 +34,7 @@ export function getHistory(dataset: Dataset, name: string): ExerciseSession[] {
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 export function getTrend(dataset: Dataset, name: string, metric: Metric): TrendPoint[] {
-  return getHistory(dataset, name)
+  const points = getHistory(dataset, name)
     .flatMap((session) => {
       const values = session.sets
         .filter((set) => !set.excluded)
@@ -63,6 +63,13 @@ export function getTrend(dataset: Dataset, name: string, metric: Metric): TrendP
       ];
     })
     .sort((a, b) => a.date.localeCompare(b.date));
+  if (metric !== 'volume') return points;
+  const sessions = new Map<string, TrendPoint>();
+  for (const point of points) {
+    const existing = sessions.get(point.workoutId);
+    sessions.set(point.workoutId, {...point, value: (existing?.value ?? 0) + point.value});
+  }
+  return [...sessions.values()];
 }
 export function bestComparable(
   dataset: Dataset,
@@ -252,4 +259,129 @@ export function parseStrongCsv(text: string): Dataset {
     workouts: values.sort((a, b) => b.date.localeCompare(a.date)),
     warnings,
   };
+}
+
+export interface RecordEntry {
+  value: number;
+  set: SetRecord;
+  workoutId: string;
+  workoutName: string;
+  date: string;
+}
+export interface ExerciseRecords {
+  /** Epley, 1–10 reps, weighted work only. */
+  estimated: RecordEntry | null;
+  heaviest: RecordEntry | null;
+  bestSetVolume: RecordEntry | null;
+  sessionVolume: {value: number; workoutId: string; workoutName: string; date: string} | null;
+  leastAssistance: RecordEntry | null;
+  mostReps: RecordEntry | null;
+  /** Heaviest recorded weight for each exact rep count (weighted work only). */
+  repBests: (RecordEntry & {reps: number})[];
+}
+/** Every record links back to the exact set that produced it; excluded rows never count. */
+export function getRecords(dataset: Dataset, name: string): ExerciseRecords {
+  const history = getHistory(dataset, name);
+  const best = (
+    pick: (set: SetRecord, type: ExerciseType) => number | null,
+    better: (a: number, b: number) => boolean = (a, b) => a > b,
+  ): RecordEntry | null => {
+    let found: RecordEntry | null = null;
+    // Oldest first, so ties keep the first time a record was reached.
+    for (const session of [...history].reverse())
+      for (const set of session.sets) {
+        if (set.excluded) continue;
+        const value = pick(set, session.type);
+        if (value === null || !Number.isFinite(value)) continue;
+        if (!found || better(value, found.value))
+          found = {
+            value,
+            set,
+            workoutId: session.workoutId,
+            workoutName: session.workoutName,
+            date: session.date,
+          };
+      }
+    return found;
+  };
+  const positive = (n: number | null) => (n !== null && n > 0 ? n : null);
+  const weightedReps = (set: SetRecord) =>
+    set.weight !== null && set.weight > 0 && set.reps !== null && set.reps >= 1;
+  let sessionVolume: ExerciseRecords['sessionVolume'] = null;
+  const volumes = new Map<string, NonNullable<ExerciseRecords['sessionVolume']>>();
+  for (const session of [...history].reverse()) {
+    const total = session.sets.reduce((sum, set) => sum + (setVolume(set, session.type) ?? 0), 0);
+    const existing = volumes.get(session.workoutId);
+    if (total > 0)
+      volumes.set(session.workoutId, {
+        value: (existing?.value ?? 0) + total,
+        workoutId: session.workoutId,
+        workoutName: session.workoutName,
+        date: session.date,
+      });
+  }
+  for (const volume of volumes.values())
+    if (!sessionVolume || volume.value > sessionVolume.value) sessionVolume = volume;
+  const reps = new Map<number, RecordEntry & {reps: number}>();
+  for (const session of [...history].reverse())
+    if (session.type === 'weighted')
+      for (const set of session.sets)
+        if (!set.excluded && weightedReps(set) && Number.isInteger(set.reps)) {
+          const current = reps.get(set.reps!);
+          if (!current || set.weight! > current.value)
+            reps.set(set.reps!, {
+              reps: set.reps!,
+              value: set.weight!,
+              set,
+              workoutId: session.workoutId,
+              workoutName: session.workoutName,
+              date: session.date,
+            });
+        }
+  return {
+    estimated: best((set, type) => estimate1RM(set, type)),
+    heaviest: best((set, type) => (type === 'weighted' && weightedReps(set) ? set.weight : null)),
+    bestSetVolume: best((set, type) => positive(setVolume(set, type))),
+    sessionVolume,
+    leastAssistance: best(
+      (set, type) =>
+        type === 'assisted' && set.weight !== null && set.weight >= 0 && (set.reps ?? 0) >= 1
+          ? set.weight
+          : null,
+      (a, b) => a < b,
+    ),
+    mostReps: best((set, type) =>
+      type === 'duration' || type === 'cardio' ? null : positive(set.reps),
+    ),
+    repBests: [...reps.values()].sort((a, b) => a.reps - b.reps),
+  };
+}
+
+const localDay = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const weekStart = (date: Date) => {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  return start;
+};
+/** Sessions per Monday-based local week; workout timestamps are local wall time. */
+export function workoutsPerWeek(
+  workouts: Workout[],
+  weeks: number,
+  now = new Date(),
+): {start: string; count: number}[] {
+  const current = weekStart(now);
+  const buckets = Array.from({length: weeks}, (_, i) => {
+    const start = new Date(current);
+    start.setDate(start.getDate() - 7 * (weeks - 1 - i));
+    return {start: localDay(start), count: 0};
+  });
+  const index = new Map(buckets.map((bucket, i) => [bucket.start, i]));
+  for (const workout of workouts) {
+    const [y, m, d] = workout.date.slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) continue;
+    const i = index.get(localDay(weekStart(new Date(y, m - 1, d))));
+    if (i !== undefined) buckets[i].count++;
+  }
+  return buckets;
 }

@@ -67,7 +67,6 @@ test('real recovery control confirms activation without reload and defers update
     await follower.goto('/');
     await openSettings(follower);
     await expect(follower.getByRole('button', {name: 'Apply shell update'})).toBeDisabled();
-    await expect(follower.getByRole('button', {name: 'Export local backup'})).toBeDisabled();
     expect(
       await follower.evaluate(
         async () => !!(await navigator.serviceWorker.getRegistration())?.waiting,

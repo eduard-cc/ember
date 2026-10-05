@@ -4,7 +4,7 @@ test('undo distinguishes duplicate exercise names even after deleting the only s
   page,
 }) => {
   await page.goto('/?demo=1');
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('gym-log');

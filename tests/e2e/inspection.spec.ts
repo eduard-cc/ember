@@ -5,7 +5,7 @@ import {navigate} from '../navigation';
 test('historical workouts repeat as editable uncompleted targets', async ({page}) => {
   await page.goto('/?demo=1');
   await navigate(page, 'History');
-  await expect(page.getByRole('heading', {name: 'Workout history'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   await page
     .getByRole('button', {name: /Repeat workout/})
     .first()
@@ -21,8 +21,10 @@ test('historical workouts repeat as editable uncompleted targets', async ({page}
 test('progress exposes source sets and selectable metrics', async ({page}) => {
   await page.goto('/?demo=1');
   await navigate(page, 'Exercises');
-  await expect(page.getByRole('heading', {name: 'Exercise progress'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'Exercises', exact: true})).toBeVisible();
   await page.getByLabel('Search exercises').fill('Bench');
+  await page.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).first().click();
+  await page.getByRole('tab', {name: 'Charts', exact: true}).click();
   await page.getByRole('button', {name: 'Estimated 1RM', exact: true}).click();
   await expect(page.getByText(/Epley/)).toBeVisible();
   await expect(page.getByRole('table', {name: 'Exact trend values'})).toBeVisible();

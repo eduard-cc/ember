@@ -1,12 +1,19 @@
-import {Pencil, Play, Plus, Trash2, X} from 'lucide-react';
+import * as Dialog from '@radix-ui/react-dialog';
+import {Pencil, Plus, Trash2, X} from 'lucide-react';
 import {useState} from 'react';
 
+import {allExerciseNames, bodyPartOf, exerciseTypeFor} from '../catalog/catalog';
+import {ExerciseThumb} from '../components/ExerciseThumb';
 import {Button, Input, plural} from '../components/ui';
 import {historyTargets} from '../components/workout-targets';
-import {getExercises} from '../domain/model';
 import type {Dataset, ExerciseType, Workout} from '../domain/types';
 import {newWorkout} from '../state/workout';
-import {WorkoutView} from './WorkoutView';
+import {WorkoutView, dateLabel} from './WorkoutView';
+
+/** Latest finished session with the template's exact name, if any. */
+function lastPerformed(dataset: Dataset, name: string): string | undefined {
+  return dataset.workouts.find((w) => w.name === name)?.date;
+}
 
 export function TemplatesView({
   templates,
@@ -23,14 +30,12 @@ export function TemplatesView({
   const [deletingSets, setDeletingSets] = useState(false);
   const [editingBase, setEditingBase] = useState<Workout | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [preview, setPreview] = useState<Workout | null>(null);
   const [exerciseName, setExerciseName] = useState('');
   const [exerciseType, setExerciseType] = useState<ExerciseType>('weighted');
   const add = () => {
     if (!editing || !exerciseName.trim()) return;
-    const known = dataset.workouts
-      .flatMap((w) => w.exercises)
-      .find((ex) => ex.name === exerciseName.trim());
-    const type = known?.type ?? exerciseType;
+    const type = exerciseTypeFor(exerciseName.trim(), dataset) ?? exerciseType;
     setEditing({
       ...editing,
       exercises: [...editing.exercises, historyTargets(dataset, exerciseName.trim(), type)],
@@ -39,17 +44,19 @@ export function TemplatesView({
   };
   return (
     <div className='templates-view'>
-      <div className='list-toolbar'>
-        <p>Routines · editable targets, not completed sets.</p>
+      <div className='section-heading templates-heading'>
+        <h2>My templates</h2>
         <Button
-          variant='primary'
+          variant='ghost'
+          size='icon'
+          aria-label='Create template'
           onClick={() => {
             setEditingBase(undefined);
             setEditing(newWorkout());
             setExerciseName('');
           }}
         >
-          <Plus size={16} /> Create template
+          <Plus size={20} />
         </Button>
       </div>
       {editing ? (
@@ -88,16 +95,14 @@ export function TemplatesView({
                 value={exerciseName}
                 onChange={(e) => {
                   setExerciseName(e.target.value);
-                  const known = dataset.workouts
-                    .flatMap((w) => w.exercises)
-                    .find((ex) => ex.name === e.target.value);
-                  if (known) setExerciseType(known.type);
+                  const known = exerciseTypeFor(e.target.value, dataset);
+                  if (known) setExerciseType(known);
                   else if (/assisted/i.test(e.target.value)) setExerciseType('assisted');
                   else setExerciseType('weighted');
                 }}
               />
               <datalist id='exercise-catalog'>
-                {getExercises(dataset).map((name) => (
+                {allExerciseNames(dataset).map((name) => (
                   <option key={name} value={name} />
                 ))}
               </datalist>
@@ -168,78 +173,118 @@ export function TemplatesView({
         </section>
       ) : (
         <div className='template-grid'>
-          {templates.map((template) => (
-            <article className='template-card' key={template.id}>
-              <span className='eyebrow'>
-                {plural(template.exercises.length, 'EXERCISE')} ·{' '}
-                {plural(
-                  template.exercises.reduce((n, ex) => n + ex.sets.length, 0),
-                  'TARGET SET',
-                )}
-              </span>
-              <h2>{template.name}</h2>
-              <div className='template-exercises'>
-                {template.exercises.map((ex, i) => (
-                  <div key={`${ex.name}-${i}`}>
-                    <span>{ex.name}</span>
-                    <small>{plural(ex.sets.length, 'set')}</small>
-                  </div>
-                ))}
-              </div>
-              <footer>
-                <Button
-                  variant='primary'
-                  aria-label={`Start template ${template.name}`}
-                  onClick={() => onStart(template)}
-                >
-                  <Play size={14} /> Start workout
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  aria-label={`Edit template ${template.name}`}
-                  onClick={() => {
-                    setEditingBase(structuredClone(template));
-                    setEditing(structuredClone(template));
-                  }}
-                >
-                  <Pencil size={16} />
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  aria-label={`Delete template ${template.name}`}
-                  onClick={() => setDeleteId(template.id)}
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </footer>
-              {deleteId === template.id && (
-                <div className='inline-confirm'>
-                  <p>Delete this template? Your workout history is kept.</p>
-                  <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+          {templates.map((template) => {
+            const last = lastPerformed(dataset, template.name);
+            return (
+              <article className='template-card' key={template.id}>
+                <header>
+                  <h3>{template.name}</h3>
                   <Button
-                    variant='danger'
-                    aria-label='Confirm delete template'
+                    variant='ghost'
+                    size='icon'
+                    aria-label={`Edit template ${template.name}`}
                     onClick={() => {
-                      void onChange(templates.filter((t) => t.id !== template.id));
-                      setDeleteId(null);
+                      setEditingBase(structuredClone(template));
+                      setEditing(structuredClone(template));
                     }}
                   >
-                    Delete template
+                    <Pencil size={16} />
                   </Button>
-                </div>
-              )}
-            </article>
-          ))}
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    aria-label={`Delete template ${template.name}`}
+                    onClick={() => setDeleteId(template.id)}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </header>
+                <button
+                  className='template-open'
+                  aria-label={`Open template ${template.name}`}
+                  onClick={() => setPreview(template)}
+                >
+                  <ul>
+                    {template.exercises.slice(0, 6).map((ex, i) => (
+                      <li key={`${ex.name}-${i}`}>
+                        {ex.sets.length} × {ex.name}
+                      </li>
+                    ))}
+                    {template.exercises.length > 6 && (
+                      <li>+ {plural(template.exercises.length - 6, 'more exercise')}</li>
+                    )}
+                  </ul>
+                  <small>{last ? `Last performed ${dateLabel(last)}` : 'Not performed yet'}</small>
+                </button>
+                {deleteId === template.id && (
+                  <div className='inline-confirm'>
+                    <p>Delete this template? Your workout history is kept.</p>
+                    <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+                    <Button
+                      variant='danger'
+                      aria-label='Confirm delete template'
+                      onClick={() => {
+                        void onChange(templates.filter((t) => t.id !== template.id));
+                        setDeleteId(null);
+                      }}
+                    >
+                      Delete template
+                    </Button>
+                  </div>
+                )}
+              </article>
+            );
+          })}
           {!templates.length && (
             <div className='empty-state'>
               <h2>No templates yet</h2>
-              <p>Create one, or save any historical workout as a template.</p>
+              <p>Create one, or save any finished workout as a template from History.</p>
             </div>
           )}
         </div>
       )}
+      <Dialog.Root open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className='dialog-overlay' />
+          <Dialog.Content className='dialog-content template-preview'>
+            <Dialog.Title>{preview?.name}</Dialog.Title>
+            <Dialog.Description>
+              {preview && lastPerformed(dataset, preview.name)
+                ? `Last performed ${dateLabel(lastPerformed(dataset, preview.name)!)}`
+                : 'Not performed yet'}
+            </Dialog.Description>
+            <ul className='exercise-rows'>
+              {preview?.exercises.map((ex, i) => (
+                <li key={`${ex.name}-${i}`} className='exercise-row static'>
+                  <ExerciseThumb name={ex.name} />
+                  <span className='exercise-row-text'>
+                    <strong>
+                      {ex.sets.length} × {ex.name}
+                    </strong>
+                    <small>{bodyPartOf(ex.name)}</small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              variant='primary'
+              className='wide-action'
+              aria-label={`Start template ${preview?.name ?? ''}`}
+              onClick={() => {
+                if (preview) onStart(preview);
+                setPreview(null);
+              }}
+            >
+              Start workout
+            </Button>
+            <Dialog.Close asChild>
+              <Button variant='ghost' size='icon' className='dialog-close' aria-label='Close'>
+                <X size={18} />
+              </Button>
+            </Dialog.Close>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }

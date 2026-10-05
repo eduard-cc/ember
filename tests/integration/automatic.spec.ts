@@ -54,20 +54,20 @@ test('fresh Tailscale devices automatically connect completed history and templa
     }
   });
   await page.goto('/');
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   expect((await snapshot(page)).pending).toEqual([]);
   await expect(page.getByLabel('Server password')).toHaveCount(0);
   for (let i = 0; i < 3; i++) {
     const pulled = page.waitForResponse('**/api/v1/sync/changes?*');
     await page.evaluate(() => window.dispatchEvent(new Event('focus')));
     await pulled;
-    await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+    await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   }
   expect(bootstraps).toBe(1);
   const peerContext = await browser.newContext();
   const peer = await peerContext.newPage();
   await peer.goto('/');
-  await expect(peer.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(peer.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const remote = await snapshot(peer);
   expect(remote.owner).toBe('owner');
   expect(remote.state.finished).toEqual([finished]);
@@ -97,7 +97,7 @@ test('Tailscale reconnect automatically renews an expired session and sends offl
     if (request.url().endsWith('/session') && request.method() === 'POST') bootstraps++;
   });
   await page.goto('/');
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const url = new URL(process.env.GYM_LOG_TEST_DATABASE_URL!);
   if (
     url.hostname !== '127.0.0.1' ||
@@ -131,13 +131,13 @@ test('Tailscale reconnect automatically renews an expired session and sends offl
   expect(local.state.finished).toHaveLength(1);
   await context.setOffline(false);
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await expect.poll(async () => (await snapshot(page)).pending.length).toBe(0);
   expect(bootstraps).toBe(2);
   const peerContext = await browser.newContext();
   const peer = await peerContext.newPage();
   await peer.goto('/');
-  await expect(peer.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(peer.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const remote = await snapshot(peer);
   expect(remote.state.finished).toEqual(local.state.finished);
   expect(remote.state.active).toBeNull();

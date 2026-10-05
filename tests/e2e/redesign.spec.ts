@@ -1,5 +1,7 @@
 import {expect, test} from '@playwright/test';
 
+import {navigate} from '../navigation';
+
 test('workout sheet minimizes to a named resume bar preserving the draft and ledger scroll', async ({
   page,
 }, info) => {
@@ -26,7 +28,7 @@ test('workout sheet minimizes to a named resume bar preserving the draft and led
     .getByRole('button', {name: /Complete .* set 1/})
     .first()
     .click();
-  await expect(sheet.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.locator('.workout-scroll').evaluate((el) => {
     el.scrollTop = 320;
   });
@@ -35,7 +37,7 @@ test('workout sheet minimizes to a named resume bar preserving the draft and led
   await expect(sheet).toBeHidden();
   await expect(page.getByRole('navigation', {name: 'Main navigation'})).toBeVisible();
   await page.getByRole('button', {name: 'History', exact: true}).click();
-  await expect(page.getByRole('heading', {name: 'Workout history'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   await page.getByRole('button', {name: /Resume Upper body A/}).click();
   await expect(page.getByLabel(/Weight for .* set 1/).first()).toHaveValue('42.5');
   await expect(page.getByRole('button', {name: /Uncomplete .* set 1/}).first()).toHaveAttribute(
@@ -101,7 +103,7 @@ test('five-column Previous opens evidence for the selected set weight and source
     .getByRole('button', {name: /View source workout/})
     .first()
     .click();
-  await expect(page.getByRole('heading', {name: 'Workout history'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   await expect(page.locator('.focused-history .recorded-sets').first()).toContainText(
     '60 kg × 9 reps',
   );
@@ -205,6 +207,8 @@ test('routine starts use actual latest matching history unchecked, else the rout
     seeded,
   );
   await page.goto('/?demo=1');
+  await navigate(page, 'Workouts');
+  await page.getByRole('button', {name: 'Open template Evidence routine'}).click();
   await page.getByRole('button', {name: 'Start template Evidence routine'}).click();
   const weights = page.getByLabel(/Weight for Synthetic Press/);
   await expect(weights.nth(0)).toHaveValue('55');
@@ -269,7 +273,7 @@ test('appearance is separate from workout saving, follows System, and persists t
   await settings.getByRole('button', {name: 'Dark', exact: true}).click();
   await settings.getByRole('button', {name: 'Ocean', exact: true}).click();
   await settings.getByRole('button', {name: 'Close settings'}).click();
-  await expect(page.getByText('Saved on this device', {exact: true}).last()).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('html')).toHaveAttribute('data-accent', 'ocean');
@@ -309,14 +313,15 @@ test('settings keeps synchronization feedback accessible without duplicate hidde
     }),
   );
   await page.goto('/');
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await page.getByRole('button', {name: 'Settings', exact: true}).last().click();
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
-  await expect(page.getByRole('button', {name: 'Sync now', exact: true})).toBeEnabled();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
+  await expect(page.getByRole('button', {name: 'Sync now', exact: true})).toHaveCount(0);
+  await expect(page.getByText('Synced', {exact: true})).toHaveCount(0);
   await page.getByRole('button', {name: 'Close settings'}).click();
   await expect(page.getByRole('button', {name: 'Settings', exact: true}).last()).toBeFocused();
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
 });
 
 test('denied appearance storage leaves workout durability independent and the choice usable in this tab', async ({
@@ -335,7 +340,7 @@ test('denied appearance storage leaves workout durability independent and the ch
     };
   });
   await page.goto('/?demo=1');
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Settings', exact: true}).last().click();
   await page.getByRole('button', {name: 'Copper', exact: true}).click();
   await expect(
@@ -347,7 +352,7 @@ test('denied appearance storage leaves workout durability independent and the ch
     .getByLabel(/Weight for .* set 1/)
     .first()
     .fill('47.5');
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await expect(page.getByText('Not saved', {exact: true})).toHaveCount(0);
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-accent', 'pine');

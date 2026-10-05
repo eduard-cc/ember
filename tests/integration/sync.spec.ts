@@ -4,6 +4,32 @@ import {demoTemplates} from '../../src/domain/demo';
 import {navigate} from '../navigation';
 import {login, revokeAndLock, syncNow} from './helpers';
 
+test('template preview is unmounted when local trust is revoked', async ({page}) => {
+  await page.addInitScript((templates) => {
+    localStorage.setItem(
+      'gym-log:v1',
+      JSON.stringify({
+        version: 1,
+        dataset: null,
+        active: null,
+        finished: [],
+        templates,
+      }),
+    );
+  }, demoTemplates);
+  await login(page);
+  await page
+    .getByRole('button', {name: `Open template ${demoTemplates[0].name}`, exact: true})
+    .click();
+  await expect(page.getByRole('dialog', {name: demoTemplates[0].name, exact: true})).toBeVisible();
+  await revokeAndLock(page);
+  await expect(page.locator('main')).toBeHidden();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(
+    page.getByRole('button', {name: `Start template ${demoTemplates[0].name}`}),
+  ).toHaveCount(0);
+});
+
 const active = {
   ...demoTemplates[0],
   id: 'offline-' + crypto.randomUUID(),
@@ -26,30 +52,30 @@ test('offline finish survives reopen and fresh independent peer sees only comple
   }, active);
   await page.goto('/');
   await login(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await context.setOffline(true);
   await page
     .getByRole('button', {name: /Complete .* set 1/})
     .first()
     .click();
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Finish workout', exact: true}).click();
   await page.getByRole('button', {name: 'Save finished workout', exact: true}).click();
-  await expect(page.getByRole('heading', {name: 'Workout history'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   await page.close();
   await context.setOffline(false);
   const reopened = await context.newPage();
   await reopened.goto('/');
-  await expect(reopened.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(reopened.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const peer = await browser.newContext();
   const fresh = await peer.newPage();
   await fresh.goto('/');
   await login(fresh);
-  await expect(fresh.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(fresh.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await navigate(fresh, 'History');
   await expect(fresh.getByText('Offline finished', {exact: true}).first()).toBeVisible();
   await navigate(fresh, 'Workouts');
-  await expect(fresh.getByRole('heading', {name: 'Ready for your next workout'})).toBeVisible();
+  await expect(fresh.getByRole('heading', {name: 'Quick start', exact: true})).toBeVisible();
   await peer.close();
 });
 test('revoked legacy session retains pending changes and untrusted local data stays hidden until restored', async ({
@@ -66,7 +92,7 @@ test('revoked legacy session retains pending changes and untrusted local data st
   );
   await page.goto('/');
   await login(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await page.evaluate(async () => {
     const session = await (await fetch('/api/v1/session')).json();
     await fetch('/api/v1/session', {
@@ -81,9 +107,10 @@ test('revoked legacy session retains pending changes and untrusted local data st
   await page.getByRole('button', {name: 'Finish workout', exact: true}).click();
   await page.getByRole('button', {name: 'Save finished workout', exact: true}).click();
   await syncNow(page);
-  await expect(
-    page.getByText('Offline or server unavailable · changes pending', {exact: true}),
-  ).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute(
+    'data-sync',
+    'Offline or server unavailable · changes pending',
+  );
   const count = () =>
     page.evaluate(async () => {
       const path = '/src/storage/repository.ts';
@@ -97,7 +124,7 @@ test('revoked legacy session retains pending changes and untrusted local data st
     });
   expect(await count()).toBe(1);
   await login(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   expect(await count()).toBe(0);
   await revokeAndLock(page);
   await expect(page.locator('main')).toBeHidden();
@@ -120,7 +147,7 @@ test('revoked local trust hides retained data in a second same-origin tab too', 
 }) => {
   await page.goto('/');
   await login(page);
-  await expect(page.getByText('Synced', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const follower = await context.newPage();
   await follower.goto('/');
   await expect(follower.locator('main')).toBeVisible();

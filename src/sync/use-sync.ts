@@ -2,7 +2,7 @@ import {liveQuery} from 'dexie';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 import type {WorkoutRepository} from '../storage/repository';
-import {type Session, SessionExpired, SyncEngine} from './engine';
+import {DatasetReset, type Session, SessionExpired, SyncEngine} from './engine';
 
 export function useSync(
   repository: WorkoutRepository,
@@ -16,6 +16,8 @@ export function useSync(
   const [locked, setLocked] = useState(true);
   const [status, setStatus] = useState('Connecting…');
   const [pending, setPending] = useState(0);
+  const [eligibleWork, setEligibleWork] = useState('');
+  const attemptedWork = useRef('');
   const [issues, setIssues] = useState<
     {operationId: string; entityId: string; errorCode?: string}[]
   >([]);
@@ -35,16 +37,27 @@ export function useSync(
   }, []);
   useEffect(() => {
     if (!ready) return;
-    const sub = liveQuery(async () => ({
-      pending: await repository.db.outbox.count(),
-      owner: (await repository.db.meta.get('ownerId'))?.value,
-      trust: (await repository.db.meta.get('local-trust'))?.value,
-      issues: (await repository.db.syncState.toArray())
+    const sub = liveQuery(async () => {
+      const operations = await repository.db.outbox.toArray();
+      const issues = (await repository.db.syncState.toArray())
         .filter((r) => r.key.startsWith('issue:'))
-        .map((r) => r.value as {operationId: string; entityId: string; errorCode?: string}),
-    })).subscribe({
+        .map((r) => r.value as {operationId: string; entityId: string; errorCode?: string});
+      const blocked = new Set(issues.map((issue) => issue.entityId));
+      return {
+        pending: operations.length,
+        eligibleWork: operations
+          .filter((operation) => !blocked.has(operation.entityId))
+          .map((operation) => operation.operationId)
+          .sort()
+          .join(','),
+        owner: (await repository.db.meta.get('ownerId'))?.value,
+        trust: (await repository.db.meta.get('local-trust'))?.value,
+        issues,
+      };
+    }).subscribe({
       next: (state) => {
         setPending(state.pending);
+        setEligibleWork(state.eligibleWork);
         setIssues(state.issues);
         setLocked(!!state.owner && !state.trust);
       },
@@ -101,6 +114,10 @@ export function useSync(
               throw new Error(
                 'This installation belongs to a different owner; data was not changed',
               );
+            // A server reset rotates the epoch: drop synced copies before anything uploads.
+            const localEpoch = (await repository.db.meta.get('dataset-epoch'))?.value ?? 'initial';
+            if (typeof next.epoch === 'string' && next.epoch !== localEpoch)
+              await repository.resetToEpoch(next.epoch);
             await repository.bootstrapSync();
             await repository.db.meta.put({key: 'ownerId', value: next.ownerId});
             await repository.db.meta.put({key: 'local-trust', value: true});
@@ -117,6 +134,10 @@ export function useSync(
             await new SyncEngine(repository).sync(current.current);
             break;
           } catch (error) {
+            if (error instanceof DatasetReset && attempt === 0) {
+              await repository.resetToEpoch(error.epoch);
+              continue;
+            }
             if (!(error instanceof SessionExpired) || attempt === 1) throw error;
             current.current = null;
             setSession(null);
@@ -154,6 +175,24 @@ export function useSync(
     inFlight.current = job;
     await job;
   }, [repository, ready, enabled]);
+  useEffect(() => {
+    if (!eligibleWork) {
+      attemptedWork.current = '';
+      return;
+    }
+    if (
+      !locallySaved ||
+      syncing ||
+      !ready ||
+      !enabled ||
+      eligibleWork === attemptedWork.current ||
+      Date.now() < nextAttempt.current
+    )
+      return;
+    // Completion alone must not retrigger retained/conflicted operations.
+    attemptedWork.current = eligibleWork;
+    void sync();
+  }, [eligibleWork, locallySaved, syncing, ready, enabled, sync]);
   useEffect(() => {
     if (!ready || !enabled) return;
     void sync();

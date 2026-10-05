@@ -1,0 +1,313 @@
+import {ArrowLeft, ArrowUpRight} from 'lucide-react';
+import {useState} from 'react';
+
+import {bodyPartOf, catalogEntry} from '../catalog/catalog';
+import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
+import {Button, plural} from '../components/ui';
+import {estimate1RM, getHistory, getRecords} from '../domain/model';
+import type {Dataset, ExerciseType, SetRecord} from '../domain/types';
+import {ExerciseCharts} from './ExerciseCharts';
+import {dateLabel} from './WorkoutView';
+
+const tabs = ['About', 'History', 'Charts', 'Records'] as const;
+type Tab = (typeof tabs)[number];
+const kg = (n: number) => `${Number(n.toFixed(1))} kg`;
+
+export function setLabel(set: SetRecord, type: ExerciseType) {
+  if (type === 'duration' || type === 'cardio')
+    return `${set.seconds ?? '—'} s${set.distance !== null ? ` · ${set.distance} km` : ''}`;
+  if (type === 'bodyweight' || set.weight === null) return `BW × ${set.reps ?? '—'}`;
+  return `${set.weight} kg${type === 'assisted' ? ' assist.' : ''} × ${set.reps ?? '—'}`;
+}
+
+function About({name}: {name: string}) {
+  const entry = catalogEntry(name);
+  if (!entry)
+    return (
+      <div className='empty-state'>
+        <h2>Custom exercise</h2>
+        <p>No instructions for this exercise. Its history, charts and records are still here.</p>
+      </div>
+    );
+  return (
+    <div className='about'>
+      {entry.images.length > 0 && (
+        <div className='about-drawings'>
+          {entry.images.map((image) => (
+            <Drawing key={image.file} file={image.file} className='drawing large-drawing' />
+          ))}
+        </div>
+      )}
+      <dl className='about-facts'>
+        <div>
+          <dt>Body part</dt>
+          <dd>{entry.bodyPart}</dd>
+        </div>
+        <div>
+          <dt>Equipment</dt>
+          <dd>{entry.equipment}</dd>
+        </div>
+        {entry.primaryMuscles.length > 0 && (
+          <div>
+            <dt>Primary</dt>
+            <dd>{entry.primaryMuscles.join(', ')}</dd>
+          </div>
+        )}
+        {entry.secondaryMuscles.length > 0 && (
+          <div>
+            <dt>Secondary</dt>
+            <dd>{entry.secondaryMuscles.join(', ')}</dd>
+          </div>
+        )}
+      </dl>
+      {entry.instructions.length > 0 && (
+        <>
+          <h2 className='list-label'>Instructions</h2>
+          <ol className='instructions'>
+            {entry.instructions.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+        </>
+      )}
+      <p className='attribution'>
+        {entry.sources.map((source, i) => (
+          <span key={i}>
+            {source.kind === 'illustration'
+              ? 'Drawing'
+              : source.kind === 'instructions'
+                ? 'Instructions'
+                : 'Muscles'}
+            : “{source.title}” by {source.author},{' '}
+            <a href={source.licenseUrl} target='_blank' rel='noreferrer'>
+              {source.license}
+            </a>{' '}
+            (
+            <a href={source.url} target='_blank' rel='noreferrer'>
+              source
+            </a>
+            ){source.changes ? `, ${source.changes}` : ''}.{' '}
+          </span>
+        ))}
+      </p>
+    </div>
+  );
+}
+
+function HistoryTab({
+  dataset,
+  name,
+  onSource,
+}: {
+  dataset: Dataset;
+  name: string;
+  onSource: (id: string) => void;
+}) {
+  const [limit, setLimit] = useState(10);
+  const history = getHistory(dataset, name);
+  if (!history.length)
+    return (
+      <div className='empty-state'>
+        <h2>No history yet</h2>
+        <p>Sessions appear here after you finish a workout with this exercise.</p>
+      </div>
+    );
+  return (
+    <div className='session-cards'>
+      {history.slice(0, limit).map((session, i) => (
+        <article className='session-card' key={`${session.workoutId}-${i}`}>
+          <header>
+            <div>
+              <h3>{session.workoutName}</h3>
+              <p>{dateLabel(session.date)}</p>
+            </div>
+            <Button
+              size='icon'
+              variant='ghost'
+              aria-label={`View source workout ${session.workoutName} ${dateLabel(session.date)}`}
+              onClick={() => onSource(session.workoutId)}
+            >
+              <ArrowUpRight size={16} />
+            </Button>
+          </header>
+          <div className='session-sets'>
+            <span className='session-sets-head'>Sets performed</span>
+            {session.type === 'weighted' && <span className='session-sets-head'>Est. 1RM</span>}
+            {session.sets.map((set, j) => {
+              const e1rm = estimate1RM(set, session.type);
+              return (
+                <div key={set.id} className='session-set'>
+                  <span>
+                    <b>{j + 1}</b>
+                    {setLabel(set, session.type)}
+                    {set.suspicious ? ' · flagged' : ''}
+                    {set.excluded ? ' · excluded' : ''}
+                  </span>
+                  {session.type === 'weighted' && <span>{e1rm === null ? '—' : kg(e1rm)}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </article>
+      ))}
+      {history.length > limit && (
+        <Button onClick={() => setLimit((n) => n + 20)}>Show more sessions</Button>
+      )}
+    </div>
+  );
+}
+
+function RecordsTab({
+  dataset,
+  name,
+  onSource,
+}: {
+  dataset: Dataset;
+  name: string;
+  onSource: (id: string) => void;
+}) {
+  const records = getRecords(dataset, name);
+  const type = getHistory(dataset, name)[0]?.type;
+  const rows: {label: string; value: string; detail: string; workoutId: string}[] = [];
+  const add = (
+    label: string,
+    entry: {value: number; set?: SetRecord; workoutId: string; date: string} | null,
+    format: (n: number) => string,
+  ) => {
+    if (entry)
+      rows.push({
+        label,
+        value: format(entry.value),
+        detail: `${entry.set && type ? setLabel(entry.set, type) + ' · ' : ''}${dateLabel(entry.date)}`,
+        workoutId: entry.workoutId,
+      });
+  };
+  add('Estimated 1RM (Epley)', records.estimated, kg);
+  add('Heaviest weight', records.heaviest, kg);
+  add('Best set volume', records.bestSetVolume, (n) => `${Number(n.toFixed(1))} kg·reps`);
+  add('Best session volume', records.sessionVolume, (n) => `${Number(n.toFixed(1))} kg·reps`);
+  add('Least assistance', records.leastAssistance, kg);
+  add('Most reps in a set', records.mostReps, (n) => `${n} reps`);
+  if (!rows.length)
+    return (
+      <div className='empty-state'>
+        <h2>No records yet</h2>
+        <p>Records come from your completed sets.</p>
+      </div>
+    );
+  return (
+    <div className='records'>
+      <ul className='record-list'>
+        {rows.map((row) => (
+          <li key={row.label}>
+            <div>
+              <span>{row.label}</span>
+              <small>{row.detail}</small>
+            </div>
+            <strong>{row.value}</strong>
+            <Button
+              size='icon'
+              variant='ghost'
+              aria-label={`View source workout for ${row.label}`}
+              onClick={() => onSource(row.workoutId)}
+            >
+              <ArrowUpRight size={16} />
+            </Button>
+          </li>
+        ))}
+      </ul>
+      {records.estimated && (
+        <p className='metric-explanation'>
+          Estimated 1RM uses Epley, weight × (1 + reps / 30), on weighted sets of 1–10 reps. It is
+          an estimate, not a tested maximum. Assisted and bodyweight work get no estimate.
+        </p>
+      )}
+      {records.repBests.length > 0 && (
+        <>
+          <h2 className='list-label'>Heaviest weight by reps</h2>
+          <table aria-label='Heaviest weight by reps'>
+            <thead>
+              <tr>
+                <th>Reps</th>
+                <th>Best performance</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.repBests.map((best) => (
+                <tr key={best.reps}>
+                  <td>{best.reps}</td>
+                  <td>{kg(best.value)}</td>
+                  <td>
+                    <button
+                      className='text-action'
+                      aria-label={`View source workout ${best.reps} reps ${dateLabel(best.date)}`}
+                      onClick={() => onSource(best.workoutId)}
+                    >
+                      {dateLabel(best.date)} <ArrowUpRight size={13} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Strong-style exercise screen: About / History / Charts / Records, all traceable to sets. */
+export function ExerciseDetail({
+  dataset,
+  name,
+  onBack,
+  onSource,
+}: {
+  dataset: Dataset;
+  name: string;
+  onBack: () => void;
+  onSource: (id: string) => void;
+}) {
+  const sessions = getHistory(dataset, name).length;
+  const [tab, setTab] = useState<Tab>(sessions ? 'History' : 'About');
+  return (
+    <div className='exercise-detail'>
+      <header className='detail-header'>
+        <Button variant='ghost' size='icon' aria-label='Back to exercises' onClick={onBack}>
+          <ArrowLeft size={20} />
+        </Button>
+        <ExerciseThumb name={name} />
+        <div>
+          <h2>{name}</h2>
+          <p>
+            {bodyPartOf(name)} · {plural(sessions, 'session')}
+          </p>
+        </div>
+      </header>
+      <div className='tabs' role='tablist' aria-label='Exercise sections'>
+        {tabs.map((value) => (
+          <button
+            key={value}
+            role='tab'
+            id={`exercise-tab-${value}`}
+            aria-selected={tab === value}
+            aria-controls='exercise-tab-panel'
+            className='tab'
+            onClick={() => setTab(value)}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
+      <div role='tabpanel' id='exercise-tab-panel' aria-labelledby={`exercise-tab-${tab}`}>
+        {tab === 'About' && <About name={name} />}
+        {tab === 'History' && <HistoryTab dataset={dataset} name={name} onSource={onSource} />}
+        {tab === 'Charts' && (
+          <ExerciseCharts key={name} dataset={dataset} name={name} onSource={onSource} />
+        )}
+        {tab === 'Records' && <RecordsTab dataset={dataset} name={name} onSource={onSource} />}
+      </div>
+    </div>
+  );
+}

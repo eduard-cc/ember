@@ -250,6 +250,69 @@ export class WorkoutRepository {
       );
     });
   }
+  /**
+   * Adopt a server dataset reset: drop every synced copy (history, imports, templates,
+   * revisions, cursor, retained issues) so purged data is neither shown nor re-uploaded.
+   * The device-local active draft and finished workouts that never reached the server
+   * are kept; the latter are re-queued as fresh creates for the new dataset.
+   */
+  async resetToEpoch(epoch: string): Promise<void> {
+    await this.enqueue(async () => {
+      const db = this.db;
+      await db.transaction(
+        'rw',
+        [db.meta, db.workouts, db.templates, db.outbox, db.syncState, db.importSources],
+        async () => {
+          // Keep a private, non-replayed snapshot before dropping stale synced copies.
+          // Offline template/import edits and legacy evidence remain recoverable here.
+          const outbox = await db.outbox.toArray();
+          const syncState = await db.syncState.toArray();
+          const workouts = await db.workouts.toArray();
+          const templates = await db.templates.toArray();
+          const importSources = await db.importSources.toArray();
+          await db.meta.put({
+            key: 'dataset-reset-archive:' + crypto.randomUUID(),
+            value: {
+              epoch: (await db.meta.get('dataset-epoch'))?.value ?? 'initial',
+              resetAt: new Date().toISOString(),
+              outbox,
+              syncState,
+              workouts,
+              templates,
+              importSources,
+            },
+          });
+          const acknowledged = new Set(
+            syncState.filter((r) => r.key.startsWith('revision:')).map((r) => r.key.slice(9)),
+          );
+          const unsent = new Set(
+            outbox.filter((o) => o.kind === 'putWorkout').map((o) => o.entityId),
+          );
+          const kept = workouts.filter((w) => unsent.has(w.id) || !acknowledged.has(w.id));
+          for (const w of kept) unsent.add(w.id);
+          await Promise.all([
+            db.workouts.clear(),
+            db.templates.clear(),
+            db.outbox.clear(),
+            db.syncState.clear(),
+            db.importSources.clear(),
+          ]);
+          for (const workout of kept) {
+            await db.workouts.add(workout);
+            await this.queueOperation('putWorkout', workout.id, workout);
+          }
+          const order =
+            ((await db.meta.get('finished-order'))?.value as string[] | undefined) ?? [];
+          await db.meta.put({key: 'finished-order', value: order.filter((id) => unsent.has(id))});
+          await db.meta.put({key: 'template-order', value: []});
+          await db.meta.put({key: 'templates-null', value: false});
+          // Imported history now arrives only from the server feed; nothing local re-uploads.
+          await db.meta.put({key: 'imported-sync-active', value: true});
+          await db.meta.put({key: 'dataset-epoch', value: epoch});
+        },
+      );
+    });
+  }
   async readDraft(): Promise<Workout | null> {
     return (await this.db.drafts.get('active'))?.workout ?? null;
   }

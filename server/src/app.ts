@@ -7,6 +7,7 @@ import 'reflect-metadata';
 import {AuthService} from './auth/service';
 import {config} from './config';
 import {database} from './db/database';
+import {currentEpoch} from './sync/reset';
 import {SyncService} from './sync/service';
 
 export async function createApp() {
@@ -26,19 +27,24 @@ export async function createApp() {
 			await db.query('SELECT 1');
 			return {status: 'ready'};
 		}
-		@Post('session') login(@Req() req: Request, @Body() body: unknown, @Res({passthrough: true}) res: Response) {
-			return auth.login(req, body, res);
+		@Post('session') async login(
+			@Req() req: Request,
+			@Body() body: unknown,
+			@Res({passthrough: true}) res: Response,
+		) {
+			const session = await auth.login(req, body, res);
+			return {...session, epoch: await currentEpoch(db, session.ownerId)};
 		}
 		@Delete('session') logout(@Req() req: Request, @Res({passthrough: true}) res: Response) {
 			return auth.logout(req, res);
 		}
 		@Get('session') async current(@Req() req: Request) {
 			const s = await auth.session(req);
-			return {ownerId: s.owner_id, csrfToken: s.csrf};
+			return {ownerId: s.owner_id, csrfToken: s.csrf, epoch: await currentEpoch(db, s.owner_id)};
 		}
 		@Post('sync/operations') async operations(@Req() req: Request, @Body() body: unknown) {
 			const s = await auth.mutation(req);
-			return sync.operations(s.owner_id, body);
+			return sync.operations(s.owner_id, body, req.headers['x-dataset-epoch']);
 		}
 		@Get('sync/changes') async changes(
 			@Req() req: Request,
@@ -46,7 +52,7 @@ export async function createApp() {
 			@Query('limit') limit: string,
 		) {
 			const s = await auth.session(req);
-			return sync.changes(s.owner_id, after, limit);
+			return sync.changes(s.owner_id, after, limit, req.headers['x-dataset-epoch']);
 		}
 	}
 	@Module({controllers: [Api]})

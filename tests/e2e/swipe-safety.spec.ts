@@ -18,6 +18,52 @@ const offset = (row: Locator) =>
     .locator('.set-swipe-content')
     .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
 
+for (const via of ['long swipe', 'Delete tap'])
+  test(`a deleted row collapses once and never reappears before removal (${via})`, async ({
+    page,
+  }) => {
+    await page.goto('/?demo=1');
+    const rows = page.locator('.set-row:not(.set-head)');
+    const row = rows.nth(1);
+    await expect(row.getByRole('button', {name: /Actions for/})).toBeEnabled();
+    const count = await rows.count();
+    // Record the row's painted height and slide every frame until it leaves the DOM.
+    await row.evaluate((el) => {
+      const frames: {h: number; x: number}[] = [];
+      (window as unknown as {__frames: typeof frames}).__frames = frames;
+      const content = el.querySelector('.set-swipe-content')!;
+      const tick = () => {
+        if (!el.isConnected) return;
+        frames.push({
+          h: el.getBoundingClientRect().height,
+          x: new DOMMatrix(getComputedStyle(content).transform).m41,
+        });
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    const width = (await row.boundingBox())!.width;
+    if (via === 'long swipe') {
+      await pointer(row, 'pointerdown', width * 0.9);
+      await pointer(row, 'pointermove', width * 0.1);
+      await pointer(row, 'pointerup', width * 0.1);
+    } else {
+      await row.getByRole('button', {name: /Actions for/}).click();
+      await row.getByRole('button', {name: /^Delete /}).click();
+    }
+    await expect(rows).toHaveCount(count - 1);
+    const frames = await page.evaluate(
+      () => (window as unknown as {__frames: {h: number; x: number}[]}).__frames,
+    );
+    const collapse = frames.findIndex((f) => f.h < 56);
+    expect(collapse).toBeGreaterThan(-1);
+    // Once the gap starts closing it only shrinks, and the row never slides back toward view.
+    for (let i = collapse; i < frames.length; i++) {
+      expect(frames[i].h).toBeLessThanOrEqual(frames[i - 1]?.h ?? 56);
+      expect(frames[i].x).toBeLessThanOrEqual(Math.min(frames[i - 1]?.x ?? 0, -40));
+    }
+  });
+
 test('gestures inside Previous evidence never drive the set behind the portal', async ({page}) => {
   await page.goto('/?demo=1');
   const rows = page.locator('.set-row:not(.set-head)');
@@ -224,7 +270,12 @@ for (const completion of ['staggered', 'together'])
     const card = page
       .locator('.template-card')
       .filter({has: page.getByRole('heading', {name, exact: true})});
-    await expect(card.locator('.eyebrow')).toContainText(`${count - 2} TARGET SETS`);
+    const targetCount = await card
+      .locator('.template-open li')
+      .evaluateAll((rows) =>
+        rows.reduce((sum, row) => sum + Number(row.textContent?.split(' × ')[0]), 0),
+      );
+    expect(targetCount).toBe(count - 2);
   });
 
 test('Finish waits for an active workout row to complete its deletion', async ({page}) => {

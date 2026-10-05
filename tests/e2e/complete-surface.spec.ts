@@ -4,7 +4,8 @@ import {navigate} from '../navigation';
 
 test('empty workouts accept an exercise with duration units and completed sets', async ({page}) => {
   await page.goto('/?demo=1');
-  await page.getByRole('button', {name: 'Start empty', exact: true}).click();
+  await navigate(page, 'Workouts');
+  await page.getByRole('button', {name: 'Start empty workout', exact: true}).click();
   await page.getByRole('button', {name: 'Replace active draft'}).click();
   await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
   await page.getByLabel('Exercise name').fill('Plank');
@@ -23,13 +24,14 @@ test('assistance progress excludes resistance estimates and source link opens se
   await navigate(page, 'Exercises');
   await page.getByLabel('Search exercises').fill('Assisted');
   await page.getByRole('button', {name: 'Pull Up (Assisted)', exact: true}).click();
+  await page.getByRole('tab', {name: 'Charts', exact: true}).click();
   await page.getByRole('button', {name: 'Assistance (less is better)', exact: true}).click();
   await expect(page.getByRole('button', {name: 'Estimated 1RM', exact: true})).toHaveCount(0);
   await page
     .getByRole('button', {name: /View source workout/})
     .first()
     .click();
-  await expect(page.getByRole('heading', {name: 'Workout history'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   await expect(page.getByText(/Set 1:.*assistance/).first()).toBeVisible();
 });
 test('all navigation screens fit their viewport without horizontal overflow', async ({

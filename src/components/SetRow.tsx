@@ -9,6 +9,8 @@ const OPEN = 88;
 const COMMIT = 0.6;
 /** px/ms; a quick flick opens or closes regardless of distance. */
 const FLICK = 0.3;
+/** ms after a delete is applied; a row still mounted by then had its change refused. */
+const REFUSED_AFTER = 1500;
 
 type Gesture = {
   id: number;
@@ -77,8 +79,10 @@ export function SetRow({
   );
   const removing = useRef(false);
   const exitAnimation = useRef<Animation | null>(null);
+  const refusedTimer = useRef<number | undefined>(undefined);
   useEffect(
     () => () => {
+      window.clearTimeout(refusedTimer.current);
       exitAnimation.current?.cancel();
       if (removing.current) latestDeletingChange.current(false);
     },
@@ -106,17 +110,27 @@ export function SetRow({
       fill: 'forwards',
     });
     exitAnimation.current = animation;
+    const restore = () => {
+      animation.cancel();
+      exitAnimation.current = null;
+      box.inert = false;
+      removing.current = false;
+      latestDeletingChange.current(false);
+      settle(false);
+    };
     animation.finished
       .then(() => {
         if (!box.isConnected) return;
-        if (!disabled()) latestDelete.current();
-        // If editing became disabled (or the change was refused), restore the still-mounted row.
-        animation.cancel();
-        exitAnimation.current = null;
-        box.inert = false;
-        removing.current = false;
-        latestDeletingChange.current(false);
-        settle(false);
+        // Editing became disabled mid-exit: keep the set and bring the row back.
+        if (disabled()) return restore();
+        latestDelete.current();
+        // React removes the row on its next commit, which is asynchronous. Keep it collapsed and
+        // off-screen until then; restoring now would flash the deleted row back for a frame.
+        // Only a refused change leaves it mounted, and then it is restored.
+        refusedTimer.current = window.setTimeout(() => {
+          refusedTimer.current = undefined;
+          if (box.isConnected) restore();
+        }, REFUSED_AFTER);
       })
       .catch(() => {
         // Cancelled on unmount: never apply a stale workout or reopen a closed editor.

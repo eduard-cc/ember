@@ -11,7 +11,7 @@ const legacy = {
 };
 test('Saving stays visible until the real IndexedDB transaction can commit', async ({page}) => {
   await page.goto('/?demo=1');
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('gym-log');
@@ -35,12 +35,12 @@ test('Saving stays visible until the real IndexedDB transaction can commit', asy
     transaction.oncomplete = () => db.close();
   });
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Commit boundary');
-  await expect(page.getByText('Saving…', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saving');
   await expect(page.getByText('Saved on this device', {exact: true})).toHaveCount(0);
   await page.evaluate(() =>
     (window as unknown as {releaseStorageTest: () => void}).releaseStorageTest(),
   );
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
   await expect(page.getByLabel('WORKOUT NAME', {exact: true})).toHaveValue('Commit boundary');
 });
@@ -50,7 +50,7 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
     .getByRole('button', {name: /Complete .* set 1/})
     .first()
     .click();
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('gym-log');
@@ -82,7 +82,7 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
   await page.getByRole('button', {name: 'Finish workout'}).click();
   await page.getByRole('button', {name: 'Save finished workout'}).click();
   await expect(page.getByRole('alert')).toContainText('Workout was not finished');
-  await expect(page.getByText('Not saved', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
   const readCounts = () =>
     page.evaluate(async () => {
       const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -105,7 +105,7 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
   expect(await readCounts()).toEqual([1, 0, 1]);
   await page.evaluate(() => (window as unknown as {restoreUUIDTest: () => void}).restoreUUIDTest());
   await page.getByRole('button', {name: 'Save finished workout'}).click();
-  await expect(page.getByRole('heading', {name: 'Workout history'})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   expect(await readCounts()).toEqual([0, 1, 2]);
 });
 test('second same-origin tab is read-only until writer closes', async ({page, context}) => {
@@ -116,7 +116,7 @@ test('second same-origin tab is read-only until writer closes', async ({page, co
   await expect(follower.getByRole('alert')).toContainText('Another tab is editing');
   await expect(follower.getByLabel('WORKOUT NAME', {exact: true})).toBeDisabled();
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Writer owns this');
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.close();
   await follower.reload();
   await expect(follower.getByLabel('WORKOUT NAME', {exact: true})).toBeEditable();
@@ -132,8 +132,8 @@ test('missing Web Locks blocks editing with a clear error, never a race-prone fa
 });
 test('empty installation has no synthetic draft or history', async ({page}) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', {name: 'Ready for your next workout'})).toBeVisible();
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'Quick start', exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   expect(await page.evaluate(() => localStorage.getItem('gym-log:v1'))).toBeNull();
 });
 test('saved edit survives a fresh page and original legacy bytes remain unchanged', async ({
@@ -147,7 +147,7 @@ test('saved edit survives a fresh page and original legacy bytes remain unchange
     .getByLabel(/Weight for .* set 1/)
     .first()
     .fill('42.5');
-  await expect(page.getByText('Saved on this device', {exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   expect(await page.evaluate(() => localStorage.getItem('gym-log:v1'))).toBe(raw);
   await page.close();
   const fresh = await context.newPage();

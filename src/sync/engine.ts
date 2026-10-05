@@ -19,8 +19,17 @@ const changeSchema = z.strictObject({
 export interface Session {
   ownerId: string;
   csrfToken: string;
+  /** Server dataset epoch; absent on servers that predate resets. */
+  epoch?: string;
 }
 export class SessionExpired extends Error {}
+/** The server dataset was reset; this installation must drop its synced copies first. */
+export class DatasetReset extends Error {
+  constructor(readonly epoch: string) {
+    super('Server dataset was reset');
+  }
+}
+const resetSchema = z.object({errorCode: z.literal('DATASET_RESET'), epoch: z.string().min(1)});
 const ackSchema = z.strictObject({
   operationId: z.uuid(),
   entityId: z.string().min(1),
@@ -34,6 +43,17 @@ export class SyncEngine {
     readonly repository: WorkoutRepository,
     readonly request: typeof fetch = globalThis.fetch.bind(globalThis),
   ) {}
+  private async call(url: string, init: RequestInit): Promise<Response> {
+    const epoch = (await this.repository.db.meta.get('dataset-epoch'))?.value;
+    const headers = new Headers(init.headers);
+    headers.set('X-Dataset-Epoch', typeof epoch === 'string' ? epoch : 'initial');
+    const response = await this.request(url, {...init, headers});
+    if (response.status === 409) {
+      const body = resetSchema.safeParse(await response.json().catch(() => null));
+      if (body.success) throw new DatasetReset(body.data.epoch);
+    }
+    return response;
+  }
   async sync(session: Session): Promise<void> {
     const db = this.repository.db;
     const owner = (await db.meta.get('ownerId'))?.value;
@@ -79,7 +99,7 @@ export class SyncEngine {
         });
         continue;
       }
-      const response = await this.request('/api/v1/sync/operations', {
+      const response = await this.call('/api/v1/sync/operations', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {'Content-Type': 'application/json', 'X-CSRF-Token': session.csrfToken},
@@ -110,7 +130,7 @@ export class SyncEngine {
     }
     let cursor = Number((await db.syncState.get('cursor'))?.value ?? 0);
     for (;;) {
-      const response = await this.request('/api/v1/sync/changes?after=' + cursor + '&limit=100', {
+      const response = await this.call('/api/v1/sync/changes?after=' + cursor + '&limit=100', {
         credentials: 'same-origin',
       });
       if (response.status === 401) throw new SessionExpired('Sign in to resume sync');

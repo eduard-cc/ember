@@ -1,6 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import {
-  Activity,
   ChevronDown,
   ChevronUp,
   Dumbbell,
@@ -8,14 +7,15 @@ import {
   History,
   Plus,
   Settings,
+  User,
   X,
 } from 'lucide-react';
 import {useEffect, useMemo, useRef, useState} from 'react';
 
 import {AddExercise} from './components/AddExercise';
 import {AppearanceSettings, useAppearance} from './components/AppearanceSettings';
+import {ElapsedTimer} from './components/ElapsedTimer';
 import {ImportPanel} from './components/ImportPanel';
-import {RecoveryPanel} from './components/RecoveryPanel';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
 import {Button, Input, plural} from './components/ui';
@@ -25,23 +25,28 @@ import type {Workout} from './domain/types';
 import {newWorkout, useWorkoutState} from './state/workout';
 import {commitStrongImport} from './storage/import';
 import {useSync} from './sync/use-sync';
+import {CreditsView} from './views/CreditsView';
+import {ExerciseDetail} from './views/ExerciseDetail';
+import {ExercisesView} from './views/ExercisesView';
 import {HistoryView} from './views/HistoryView';
-import {ProgressView} from './views/ProgressView';
+import {ProfileView} from './views/ProfileView';
 import {TemplatesView} from './views/TemplatesView';
 import {WorkoutView, validSet} from './views/WorkoutView';
 
 const navigation = [
-  {name: 'Workouts', icon: Dumbbell},
+  {name: 'Profile', icon: User},
   {name: 'History', icon: History},
-  {name: 'Exercises', icon: Activity},
+  {name: 'Workout', icon: Plus},
+  {name: 'Exercises', icon: Dumbbell},
 ] as const;
+type View = (typeof navigation)[number]['name'];
+
 export default function App() {
   const appearance = useAppearance();
   const settingsTrigger = useRef<HTMLButtonElement | null>(null);
   const {
     repository,
     refresh,
-    reloadState,
     pauseEditing,
     resumeEditing,
     maintenance,
@@ -56,14 +61,17 @@ export default function App() {
     recoveryError,
     resetUnreadableStorage,
   } = useWorkoutState();
+  const demo = new URLSearchParams(location.search).get('demo') === '1';
   const sync = useSync(
     repository,
     hydrated,
-    !readOnly && !recoveryError && new URLSearchParams(location.search).get('demo') !== '1',
+    !readOnly && !recoveryError && !demo,
     refresh,
     saveStatus === 'saved',
   );
-  const [view, setView] = useState<string>('Workouts');
+  const [view, setView] = useState<View>('Workout');
+  const [exercise, setExercise] = useState<string | null>(null);
+  const [credits, setCredits] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [mobile, setMobile] = useState(() => matchMedia('(max-width: 999px)').matches);
   useEffect(() => {
@@ -73,26 +81,28 @@ export default function App() {
     return () => media.removeEventListener('change', update);
   }, []);
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [deletingSets, setDeletingSets] = useState(false);
   const [pendingWorkout, setPendingWorkout] = useState<Workout | null>(null);
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const [recoveryOpen, setRecoveryOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const transitioning = useRef(false);
   const pendingImport = useRef<Promise<void> | null>(null);
-  const endRecovery = (safeToResume = true) => {
+  // App-shell updates pause editing and sync around a saved, draft-free transition.
+  const endTransition = (safeToResume = true) => {
     if (!safeToResume) return;
     transitioning.current = false;
     resumeEditing();
     sync.resume();
   };
-  const beginRecovery = async (restoring: boolean) => {
+  const beginTransition = async (requireSaved: boolean) => {
     if (transitioning.current || sync.locked || readOnly || !hydrated)
-      throw new Error('Recovery is locked');
+      throw new Error('Transition is locked');
     transitioning.current = true;
     try {
       const settled = await Promise.allSettled([
         sync.pause(),
-        pauseEditing(restoring),
+        pauseEditing(requireSaved),
         pendingImport.current,
       ]);
       if (settled.some((result) => result.status === 'rejected'))
@@ -101,9 +111,9 @@ export default function App() {
         (await repository.db.meta.get('ownerId')) &&
         !(await repository.db.meta.get('local-trust'))?.value
       )
-        throw new Error('Reconnect before recovery');
+        throw new Error('Reconnect first');
     } catch (error) {
-      endRecovery();
+      endTransition();
       throw error;
     }
   };
@@ -157,15 +167,14 @@ export default function App() {
     fetch('/__local/strong.csv', {signal: controller.signal})
       .then(async (response) => {
         if (response.status === 404) return;
-        if (!response.ok)
-          throw new Error('Could not read configured local history. Demo data remains available.');
+        if (!response.ok) throw new Error('Could not read the configured history file.');
         const parsed = parseStrongCsv(await response.text());
         if (!controller.signal.aborted && !importedManually.current)
           void setState((s) => (s.dataset ? s : {...s, dataset: parsed}));
       })
       .catch((error) => {
         if (!controller.signal.aborted)
-          setNotice(error instanceof Error ? error.message : 'Could not load local history.');
+          setNotice(error instanceof Error ? error.message : 'Could not load history.');
       });
     return () => controller.abort();
     // Keeps the existing run-once-after-hydration behavior for the configured CSV.
@@ -174,7 +183,7 @@ export default function App() {
   const dataset = useMemo(
     () =>
       state.dataset ?? {
-        sourceLabel: 'Local data',
+        sourceLabel: 'History',
         workouts: [],
         warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
       },
@@ -191,22 +200,30 @@ export default function App() {
     }),
     [dataset, state.finished],
   );
+  const go = (next: View) => {
+    setView(next);
+    setExercise(null);
+    setCredits(false);
+    setFocusedId(null);
+    setPendingWorkout(null);
+    setNotice('');
+  };
   const source = (id: string) => {
+    go('History');
     setFocusedId(id);
     setExpanded(false);
-    setView('History');
   };
   const start = (workout: Workout) => {
     if (state.active) setPendingWorkout(workout);
     else {
       void setState((s) => ({...s, active: newWorkout(workout)}));
-      setView('Workouts');
+      setView('Workout');
       setExpanded(true);
     }
   };
   const saveTemplate = async (workout: Workout) => {
-    setView('Workouts');
-    setNotice('Saving template on this device…');
+    setView('Workout');
+    setNotice('Saving template…');
     const saved = await setState((s) => ({
       ...s,
       templates: [...(s.templates ?? []), newWorkout(workout)],
@@ -234,14 +251,6 @@ export default function App() {
   };
   const disabled = !hydrated || readOnly || sync.locked || maintenance || !!recoveryError;
   const showSheet = !!state.active && expanded && !sync.locked;
-  const savedLabel =
-    saveStatus === 'loading'
-      ? 'Loading…'
-      : saveStatus === 'saving'
-        ? 'Saving…'
-        : saveStatus === 'error'
-          ? 'Not saved'
-          : 'Saved on this device';
   const feedback = notice && (
     <div className='notice' role='status'>
       {notice}
@@ -250,6 +259,7 @@ export default function App() {
       </Button>
     </div>
   );
+  // Sync is silent. Only states that need the owner surface here.
   const errors = (
     <>
       {ownershipError && (
@@ -269,22 +279,18 @@ export default function App() {
         </div>
       )}
       {!sync.locked && sync.issues.length > 0 && (
-        <section aria-label='Retained sync problems' className='error-banner'>
+        <section aria-label='Sync problems' className='error-banner'>
           <p>
-            Sync problems need review. Local changes are retained; export before manual recovery.
+            {plural(sync.issues.length, 'change')} could not sync. Later edits to the same item wait
+            until this is resolved.
           </p>
           <ul>
             {sync.issues.map((issue) => (
               <li key={issue.operationId}>
                 <strong>{issue.errorCode ?? 'SYNC_REJECTED'}</strong>
-                <p>
-                  Record {issue.entityId}. Operation {issue.operationId} is retained locally; later
-                  edits to this record are paused.
-                </p>
               </li>
             ))}
           </ul>
-          <Button onClick={() => setRecoveryOpen(true)}>Recovery settings</Button>
         </section>
       )}
     </>
@@ -294,25 +300,27 @@ export default function App() {
       variant='ghost'
       size='icon'
       aria-label='Settings'
-      aria-expanded={recoveryOpen}
+      aria-expanded={settingsOpen}
       onClick={(event) => {
         settingsTrigger.current = event.currentTarget;
-        setRecoveryOpen((value) => !value);
+        setSettingsOpen((value) => !value);
       }}
     >
       <Settings size={20} />
     </Button>
   );
-  const syncStatus = new URLSearchParams(location.search).get('demo') !== '1' && (
-    <SyncStatus sync={sync} />
-  );
+  const title = view === 'Exercises' && exercise ? 'Exercise' : credits ? 'Credits' : view;
   return (
-    <div className={`app-shell ${showSheet ? 'sheet-open' : ''}`}>
+    <div
+      className={`app-shell ${showSheet ? 'sheet-open' : ''}`}
+      data-save={saveStatus}
+      data-sync={sync.status}
+    >
       {sync.locked && (
         <div className='locked-status'>
-          {!recoveryOpen && (
+          {!settingsOpen && (
             <>
-              {syncStatus}
+              <SyncStatus sync={sync} />
               {errors}
             </>
           )}
@@ -326,59 +334,25 @@ export default function App() {
           aria-hidden={showSheet && mobile ? true : undefined}
         >
           <header className='topbar'>
-            <a
-              className='brand'
-              href='#'
-              onClick={(e) => {
-                e.preventDefault();
-                setView('Workouts');
-              }}
-            >
-              <Dumbbell size={24} /> Gym Log
-            </a>
+            <h1>{title}</h1>
             <div className='topbar-actions'>{settingsButton}</div>
           </header>
           <div className='library-scroll'>
-            {!showSheet && !sync.locked && !recoveryOpen && errors}
-            {!showSheet && !sync.locked && (
-              <div className='library-status'>
-                <span className='source-badge'>{dataset.sourceLabel}</span>
-                <span className='saved-status' role='status'>
-                  {savedLabel}
-                </span>
-                {!recoveryOpen && syncStatus}
-              </div>
-            )}
+            {!showSheet && !sync.locked && !settingsOpen && errors}
             <fieldset disabled={disabled} className='content-fieldset'>
-              <div className='page-heading'>
-                <div>
-                  <h1>
-                    {view === 'History'
-                      ? 'Workout history'
-                      : view === 'Exercises'
-                        ? 'Exercise progress'
-                        : 'Workouts'}
-                  </h1>
-                  <p>
-                    {view === 'History'
-                      ? 'Review the work. Repeat what works.'
-                      : view === 'Exercises'
-                        ? 'Real sets, clear trends. Always traceable to your training.'
-                        : 'Your routines, ready when you are.'}
-                  </p>
-                </div>
-              </div>
-              {!showSheet && !recoveryOpen && feedback}
-              {view === 'Workouts' && (
+              {!showSheet && !settingsOpen && feedback}
+              {view === 'Workout' && !sync.locked && (
                 <>
-                  <section className='start-workout'>
-                    <div>
-                      <h2>{state.active ? 'Start a workout' : 'Ready for your next workout'}</h2>
-                      <p>Choose a routine, repeat history, or start with a clean slate.</p>
-                    </div>
-                    <Button onClick={() => start(newWorkout())}>
-                      {' '}
-                      <Plus size={16} /> Start empty workout
+                  <section className='quick-start' aria-labelledby='quick-start'>
+                    <h2 className='list-label' id='quick-start'>
+                      Quick start
+                    </h2>
+                    <Button
+                      variant='primary'
+                      className='wide-action'
+                      onClick={() => start(newWorkout())}
+                    >
+                      Start empty workout
                     </Button>
                   </section>
                   <TemplatesView
@@ -397,10 +371,28 @@ export default function App() {
                   onTemplate={saveTemplate}
                 />
               )}
-              {view === 'Exercises' && <ProgressView dataset={allDataset} onSource={source} />}
-              <footer className='page-foot'>
-                Local-first logging · drafts are device-local · server sync is not off-device backup
-              </footer>
+              {view === 'Exercises' &&
+                (exercise ? (
+                  <ExerciseDetail
+                    key={exercise}
+                    dataset={allDataset}
+                    name={exercise}
+                    onBack={() => setExercise(null)}
+                    onSource={source}
+                  />
+                ) : (
+                  <ExercisesView dataset={allDataset} onOpen={setExercise} />
+                ))}
+              {view === 'Profile' &&
+                (credits ? (
+                  <CreditsView onBack={() => setCredits(false)} />
+                ) : (
+                  <ProfileView
+                    workouts={allDataset.workouts}
+                    onSettings={() => setSettingsOpen(true)}
+                    onCredits={() => setCredits(true)}
+                  />
+                ))}
             </fieldset>
           </div>
           {state.active && !showSheet && (
@@ -410,13 +402,13 @@ export default function App() {
               aria-label={`Resume ${state.active.name}`}
               onClick={() => setExpanded(true)}
             >
+              <ChevronUp size={20} />
               <div>
                 <strong>{state.active.name}</strong>
                 <span>
-                  {completed} / {plural(sets.length, 'set')} completed · Resume workout
+                  <ElapsedTimer start={state.active.date} /> · {completed} / {sets.length} sets
                 </span>
               </div>
-              <ChevronUp size={20} />
             </Button>
           )}
           <nav aria-label='Main navigation'>
@@ -425,12 +417,7 @@ export default function App() {
                 key={name}
                 className={`nav-item ${view === name ? 'active' : ''}`}
                 aria-current={view === name ? 'page' : undefined}
-                onClick={() => {
-                  setView(name);
-                  setFocusedId(null);
-                  setPendingWorkout(null);
-                  setNotice('');
-                }}
+                onClick={() => go(name)}
               >
                 <Icon size={22} />
                 <span>{name}</span>
@@ -452,22 +439,11 @@ export default function App() {
                   >
                     <ChevronDown size={22} />
                   </Button>
-                  <label className='sr-only' htmlFor='workout-name'>
-                    WORKOUT NAME
-                  </label>
-                  <Input
-                    disabled={disabled}
-                    id='workout-name'
-                    className='workout-title'
-                    value={state.active.name}
-                    onChange={(event) =>
-                      setState((s) =>
-                        s.active ? {...s, active: {...s.active, name: event.target.value}} : s,
-                      )
-                    }
-                  />
+                  {settingsButton}
+                  {showSheet && <ElapsedTimer start={state.active.date} />}
                   <Button
                     variant='primary'
+                    className='finish-button'
                     aria-label='Finish workout'
                     disabled={disabled || deletingSets || !completed}
                     onClick={() => setConfirmFinish(true)}
@@ -475,6 +451,20 @@ export default function App() {
                     Finish
                   </Button>
                 </div>
+                <label className='sr-only' htmlFor='workout-name'>
+                  WORKOUT NAME
+                </label>
+                <Input
+                  disabled={disabled}
+                  id='workout-name'
+                  className='workout-title'
+                  value={state.active.name}
+                  onChange={(event) =>
+                    setState((s) =>
+                      s.active ? {...s, active: {...s.active, name: event.target.value}} : s,
+                    )
+                  }
+                />
                 {showSheet && (
                   <div className='workout-meta'>
                     <span>
@@ -483,26 +473,15 @@ export default function App() {
                       </strong>{' '}
                       {sets.length === 1 ? 'set' : 'sets'} completed
                     </span>
-                    <span className='saved-status' role='status'>
-                      {savedLabel}
-                    </span>
                   </div>
                 )}
               </header>
               <div className='workout-scroll'>
-                <h1 className='sr-only'>Your workout</h1>
-                {showSheet && (
+                <h2 className='sr-only'>Your workout</h2>
+                {showSheet && !settingsOpen && (
                   <>
-                    {!recoveryOpen && (
-                      <>
-                        {errors}
-                        {feedback}
-                      </>
-                    )}
-                    <div className='logger-status'>
-                      {!recoveryOpen && syncStatus}
-                      {settingsButton}
-                    </div>
+                    {errors}
+                    {feedback}
                   </>
                 )}
                 <fieldset disabled={disabled} className='content-fieldset'>
@@ -534,24 +513,13 @@ export default function App() {
                         )
                       }
                     />
-                    <div className='logger-footer'>
-                      <Button
-                        onClick={() => {
-                          setView('Workouts');
-                          setExpanded(false);
-                        }}
-                      >
-                        Choose a routine
-                      </Button>
-                      <Button variant='ghost' onClick={() => start(newWorkout())}>
-                        Start empty
-                      </Button>
-                    </div>
-                    <p className='draft-note'>
-                      {persistenceError
-                        ? 'Draft is only in memory. Browser storage could not be updated.'
-                        : 'Your draft stays on this device. Server sync is not off-device backup.'}
-                    </p>
+                    <Button
+                      variant='danger'
+                      className='wide-action'
+                      onClick={() => setConfirmCancel(true)}
+                    >
+                      Cancel workout
+                    </Button>
                   </div>
                 </fieldset>
               </div>
@@ -559,7 +527,7 @@ export default function App() {
           </section>
         )}
       </main>
-      <Dialog.Root open={recoveryOpen} onOpenChange={setRecoveryOpen}>
+      <Dialog.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className='dialog-overlay' />
           <Dialog.Content
@@ -578,7 +546,7 @@ export default function App() {
               </Dialog.Close>
             </div>
             <Dialog.Description className='sr-only'>
-              Appearance, import, synchronization, recovery and app updates.
+              Appearance, Strong import and app updates.
             </Dialog.Description>
             {errors}
             {feedback}
@@ -596,7 +564,7 @@ export default function App() {
                 <ImportPanel
                   onClose={() => setImportOpen(false)}
                   onReplace={async (prepared) => {
-                    if (transitioning.current) throw new Error('Recovery in progress');
+                    if (transitioning.current) throw new Error('Update in progress');
                     const job = (async () => {
                       importedManually.current = true;
                       const result = await commitStrongImport(repository, prepared, true);
@@ -618,53 +586,22 @@ export default function App() {
                 />
               </fieldset>
             )}
-            {new URLSearchParams(location.search).get('demo') !== '1' && (
-              <>
-                <section aria-label='Sync settings' className='notice'>
-                  <div>
-                    <h3>Synchronization</h3>
-                    <p>
-                      Completed history and templates sync automatically. Active drafts stay on this
-                      device.
-                    </p>
-                    <p>Server sync is not off-device disaster backup.</p>
-                    {syncStatus}
-                    <Button disabled={maintenance || sync.syncing} onClick={() => void sync.sync()}>
-                      Sync now
-                    </Button>
-                  </div>
-                </section>
-                <RecoveryPanel
-                  repository={repository}
-                  readOnly={disabled}
-                  persistenceError={!!persistenceError}
-                  begin={beginRecovery}
-                  end={endRecovery}
-                  onRestored={async () => {
-                    await reloadState();
-                    setImportOpen(false);
-                    setPendingWorkout(null);
-                    setConfirmFinish(false);
-                    setView('Workouts');
-                    setExpanded(true);
-                  }}
-                />
-                <ShellUpdatePanel
-                  repository={repository}
-                  available={
-                    hydrated &&
-                    !readOnly &&
-                    !sync.locked &&
-                    !maintenance &&
-                    !sync.syncing &&
-                    saveStatus === 'saved' &&
-                    !state.active &&
-                    !recoveryError
-                  }
-                  begin={beginRecovery}
-                  end={endRecovery}
-                />
-              </>
+            {!demo && (
+              <ShellUpdatePanel
+                repository={repository}
+                available={
+                  hydrated &&
+                  !readOnly &&
+                  !sync.locked &&
+                  !maintenance &&
+                  !sync.syncing &&
+                  saveStatus === 'saved' &&
+                  !state.active &&
+                  !recoveryError
+                }
+                begin={beginTransition}
+                end={endTransition}
+              />
             )}
           </Dialog.Content>
         </Dialog.Portal>
@@ -680,7 +617,7 @@ export default function App() {
           <Dialog.Content className='dialog-content'>
             <Dialog.Title>Replace your active workout?</Dialog.Title>
             <Dialog.Description>
-              Your current draft will be discarded. All repeated sets start uncompleted.
+              Your current workout will be discarded. All repeated sets start uncompleted.
             </Dialog.Description>
             <div className='dialog-actions'>
               <Button
@@ -717,6 +654,31 @@ export default function App() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
+      <Dialog.Root open={confirmCancel && !sync.locked} onOpenChange={setConfirmCancel}>
+        <Dialog.Portal>
+          <Dialog.Overlay className='dialog-overlay' />
+          <Dialog.Content className='dialog-content'>
+            <Dialog.Title>Cancel this workout?</Dialog.Title>
+            <Dialog.Description>
+              {plural(sets.length, 'set')} will be discarded. Finished workouts are not affected.
+            </Dialog.Description>
+            <div className='dialog-actions'>
+              <Dialog.Close asChild>
+                <Button>Keep logging</Button>
+              </Dialog.Close>
+              <Button
+                variant='danger'
+                disabled={disabled || deletingSets}
+                onClick={async () => {
+                  if (await setState((s) => ({...s, active: null}))) setConfirmCancel(false);
+                }}
+              >
+                Discard workout
+              </Button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
       <Dialog.Root open={confirmFinish && !sync.locked} onOpenChange={setConfirmFinish}>
         <Dialog.Portal>
           <Dialog.Overlay className='dialog-overlay' />
@@ -727,9 +689,6 @@ export default function App() {
               {completed} completed set{completed !== 1 ? 's' : ''} will be saved.{' '}
               {sets.length - completed} uncompleted sets will be excluded.
             </Dialog.Description>
-            <p className='quiet-note'>
-              Saved on this device only. You can repeat this workout from History.
-            </p>
             <div className='dialog-actions'>
               <Dialog.Close asChild>
                 <Button>Keep logging</Button>

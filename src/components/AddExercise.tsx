@@ -1,7 +1,7 @@
 import {Plus, X} from 'lucide-react';
 import {useState} from 'react';
 
-import {getExercises} from '../domain/model';
+import {allExerciseNames, exerciseTypeFor} from '../catalog/catalog';
 import type {Dataset, ExerciseLog, ExerciseType} from '../domain/types';
 import {Button, Input} from './ui';
 import {historyTargets} from './workout-targets';
@@ -42,17 +42,15 @@ export function AddExercise({
         id='active-exercise-name'
         list='active-exercises'
         value={name}
-        placeholder='Choose from history or enter a custom exercise'
+        placeholder='Search or enter a custom exercise'
         onChange={(e) => {
           setName(e.target.value);
-          const known = dataset.workouts
-            .flatMap((w) => w.exercises)
-            .find((ex) => ex.name === e.target.value);
-          if (known) setType(known.type);
+          const known = exerciseTypeFor(e.target.value, dataset);
+          if (known) setType(known);
         }}
       />
       <datalist id='active-exercises'>
-        {getExercises(dataset).map((name) => (
+        {allExerciseNames(dataset).map((name) => (
           <option value={name} key={name} />
         ))}
       </datalist>

@@ -2,6 +2,7 @@ import {BadRequestException} from '@nestjs/common';
 import {createHash} from 'node:crypto';
 import {DataSource} from 'typeorm';
 
+import {requireEpoch} from './reset';
 import {batch, operation} from './schema';
 
 function canonical(value: any): string {
@@ -19,7 +20,7 @@ function canonical(value: any): string {
 }
 export class SyncService {
 	constructor(private db: DataSource) {}
-	async operations(owner: string, body: unknown) {
+	async operations(owner: string, body: unknown, epoch?: unknown) {
 		const b = batch.safeParse(body);
 		if (!b.success) throw new BadRequestException('Invalid batch');
 		const results = [];
@@ -41,6 +42,7 @@ export class SyncService {
 			results.push(
 				await this.db.transaction(async (tx) => {
 					await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
+					await requireEpoch(tx, owner, epoch);
 					const [existing] = await tx.query(
 						'SELECT * FROM operation_ledger WHERE owner_id=$1 AND operation_id=$2',
 						[owner, o.operationId],
@@ -146,7 +148,7 @@ export class SyncService {
 		}
 		return {results};
 	}
-	async changes(owner: string, after: string = '0', limit: string = '100') {
+	async changes(owner: string, after: string = '0', limit: string = '100', epoch?: unknown) {
 		if (
 			typeof after !== 'string' ||
 			!/^(0|[1-9][0-9]*)$/.test(after) ||
@@ -156,11 +158,15 @@ export class SyncService {
 			Number(limit) > 100
 		)
 			throw new BadRequestException('Invalid cursor or limit');
-		const rows = await this.db.query('SELECT * FROM changes WHERE owner_id=$1 AND seq>$2 ORDER BY seq LIMIT $3', [
-			owner,
-			after,
-			Number(limit) + 1,
-		]);
+		const rows = await this.db.transaction(async (tx) => {
+			await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
+			await requireEpoch(tx, owner, epoch);
+			return tx.query('SELECT * FROM changes WHERE owner_id=$1 AND seq>$2 ORDER BY seq LIMIT $3', [
+				owner,
+				after,
+				Number(limit) + 1,
+			]);
+		});
 		const hasMore = rows.length > Number(limit);
 		const page = rows.slice(0, Number(limit));
 		return {
