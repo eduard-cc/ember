@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {navigate, openImport} from '../navigation';
+import {addExercise, navigate, openImport} from '../navigation';
 
 const csv =
   'Date;Workout Name;Exercise Name;Set Order;Weight;Weight Unit;Reps;Seconds;Workout Duration\n2026-01-10 12:00:00;Synthetic import;Synthetic Press;1;30;kg;8;;40m';
@@ -9,8 +9,7 @@ test('templates can be created edited started and deleted', async ({page}) => {
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template'}).click();
   await page.getByLabel('Template name').fill('My test session');
-  await page.getByLabel('Exercise name').fill('Custom Press');
-  await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
+  await addExercise(page, 'Custom Press');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.getByRole('heading', {name: 'My test session'})).toBeVisible();
   const card = page.locator('.template-card', {hasText: 'My test session'});

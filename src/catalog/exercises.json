@@ -1839,7 +1839,13 @@
       "Pause for a moment and then return the bar to the starting position.",
       "Repeat."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "lat-pulldown-cable-0.webp",
+        "width": 203,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -1857,6 +1863,15 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/723/view-base"
+      },
+      {
+        "kind": "illustration",
+        "title": "Lat Pulldown (Cable)",
+        "author": "Gym Log",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -1870,7 +1885,13 @@
     "instructions": [
       "Custom description created by the Integrated Conditioning routine importer for wger."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "lat-pulldown-machine-0.webp",
+        "width": 153,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -1880,6 +1901,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/2631/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Lat Pulldown (Machine)",
+        "author": "Gym Log",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -2263,7 +2293,13 @@
       "Keep your chest up and squeeze your shoulder blades at the end.",
       "Don’t hunch forward or round your back during the pull."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "seated-row-machine-0.webp",
+        "width": 240,
+        "height": 231
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -2273,6 +2309,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1725/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Seated Row (Machine)",
+        "author": "Gym Log",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -2978,7 +3023,13 @@
       "Keep the elbow slightly bent and pull the handle across your body and raise laterally.",
       "Slowly lower the handle back to the starting position under control."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "lateral-raise-cable-0.webp",
+        "width": 223,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -2988,6 +3039,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1378/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Lateral Raise (Cable)",
+        "author": "Gym Log",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -7597,7 +7657,13 @@
       "This exercise involves holding a dumbbell in each hand and bending forward at the hips while keeping the back straight, then returning to a standing position.",
       "It primarily targets the hamstrings and glutes."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "romanian-deadlift-dumbbell-0.webp",
+        "width": 136,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -7607,6 +7673,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1652/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Romanian Deadlift (Dumbbell)",
+        "author": "Gym Log",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -9524,7 +9599,13 @@
       "At the highest point, contract your abs as much as you can and hold there for 2 sec.",
       "Go now down, unrolling your back."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "sit-up-0.webp",
+        "width": 240,
+        "height": 214
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -9534,6 +9615,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/591/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Sit Up",
+        "author": "Gym Log",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },

@@ -29,14 +29,14 @@ The private mobile trial uses the owner's Tailscale identity with no separate ap
 
 ### Implemented Phase 2 navigation and evidence
 
-- **Profile:** workout/set totals, this week's workout count, a 12-week frequency chart, Settings and Credits and licenses.
+- **Profile:** workout/set totals, this week's workout count, a 12-week frequency chart and Settings.
 - **History:** complete source details, search/pagination, Repeat and Save as template.
-- **Workout:** empty start and editable templates. Targets remain unchecked until completed; minimize/resume keeps the local draft and shows elapsed time and completed/total sets.
+- **Workout:** empty start and editable templates. Exercise additions use a full-screen searchable/filterable catalog picker, also in template editing, with custom-name creation and an explicit type choice. Set deletion has no undo banner. Targets remain unchecked until completed; minimize/resume keeps the local draft and shows elapsed time and completed/total sets.
 - **Exercises:** searchable catalog and exact recorded/custom names, body-part filters and recent exercises. Details have **About / History / Charts / Records**, with available instructional content, actual sets, exact trend tables and source-linked records.
 
 Weighted charts show best reps, best load, session volume and bounded Epley estimates; assistance uses least assistance and reps, not resistance formulas. Best reps/load may come from different weights/rep counts and are not automatically comparable strength gains. Records include heaviest weight by exact rep count. Excluded sets do not count; suspicious-set correction/exclusion UI and nearby-weight fallback remain incomplete. Duration/distance-specific charts are not implemented. Volume is recorded load × reps, not evidence of hypertrophy; machine loads are not equated across gyms.
 
-Catalog drawings, instructions and muscle data use attributable Everkinetic/wger content. About and Credits and licenses expose item-level title, author, source/license URLs and adaptations. Preserve original licenses and applicable attribution/share-alike obligations. Coverage varies; a custom exercise without instructions still retains its history and analytics.
+Catalog drawings, instructions and muscle data use attributable Everkinetic/wger content. About exposes item-level title, author, source/license URLs and adaptations. Preserve original licenses and applicable attribution/share-alike obligations. Coverage varies; a custom exercise without instructions still retains its history and analytics.
 
 ## Brand Commitments
 

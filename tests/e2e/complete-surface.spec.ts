@@ -1,16 +1,13 @@
 import {expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {addExercise, navigate} from '../navigation';
 
 test('empty workouts accept an exercise with duration units and completed sets', async ({page}) => {
   await page.goto('/?demo=1');
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout', exact: true}).click();
   await page.getByRole('button', {name: 'Replace active draft'}).click();
-  await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
-  await page.getByLabel('Exercise name').fill('Plank');
-  await page.getByLabel('Exercise type').selectOption('duration');
-  await page.getByRole('button', {name: 'Add to workout'}).click();
+  await addExercise(page, 'Plank', 'Duration');
   await expect(page.getByLabel('Seconds for Plank set 1')).toBeVisible();
   await expect(page.getByLabel('Distance in km for Plank set 1')).toHaveCount(0);
   await page.getByLabel('Seconds for Plank set 1').fill('90');

@@ -25,7 +25,6 @@ import type {Workout} from './domain/types';
 import {newWorkout, useWorkoutState} from './state/workout';
 import {commitStrongImport} from './storage/import';
 import {useSync} from './sync/use-sync';
-import {CreditsView} from './views/CreditsView';
 import {ExerciseDetail} from './views/ExerciseDetail';
 import {ExercisesView} from './views/ExercisesView';
 import {HistoryView} from './views/HistoryView';
@@ -71,7 +70,6 @@ export default function App() {
   );
   const [view, setView] = useState<View>('Workout');
   const [exercise, setExercise] = useState<string | null>(null);
-  const [credits, setCredits] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [mobile, setMobile] = useState(() => matchMedia('(max-width: 999px)').matches);
   useEffect(() => {
@@ -203,7 +201,6 @@ export default function App() {
   const go = (next: View) => {
     setView(next);
     setExercise(null);
-    setCredits(false);
     setFocusedId(null);
     setPendingWorkout(null);
     setNotice('');
@@ -309,7 +306,7 @@ export default function App() {
       <Settings size={20} />
     </Button>
   );
-  const title = view === 'Exercises' && exercise ? 'Exercise' : credits ? 'Credits' : view;
+  const title = view === 'Exercises' && exercise ? 'Exercise' : view;
   return (
     <div
       className={`app-shell ${showSheet ? 'sheet-open' : ''}`}
@@ -383,16 +380,12 @@ export default function App() {
                 ) : (
                   <ExercisesView dataset={allDataset} onOpen={setExercise} />
                 ))}
-              {view === 'Profile' &&
-                (credits ? (
-                  <CreditsView onBack={() => setCredits(false)} />
-                ) : (
-                  <ProfileView
-                    workouts={allDataset.workouts}
-                    onSettings={() => setSettingsOpen(true)}
-                    onCredits={() => setCredits(true)}
-                  />
-                ))}
+              {view === 'Profile' && (
+                <ProfileView
+                  workouts={allDataset.workouts}
+                  onSettings={() => setSettingsOpen(true)}
+                />
+              )}
             </fieldset>
           </div>
           {state.active && !showSheet && (

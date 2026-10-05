@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {addExercise, navigate} from '../navigation';
 
 test('workout sheet minimizes to a named resume bar preserving the draft and ledger scroll', async ({
   page,
@@ -231,15 +231,11 @@ test('added exercises reuse matching history unchecked and custom exercises have
   );
   await page.goto('/?demo=1');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
-  await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
-  await page.getByLabel('Exercise name', {exact: true}).fill('Synthetic Press');
-  await page.getByRole('button', {name: 'Add to workout'}).click();
+  await addExercise(page, 'Synthetic Press');
   await expect(page.getByLabel('Weight for Synthetic Press set 1')).toHaveValue('55');
   await expect(page.getByLabel('Weight for Synthetic Press set 2')).toHaveValue('50');
   await expect(page.getByRole('button', {name: /Uncomplete /})).toHaveCount(0);
-  await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
-  await page.getByLabel('Exercise name', {exact: true}).fill('New custom lift');
-  await page.getByRole('button', {name: 'Add to workout'}).click();
+  await addExercise(page, 'New custom lift');
   await expect(page.getByLabel(/Weight for New custom lift/)).toHaveCount(3);
   for (let i = 1; i <= 3; i++) {
     await expect(page.getByLabel(`Weight for New custom lift set ${i}`)).toHaveValue('');

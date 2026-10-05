@@ -538,19 +538,6 @@ select {
   color: var(--accent);
   font-weight: 650;
 }
-.set-undo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
-  background: var(--tint);
-  color: var(--accent);
-  font-size: 12px;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
 .add-set {
   width: 100%;
   margin-top: 4px;
@@ -701,8 +688,7 @@ select {
 .history-card,
 .analytics-card,
 .template-editor,
-.import-panel,
-.exercise-adder {
+.import-panel {
   background: var(--surface);
   border: 1px solid var(--border);
   padding: 20px;
@@ -728,13 +714,6 @@ select {
 .template-editor .workout-name {
   display: none;
 }
-.exercise-add-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 130px auto;
-  gap: 12px;
-  align-items: end;
-  margin-bottom: 22px;
-}
 .editor-footer {
   justify-content: flex-end;
   border-top: 1px solid var(--border);
@@ -750,10 +729,6 @@ select {
 }
 .inline-confirm .button {
   margin-right: 8px;
-}
-.adder-save {
-  width: 100%;
-  margin-top: 18px;
 }
 .history-list {
   display: flex;
@@ -1024,13 +999,6 @@ th {
   }
   .analytics-header {
     flex-wrap: wrap;
-  }
-  .exercise-add-form {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-  .exercise-add-form > .button {
-    margin-top: 12px;
   }
   .workout-details {
     grid-template-columns: 1fr;
@@ -1557,29 +1525,29 @@ th {
   margin-left: auto;
   color: var(--muted);
 }
-.credits-view > p {
-  line-height: 1.55;
+.exercise-picker {
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  border: 0;
+  box-shadow: none;
+  padding: 24px max(18px, calc((100vw - 900px) / 2));
 }
-.license-summary,
-.credit-list {
-  padding-left: 18px;
-  font-size: 13px;
-  line-height: 1.55;
+.exercise-picker > .section-heading {
+  position: sticky;
+  top: -24px;
+  z-index: 1;
+  background: var(--surface);
+  padding-block: 12px;
 }
-.credit-list {
-  list-style: none;
-  padding: 0;
+.type-choice {
+  flex-wrap: wrap;
 }
-.credit-list li {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.custom-exercise {
+  margin-top: 12px;
 }
-.credit-list span {
-  font-size: 12px;
-  color: var(--muted);
+.template-editor > .add-exercise-button {
+  margin-block: 16px;
 }
 .elapsed {
   font-variant-numeric: tabular-nums;

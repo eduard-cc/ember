@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {addExercise, navigate} from '../navigation';
 
 test('fresh installation connects automatically without an app password or permanent sync card', async ({
   page,
@@ -108,8 +108,7 @@ test('unavailable server keeps trusted local drafts and pending edits across reo
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Offline retained template');
-  await page.getByLabel('Exercise name', {exact: true}).fill('Press');
-  await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
+  await addExercise(page, 'Press');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
@@ -188,8 +187,7 @@ for (const status of ['conflict', 'rejected'] as const) {
     await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
     await page.getByRole('button', {name: 'Create template', exact: true}).click();
     await page.getByLabel('Template name').fill('Retained template');
-    await page.getByLabel('Exercise name', {exact: true}).fill('Custom Press');
-    await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
+    await addExercise(page, 'Custom Press');
     await page.getByRole('button', {name: 'Save template', exact: true}).click();
     await expect(page.locator('.app-shell')).toHaveAttribute(
       'data-sync',
@@ -251,8 +249,7 @@ test('a new template syncs immediately in the background without a wake or manua
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Immediate sync template');
-  await page.getByLabel('Exercise name', {exact: true}).fill('Custom Press');
-  await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
+  await addExercise(page, 'Custom Press');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect.poll(() => uploaded, {timeout: 1200}).toBe(1);
 });

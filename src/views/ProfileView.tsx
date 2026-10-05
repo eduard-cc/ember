@@ -1,4 +1,4 @@
-import {ChevronRight, Info, Settings} from 'lucide-react';
+import {ChevronRight, Settings} from 'lucide-react';
 import {useMemo} from 'react';
 
 import {Button, plural} from '../components/ui';
@@ -8,15 +8,7 @@ import type {Workout} from '../domain/types';
 const WEEKS = 12;
 
 /** Strong-style dashboard: totals and workouts per week, nothing estimated. */
-export function ProfileView({
-  workouts,
-  onSettings,
-  onCredits,
-}: {
-  workouts: Workout[];
-  onSettings: () => void;
-  onCredits: () => void;
-}) {
+export function ProfileView({workouts, onSettings}: {workouts: Workout[]; onSettings: () => void}) {
   const weeks = useMemo(() => workoutsPerWeek(workouts, WEEKS), [workouts]);
   const max = Math.max(3, ...weeks.map((w) => w.count));
   const sets = useMemo(
@@ -96,9 +88,6 @@ export function ProfileView({
       <nav className='profile-links' aria-label='Profile'>
         <Button variant='ghost' className='profile-link' onClick={onSettings}>
           <Settings size={18} /> Settings <ChevronRight size={16} />
-        </Button>
-        <Button variant='ghost' className='profile-link' onClick={onCredits}>
-          <Info size={18} /> Credits and licenses <ChevronRight size={16} />
         </Button>
       </nav>
     </div>

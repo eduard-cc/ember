@@ -2,11 +2,11 @@ import * as Dialog from '@radix-ui/react-dialog';
 import {Pencil, Plus, Trash2, X} from 'lucide-react';
 import {useState} from 'react';
 
-import {allExerciseNames, bodyPartOf, exerciseTypeFor} from '../catalog/catalog';
+import {bodyPartOf} from '../catalog/catalog';
+import {AddExercise} from '../components/AddExercise';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {Button, Input, plural} from '../components/ui';
-import {historyTargets} from '../components/workout-targets';
-import type {Dataset, ExerciseType, Workout} from '../domain/types';
+import type {Dataset, Workout} from '../domain/types';
 import {newWorkout} from '../state/workout';
 import {WorkoutView, dateLabel} from './WorkoutView';
 
@@ -31,17 +31,6 @@ export function TemplatesView({
   const [editingBase, setEditingBase] = useState<Workout | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [preview, setPreview] = useState<Workout | null>(null);
-  const [exerciseName, setExerciseName] = useState('');
-  const [exerciseType, setExerciseType] = useState<ExerciseType>('weighted');
-  const add = () => {
-    if (!editing || !exerciseName.trim()) return;
-    const type = exerciseTypeFor(exerciseName.trim(), dataset) ?? exerciseType;
-    setEditing({
-      ...editing,
-      exercises: [...editing.exercises, historyTargets(dataset, exerciseName.trim(), type)],
-    });
-    setExerciseName('');
-  };
   return (
     <div className='templates-view'>
       <div className='section-heading templates-heading'>
@@ -53,7 +42,6 @@ export function TemplatesView({
           onClick={() => {
             setEditingBase(undefined);
             setEditing(newWorkout());
-            setExerciseName('');
           }}
         >
           <Plus size={20} />
@@ -83,50 +71,14 @@ export function TemplatesView({
             onChange={(e) => setEditing({...editing, name: e.target.value})}
             placeholder='e.g. Upper body B'
           />
-          <div className='exercise-add-form'>
-            <div>
-              <label className='field-label' htmlFor='exercise-name'>
-                Exercise name
-              </label>
-              <Input
-                id='exercise-name'
-                list='exercise-catalog'
-                placeholder='Search or enter a custom exercise'
-                value={exerciseName}
-                onChange={(e) => {
-                  setExerciseName(e.target.value);
-                  const known = exerciseTypeFor(e.target.value, dataset);
-                  if (known) setExerciseType(known);
-                  else if (/assisted/i.test(e.target.value)) setExerciseType('assisted');
-                  else setExerciseType('weighted');
-                }}
-              />
-              <datalist id='exercise-catalog'>
-                {allExerciseNames(dataset).map((name) => (
-                  <option key={name} value={name} />
-                ))}
-              </datalist>
-            </div>
-            <div>
-              <label className='field-label' htmlFor='exercise-type'>
-                Type
-              </label>
-              <select
-                id='exercise-type'
-                value={exerciseType}
-                onChange={(e) => setExerciseType(e.target.value as ExerciseType)}
-              >
-                <option value='weighted'>Weighted</option>
-                <option value='assisted'>Assisted</option>
-                <option value='bodyweight'>Bodyweight</option>
-                <option value='duration'>Duration</option>
-                <option value='cardio'>Cardio</option>
-              </select>
-            </div>
-            <Button onClick={add} disabled={!exerciseName.trim()}>
-              <Plus size={16} /> Add exercise
-            </Button>
-          </div>
+          <AddExercise
+            dataset={dataset}
+            onAdd={(exercise) =>
+              setEditing(
+                (current) => current && {...current, exercises: [...current.exercises, exercise]},
+              )
+            }
+          />
           <WorkoutView
             targetsOnly
             workout={editing}

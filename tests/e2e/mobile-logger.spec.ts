@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-test('undo distinguishes duplicate exercise names even after deleting the only set', async ({
+test('deleting the only set of a duplicate-named exercise removes exactly that set, without an undo banner', async ({
   page,
 }) => {
   await page.goto('/?demo=1');
@@ -48,20 +48,18 @@ test('undo distinguishes duplicate exercise names even after deleting the only s
     .first()
     .getByLabel(/Weight/)
     .fill('80');
-  await exercises.nth(1).getByRole('button', {name: 'Add set', exact: true}).click();
-  await page.getByRole('button', {name: 'Undo', exact: true}).click();
+  await expect(exercises).toHaveCount(2);
+  await expect(exercises.nth(1).getByLabel(/Weight/)).toHaveCount(0);
+  // The owner asked for deletion without a Removed/Undo banner.
+  await expect(page.getByText(/^Removed /)).toHaveCount(0);
+  await expect(page.getByRole('button', {name: 'Undo', exact: true})).toHaveCount(0);
   await expect(exercises.first().getByLabel(/Weight/)).toHaveValue('80');
-  await expect(
-    exercises
-      .nth(1)
-      .getByLabel(/Weight/)
-      .first(),
-  ).toHaveValue('42.5');
-  await expect(exercises.nth(1).getByRole('button', {name: /Uncomplete/})).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
-  await expect(exercises.nth(1).getByLabel(/Weight/)).toHaveCount(2);
+  await exercises.nth(1).getByRole('button', {name: 'Add set', exact: true}).click();
+  // The new set belongs to the second exercise; the first duplicate keeps its own set.
+  await expect(exercises.nth(1).getByLabel(/Weight/)).toHaveCount(1);
+  await expect(exercises.nth(1).getByLabel(/Weight/)).toHaveValue('');
+  await expect(exercises.first().getByLabel(/Weight/)).toHaveCount(1);
+  await expect(exercises.first().getByLabel(/Weight/)).toHaveValue('80');
 });
 
 test('phone landscape keeps first editable set in the usable viewport', async ({page}, info) => {
@@ -222,12 +220,14 @@ test('number swipe works while vertical, canceled and input drags do not reveal 
   expect(await row.evaluate((el) => getComputedStyle(el).touchAction)).toBe('pan-y');
 });
 
-test('set number exposes keyboard-accessible deletion and undo survives earlier exercise removal', async ({
-  page,
-}) => {
+test('set number exposes keyboard-accessible deletion of exactly that set', async ({page}) => {
   await page.goto('/?demo=1');
   const exercises = page.locator('.exercise-card');
-  const secondName = await exercises.nth(1).getByRole('heading').textContent();
+  const weights = exercises.nth(1).getByLabel(/Weight for .* set/);
+  await expect(weights).toHaveCount(3);
+  await weights.nth(0).fill('11');
+  await weights.nth(1).fill('22');
+  await weights.nth(2).fill('33');
   const action = exercises.nth(1).getByRole('button', {name: /Actions for .* set 1/});
   await action.focus();
   await page.keyboard.press('Enter');
@@ -235,24 +235,21 @@ test('set number exposes keyboard-accessible deletion and undo survives earlier 
     .nth(1)
     .getByRole('button', {name: /Delete .* set 1/})
     .click();
-  await exercises
-    .first()
-    .getByRole('button', {name: /^Remove [^]*$/})
-    .first()
-    .click();
-  await page.getByRole('button', {name: 'Undo', exact: true}).click();
-  await expect(exercises.first().getByRole('heading')).toHaveText(secondName!);
-  await expect(exercises.first().getByRole('button', {name: /Actions for .* set/})).toHaveCount(3);
+  await expect(weights).toHaveCount(2);
+  await expect(weights.nth(0)).toHaveValue('22');
+  await expect(weights.nth(1)).toHaveValue('33');
+  await expect(exercises.first().getByLabel(/Weight for .* set/)).toHaveCount(3);
 });
 
-test('left swipe reveals Delete without deleting; undo restores values, order and completion', async ({
+test('left swipe reveals Delete without deleting; Delete removes that set and keeps the order', async ({
   page,
 }) => {
   await page.goto('/?demo=1');
   const weights = page.getByLabel(/Weight for .* set/);
   await weights.first().fill('42.5');
+  await weights.nth(1).fill('47.5');
   await page
-    .getByRole('button', {name: /Complete .* set 1/})
+    .getByRole('button', {name: /Complete .* set 2/})
     .first()
     .click();
   const row = page.locator('.set-row:not(.set-head)').first();
@@ -281,10 +278,8 @@ test('left swipe reveals Delete without deleting; undo restores values, order an
   await row.getByRole('button', {name: /Delete .* set 1/}).click();
   // The row slides out and collapses before it leaves the workout.
   await expect(weights).toHaveCount(before - 1);
-  await weights.first().fill('51');
-  await page.getByRole('button', {name: 'Undo', exact: true}).click();
-  await expect(weights.nth(0)).toHaveValue('42.5');
-  await expect(weights.nth(1)).toHaveValue('51');
+  // Former set 2 moves up with its value and completion intact.
+  await expect(weights.nth(0)).toHaveValue('47.5');
   await expect(page.getByRole('button', {name: /Uncomplete .* set 1/}).first()).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -336,7 +331,7 @@ test('swipe follows the finger from the weight field, settles open, and a long s
   await expect(row.getByRole('button', {name: /^Delete /})).toBeVisible();
   await expect.poll(shift).toBeLessThan(-80);
   await expect(weight).not.toBeFocused();
-  // Continuing from the open position past most of the row deletes outright, with Undo.
+  // Continuing from the open position past most of the row deletes outright.
   const start = (await row.boundingBox())!;
   const sx = start.x + start.width - 40;
   await cdp.send('Input.dispatchTouchEvent', {
@@ -350,7 +345,5 @@ test('swipe follows the finger from the weight field, settles open, and a long s
     });
   await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
   await expect(rows).toHaveCount(count - 1);
-  await page.getByRole('button', {name: 'Undo', exact: true}).click();
-  await expect(rows).toHaveCount(count);
   await context.close();
 });

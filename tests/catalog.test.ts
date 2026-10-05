@@ -30,7 +30,12 @@ describe('bundled exercise catalog', () => {
         expect(exercise.sources.some((s) => s.kind === 'illustration')).toBe(true);
       for (const source of exercise.sources) {
         expect(source.author).toBeTruthy();
-        expect(source.license).toMatch(/^(CC BY-SA [34]\.0|CC0 1\.0)$/);
+        expect(source.license).toMatch(/^(CC BY-SA [34]\.0|CC0 1\.0|app-owned)$/);
+        if (source.license === 'app-owned') {
+          expect(source.kind).toBe('illustration');
+          expect(source.author).toBe('Gym Log');
+          expect(source.changes).toContain('AI-assisted illustration');
+        }
         expect(source.url).toMatch(/^https:\/\//);
       }
       for (const image of exercise.images) {
@@ -38,6 +43,24 @@ describe('bundled exercise catalog', () => {
         expect(existsSync(path)).toBe(true);
         expect(statSync(path).size).toBeLessThanOrEqual(40 * 1024);
       }
+    }
+  });
+  it('bundles reviewed app-owned drawings for the first approved exercises', () => {
+    for (const name of [
+      'Lat Pulldown (Cable)',
+      'Seated Row (Machine)',
+      'Lat Pulldown (Machine)',
+      'Lateral Raise (Cable)',
+      'Sit Up',
+      'Romanian Deadlift (Dumbbell)',
+    ]) {
+      const entry = catalogEntry(name);
+      expect(entry?.images).toHaveLength(1);
+      expect(entry?.sources).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({kind: 'illustration', author: 'Gym Log', license: 'app-owned'}),
+        ]),
+      );
     }
   });
   it('keeps unclear-copyright datasets out of the committed catalog', () => {

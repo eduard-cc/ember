@@ -1,11 +1,22 @@
+import * as Dialog from '@radix-ui/react-dialog';
 import {Plus, X} from 'lucide-react';
 import {useState} from 'react';
 
-import {allExerciseNames, exerciseTypeFor} from '../catalog/catalog';
+import {exerciseTypeFor} from '../catalog/catalog';
 import type {Dataset, ExerciseLog, ExerciseType} from '../domain/types';
-import {Button, Input} from './ui';
+import {ExerciseList} from './ExerciseList';
+import {Button} from './ui';
 import {historyTargets} from './workout-targets';
 
+const types: [ExerciseType, string][] = [
+  ['weighted', 'Weighted'],
+  ['assisted', 'Assisted'],
+  ['bodyweight', 'Bodyweight'],
+  ['duration', 'Duration'],
+  ['cardio', 'Cardio'],
+];
+
+/** Add exercise opens the same library as the Exercises tab; picking a row adds it. */
 export function AddExercise({
   dataset,
   onAdd,
@@ -14,72 +25,76 @@ export function AddExercise({
   onAdd: (exercise: ExerciseLog) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [type, setType] = useState<ExerciseType>('weighted');
-  if (!open)
-    return (
-      <Button className='add-exercise-button' onClick={() => setOpen(true)}>
-        <Plus size={16} /> Add exercise
-      </Button>
-    );
+  const [custom, setCustom] = useState<string | null>(null);
+  const toggle = (next: boolean) => {
+    setOpen(next);
+    setCustom(null);
+  };
+  const add = (name: string, type = exerciseTypeFor(name, dataset) ?? 'weighted') => {
+    onAdd(historyTargets(dataset, name, type));
+    toggle(false);
+  };
   return (
-    <section className='exercise-adder'>
-      <div className='section-heading'>
-        <h2>Add an exercise</h2>
-        <Button
-          size='icon'
-          variant='ghost'
-          aria-label='Cancel adding exercise'
-          onClick={() => setOpen(false)}
-        >
-          <X size={17} />
+    <Dialog.Root open={open} onOpenChange={toggle}>
+      <Dialog.Trigger asChild>
+        <Button className='add-exercise-button'>
+          <Plus size={16} /> Add exercise
         </Button>
-      </div>
-      <label className='field-label' htmlFor='active-exercise-name'>
-        Exercise name
-      </label>
-      <Input
-        id='active-exercise-name'
-        list='active-exercises'
-        value={name}
-        placeholder='Search or enter a custom exercise'
-        onChange={(e) => {
-          setName(e.target.value);
-          const known = exerciseTypeFor(e.target.value, dataset);
-          if (known) setType(known);
-        }}
-      />
-      <datalist id='active-exercises'>
-        {allExerciseNames(dataset).map((name) => (
-          <option value={name} key={name} />
-        ))}
-      </datalist>
-      <label className='field-label' htmlFor='active-exercise-type'>
-        Exercise type
-      </label>
-      <select
-        id='active-exercise-type'
-        value={type}
-        onChange={(e) => setType(e.target.value as ExerciseType)}
-      >
-        <option value='weighted'>Weighted</option>
-        <option value='assisted'>Assisted</option>
-        <option value='bodyweight'>Bodyweight</option>
-        <option value='duration'>Duration</option>
-        <option value='cardio'>Cardio</option>
-      </select>
-      <Button
-        variant='primary'
-        className='adder-save'
-        disabled={!name.trim()}
-        onClick={() => {
-          onAdd(historyTargets(dataset, name.trim(), type));
-          setOpen(false);
-          setName('');
-        }}
-      >
-        Add to workout
-      </Button>
-    </section>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className='dialog-overlay' />
+        <Dialog.Content className='dialog-content settings-panel exercise-picker'>
+          <div className='section-heading'>
+            <Dialog.Title>Add exercise</Dialog.Title>
+            <Dialog.Close asChild>
+              <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
+                <X size={20} />
+              </Button>
+            </Dialog.Close>
+          </div>
+          <Dialog.Description className='sr-only'>
+            Search or filter the exercise library and choose one to add to this workout.
+          </Dialog.Description>
+          <ExerciseList
+            dataset={dataset}
+            onSelect={(name) => add(name)}
+            extra={(query, names) => {
+              const exact = names.some((name) => name.toLowerCase() === query.toLowerCase());
+              if (!query || exact) return null;
+              return custom === query ? (
+                <section className='custom-exercise' aria-label='New exercise'>
+                  <h2 className='list-label'>Type for {query}</h2>
+                  <div className='chip-row type-choice' role='group' aria-label='Exercise type'>
+                    {types.map(([type, label]) => (
+                      <button key={type} className='chip' onClick={() => add(query, type)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ) : (
+                <ul className='exercise-rows custom-exercise'>
+                  <li>
+                    <button
+                      className='exercise-row'
+                      aria-label={`Create "${query}"`}
+                      onClick={() => setCustom(query)}
+                    >
+                      <span className='exercise-thumb' aria-hidden='true'>
+                        <Plus size={18} />
+                      </span>
+                      <span className='exercise-row-text'>
+                        <strong>{`Create "${query}"`}</strong>
+                        <small>Custom exercise</small>
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              );
+            }}
+          />
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

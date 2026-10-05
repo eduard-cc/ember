@@ -1,5 +1,5 @@
 import {Check, Plus, Trash2} from 'lucide-react';
-import {useCallback, useRef, useState} from 'react';
+import {useCallback, useRef} from 'react';
 
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
@@ -64,25 +64,7 @@ export function WorkoutView({
     identities.current.set(next, identity(exercise));
     return next;
   };
-  const [removed, setRemoved] = useState<{
-    workoutId: string;
-    exerciseId: string;
-    name: string;
-    set: SetRecord;
-    index: number;
-    before?: string;
-    after?: string;
-  } | null>(null);
   const removeSet = (exercise: ExerciseLog, index: number) => {
-    setRemoved({
-      workoutId: workout.id,
-      exerciseId: identity(exercise),
-      name: exercise.name,
-      set: exercise.sets[index],
-      index,
-      before: exercise.sets[index - 1]?.id,
-      after: exercise.sets[index + 1]?.id,
-    });
     const exerciseId = identity(exercise);
     const setId = exercise.sets[index].id;
     // Exits can finish in the same frame. Apply each deletion to the current draft.
@@ -97,30 +79,6 @@ export function WorkoutView({
           : ex,
       ),
     }));
-  };
-  // identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use.
-  const canUndo =
-    removed?.workoutId === workout.id &&
-    // eslint-disable-next-line react-hooks/refs
-    workout.exercises.some((ex) => identity(ex) === removed.exerciseId);
-  const undo = () => {
-    if (!removed || !canUndo) return;
-    onChange({
-      ...workout,
-      exercises: workout.exercises.map((ex) => {
-        if (identity(ex) !== removed.exerciseId) return ex;
-        const sets = [...ex.sets];
-        const after = sets.findIndex((set) => set.id === removed.after),
-          before = sets.findIndex((set) => set.id === removed.before);
-        sets.splice(
-          after >= 0 ? after : before >= 0 ? before + 1 : Math.min(removed.index, sets.length),
-          0,
-          removed.set,
-        );
-        return changeExercise(ex, sets);
-      }),
-    });
-    setRemoved(null);
   };
   const edit = (ei: number, si: number, patch: Partial<SetRecord>) =>
     onChange({
@@ -146,12 +104,6 @@ export function WorkoutView({
     });
   return (
     <div className='exercise-list'>
-      {removed && canUndo && (
-        <div className='set-undo' role='status'>
-          Removed {removed.name} set {removed.index + 1}
-          <Button onClick={undo}>Undo</Button>
-        </div>
-      )}
       {targetsOnly && (
         <div className='workout-name'>
           <label htmlFor='workout-name'>WORKOUT NAME</label>
@@ -162,7 +114,7 @@ export function WorkoutView({
           />
         </div>
       )}
-      {/* eslint-disable-next-line react-hooks/refs -- identity() keys, see canUndo */}
+      {/* eslint-disable-next-line react-hooks/refs -- identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use. */}
       {workout.exercises.map((ex, ei) => {
         const timed = ex.type === 'cardio' || ex.type === 'duration';
         const checked = ex.sets.filter((set) => set.completed && validSet(set, ex.type)).length;

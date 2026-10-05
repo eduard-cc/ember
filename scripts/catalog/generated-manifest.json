@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "model": "gpt-image-2-medium",
+  "reference": "$SCRATCH/ref-bench.png",
+  "referenceSha256": "5df0e3818f0bc8cb29473331c76764b4800d994984e6b46ab80e4178221d701c",
+  "conversion": "generate.line_mask: MAX_SIDE=240, LEVELS=8, lossless WebP method=4",
+  "qaStatus": "Partial: vision provider session limit blocked QA after 13 reviews; resets a later time. No pending/rejected image bundled.",
+  "exercises": [
+    {
+      "name": "Face Pull (Cable)",
+      "acceptedAttempt": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/face-pull-cable-attempt-1.png",
+          "verdict": "PENDING",
+          "note": "QA blocked by vision provider session limit."
+        }
+      ]
+    },
+    {
+      "name": "Lat Pulldown (Cable)",
+      "acceptedAttempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/lat-pulldown-cable-attempt-1.png",
+          "verdict": "PASS",
+          "note": "Front pulldown; bar horizontal across upper chest; anatomy and style pass."
+        }
+      ],
+      "sha256": "febf8ff2c60d045a01a7c625db99d03639eb85da4ae9fc30166910973475ad1e"
+    },
+    {
+      "name": "Lat Pulldown (Machine)",
+      "acceptedAttempt": 3,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/lat-pulldown-machine-attempt-1.png",
+          "verdict": "FAIL",
+          "note": "Shoulder-press look; plates mounted at pivots/floating."
+        },
+        {
+          "attempt": 2,
+          "source": "attempts/lat-pulldown-machine-attempt-2.png",
+          "verdict": "FAIL",
+          "note": "Hands at ears: shoulder-press look."
+        },
+        {
+          "attempt": 3,
+          "source": "attempts/lat-pulldown-machine-attempt-3.png",
+          "verdict": "PASS",
+          "note": "Correct front pulldown bottom position, elbows down; anatomy and style pass."
+        }
+      ],
+      "sha256": "f4102c10047bf4f62e17035fb725b272b31d4d86011fa3b0bf03c86b73e41a3b"
+    },
+    {
+      "name": "Lateral Raise (Cable)",
+      "acceptedAttempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/lateral-raise-cable-attempt-1.png",
+          "verdict": "PASS",
+          "note": "Correct single-arm lateral raise; coherent low cable path; anatomy and style pass."
+        }
+      ],
+      "sha256": "dca44dd05a732617ed68dcdde40b057027919c713c9d2f430b23c323260f8da6"
+    },
+    {
+      "name": "Plank",
+      "acceptedAttempt": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/plank-attempt-1.png",
+          "verdict": "PENDING",
+          "note": "QA blocked by vision provider session limit."
+        }
+      ]
+    },
+    {
+      "name": "Reverse Fly (Machine)",
+      "acceptedAttempt": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/reverse-fly-machine-attempt-1.png",
+          "verdict": "FAIL",
+          "note": "Twisted sideways legs; detached/offset seat."
+        },
+        {
+          "attempt": 2,
+          "source": "attempts/reverse-fly-machine-attempt-2.png",
+          "verdict": "FAIL",
+          "note": "Chest pad absent; seat in front of hips."
+        },
+        {
+          "attempt": 3,
+          "source": "attempts/reverse-fly-machine-attempt-3.png",
+          "verdict": "FAIL",
+          "note": "Torso offset from pad; seat post detached."
+        },
+        {
+          "attempt": 4,
+          "source": "attempts/reverse-fly-machine-attempt-4.png",
+          "verdict": "PENDING",
+          "note": "QA blocked by vision provider session limit, resets a later time."
+        }
+      ]
+    },
+    {
+      "name": "Romanian Deadlift (Dumbbell)",
+      "acceptedAttempt": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/romanian-deadlift-dumbbell-attempt-1.png",
+          "verdict": "FAIL",
+          "note": "Two dumbbells visually merged into one incoherent dumbbell."
+        },
+        {
+          "attempt": 2,
+          "source": "attempts/romanian-deadlift-dumbbell-attempt-2.png",
+          "verdict": "PASS",
+          "note": "Correct hinge, flat back and two separate coherent dumbbells; style pass."
+        }
+      ],
+      "sha256": "767c2b2288bd72d9ab47fae1f254d4fe4a376eec5b2e1f01f0519fea2150dc1f"
+    },
+    {
+      "name": "Seated Palms Up Wrist Curl (Dumbbell)",
+      "acceptedAttempt": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/seated-palms-up-wrist-curl-dumbbell-attempt-1.png",
+          "verdict": "PENDING",
+          "note": "QA blocked by vision provider session limit."
+        }
+      ]
+    },
+    {
+      "name": "Seated Row (Machine)",
+      "acceptedAttempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/seated-row-machine-attempt-1.png",
+          "verdict": "PASS",
+          "note": "Correct chest-supported row; anatomy and style pass. Simplified linkage caveat."
+        }
+      ],
+      "sha256": "15e043745e3385af29b45d3cd3d8e690a422e576d6817520dfb738b4900c12de"
+    },
+    {
+      "name": "Sit Up",
+      "acceptedAttempt": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source": "attempts/sit-up-attempt-1.png",
+          "verdict": "FAIL",
+          "note": "Ambiguous/merged arms and hands."
+        },
+        {
+          "attempt": 2,
+          "source": "attempts/sit-up-attempt-2.png",
+          "verdict": "PASS",
+          "note": "Correct top sit-up, both hands at temples; anatomy and style pass."
+        }
+      ],
+      "sha256": "139f9a9ac076bcd6a2394f52118fe638b8858298a586b6f4bed2dfe9d2d5ca4e"
+    }
+  ]
+}
