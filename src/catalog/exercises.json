@@ -1508,7 +1508,13 @@
       "Row the dumbbells toward the top of the stomach and squeeze the back at the top of the rep.",
       "Finally, lower the dumbbells back to the starting position and repeat until all reps are completed."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "chest-supported-row-dumbbell-0.webp",
+        "width": 240,
+        "height": 234
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -1518,6 +1524,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1283/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Chest Supported Row (Dumbbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -1839,13 +1854,7 @@
       "Pause for a moment and then return the bar to the starting position.",
       "Repeat."
     ],
-    "images": [
-      {
-        "file": "lat-pulldown-cable-0.webp",
-        "width": 203,
-        "height": 240
-      }
-    ],
+    "images": [],
     "sources": [
       {
         "kind": "instructions",
@@ -1863,15 +1872,6 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/723/view-base"
-      },
-      {
-        "kind": "illustration",
-        "title": "Lat Pulldown (Cable)",
-        "author": "Gym Log",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
-        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -1885,13 +1885,7 @@
     "instructions": [
       "Custom description created by the Integrated Conditioning routine importer for wger."
     ],
-    "images": [
-      {
-        "file": "lat-pulldown-machine-0.webp",
-        "width": 153,
-        "height": 240
-      }
-    ],
+    "images": [],
     "sources": [
       {
         "kind": "instructions",
@@ -1901,15 +1895,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/2631/view-base",
         "changes": "converted to plain text"
-      },
-      {
-        "kind": "illustration",
-        "title": "Lat Pulldown (Machine)",
-        "author": "Gym Log",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
-        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -2293,13 +2278,7 @@
       "Keep your chest up and squeeze your shoulder blades at the end.",
       "Don’t hunch forward or round your back during the pull."
     ],
-    "images": [
-      {
-        "file": "seated-row-machine-0.webp",
-        "width": 240,
-        "height": 231
-      }
-    ],
+    "images": [],
     "sources": [
       {
         "kind": "instructions",
@@ -2309,15 +2288,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1725/view-base",
         "changes": "converted to plain text"
-      },
-      {
-        "kind": "illustration",
-        "title": "Seated Row (Machine)",
-        "author": "Gym Log",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
-        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -2731,7 +2701,13 @@
       "Continue out as far as possible so that you feel a stretch in your shoulders, hold for a count and then return back to the starting position.",
       "Repeat for as many reps and sets as desired."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "external-rotation-cable-0.webp",
+        "width": 190,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -2741,6 +2717,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/142/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "External Rotation (Cable)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -3026,7 +3011,7 @@
     "images": [
       {
         "file": "lateral-raise-cable-0.webp",
-        "width": 223,
+        "width": 224,
         "height": 240
       }
     ],
@@ -3043,11 +3028,11 @@
       {
         "kind": "illustration",
         "title": "Lateral Raise (Cable)",
-        "author": "Gym Log",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -3123,7 +3108,13 @@
       "Peak Contraction: Pause briefly at the top, squeezing the side delts, but don't shrug your shoulders up.",
       "Lowering Phase: Inhale and slowly lower the weight back down with control, resisting the weight on the way down."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "lateral-raise-machine-0.webp",
+        "width": 240,
+        "height": 216
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -3133,6 +3124,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1744/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Lateral Raise (Machine)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -4950,7 +4950,13 @@
       "Switch arms and repeat.",
       "Note: Keep your elbows close to your head during the exercise"
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "one-arm-triceps-extension-dumbbell-0.webp",
+        "width": 92,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -4960,6 +4966,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
+      },
+      {
+        "kind": "illustration",
+        "title": "One Arm Triceps Extension (Dumbbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -5380,7 +5395,13 @@
       "Curl your knuckles towards your face, lifting the barbell.",
       "Pause for a moment in the top position, then slowly return the barbell to the starting position."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "reverse-wrist-curl-barbell-0.webp",
+        "width": 240,
+        "height": 197
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -5390,6 +5411,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/48/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Reverse Wrist Curl (Barbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -6315,7 +6345,13 @@
       "It mainly trains the quads and glutes, with much less lower-back fatigue than a barbell squat.",
       "Use a full range of motion, keep the torso upright, and drive through the mid-foot."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "belt-squat-machine-0.webp",
+        "width": 232,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -6325,6 +6361,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1935/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Belt Squat (Machine)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -6338,7 +6383,13 @@
     "instructions": [
       "Jump from a standing position onto the box, stretch your body, then step down again (do not jump)"
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "box-jump-0.webp",
+        "width": 228,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -6348,6 +6399,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1373/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Box Jump",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -6412,7 +6472,13 @@
       "The Bulgarian split squat consists of performing a squat on one leg with the rear foot resting on a raised platform.",
       "Elevating your back leg on a bench creates instability and increases the range of motion of the exercise."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "bulgarian-split-squat-0.webp",
+        "width": 240,
+        "height": 195
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -6422,6 +6488,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1706/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Bulgarian Split Squat",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -6732,7 +6807,13 @@
       "Repeat.",
       "Keep bodyweight on heels and look ahead or slightly above to keep back straight."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "goblet-squat-dumbbell-0.webp",
+        "width": 155,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -6742,6 +6823,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/203/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Goblet Squat (Dumbbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -7473,7 +7563,13 @@
       "Slowly squat down.",
       "(optional) pause at the bottom."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "pistol-squat-0.webp",
+        "width": 240,
+        "height": 203
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -7483,6 +7579,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/456/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Pistol Squat",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -7657,13 +7762,7 @@
       "This exercise involves holding a dumbbell in each hand and bending forward at the hips while keeping the back straight, then returning to a standing position.",
       "It primarily targets the hamstrings and glutes."
     ],
-    "images": [
-      {
-        "file": "romanian-deadlift-dumbbell-0.webp",
-        "width": 136,
-        "height": 240
-      }
-    ],
+    "images": [],
     "sources": [
       {
         "kind": "instructions",
@@ -7673,15 +7772,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1652/view-base",
         "changes": "converted to plain text"
-      },
-      {
-        "kind": "illustration",
-        "title": "Romanian Deadlift (Dumbbell)",
-        "author": "Gym Log",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
-        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration; cropped, resized and recoloured"
       }
     ]
   },
@@ -7913,7 +8003,13 @@
       "Your non-supporting leg should return in line with the supporting one.",
       "Switch Sides: After completing your desired number of repetitions on one side, switch your weight and repeat the movement on the other leg."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "single-leg-deadlift-dumbbell-0.webp",
+        "width": 240,
+        "height": 161
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -7923,6 +8019,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1736/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Single Leg Deadlift (Dumbbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -7981,7 +8086,13 @@
     "primaryMuscles": ["Glutes", "Quads"],
     "secondaryMuscles": ["Hamstrings", "Calves"],
     "instructions": ["Controlled execution", "No momentum", "Execute slowly"],
-    "images": [],
+    "images": [
+      {
+        "file": "split-squat-dumbbell-0.webp",
+        "width": 240,
+        "height": 237
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -7991,6 +8102,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1366/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Split Squat (Dumbbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -8067,7 +8187,13 @@
       "Squats are very effective for firming and strengthening your legs by acting on the gluteus,hip flexors, quadriceps, hamstrings and inner thigh muscles.",
       "Also, bodyweight squats can help shape your glutes and butt."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "squat-bodyweight-0.webp",
+        "width": 240,
+        "height": 231
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -8077,6 +8203,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1312/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Squat (Bodyweight)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -8560,7 +8695,13 @@
       "As the bar passes through the knees, lean back and drive the hips into the bar, pulling your shoulder blades together.",
       "Return the weight to the ground by bending at the hips and controlling the weight on the way down."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "sumo-deadlift-barbell-0.webp",
+        "width": 240,
+        "height": 192
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -8570,6 +8711,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/630/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Sumo Deadlift (Barbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -8747,7 +8897,13 @@
       "Roll Out : Slowly roll the wheel forward, extending your body while keeping your core tight.",
       "Return : Pull the wheel back towards your knees, maintaining tension in your core."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "ab-wheel-0.webp",
+        "width": 240,
+        "height": 78
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -8757,6 +8913,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1573/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Ab Wheel",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -8819,7 +8984,13 @@
       "Lift your shoulders off the ground, bring one knee toward your chest, and twist your torso so your opposite elbow meets the knee.",
       "Alternate sides in a pedaling motion, ensuring controlled movements and engaging your core throughout the exercise."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "bicycle-crunch-0.webp",
+        "width": 240,
+        "height": 84
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -8829,6 +9000,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1412/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Bicycle Crunch",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -8982,7 +9162,13 @@
       "Grab the to the weights, cables, etc. and do a rolling motion forwards (the spine should ideally lose touch vertebra by vertebra).",
       "Slowly return to the starting position."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "crunch-machine-0.webp",
+        "width": 202,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -8992,6 +9178,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/172/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Crunch (Machine)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -9438,7 +9633,13 @@
       "Keep your body straight at all times and hold this position as long as possible.",
       "To increase difficulty an arm or leg can be raised while performing this exercise."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "plank-0.webp",
+        "width": 240,
+        "height": 75
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -9448,6 +9649,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/458/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Plank",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -9463,7 +9673,13 @@
       "Lean back to a 45-degree angle from the floor. For an extra challenge, lift your feet off the floor.",
       "Rotate your arms to one side to the same level as your chest, touch the floor for a little extra challenge, and then do the same to the other side. When you're back in your original position after doing both sides it will count as 1 rep."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "russian-twist-0.webp",
+        "width": 240,
+        "height": 167
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -9473,6 +9689,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1193/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Russian Twist",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -9603,7 +9828,7 @@
       {
         "file": "sit-up-0.webp",
         "width": 240,
-        "height": 214
+        "height": 144
       }
     ],
     "sources": [
@@ -9619,11 +9844,11 @@
       {
         "kind": "illustration",
         "title": "Sit Up",
-        "author": "Gym Log",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -9807,7 +10032,13 @@
       "Jump just high enough to pass the rope below your feet.",
       "Repeat."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "jump-rope-0.webp",
+        "width": 155,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -9817,6 +10048,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/993/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Jump Rope",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -9830,7 +10070,13 @@
     "instructions": [
       "A jumping jack or star jump, also called side-straddle hop in the US military, is a physical jumping exercise performed by jumping to a position with the legs spread wide and the hands going overhead, sometimes in a clap, and then returning to a position with the feet together and the arms at the sides"
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "jumping-jack-0.webp",
+        "width": 145,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -9840,6 +10086,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/320/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Jumping Jack",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -9957,7 +10212,13 @@
     "primaryMuscles": ["Quads", "Chest"],
     "secondaryMuscles": ["Shoulders", "Abs", "Triceps"],
     "instructions": ["Jump, lay down on your chest, do a pushup then jump, repeat"],
-    "images": [],
+    "images": [
+      {
+        "file": "burpee-0.webp",
+        "width": 217,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -9967,6 +10228,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/132/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Burpee",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -10007,7 +10277,13 @@
       "The Quick Elbow Turnover: In the catch phase, rotate your elbows rapidly under the bar to create a \"shelf\" on your front deltoids.",
       "The Vertical Press: Press the bar in a straight line; your head should shift slightly forward once the bar clears your forehead to reach full lockout."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "clean-and-press-barbell-0.webp",
+        "width": 209,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -10017,6 +10293,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1901/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Clean and Press (Barbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -10028,7 +10313,13 @@
     "primaryMuscles": ["Forearms", "Trapezius"],
     "secondaryMuscles": ["Abs", "Glutes"],
     "instructions": ["Grab half your body weight in each hand and walk."],
-    "images": [],
+    "images": [
+      {
+        "file": "farmer-s-walk-dumbbell-0.webp",
+        "width": 130,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -10038,6 +10329,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/1116/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Farmer's Walk (Dumbbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -10052,7 +10352,13 @@
       "While kettlebell swings are a full-body workout, they mostly target the muscles along the posterior chain (back of the body).",
       "The main muscles used are the glutes, hamstrings, spinal erectors, and muscles of the upper back."
     ],
-    "images": [],
+    "images": [
+      {
+        "file": "kettlebell-swing-0.webp",
+        "width": 151,
+        "height": 240
+      }
+    ],
     "sources": [
       {
         "kind": "instructions",
@@ -10062,6 +10368,15 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://wger.de/exercise/960/view-base",
         "changes": "converted to plain text"
+      },
+      {
+        "kind": "illustration",
+        "title": "Kettlebell Swing",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -10094,8 +10409,24 @@
     "primaryMuscles": [],
     "secondaryMuscles": [],
     "instructions": [],
-    "images": [],
-    "sources": []
+    "images": [
+      {
+        "file": "snatch-barbell-0.webp",
+        "width": 240,
+        "height": 197
+      }
+    ],
+    "sources": [
+      {
+        "kind": "illustration",
+        "title": "Snatch (Barbell)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
+      }
+    ]
   },
   {
     "name": "Thruster (Barbell)",

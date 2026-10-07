@@ -1,178 +1,384 @@
 {
-  "schemaVersion": 1,
-  "model": "gpt-image-2-medium",
-  "reference": "$SCRATCH/ref-bench.png",
-  "referenceSha256": "5df0e3818f0bc8cb29473331c76764b4800d994984e6b46ab80e4178221d701c",
+  "schemaVersion": 2,
+  "model": "gpt-image-2 (image_generate)",
   "conversion": "generate.line_mask: MAX_SIDE=240, LEVELS=8, lossless WebP method=4",
-  "qaStatus": "Partial: vision provider session limit blocked QA after 13 reviews; resets a later time. No pending/rejected image bundled.",
+  "review": "Accepted only after a style audit against Everkinetic references, an independent strict physical-logic audit of the raw image, and a 240px mask check beside licensed drawings on light and dark backgrounds.",
   "exercises": [
     {
+      "name": "Ab Wheel",
+      "status": "accepted",
+      "attempts": 3,
+      "sha256": "2798cf24563e3bb52cf3f4aabf274312594ec0e5406913548d59678514221554"
+    },
+    {
+      "name": "Arnold Press (Dumbbell)",
+      "status": "rejected",
+      "attempts": 2
+    },
+    {
+      "name": "Belt Squat (Machine)",
+      "status": "accepted",
+      "attempts": 8,
+      "sha256": "cc8d632cbfb594d6eb4321741f3348b769a34a7cc7504d31da75ad826badb754",
+      "postProcessed": "local line cleanup or thickening, re-audited"
+    },
+    {
+      "name": "Bent Over One Arm Row (Dumbbell)",
+      "status": "rejected",
+      "attempts": 4
+    },
+    {
+      "name": "Bent Over Row (Dumbbell)",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Bicycle Crunch",
+      "status": "accepted",
+      "attempts": 3,
+      "sha256": "4c07f6adcfd54002150b041dc083aa43d90242f5ac8d9b37b7be888e7053ac07",
+      "postProcessed": "local line cleanup or thickening, re-audited"
+    },
+    {
+      "name": "Box Jump",
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "577e4937133d951fb7efdb18398112437769a15ed2b63df5931a1e942586941c"
+    },
+    {
+      "name": "Bulgarian Split Squat",
+      "status": "accepted",
+      "attempts": 6,
+      "sha256": "71c9744fd752cee677c1008e76a179b5ab6db8a3a4e87fc03e930b414ed76013"
+    },
+    {
+      "name": "Burpee",
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "a4356aed2ca01943932baad31ede67c9ae7eafb17e4d7c3b499e2c568b32afb8"
+    },
+    {
+      "name": "Cable Crunch",
+      "status": "rejected",
+      "attempts": 2
+    },
+    {
+      "name": "Chest Supported Row (Dumbbell)",
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "f3ac8297da82b5070069a1a24f99927678926e318db925c23a8b8bab9f6b5b6c"
+    },
+    {
+      "name": "Chin Up (Assisted)",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Clean and Press (Barbell)",
+      "status": "accepted",
+      "attempts": 4,
+      "sha256": "852d0534c1667ade7b14d520265bd550470f3e814b5aa2b8e8c8d9bf1dd0d4d0"
+    },
+    {
+      "name": "Clean (Barbell)",
+      "status": "rejected",
+      "attempts": 6
+    },
+    {
+      "name": "Crunch (Machine)",
+      "status": "accepted",
+      "attempts": 4,
+      "sha256": "4ade0cfa8903c175bdb18269eb48d64e3624d972a2b3b2bb1a07c36ac9cb8a6a"
+    },
+    {
+      "name": "Cycling (Stationary Bike)",
+      "status": "rejected",
+      "attempts": 7
+    },
+    {
+      "name": "Elliptical Trainer",
+      "status": "rejected",
+      "attempts": 8
+    },
+    {
+      "name": "External Rotation (Cable)",
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "9ab03bcd27e222d30af081169798f17a510f5b735f3f5693b62782cff8252d10"
+    },
+    {
       "name": "Face Pull (Cable)",
-      "acceptedAttempt": null,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/face-pull-cable-attempt-1.png",
-          "verdict": "PENDING",
-          "note": "QA blocked by vision provider session limit."
-        }
-      ]
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Farmer's Walk (Dumbbell)",
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "0f2879c61fcc08eb47c88b12bea44e99bf79d3dece93cf8152db2e0233f53c29"
+    },
+    {
+      "name": "Floor Press (Dumbbell)",
+      "status": "rejected",
+      "attempts": 1
+    },
+    {
+      "name": "Front Raise (Barbell)",
+      "status": "rejected",
+      "attempts": 8
+    },
+    {
+      "name": "Glute Kickback (Machine)",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Goblet Squat (Dumbbell)",
+      "status": "accepted",
+      "attempts": 4,
+      "sha256": "de541bfe27f735fe6ae26b319e401fcacca5449453fff06cbbd8d84a2b2bd192"
+    },
+    {
+      "name": "Hanging Knee Raise",
+      "status": "rejected",
+      "attempts": 1
+    },
+    {
+      "name": "Hanging Leg Raise",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Hip Thrust (Barbell)",
+      "status": "rejected",
+      "attempts": 7
+    },
+    {
+      "name": "Hollow Hold",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Incline Chest Press (Machine)",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Iso-Lateral Row (Machine)",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Jump Rope",
+      "status": "accepted",
+      "attempts": 3,
+      "sha256": "9551152e8c667269534a3c666a488b87f9f1acabd33dfc84edb8c502880120be"
+    },
+    {
+      "name": "Jumping Jack",
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "c7b91facbb742f0174a9c5df68cf537145551ee08e3ca225a8225779f5f6b98f",
+      "postProcessed": "local line cleanup or thickening, re-audited"
+    },
+    {
+      "name": "Kettlebell Swing",
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "9379cccfbba2a9d96f535004d257b9611805fe694da4a12ee7f15ff6331038f8"
     },
     {
       "name": "Lat Pulldown (Cable)",
-      "acceptedAttempt": 1,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/lat-pulldown-cable-attempt-1.png",
-          "verdict": "PASS",
-          "note": "Front pulldown; bar horizontal across upper chest; anatomy and style pass."
-        }
-      ],
-      "sha256": "febf8ff2c60d045a01a7c625db99d03639eb85da4ae9fc30166910973475ad1e"
+      "status": "rejected",
+      "attempts": 10
     },
     {
       "name": "Lat Pulldown (Machine)",
-      "acceptedAttempt": 3,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/lat-pulldown-machine-attempt-1.png",
-          "verdict": "FAIL",
-          "note": "Shoulder-press look; plates mounted at pivots/floating."
-        },
-        {
-          "attempt": 2,
-          "source": "attempts/lat-pulldown-machine-attempt-2.png",
-          "verdict": "FAIL",
-          "note": "Hands at ears: shoulder-press look."
-        },
-        {
-          "attempt": 3,
-          "source": "attempts/lat-pulldown-machine-attempt-3.png",
-          "verdict": "PASS",
-          "note": "Correct front pulldown bottom position, elbows down; anatomy and style pass."
-        }
-      ],
-      "sha256": "f4102c10047bf4f62e17035fb725b272b31d4d86011fa3b0bf03c86b73e41a3b"
+      "status": "rejected",
+      "attempts": 10
     },
     {
       "name": "Lateral Raise (Cable)",
-      "acceptedAttempt": 1,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/lateral-raise-cable-attempt-1.png",
-          "verdict": "PASS",
-          "note": "Correct single-arm lateral raise; coherent low cable path; anatomy and style pass."
-        }
-      ],
-      "sha256": "dca44dd05a732617ed68dcdde40b057027919c713c9d2f430b23c323260f8da6"
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "3cf36aeee84525e32b1917843081ded5117472d2fa5ee635f936bfa6aec2c454"
+    },
+    {
+      "name": "Lateral Raise (Machine)",
+      "status": "accepted",
+      "attempts": 7,
+      "sha256": "d62697f1cb1742467a9d3e07883f7829f9462d21985f4f5b84fc92f28d3aa791"
+    },
+    {
+      "name": "Lunge (Bodyweight)",
+      "status": "rejected",
+      "attempts": 5
+    },
+    {
+      "name": "Mountain Climber",
+      "status": "rejected",
+      "attempts": 4
+    },
+    {
+      "name": "One Arm Triceps Extension (Dumbbell)",
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "0402d3dac97f0b687488c2db1e5e30b8893276b281543f8b47700105259424cb"
+    },
+    {
+      "name": "Overhead Press (Smith Machine)",
+      "status": "rejected",
+      "attempts": 2
+    },
+    {
+      "name": "Pallof Press (Cable)",
+      "status": "rejected",
+      "attempts": 9
+    },
+    {
+      "name": "Pendlay Row (Barbell)",
+      "status": "rejected",
+      "attempts": 4
+    },
+    {
+      "name": "Pistol Squat",
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "8ac6117188bd516a8c31a7ccbfa8e643d030a25630fcdc71b6b059736f68658c"
     },
     {
       "name": "Plank",
-      "acceptedAttempt": null,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/plank-attempt-1.png",
-          "verdict": "PENDING",
-          "note": "QA blocked by vision provider session limit."
-        }
-      ]
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "4a46d111402771ff895987e3755676e0b84cfa2e633741bf8983165ada815945"
+    },
+    {
+      "name": "Power Clean (Barbell)",
+      "status": "rejected",
+      "attempts": 7
+    },
+    {
+      "name": "Pullover (Machine)",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Push Press (Barbell)",
+      "status": "rejected",
+      "attempts": 1
     },
     {
       "name": "Reverse Fly (Machine)",
-      "acceptedAttempt": null,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/reverse-fly-machine-attempt-1.png",
-          "verdict": "FAIL",
-          "note": "Twisted sideways legs; detached/offset seat."
-        },
-        {
-          "attempt": 2,
-          "source": "attempts/reverse-fly-machine-attempt-2.png",
-          "verdict": "FAIL",
-          "note": "Chest pad absent; seat in front of hips."
-        },
-        {
-          "attempt": 3,
-          "source": "attempts/reverse-fly-machine-attempt-3.png",
-          "verdict": "FAIL",
-          "note": "Torso offset from pad; seat post detached."
-        },
-        {
-          "attempt": 4,
-          "source": "attempts/reverse-fly-machine-attempt-4.png",
-          "verdict": "PENDING",
-          "note": "QA blocked by vision provider session limit, resets a later time."
-        }
-      ]
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Reverse Wrist Curl (Barbell)",
+      "status": "accepted",
+      "attempts": 3,
+      "sha256": "05ab6c5c286cf52095dcd07d2d8b3a3443ea829e1f525f48f442fce982d00f15"
     },
     {
       "name": "Romanian Deadlift (Dumbbell)",
-      "acceptedAttempt": 2,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/romanian-deadlift-dumbbell-attempt-1.png",
-          "verdict": "FAIL",
-          "note": "Two dumbbells visually merged into one incoherent dumbbell."
-        },
-        {
-          "attempt": 2,
-          "source": "attempts/romanian-deadlift-dumbbell-attempt-2.png",
-          "verdict": "PASS",
-          "note": "Correct hinge, flat back and two separate coherent dumbbells; style pass."
-        }
-      ],
-      "sha256": "767c2b2288bd72d9ab47fae1f254d4fe4a376eec5b2e1f01f0519fea2150dc1f"
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Rowing (Machine)",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Running (Treadmill)",
+      "status": "rejected",
+      "attempts": 2
+    },
+    {
+      "name": "Russian Twist",
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "2be36b508eb420f0543426385414dbc0eb279fae5ab7624d8668c49005e9daaf"
     },
     {
       "name": "Seated Palms Up Wrist Curl (Dumbbell)",
-      "acceptedAttempt": null,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/seated-palms-up-wrist-curl-dumbbell-attempt-1.png",
-          "verdict": "PENDING",
-          "note": "QA blocked by vision provider session limit."
-        }
-      ]
+      "status": "rejected",
+      "attempts": 7
     },
     {
       "name": "Seated Row (Machine)",
-      "acceptedAttempt": 1,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/seated-row-machine-attempt-1.png",
-          "verdict": "PASS",
-          "note": "Correct chest-supported row; anatomy and style pass. Simplified linkage caveat."
-        }
-      ],
-      "sha256": "15e043745e3385af29b45d3cd3d8e690a422e576d6817520dfb738b4900c12de"
+      "status": "rejected",
+      "attempts": 2
+    },
+    {
+      "name": "Single Leg Deadlift (Dumbbell)",
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "7ecd3ba4acb361c3fdc6c51d1ef02019acaaa8b32ee66aaf507216abd59d09b5"
     },
     {
       "name": "Sit Up",
-      "acceptedAttempt": 2,
-      "attempts": [
-        {
-          "attempt": 1,
-          "source": "attempts/sit-up-attempt-1.png",
-          "verdict": "FAIL",
-          "note": "Ambiguous/merged arms and hands."
-        },
-        {
-          "attempt": 2,
-          "source": "attempts/sit-up-attempt-2.png",
-          "verdict": "PASS",
-          "note": "Correct top sit-up, both hands at temples; anatomy and style pass."
-        }
-      ],
-      "sha256": "139f9a9ac076bcd6a2394f52118fe638b8858298a586b6f4bed2dfe9d2d5ca4e"
+      "status": "accepted",
+      "attempts": 3,
+      "sha256": "0a55d9331cbeb8d07d2292c48ae4801183f79e65ca9ef3782da5d1932d6df694"
+    },
+    {
+      "name": "Ski Erg",
+      "status": "rejected",
+      "attempts": 6
+    },
+    {
+      "name": "Snatch (Barbell)",
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "fe4c44b3b1fa8cba136ffb07fe748c3ecda40c96884068d285ee434fe700bf59"
+    },
+    {
+      "name": "Split Squat (Dumbbell)",
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "7badcd5e7c499d080a4548bc1473dd9efcbffc6f48a6555217af05f95c09eb6f"
+    },
+    {
+      "name": "Squat (Bodyweight)",
+      "status": "accepted",
+      "attempts": 10,
+      "sha256": "a43d1c7216caa9f68e951c2a085a879c217583f3ad628ee6396d69cc4e88e133"
+    },
+    {
+      "name": "Stair Climber",
+      "status": "rejected",
+      "attempts": 7
+    },
+    {
+      "name": "Standing Calf Raise (Dumbbell)",
+      "status": "rejected",
+      "attempts": 7
+    },
+    {
+      "name": "Stiff Leg Deadlift (Barbell)",
+      "status": "rejected",
+      "attempts": 10
+    },
+    {
+      "name": "Sumo Deadlift (Barbell)",
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "f43cc64c5ffaef570ffa94fa0127e17c9aa8c6b73d9c8d66f933b14d8d2f69f9"
+    },
+    {
+      "name": "Thruster (Barbell)",
+      "status": "rejected",
+      "attempts": 4
+    },
+    {
+      "name": "Woodchopper (Cable)",
+      "status": "rejected",
+      "attempts": 7
+    },
+    {
+      "name": "Wrist Curl (Barbell)",
+      "status": "rejected",
+      "attempts": 7
     }
   ]
 }

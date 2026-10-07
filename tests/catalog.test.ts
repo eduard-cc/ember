@@ -33,8 +33,12 @@ describe('bundled exercise catalog', () => {
         expect(source.license).toMatch(/^(CC BY-SA [34]\.0|CC0 1\.0|app-owned)$/);
         if (source.license === 'app-owned') {
           expect(source.kind).toBe('illustration');
-          expect(source.author).toBe('Gym Log');
+          expect(source.author).toBe('Gym Log (AI-assisted, gpt-image-2)');
           expect(source.changes).toContain('AI-assisted illustration');
+          expect(source.changes).toContain('not an Everkinetic or wger work');
+          expect(`${source.author} ${source.url} ${source.licenseUrl}`).not.toMatch(
+            /everkinetic|wger/i,
+          );
         }
         expect(source.url).toMatch(/^https:\/\//);
       }
@@ -45,23 +49,38 @@ describe('bundled exercise catalog', () => {
       }
     }
   });
-  it('bundles reviewed app-owned drawings for the first approved exercises', () => {
-    for (const name of [
-      'Lat Pulldown (Cable)',
-      'Seated Row (Machine)',
-      'Lat Pulldown (Machine)',
-      'Lateral Raise (Cable)',
-      'Sit Up',
-      'Romanian Deadlift (Dumbbell)',
-    ]) {
-      const entry = catalogEntry(name);
-      expect(entry?.images).toHaveLength(1);
-      expect(entry?.sources).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({kind: 'illustration', author: 'Gym Log', license: 'app-owned'}),
-        ]),
-      );
+  it('bundles exactly the accepted AI-assisted drawings, one image each, with only one illustration source', () => {
+    const manifest = JSON.parse(
+      readFileSync('scripts/catalog/generated-manifest.json', 'utf8'),
+    ) as {
+      exercises: {name: string; status: string; sha256?: string}[];
+    };
+    const accepted = manifest.exercises.filter((e) => e.status === 'accepted');
+    expect(accepted.length).toBeGreaterThan(0);
+    for (const item of accepted) expect(item.sha256).toMatch(/^[0-9a-f]{64}$/);
+    const appOwned = catalog.filter((e) => e.sources.some((s) => s.license === 'app-owned'));
+    expect(appOwned.map((e) => e.name).sort()).toEqual(accepted.map((e) => e.name).sort());
+    for (const entry of appOwned) {
+      expect(entry.images).toHaveLength(1);
+      const illustrations = entry.sources.filter((s) => s.kind === 'illustration');
+      expect(illustrations).toEqual([
+        expect.objectContaining({
+          author: 'Gym Log (AI-assisted, gpt-image-2)',
+          license: 'app-owned',
+        }),
+      ]);
     }
+    // Rejected or unreviewed drawings never ship.
+    for (const item of manifest.exercises.filter((e) => e.status !== 'accepted'))
+      expect(catalogEntry(item.name)?.sources.some((s) => s.license === 'app-owned')).toBe(false);
+  });
+  it('keeps licensed drawings attributed to their original authors', () => {
+    const licensed = catalog.filter((e) =>
+      e.sources.some((s) => s.kind === 'illustration' && s.license !== 'app-owned'),
+    );
+    expect(licensed.length).toBeGreaterThanOrEqual(157);
+    for (const entry of licensed)
+      expect(entry.sources.some((s) => s.license === 'app-owned')).toBe(false);
   });
   it('keeps unclear-copyright datasets out of the committed catalog', () => {
     const raw = readFileSync('src/catalog/exercises.json', 'utf8');

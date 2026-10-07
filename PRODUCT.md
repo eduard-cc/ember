@@ -36,7 +36,7 @@ The private mobile trial uses the owner's Tailscale identity with no separate ap
 
 Weighted charts show best reps, best load, session volume and bounded Epley estimates; assistance uses least assistance and reps, not resistance formulas. Best reps/load may come from different weights/rep counts and are not automatically comparable strength gains. Records include heaviest weight by exact rep count. Excluded sets do not count; suspicious-set correction/exclusion UI and nearby-weight fallback remain incomplete. Duration/distance-specific charts are not implemented. Volume is recorded load × reps, not evidence of hypertrophy; machine loads are not equated across gyms.
 
-Catalog drawings, instructions and muscle data use attributable Everkinetic/wger content. About exposes item-level title, author, source/license URLs and adaptations. Preserve original licenses and applicable attribution/share-alike obligations. Coverage varies; a custom exercise without instructions still retains its history and analytics.
+Catalog instructions and muscle data, and most drawings, use attributable Everkinetic/wger content. Gaps may be filled with reviewed AI-assisted drawings made for Gym Log, always labelled as AI-assisted and never attributed to Everkinetic/wger; an exercise with no drawing that passes review stays without one. About exposes item-level title, author, source/license URLs and adaptations. Preserve original licenses and applicable attribution/share-alike obligations. Coverage varies; a custom exercise without instructions still retains its history and analytics.
 
 ## Brand Commitments
 

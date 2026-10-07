@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Bundle only QA-approved app-owned illustrations without touching licensed assets.
+"""Bundle only QA-accepted app-owned (AI-assisted) illustrations without touching licensed assets.
 
 Usage: python3 scripts/catalog/generated.py [--source-dir ~/.cache/gym-log-catalog/generated]
-Run after generate.py when rebuilding the open-source base catalog. The manifest
-records source hashes, accepted attempts, and rejected/pending attempts. PNGs stay
-in the local cache, never in git. Re-running with the same PNGs is deterministic.
+
+The source directory holds one QA record per exercise (qa/<slug>.json, status
+accepted|rejected|unreviewed) and accepted raw PNGs (accepted/<slug>.png). Only
+records with status "accepted" whose PNG matches the recorded SHA-256 are bundled.
+App-owned drawings that are no longer accepted are removed; licensed Everkinetic/wger
+drawings and their sources are never modified. All inputs are validated before any
+catalog file changes. PNGs stay outside git. Re-running with the same cache is
+deterministic. Run after generate.py when rebuilding the licensed base catalog.
 """
 import argparse
 import hashlib
@@ -18,61 +23,114 @@ from generate import CACHE, OUT_IMAGES, OUT_JSON, ROOT, line_mask, slug
 
 MANIFEST = Path(__file__).with_name('generated-manifest.json')
 PROVENANCE_URL = 'https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md'
+AUTHOR = 'Gym Log (AI-assisted, gpt-image-2)'
+LICENSE = 'app-owned'
+CHANGES = ('AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; '
+           'cropped, resized and recoloured')
+
+
+def is_app_owned(source):
+    return source['kind'] == 'illustration' and source['license'] == LICENSE
+
+
+def load_records(source_dir):
+    records = {}
+    for path in sorted((source_dir / 'qa').glob('*.json')):
+        record = json.loads(path.read_text())
+        if record.get('status') not in ('accepted', 'rejected', 'unreviewed'):
+            raise ValueError(f'{path.stem}: unknown QA status {record.get("status")!r}')
+        records[path.stem] = record
+    if not records:
+        raise ValueError(f'no QA records in {source_dir / "qa"}')
+    return records
 
 
 def bundle(source_dir):
     entries = json.loads(OUT_JSON.read_text())
-    manifest = json.loads(MANIFEST.read_text())
-    by_name = {entry['name']: entry for entry in entries}
-    approved = [item for item in manifest['exercises'] if item.get('acceptedAttempt')]
-    prepared = []
+    by_slug = {slug(entry['name']): entry for entry in entries}
+    records = load_records(source_dir)
+    unknown = sorted(set(records) - set(by_slug))
+    if unknown:
+        raise ValueError(f'QA records without a catalog exercise: {unknown}')
+
     # Validate every input before writing any catalog asset.
-    for item in approved:
-        name = item['name']
-        entry = by_name[name]
-        attempts = [attempt for attempt in item['attempts']
-                    if attempt['attempt'] == item['acceptedAttempt']]
-        if len(attempts) != 1 or attempts[0]['verdict'] != 'PASS':
-            raise ValueError(f'{name}: accepted attempt must have passed QA')
-        filename = f'{slug(name)}-0.webp'
-        source = source_dir / f'{slug(name)}.png'
-        raw = source.read_bytes()
-        if hashlib.sha256(raw).hexdigest() != item['sha256']:
-            raise ValueError(f'{name}: source SHA-256 does not match the reviewed PNG')
-        # Never replace a licensed illustration or append alongside one.
-        existing_illustrations = [s for s in entry['sources'] if s['kind'] == 'illustration']
-        if entry['images'] and (entry['images'][0]['file'] != filename
-                                or len(entry['images']) != 1
-                                or not existing_illustrations):
-            raise ValueError(f'{name}: refusing to replace existing catalog images')
-        if any(s['license'] != 'app-owned' for s in existing_illustrations):
-            raise ValueError(f'{name}: refusing to alter licensed illustrations')
-        if (OUT_IMAGES / filename).exists() and not entry['images']:
-            raise ValueError(f'{name}: refusing to overwrite an unreferenced existing asset')
+    prepared = []
+    for key, record in records.items():
+        if record['status'] != 'accepted':
+            continue
+        entry = by_slug[key]
+        raw = (source_dir / 'accepted' / f'{key}.png').read_bytes()
+        if hashlib.sha256(raw).hexdigest() != record.get('sha256'):
+            raise ValueError(f'{entry["name"]}: source SHA-256 does not match the reviewed PNG')
+        illustrations = [s for s in entry['sources'] if s['kind'] == 'illustration']
+        if any(not is_app_owned(s) for s in illustrations):
+            raise ValueError(f'{entry["name"]}: refusing to replace a licensed illustration')
+        if entry['images'] and not illustrations:
+            raise ValueError(f'{entry["name"]}: refusing to replace unattributed images')
         data, size = line_mask(raw)
         if len(data) > 40 * 1024:
-            raise ValueError(f'{name}: image exceeds catalog size budget')
-        prepared.append((entry, filename, data, size))
-    OUT_IMAGES.mkdir(parents=True, exist_ok=True)
-    for entry, filename, data, size in prepared:
-        (OUT_IMAGES / filename).write_bytes(data)
+            raise ValueError(f'{entry["name"]}: image exceeds catalog size budget')
+        prepared.append((key, entry, data, size))
+
+    accepted = {key for key, *_ in prepared}
+    # A partially restored cache must not silently drop drawings that are still bundled.
+    orphaned = sorted(entry['name'] for key, entry in by_slug.items()
+                      if any(is_app_owned(s) for s in entry['sources']) and key not in records)
+    if orphaned:
+        raise ValueError(f'bundled AI drawings without a QA record: {orphaned}')
+    removed, stale_files = [], []
+    for key, entry in by_slug.items():
+        if any(is_app_owned(s) for s in entry['sources']) and key not in accepted:
+            stale_files += [OUT_IMAGES / image['file'] for image in entry['images']]
+            entry['images'] = []
+            entry['sources'] = [s for s in entry['sources'] if not is_app_owned(s)]
+            removed.append(entry['name'])
+
+    for key, entry, data, size in prepared:
+        filename = f'{key}-0.webp'
         entry['images'] = [{'file': filename, 'width': size[0], 'height': size[1]}]
-        # Preserve every existing instruction/muscle source and its order/contents.
+        # Preserve every instruction/muscle source and its order/contents.
         entry['sources'] = [s for s in entry['sources'] if s['kind'] != 'illustration'] + [{
-            'kind': 'illustration', 'title': entry['name'], 'author': 'Gym Log',
-            'license': 'app-owned', 'licenseUrl': PROVENANCE_URL + '#app-owned-illustrations',
-            'url': PROVENANCE_URL,
-            'changes': 'AI-assisted illustration; cropped, resized and recoloured',
+            'kind': 'illustration', 'title': entry['name'], 'author': AUTHOR,
+            'license': LICENSE, 'licenseUrl': PROVENANCE_URL + '#app-owned-illustrations',
+            'url': PROVENANCE_URL, 'changes': CHANGES,
         }]
+
+    manifest = {
+        'schemaVersion': 2,
+        'model': 'gpt-image-2 (image_generate)',
+        'conversion': 'generate.line_mask: MAX_SIDE=240, LEVELS=8, lossless WebP method=4',
+        'review': ('Accepted only after a style audit against Everkinetic references, an '
+                   'independent strict physical-logic audit of the raw image, and a 240px '
+                   'mask check beside licensed drawings on light and dark backgrounds.'),
+        'exercises': [
+            {
+                'name': by_slug[key]['name'],
+                'status': record['status'],
+                'attempts': record.get('attempts', 0),
+                **({'sha256': record['sha256']} if record['status'] == 'accepted' else {}),
+                **({'postProcessed': 'local line cleanup or thickening, re-audited'}
+                   if record['status'] == 'accepted' and record.get('derived_from') else {}),
+            }
+            for key, record in records.items()
+        ],
+    }
     formatted = subprocess.run(
         ['node', str(ROOT / 'node_modules/prettier/bin/prettier.cjs'),
          '--stdin-filepath', str(OUT_JSON)],
         input=json.dumps(entries, indent=2, ensure_ascii=False) + '\n',
         text=True, capture_output=True, check=True, cwd=ROOT,
     ).stdout
+    # Only now, with every input validated and every output computed, touch the tree.
+    for path in stale_files:
+        path.unlink(missing_ok=True)
+    OUT_IMAGES.mkdir(parents=True, exist_ok=True)
+    for key, _, data, _ in prepared:
+        (OUT_IMAGES / f'{key}-0.webp').write_bytes(data)
+    MANIFEST.write_text(json.dumps(manifest, indent=2) + '\n')
     OUT_JSON.write_text(formatted)
     total = sum(p.stat().st_size for p in OUT_IMAGES.glob('*.webp'))
-    print(f'{len(prepared)} app-owned drawings bundled; '
+    print(f'{len(prepared)} app-owned drawings bundled; removed: {removed or "none"}; '
           f'{sum(bool(e["images"]) for e in entries)}/{len(entries)} exercises illustrated; '
           f'{sum(not e["images"] for e in entries)} missing; '
           f'{total / 1024:.2f} KiB total image payload')
@@ -81,4 +139,4 @@ def bundle(source_dir):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-dir', type=Path, default=CACHE / 'generated')
-    bundle(parser.parse_args().source_dir)
+    bundle(parser.parse_args().source_dir.expanduser())

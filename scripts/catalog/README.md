@@ -6,17 +6,21 @@ mappings. Do not replace or reattribute those illustrations or text sources.
 ## App-owned illustrations
 
 Missing illustrations may be generated specifically for Gym Log. They are marked
-`app-owned`, authored by `Gym Log`, and explicitly described as AI-assisted. This
+`app-owned`, credited to `Gym Log (AI-assisted, gpt-image-2)`, and explicitly described as AI-assisted. This
 label describes app-created provenance, not a claim that AI output has exclusive
 copyright or a Creative Commons license. Existing licensed sources retain their
-original attribution and terms. The reference image guides visual style only;
+original attribution and terms. Licensed Everkinetic reference drawings guide visual style only;
 no reference pixels are bundled in the new assets.
 
-Raw PNGs stay outside git in `~/.cache/gym-log-catalog/generated/`. The tracked
-`generated-manifest.json` records reviewed attempts, acceptance, and SHA-256 hashes
-of accepted sources. Rejected and unreviewed images must never be bundled.
+Raw PNGs stay outside git in `~/.cache/gym-log-catalog/generated/`: one QA record
+per exercise in `qa/<slug>.json` (status `accepted`, `rejected` or `unreviewed`,
+SHA-256, attempts, notes) and accepted sources in `accepted/<slug>.png`. The
+tracked `generated-manifest.json` is written from those records and lists every
+reviewed exercise, its status, attempt count and the SHA-256 of accepted sources.
+Rejected and unreviewed images are never bundled, and an app-owned drawing whose
+record is no longer accepted is removed on the next run.
 
-Reproduce the approved additions (Pillow with WebP support and the repository's
+Reproduce the bundled additions (Pillow with WebP support and the repository's
 Node/Prettier dependencies from `npm ci --include=dev` required):
 
 ```sh
@@ -27,29 +31,30 @@ npm run test:run -- tests/catalog.test.ts
 npm run typecheck
 ```
 
-The sibling script imports `generate.line_mask`, so cropping, ink extraction,
-8-level quantisation, maximum 240-pixel side, and lossless WebP conversion are the
-same as existing drawings. It refuses mismatched source hashes or replacement of
-licensed images, and validates all sources before changing assets. Run it after
-`generate.py` if rebuilding the licensed base catalog.
+The script imports `generate.line_mask`, so cropping, ink extraction, 8-level
+quantisation, maximum 240-pixel side and lossless WebP conversion match the
+licensed drawings. It refuses mismatched source hashes and never replaces or
+edits a licensed illustration or its attribution. All inputs are validated before
+any asset changes. Run it after `generate.py` when rebuilding the licensed base.
+
+Each bundled drawing is credited `Gym Log (AI-assisted, gpt-image-2)`, license
+`app-owned`, with an adaptation note saying it is AI-assisted and not an
+Everkinetic or wger work.
 
 ## QA and continuation
 
-Use `image_generate` with the reference image and square aspect ratio. Describe
-body position, grip, bar/handle orientation and camera angle explicitly. Inspect
-every generated output with `vision_analyze` for exact exercise/variant, limb
-count, equipment coherence and style. Regenerate up to three times; leave the
-exercise without a drawing if none passes. Record every attempt in the manifest.
-After bundling, inspect the resulting 240px masks and 44px thumb equivalents on
-light and dark backgrounds. `ExerciseThumb` uses each asset's alpha as a CSS mask
-filled with the theme foreground (not a white-paper image or simple inversion).
+Generate with `image_generate` (gpt-image-2) using licensed Everkinetic drawings as
+style references only. Every candidate must pass, on the raw full-size image:
 
-Current generation is **partial**: 17 generated outputs, six approved, seven
-rejected, four awaiting QA. The vision provider hit its session limit during QA,
-with a later reported reset. Some catalog exercises remain without drawings. No unreviewed output is bundled.
+1. A style audit: faceless egg head without hair or ears, thick uniform outlines,
+   no shading or hatching, sparse interior lines.
+2. An independent strict physical-logic audit: limb counts, no twisted torso,
+   cables continuous from a pulley on a grounded column, machine parts and pivots
+   connected to a grounded base, handles gripped, correct dumbbell/plate count,
+   nothing passing through the body, and not confusable with another exercise.
 
-Rejected attempts and reasons are in `generated-manifest.json`. Pending review:
-`face-pull-cable` attempt 1, `plank` attempt 1,
-`reverse-fly-machine` attempt 4 (third regeneration) and
-`seated-palms-up-wrist-curl-dumbbell` attempt 1. Their raw paths are recorded under the cache's `attempts/`.
-The remaining exercises without drawings come next.
+Then inspect its 240px mask beside licensed masks on light and dark backgrounds.
+Local post-processing is limited to operations that cannot change the pose
+(removing small isolated specks, uniform line thickening); the result is
+re-audited. About six attempts per exercise; an exercise without a passing
+drawing stays without one. `generated-manifest.json` is the current status.
