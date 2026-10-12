@@ -1350,9 +1350,15 @@ th {
 }
 .about-drawings {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 16px;
+}
+/* A single drawing keeps the size of one drawing in a start/finish pair. */
+.about-drawings > .drawing:only-child {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(50% - 5px);
 }
 .large-drawing {
   aspect-ratio: 1;

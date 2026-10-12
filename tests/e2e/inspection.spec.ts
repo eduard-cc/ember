@@ -31,3 +31,25 @@ test('progress exposes source sets and selectable metrics', async ({page}) => {
   await page.getByLabel('Time range').selectOption('all');
   await expect(page.getByRole('button', {name: /View source workout/}).first()).toBeVisible();
 });
+
+test('a single drawing renders at the same size as each drawing in a pair', async ({page}) => {
+  await page.goto('/?demo=1');
+  await navigate(page, 'Exercises');
+  const widths = async (name: string) => {
+    await page.getByLabel('Search exercises').fill(name);
+    await page.getByRole('button', {name, exact: true}).first().click();
+    await page.getByRole('tab', {name: 'About', exact: true}).click();
+    const drawings = page.locator('.about-drawings > .drawing');
+    await expect(drawings.first()).toBeVisible();
+    const boxes = await drawings.evaluateAll((els) =>
+      els.map((e) => e.getBoundingClientRect().width),
+    );
+    await page.getByRole('button', {name: 'Back to exercises'}).click();
+    return boxes;
+  };
+  const pair = await widths('Bench Press (Barbell)');
+  expect(pair).toHaveLength(2);
+  const single = await widths('Cable Crunch');
+  expect(single).toHaveLength(1);
+  expect(Math.abs(single[0] - pair[0])).toBeLessThanOrEqual(2);
+});
