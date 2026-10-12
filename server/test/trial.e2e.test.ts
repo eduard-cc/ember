@@ -33,6 +33,7 @@ async function fixture() {
 	await writeFile(join(root, 'sw.js'), '// Synthetic service worker');
 	await writeFile(join(root, 'assets/index-synthetic.js'), 'console.log("Synthetic shell");');
 	await writeFile(join(root, 'icons/icon-192.png'), 'synthetic icon bytes');
+	await writeFile(join(root, 'assets/drawing-synthetic-0-Ab_12-cd.webp'), 'synthetic drawing bytes');
 	await mkdir(join(root, 'src'));
 	await mkdir(join(root, 'server'));
 	await writeFile(join(root, 'src/main.ts'), '// Synthetic private source');
@@ -94,8 +95,15 @@ test('compiled trial serves the production shell and API on one loopback listene
 		const manifest = await fetch(url + '/manifest.webmanifest');
 		assert.equal(manifest.status, 200);
 		assert.equal(((await manifest.json()) as any).name, 'Synthetic trial');
-		for (const path of ['/sw.js', '/assets/index-synthetic.js', '/icons/icon-192.png'])
+		for (const path of [
+			'/sw.js',
+			'/assets/index-synthetic.js',
+			'/assets/drawing-synthetic-0-Ab_12-cd.webp',
+			'/icons/icon-192.png',
+		])
 			assert.equal((await fetch(url + path)).status, 200, path);
+		const drawing = await fetch(url + '/assets/drawing-synthetic-0-Ab_12-cd.webp');
+		assert.equal(drawing.headers.get('content-type'), 'image/webp');
 		const head = await fetch(url + '/sw.js', {method: 'HEAD'});
 		assert.equal(head.status, 200);
 		assert.equal(await head.text(), '');

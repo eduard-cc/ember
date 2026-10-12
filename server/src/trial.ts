@@ -34,7 +34,7 @@ async function main() {
 		const file = path === '/' ? 'index.html' : path.slice(1);
 		if (
 			!['index.html', 'manifest.webmanifest', 'sw.js'].includes(file) &&
-			!/^assets\/[A-Za-z0-9_-]+\.(?:js|css|woff2)$/.test(file) &&
+			!/^assets\/[A-Za-z0-9_-]+\.(?:js|css|woff2|webp)$/.test(file) &&
 			!/^icons\/icon-(?:192|512)\.png$/.test(file)
 		) {
 			next();
