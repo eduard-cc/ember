@@ -48,6 +48,14 @@ check_config() {
 	[[ $(setting GYM_LOG_WEB_ROOT) == "$CURRENT/dist" ]] || die "GYM_LOG_WEB_ROOT in $GYM_LOG_ENV must be $CURRENT/dist"
 	[[ $(setting GYM_LOG_PORT) =~ ^[0-9]+$ ]] || die "GYM_LOG_PORT missing from $GYM_LOG_ENV"
 	[[ -n $(setting GYM_LOG_ORIGIN) ]] || die "GYM_LOG_ORIGIN missing from $GYM_LOG_ENV"
+	# A malformed value would make the extra endpoints look down on every deploy, which silently
+	# switches the guard off.
+	local url urls
+	read -ra urls <<<"$(extra_urls)"
+	((${#urls[@]})) || die "GYM_LOG_EXTRA_HEALTH_URLS in $GYM_LOG_ENV is empty"
+	for url in "${urls[@]}"; do
+		[[ $url =~ ^(https?|file)://[^[:space:]\'\"#]+$ ]] || die "invalid extra health URL '$url' in GYM_LOG_EXTRA_HEALTH_URLS"
+	done
 }
 
 # Atomic: a reader always sees either the old or the new release.
@@ -95,25 +103,22 @@ restart_and_check() {
 }
 
 # Read-only probes of the extra health endpoints bracket every gym switch.
+# runtime.env lists them, space-separated, in
+# GYM_LOG_EXTRA_HEALTH_URLS; the environment variable overrides it for tests.
 extra_urls() {
-	if [[ -n ${GYM_LOG_EXTRA_HEALTH_URLS:-} ]]; then
-		echo "$GYM_LOG_EXTRA_HEALTH_URLS"
-		return
-	fi
-	local origin host
-	origin=$(setting GYM_LOG_ORIGIN)
-	echo 'http://127.0.0.1:<port>/api/health'
-		if [[ $origin == https://* ]]; then
-		host=${origin#https://}
-		echo "https://${host%%[:/]*}/api/health"
-	fi
+	local urls=${GYM_LOG_EXTRA_HEALTH_URLS:-$(setting GYM_LOG_EXTRA_HEALTH_URLS)}
+	echo "${urls:-http://127.0.0.1:<port>/api/health}"
 }
 
 extra_healthy() {
-	local url urls
+	local url urls type
 	read -ra urls <<<"$(extra_urls)"
+	((${#urls[@]})) || return 1
 	for url in "${urls[@]}"; do
-		curl -fsS --max-time 10 --output /dev/null "$url" 2>/dev/null || return 1
+		type=$(curl -fsS --max-time 10 --output /dev/null --write-out '%{content_type}' "$url" 2>/dev/null) || return 1
+		# A health endpoint answers JSON. An HTML page means the URL fell through to a web
+		# app's shell, which would make a dead API look healthy.
+		[[ $type != text/html* ]] || return 1
 	done
 }
 

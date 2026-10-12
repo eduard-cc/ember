@@ -1,0 +1,26 @@
+# User unit installed by ops/install.sh. Gym Log's own tailnet device (gym-log), so the
+# app has its own HTTPS origin instead of sharing the host's address with other apps.
+# Userspace networking: no TUN device or root. Its Serve config proxies HTTPS 443 to the
+# app on loopback; inspect it with
+#   tailscale --socket="$XDG_RUNTIME_DIR/gym-log-tailscale/tailscaled.sock" serve status
+[Unit]
+Description=Gym Log dedicated private Tailscale device
+After=network.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+OnFailure=gym-log-notify-failure@%n.service
+
+[Service]
+Type=simple
+Slice=gym-log-live.slice
+# UDP 41642, so it never competes with the host's tailscaled on 41641.
+ExecStart=/usr/sbin/tailscaled --tun=userspace-networking --port=41642 --socket=%t/gym-log-tailscale/tailscaled.sock --statedir=%h/.local/share/gym-log-tailscale
+RuntimeDirectory=gym-log-tailscale
+RuntimeDirectoryMode=0700
+UMask=0077
+Restart=on-failure
+RestartSec=5
+RestartMode=direct
+
+[Install]
+WantedBy=default.target

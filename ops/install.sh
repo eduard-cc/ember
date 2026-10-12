@@ -7,7 +7,7 @@ SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 units=$HOME/.config/systemd/user
 mkdir -p "$units"
 install -m 644 "$SCRIPT_DIR"/systemd/{gym-log.service,gym-log-notify-failure@.service,gym-log-docker.service} \
-	"$SCRIPT_DIR"/systemd/{gym-log-live.slice,gym-log-jobs.slice} "$units/"
+	"$SCRIPT_DIR"/systemd/{gym-log-tailscale.service,gym-log-live.slice,gym-log-jobs.slice} "$units/"
 systemctl --user daemon-reload
-systemctl --user enable gym-log-docker.service gym-log.service
+systemctl --user enable gym-log-docker.service gym-log.service gym-log-tailscale.service
 echo 'gym-log-install: units installed; deploy with ops/deploy.sh <commit>'

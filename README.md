@@ -125,7 +125,7 @@ Measured: the first `main` run (3 October 2026, cold caches) took 2m50s wall tim
 
 ## Deploy and rollback
 
-The live app runs from built releases, never from a checkout, so source can be edited and built freely. The `gym-log.service` user unit (`ops/systemd/`, installed with `ops/install.sh`) serves `~/.local/share/gym-log/current`, a symlink to `releases/<commit>/`. Runtime settings and secrets live in `~/.config/gym-log/runtime.env` (mode 0600, outside the repository) with `GYM_LOG_WEB_ROOT` set to the absolute path of `~/.local/share/gym-log/current/dist` (systemd does not expand `~`). Tailscale Serve on port 8444 proxies to the service on loopback.
+The live app runs from built releases, never from a checkout, so source can be edited and built freely. The `gym-log.service` user unit (`ops/systemd/`, installed with `ops/install.sh`) serves `~/.local/share/gym-log/current`, a symlink to `releases/<commit>/`. Runtime settings and secrets live in `~/.config/gym-log/runtime.env` (mode 0600, outside the repository) with `GYM_LOG_WEB_ROOT` set to the absolute path of `~/.local/share/gym-log/current/dist` (systemd does not expand `~`). The app has its own tailnet device, `gym-log`, run by the `gym-log-tailscale.service` user unit (userspace networking, UDP 41642, state in `~/.local/share/gym-log-tailscale`); its Tailscale Serve config proxies HTTPS 443 to the service on loopback, so the app has its own origin. `GYM_LOG_ORIGIN` must be that address.
 
 ```sh
 ops/deploy.sh <commit>   # build, switch, restart, health-check; rolls back on failure

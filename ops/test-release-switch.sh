@@ -10,6 +10,7 @@ unit=gym-log-release-test-$$.service
 units=$HOME/.config/systemd/user
 port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
 cleanup() {
+	[[ -z ${shell_pid:-} ]] || kill "$shell_pid" 2>/dev/null || true
 	systemctl --user stop "$unit" 2>/dev/null || true
 	rm -f -- "$units/$unit"
 	systemctl --user daemon-reload
@@ -106,6 +107,34 @@ switched() { # <sha> <extra_before>; prints switch_release's exit status
 }
 touch "$sandbox/extra-health"
 extra_healthy || fail 'the fake extra endpoint should start healthy'
+# A URL that falls through to a web shell (HTML) is not a health check.
+mkdir -p "$sandbox/shell"
+echo '<!doctype html>' >"$sandbox/shell/index.html"
+shell_port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
+python3 -m http.server --bind 127.0.0.1 --directory "$sandbox/shell" "$shell_port" >/dev/null 2>&1 &
+shell_pid=$!
+shell_up=false
+for _ in $(seq 1 50); do
+	curl -fsS -o /dev/null "http://127.0.0.1:$shell_port/" 2>/dev/null && shell_up=true && break
+	sleep 0.1
+done
+[[ $shell_up == true ]] || { kill "$shell_pid" 2>/dev/null; fail 'the fake HTML shell server did not start'; }
+shell_healthy=false
+GYM_LOG_EXTRA_HEALTH_URLS="http://127.0.0.1:$shell_port/" extra_healthy && shell_healthy=true
+kill "$shell_pid" && wait "$shell_pid" 2>/dev/null || true
+[[ $shell_healthy == false ]] || fail 'an HTML page must not count as a healthy endpoint'
+# runtime.env supplies the URLs when the environment does not; the environment wins.
+echo "GYM_LOG_EXTRA_HEALTH_URLS=\"file://$sandbox/from-env-file\"" >>"$GYM_LOG_ENV"
+[[ $(GYM_LOG_EXTRA_HEALTH_URLS='' extra_urls) == "file://$sandbox/from-env-file" ]] ||
+	fail 'extra_urls should read GYM_LOG_EXTRA_HEALTH_URLS from runtime.env'
+[[ $(extra_urls) == "file://$sandbox/extra-health" ]] ||
+	fail 'the GYM_LOG_EXTRA_HEALTH_URLS environment variable should override runtime.env'
+# A malformed list must stop the deploy instead of silently disabling the guard.
+(GYM_LOG_EXTRA_HEALTH_URLS="'http://127.0.0.1:1/x'" check_config) 2>/dev/null &&
+	fail 'check_config must reject a quoted extra health URL'
+(GYM_LOG_EXTRA_HEALTH_URLS='http://127.0.0.1:1/x #note' check_config) 2>/dev/null &&
+	fail 'check_config must reject an extra health URL list with a comment'
+check_config || fail 'check_config should accept the test URLs'
 [[ $(switched harmful true) == 1 ]] || fail 'a switch that breaks the extra endpoints must roll back'
 [[ $(current_release) == bbb ]] && serving bbb || fail 'extra-endpoint breakage should roll back to bbb'
 grep -q 'The extra health endpoints stopped responding after Gym Log deployed harmful.*rolled back to bbb.*STILL unhealthy' "$alerts" ||

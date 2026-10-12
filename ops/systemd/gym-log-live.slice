@@ -1,5 +1,7 @@
 # User slice installed by ops/install.sh. Holds the live app (gym-log.service), Gym Log's
-# Docker daemon and its PostgreSQL container, so a runaway gym process cannot starve other services on the host.
+# Docker daemon, its PostgreSQL container and its Tailscale device (gym-log-tailscale.service),
+# so a runaway gym process cannot starve other services on the host. Hitting the memory cap can stop any of them,
+# including the Tailscale device that serves the app's address; systemd restarts it.
 # System services sit outside the user manager, whose CPU weights do not reach them, so
 # the hard caps are what protect them; the low weight only yields to other user work.
 # I/O weights need the io controller, which this host does not delegate to user units.
