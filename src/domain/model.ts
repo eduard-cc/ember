@@ -71,14 +71,11 @@ export function getTrend(dataset: Dataset, name: string, metric: Metric): TrendP
   }
   return [...sessions.values()];
 }
-export function bestComparable(
-  dataset: Dataset,
-  name: string,
-  weight: number | null,
-): Comparable | null {
-  const candidates = getHistory(dataset, name).flatMap((session) =>
+/** Counted sets with reps, linked to their source workout. */
+function repEvidence(sessions: ExerciseSession[]): Comparable[] {
+  return sessions.flatMap((session) =>
     session.sets
-      .filter((set) => !set.excluded && set.weight === weight && set.reps !== null && set.reps > 0)
+      .filter((set) => !set.excluded && set.reps !== null && set.reps > 0)
       .map((set) => ({
         set,
         workoutId: session.workoutId,
@@ -86,8 +83,57 @@ export function bestComparable(
         date: session.date,
       })),
   );
-  candidates.sort((a, b) => (b.set.reps ?? 0) - (a.set.reps ?? 0) || b.date.localeCompare(a.date));
-  return candidates[0] ?? null;
+}
+/** Unflagged before flagged, then most reps, then newest. */
+function bestReps(candidates: Comparable[]): Comparable | null {
+  return (
+    [...candidates].sort(
+      (a, b) =>
+        Number(a.set.suspicious === true) - Number(b.set.suspicious === true) ||
+        (b.set.reps ?? 0) - (a.set.reps ?? 0) ||
+        b.date.localeCompare(a.date),
+    )[0] ?? null
+  );
+}
+export function bestComparable(
+  dataset: Dataset,
+  name: string,
+  weight: number | null,
+): Comparable | null {
+  return bestReps(
+    repEvidence(getHistory(dataset, name)).filter((entry) => entry.set.weight === weight),
+  );
+}
+/**
+ * Actual recorded sets at the closest lighter and heavier weights for the same exercise
+ * and type. No conversion, interpolation or estimated equivalent; assistance stays
+ * assistance. Not applicable to bodyweight, duration or cardio work.
+ */
+export function nearestRecorded(
+  dataset: Dataset,
+  name: string,
+  type: ExerciseType,
+  weight: number,
+): {below: Comparable | null; above: Comparable | null} {
+  if (type !== 'weighted' && type !== 'assisted') return {below: null, above: null};
+  const evidence = repEvidence(
+    getHistory(dataset, name).filter((session) => session.type === type),
+  ).filter((entry) => entry.set.weight !== null && Number.isFinite(entry.set.weight));
+  const nearest = (side: Comparable[], pick: (weights: number[]) => number) => {
+    if (!side.length) return null;
+    const target = pick(side.map((entry) => entry.set.weight!));
+    return bestReps(side.filter((entry) => entry.set.weight === target));
+  };
+  return {
+    below: nearest(
+      evidence.filter((entry) => entry.set.weight! < weight),
+      (weights) => Math.max(...weights),
+    ),
+    above: nearest(
+      evidence.filter((entry) => entry.set.weight! > weight),
+      (weights) => Math.min(...weights),
+    ),
+  };
 }
 export function classifyExercise(name: string, sets: SetRecord[]): ExerciseType {
   if (/assisted/i.test(name)) return 'assisted';

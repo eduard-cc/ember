@@ -1,8 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import {ArrowUpRight, X} from 'lucide-react';
-import {useMemo, useState} from 'react';
+import {useId, useMemo, useState} from 'react';
 
-import {bestComparable, getHistory} from '../domain/model';
+import {bestComparable, getHistory, nearestRecorded} from '../domain/model';
 import type {Dataset, ExerciseLog, SetRecord} from '../domain/types';
 import {dateLabel} from '../views/WorkoutView';
 import {Button} from './ui';
@@ -50,6 +50,12 @@ export function PreviousSet({
           exercise.type === 'bodyweight' ? null : set.weight,
         )
       : null;
+  // Only when the chosen weight has no counted history: actual neighbours, never an estimate.
+  const nearest =
+    open && !comparable && set.weight !== null && Number.isFinite(set.weight)
+      ? nearestRecorded(dataset, exercise.name, exercise.type, set.weight)
+      : null;
+  const nearestId = useId();
   const source = (id: string) => {
     setOpen(false);
     onSource(id);
@@ -86,7 +92,8 @@ export function PreviousSet({
               {comparable ? (
                 <>
                   <p>
-                    {recorded(comparable.set, exercise.type)} · {dateLabel(comparable.date)}
+                    {recorded(comparable.set, exercise.type)}
+                    {comparable.set.suspicious ? ' · flagged' : ''} · {dateLabel(comparable.date)}
                   </p>
                   <Button
                     variant='ghost'
@@ -98,8 +105,48 @@ export function PreviousSet({
                   </Button>
                 </>
               ) : (
-                <p>No exact-weight history</p>
+                <p>
+                  {exercise.type === 'bodyweight'
+                    ? 'No exact-weight history'
+                    : set.weight === null || !Number.isFinite(set.weight)
+                      ? 'Enter a weight to compare'
+                      : `No counted sets at ${set.weight} kg${exercise.type === 'assisted' ? ' assistance' : ''}`}
+                </p>
               )}
+            </section>
+          )}
+          {nearest && (nearest.below || nearest.above) && (
+            <section className='source-evidence' aria-labelledby={`${nearestId}-title`}>
+              <h3 id={`${nearestId}-title`}>Nearest recorded</h3>
+              <p>
+                These are actual sets at other weights, not an equivalent for {set.weight} kg
+                {exercise.type === 'assisted' ? ' assistance' : ''}.
+              </p>
+              <ul className='nearest-list'>
+                {(
+                  [
+                    [exercise.type === 'assisted' ? 'Less assistance' : 'Lighter', nearest.below],
+                    [exercise.type === 'assisted' ? 'More assistance' : 'Heavier', nearest.above],
+                  ] as const
+                ).map(([label, entry]) =>
+                  entry ? (
+                    <li key={label}>
+                      <span>
+                        <strong>{label}</strong> {recorded(entry.set, exercise.type)}
+                        {entry.set.suspicious ? ' · flagged' : ''} · {dateLabel(entry.date)}
+                      </span>
+                      <Button
+                        variant='ghost'
+                        aria-label={`View source workout ${entry.workoutName} (${label.toLowerCase()})`}
+                        onClick={() => source(entry.workoutId)}
+                      >
+                        {entry.workoutName}
+                        <ArrowUpRight size={16} />
+                      </Button>
+                    </li>
+                  ) : null,
+                )}
+              </ul>
             </section>
           )}
           <section className='source-evidence'>

@@ -1065,6 +1065,19 @@ th {
   padding-top: 18px;
   border-top: 1px solid var(--border);
 }
+.nearest-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.nearest-list li {
+  display: grid;
+  gap: 0;
+}
+.nearest-list li > .button {
+  justify-self: start;
+}
 .source-set-list {
   padding-left: 20px;
   font-size: 13px;

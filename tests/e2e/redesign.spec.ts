@@ -110,10 +110,46 @@ test('five-column Previous opens evidence for the selected set weight and source
   await page.getByRole('button', {name: /Resume Upper body A/}).click();
   await second.getByLabel(/Weight/).fill('61');
   await second.getByRole('button', {name: /Previous for .* set 2/}).click();
-  await expect(dialog).toContainText('No exact-weight history');
+  await expect(dialog).toContainText('No counted sets at 61 kg');
   await expect(dialog).toContainText('No equivalent performance is inferred');
   await dialog.getByRole('button', {name: 'Close previous sets'}).click();
   await expect(second.getByLabel(/Weight/)).toHaveValue('61');
+});
+
+test('an unrecorded weight shows the nearest actual lighter and heavier sets with sources', async ({
+  page,
+}) => {
+  await page.goto('/?demo=1');
+  const second = page.locator('.exercise-card').first().locator('.set-row:not(.set-head)').nth(1);
+  await second.getByLabel(/Weight/).fill('61');
+  await second.getByRole('button', {name: /Previous for .* set 2/}).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('No counted sets at 61 kg');
+  const nearest = dialog.getByRole('region', {name: 'Nearest recorded'});
+  await expect(nearest).toContainText('actual sets');
+  const lighter = nearest.getByRole('listitem').filter({hasText: 'Lighter'});
+  const heavier = nearest.getByRole('listitem').filter({hasText: 'Heavier'});
+  await expect(lighter).toContainText('60 kg × 9');
+  await expect(heavier).toContainText('62.5 kg × 8');
+  const view = heavier.getByRole('button', {name: /View source workout/});
+  const box = (await view.boundingBox())!;
+  expect(box.height).toBeGreaterThanOrEqual(44);
+  // Nothing in the sheet may scroll sideways on a phone.
+  expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  await dialog.getByRole('button', {name: 'Close previous sets'}).click();
+  // A blank weight is not a claim about history.
+  await second.getByLabel(/Weight/).fill('');
+  await second.getByRole('button', {name: /Previous for .* set 2/}).click();
+  await expect(dialog).toContainText('Enter a weight to compare');
+  await expect(dialog).not.toContainText('sets at');
+  await dialog.getByRole('button', {name: 'Close previous sets'}).click();
+  await second.getByLabel(/Weight/).fill('61');
+  await second.getByRole('button', {name: /Previous for .* set 2/}).click();
+  await view.click();
+  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
+  await expect(page.locator('.focused-history .recorded-sets').first()).toContainText(
+    '62.5 kg × 8 reps',
+  );
 });
 
 test('exercise Done requires every valid set checked and returns to targets on edit or add', async ({
