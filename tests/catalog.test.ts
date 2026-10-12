@@ -78,9 +78,12 @@ describe('bundled exercise catalog', () => {
     const licensed = catalog.filter((e) =>
       e.sources.some((s) => s.kind === 'illustration' && s.license !== 'app-owned'),
     );
-    expect(licensed.length).toBeGreaterThanOrEqual(157);
+    expect(licensed.length).toBeGreaterThanOrEqual(160);
     for (const entry of licensed)
       expect(entry.sources.some((s) => s.license === 'app-owned')).toBe(false);
+  });
+  it('gives every exercise a drawing', () => {
+    expect(catalog.filter((e) => e.images.length === 0).map((e) => e.name)).toEqual([]);
   });
   it('keeps unclear-copyright datasets out of the committed catalog', () => {
     const raw = readFileSync('src/catalog/exercises.json', 'utf8');

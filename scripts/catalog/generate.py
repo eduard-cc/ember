@@ -64,7 +64,7 @@ CATALOG = [
     ('Incline Bench Press (Smith Machine)', 'Chest', 'Smith machine', 'weighted', 925, '0081'),
     ('Incline Chest Fly (Cable)', 'Chest', 'Cable', 'weighted', None, '0060'),
     ('Incline Chest Fly (Dumbbell)', 'Chest', 'Dumbbell', 'weighted', None, '0062'),
-    ('Incline Chest Press (Machine)', 'Chest', 'Machine', 'weighted', 2632, None),
+    ('Incline Chest Press (Machine)', 'Chest', 'Machine', 'weighted', 2632, '0084'),
     ('Pullover (Dumbbell)', 'Chest', 'Dumbbell', 'weighted', 1273, '0079'),
     ('Push Up', 'Chest', 'Bodyweight', 'bodyweight', 1551, '0077'),
     ('Push Up (Feet Elevated)', 'Chest', 'Bodyweight', 'bodyweight', 1112, '0075'),
@@ -450,6 +450,17 @@ def main():
                     'author': drawings[0]['license_author'] or 'wger.de contributors',
                     'license': lic[0], 'licenseUrl': lic[1],
                     'url': f'https://wger.de/exercise/{wger_id}/view-base',
+                }
+        # Some Everkinetic drawings exist only as finished source exports (src/images-ai,
+        # start "-S" then finish "-F"), not in dist/. Same artist, licence and attribution.
+        if not images and ek_id:
+            files = [ek_root / f'src/images-ai/{ek_id}-S.ai.png', ek_root / f'src/images-ai/{ek_id}-F.ai.png']
+            if all(f.exists() for f in files):
+                images = [f.read_bytes() for f in files]
+                image_source = {
+                    'title': ek['title'], 'author': 'Everkinetic', 'license': EK_LICENSE[0],
+                    'licenseUrl': EK_LICENSE[1],
+                    'url': 'https://github.com/everkinetic/data',
                 }
         files_out = []
         for index, raw in enumerate(images):

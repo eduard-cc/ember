@@ -24,13 +24,16 @@
     },
     {
       "name": "Bent Over One Arm Row (Dumbbell)",
-      "status": "rejected",
-      "attempts": 4
+      "status": "accepted",
+      "attempts": 4,
+      "sha256": "09c9382b55e1d29eabc6b1d357e098bb751ebea0befa5d92d6ee166e3661d7a2"
     },
     {
       "name": "Bent Over Row (Dumbbell)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "79129d0593f9c62abbc1bd7f512c6746a8a1529ecd35b6a4ccbd775b9753c8ce",
+      "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
       "name": "Bicycle Crunch",
@@ -59,8 +62,9 @@
     },
     {
       "name": "Cable Crunch",
-      "status": "rejected",
-      "attempts": 2
+      "status": "accepted",
+      "attempts": 3,
+      "sha256": "ab25f4c40965145b68c6b1e9b8e8b7fcb6a5efe0cfbd4249b9a9cd891f8daffe"
     },
     {
       "name": "Chest Supported Row (Dumbbell)",
@@ -70,8 +74,9 @@
     },
     {
       "name": "Chin Up (Assisted)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "b90b69df34bdac81218b8bda267e87359b40622673f2a576b2f278c4a601a396"
     },
     {
       "name": "Clean and Press (Barbell)",
@@ -81,8 +86,9 @@
     },
     {
       "name": "Clean (Barbell)",
-      "status": "rejected",
-      "attempts": 6
+      "status": "accepted",
+      "attempts": 7,
+      "sha256": "087b5ffde14b54ca746e8acca63f41d3ddc65948f6bf8fa85f0d3913b37199cb"
     },
     {
       "name": "Crunch (Machine)",
@@ -92,13 +98,15 @@
     },
     {
       "name": "Cycling (Stationary Bike)",
-      "status": "rejected",
-      "attempts": 7
+      "status": "accepted",
+      "attempts": 7,
+      "sha256": "3b20bb295786499e68cf1a0a1ac6f3ddb9f841c70a7d30d583b7f302d02271d6"
     },
     {
       "name": "Elliptical Trainer",
-      "status": "rejected",
-      "attempts": 8
+      "status": "accepted",
+      "attempts": 8,
+      "sha256": "91b332fd25a32680f7589d7fd46f2f2cff744842a0999743793bb7692c9f9981"
     },
     {
       "name": "External Rotation (Cable)",
@@ -108,8 +116,9 @@
     },
     {
       "name": "Face Pull (Cable)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "82140aa14ceefb682c76f652ef13c74430637a9892819a74ed6476a1239000cd"
     },
     {
       "name": "Farmer's Walk (Dumbbell)",
@@ -119,8 +128,9 @@
     },
     {
       "name": "Floor Press (Dumbbell)",
-      "status": "rejected",
-      "attempts": 1
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "64a40234834b6d41b8f2a6a8b5c3e0aa5c9ee6e86f8ac3417eef4bf90a82538b"
     },
     {
       "name": "Front Raise (Barbell)",
@@ -129,8 +139,9 @@
     },
     {
       "name": "Glute Kickback (Machine)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 10,
+      "sha256": "fd57cdfb8ee22e645c221e785f39b6a1cc1da86e0808169aa259704d3e1f720b"
     },
     {
       "name": "Goblet Squat (Dumbbell)",
@@ -140,23 +151,27 @@
     },
     {
       "name": "Hanging Knee Raise",
-      "status": "rejected",
-      "attempts": 1
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "a956ecdef963faa8151214c0c72964a4c91cf3d2e77a6b0c47a8dcd1b09dab10"
     },
     {
       "name": "Hanging Leg Raise",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "813035102524009e59665920e56074fcb882f0798b49b6af263db8b109e5dafa"
     },
     {
       "name": "Hip Thrust (Barbell)",
-      "status": "rejected",
-      "attempts": 7
+      "status": "accepted",
+      "attempts": 8,
+      "sha256": "3545482194fca78b9b3412dc3eff409f647cefff4400763df7d23103b88cf0a7"
     },
     {
       "name": "Hollow Hold",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 10,
+      "sha256": "5c6a4f002e756c7a6f47e2a2291668428307f0dec6279d8e41ff6c5d6cc89074"
     },
     {
       "name": "Incline Chest Press (Machine)",
@@ -165,8 +180,9 @@
     },
     {
       "name": "Iso-Lateral Row (Machine)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "8cd0fbab84d4f8cbc0538a2c92a3f9606e2eed711a0f6057f27a02cfebe5526a"
     },
     {
       "name": "Jump Rope",
@@ -189,13 +205,15 @@
     },
     {
       "name": "Lat Pulldown (Cable)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 10,
+      "sha256": "1cccbf915bfb025a212ce47b4093559b0279949cbbc967f58d02c28b2a932fe8"
     },
     {
       "name": "Lat Pulldown (Machine)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "d031ea3b56f77ce2ba8c2542aa5659fbf2c07dba32ac3dd69fe711c2b015250c"
     },
     {
       "name": "Lateral Raise (Cable)",
@@ -211,13 +229,16 @@
     },
     {
       "name": "Lunge (Bodyweight)",
-      "status": "rejected",
-      "attempts": 5
+      "status": "accepted",
+      "attempts": 5,
+      "sha256": "a8c5982c5c34f46ef3819a3d9032759eae60b28170e7670266d3ec6bf43bf810"
     },
     {
       "name": "Mountain Climber",
-      "status": "rejected",
-      "attempts": 4
+      "status": "accepted",
+      "attempts": 5,
+      "sha256": "10915d01b72e228d1e53882b8f7457124aa61f5c2224a03299ac37b3e790caa5",
+      "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
       "name": "One Arm Triceps Extension (Dumbbell)",
@@ -227,18 +248,22 @@
     },
     {
       "name": "Overhead Press (Smith Machine)",
-      "status": "rejected",
-      "attempts": 2
+      "status": "accepted",
+      "attempts": 3,
+      "sha256": "435a3b12f3220e476b6eb0248559dfdfc2776b72a294412680cf18981e700974"
     },
     {
       "name": "Pallof Press (Cable)",
-      "status": "rejected",
-      "attempts": 9
+      "status": "accepted",
+      "attempts": 10,
+      "sha256": "92f7f1a3be53853bb24b8a6963f2b683f49c18eb56caf0beeefa589a943ebcbb",
+      "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
       "name": "Pendlay Row (Barbell)",
-      "status": "rejected",
-      "attempts": 4
+      "status": "accepted",
+      "attempts": 5,
+      "sha256": "69247152991c2ebc9a9640e384cc2834cd742fdab497fe1e2d22ee2f3354a47b"
     },
     {
       "name": "Pistol Squat",
@@ -254,23 +279,27 @@
     },
     {
       "name": "Power Clean (Barbell)",
-      "status": "rejected",
-      "attempts": 7
+      "status": "accepted",
+      "attempts": 7,
+      "sha256": "894edcce847916236ad38a61682d17cfc6241754691cd82e71a3340cfd56482d"
     },
     {
       "name": "Pullover (Machine)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "3e72ba75100f8bfe90dbe02b6bec34051ae4ac8249b4802cd0865e47eb1169e6"
     },
     {
       "name": "Push Press (Barbell)",
-      "status": "rejected",
-      "attempts": 1
+      "status": "accepted",
+      "attempts": 1,
+      "sha256": "d64d62d07cf0402dce0ca44f96241501849db7cd972fbdda707fe210f149fc9f"
     },
     {
       "name": "Reverse Fly (Machine)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "c633de51889347489dfea5a7ff8af509d85d57891c64916037458588c7a59241"
     },
     {
       "name": "Reverse Wrist Curl (Barbell)",
@@ -280,18 +309,21 @@
     },
     {
       "name": "Romanian Deadlift (Dumbbell)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 10,
+      "sha256": "3865b34c42c952d67b2c249b31dad2ae9c5bb1423a28df525989f9ffc620ac26"
     },
     {
       "name": "Rowing (Machine)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 11,
+      "sha256": "233a94c1c6509063b3f668099a919a66362bcf6aaefb390f32ab7556ca3fc4ce"
     },
     {
       "name": "Running (Treadmill)",
-      "status": "rejected",
-      "attempts": 2
+      "status": "accepted",
+      "attempts": 2,
+      "sha256": "f38e81c562efb3fbb6328f3141984aceccd7dd95da12c71e7481cb63af1bde41"
     },
     {
       "name": "Russian Twist",
@@ -301,13 +333,15 @@
     },
     {
       "name": "Seated Palms Up Wrist Curl (Dumbbell)",
-      "status": "rejected",
-      "attempts": 7
+      "status": "accepted",
+      "attempts": 7,
+      "sha256": "2ec15acf466604d670025b5f398fb8d8de7d037e8c710bc00ff9e0e2d14b84bf"
     },
     {
       "name": "Seated Row (Machine)",
-      "status": "rejected",
-      "attempts": 2
+      "status": "accepted",
+      "attempts": 3,
+      "sha256": "f46ad63380dea4723a7806cd2e17749a84833ca0d50fd4b110a04112eff4c0a3"
     },
     {
       "name": "Single Leg Deadlift (Dumbbell)",
@@ -323,8 +357,9 @@
     },
     {
       "name": "Ski Erg",
-      "status": "rejected",
-      "attempts": 6
+      "status": "accepted",
+      "attempts": 7,
+      "sha256": "207c16588bb0b16ddd0e0d59694d068cd5e9436a5eba055b43a6bdd637ff9f75"
     },
     {
       "name": "Snatch (Barbell)",
@@ -346,18 +381,22 @@
     },
     {
       "name": "Stair Climber",
-      "status": "rejected",
-      "attempts": 7
+      "status": "accepted",
+      "attempts": 8,
+      "sha256": "b843dd5511bce3423b5a7c1dd04d285ed9d712ff90e2efcc00ac4508d6409627",
+      "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
       "name": "Standing Calf Raise (Dumbbell)",
-      "status": "rejected",
-      "attempts": 7
+      "status": "accepted",
+      "attempts": 7,
+      "sha256": "6c0bbdc0d9431ac265fdf4ca2f477edb60e70a425f1f929201295a2e7591e37a"
     },
     {
       "name": "Stiff Leg Deadlift (Barbell)",
-      "status": "rejected",
-      "attempts": 10
+      "status": "accepted",
+      "attempts": 10,
+      "sha256": "b6b1aefd7fcb45bea25d6710bc6ab06b833bf48e3dc23c9da5d8705fb6e8f0b2"
     },
     {
       "name": "Sumo Deadlift (Barbell)",
@@ -367,18 +406,22 @@
     },
     {
       "name": "Thruster (Barbell)",
-      "status": "rejected",
-      "attempts": 4
+      "status": "accepted",
+      "attempts": 4,
+      "sha256": "498d1cebfdf4253217031becce5ebe2914fa3c47c32a8fcf335ff9b2a8a9922c"
     },
     {
       "name": "Woodchopper (Cable)",
-      "status": "rejected",
-      "attempts": 7
+      "status": "accepted",
+      "attempts": 8,
+      "sha256": "54280c393aae388e0799e07533b0fc25cd62eb6e89f3750166ed20943e0e8205",
+      "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
       "name": "Wrist Curl (Barbell)",
-      "status": "rejected",
-      "attempts": 7
+      "status": "accepted",
+      "attempts": 7,
+      "sha256": "a7e784938a9041b5d3bcebf0db7f639b4176f9088d075c57595e9ca496ba9540"
     }
   ]
 }

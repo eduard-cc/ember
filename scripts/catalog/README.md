@@ -2,6 +2,11 @@
 
 The licensed base catalog is built by `generate.py` from reviewed open-source
 mappings. Do not replace or reattribute those illustrations or text sources.
+Everkinetic drawings come from `dist/png`; when an exercise has none there,
+`generate.py` falls back to the artist's finished source exports
+`src/images-ai/<id>-S.ai.png` and `-F.ai.png` ("ai" = Adobe Illustrator, same
+licence and attribution). Build from a full Everkinetic checkout, including
+`src/`, or those drawings are dropped.
 
 ## App-owned illustrations
 
