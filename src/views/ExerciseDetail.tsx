@@ -5,7 +5,7 @@ import {bodyPartOf, catalogEntry} from '../catalog/catalog';
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
 import {Button, plural} from '../components/ui';
-import {estimate1RM, getHistory, getRecords} from '../domain/model';
+import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
 import type {Dataset, ExerciseType, SetRecord} from '../domain/types';
 import {ExerciseCharts} from './ExerciseCharts';
 import {dateLabel} from './WorkoutView';
@@ -286,8 +286,9 @@ export function ExerciseDetail({
   onSource: (id: string) => void;
   onExclude: ExcludeSetHandler;
 }) {
-  const sessions = getHistory(dataset, name).length;
-  const [tab, setTab] = useState<Tab>(sessions ? 'History' : 'About');
+  // Unique workouts, matching the Exercises list; History/Charts/Records stay per exercise block.
+  const workouts = exerciseWorkoutCount(dataset, name);
+  const [tab, setTab] = useState<Tab>(workouts ? 'History' : 'About');
   return (
     <div className='exercise-detail'>
       <header className='detail-header'>
@@ -298,7 +299,7 @@ export function ExerciseDetail({
         <div>
           <h2>{name}</h2>
           <p>
-            {bodyPartOf(name)} · {plural(sessions, 'session')}
+            {bodyPartOf(name)} · {plural(workouts, 'workout')}
           </p>
         </div>
       </header>

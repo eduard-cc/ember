@@ -18,6 +18,46 @@ export function getExercises(dataset: Dataset): string[] {
     ),
   ].sort((a, b) => a.localeCompare(b));
 }
+export interface ExerciseStat {
+  /** Unique workouts containing the exercise; repeated blocks in one workout count once. */
+  sessions: number;
+  last: string;
+}
+export function exerciseStats(dataset: Dataset): Map<string, ExerciseStat> {
+  const stats = new Map<string, ExerciseStat>();
+  for (const workout of dataset.workouts)
+    for (const name of new Set(workout.exercises.map((exercise) => exercise.name))) {
+      const current = stats.get(name);
+      if (!current) stats.set(name, {sessions: 1, last: workout.date});
+      else {
+        current.sessions++;
+        if (workout.date > current.last) current.last = workout.date;
+      }
+    }
+  return stats;
+}
+/** Unique workouts containing the exercise: the same count as the Exercises list. */
+export function exerciseWorkoutCount(dataset: Dataset, name: string): number {
+  return dataset.workouts.filter((workout) =>
+    workout.exercises.some((exercise) => exercise.name === name),
+  ).length;
+}
+export type ExerciseSort = 'az' | 'most';
+/** A stored sort preference; anything unknown or missing falls back to A–Z. */
+export function parseExerciseSort(value: string | null): ExerciseSort {
+  return value === 'most' ? 'most' : 'az';
+}
+/** A–Z, or most unique workouts first with name ties A–Z; never-done names stay last. */
+export function sortExerciseNames(
+  names: readonly string[],
+  stats: ReadonlyMap<string, ExerciseStat>,
+  sort: ExerciseSort,
+): string[] {
+  const byName = (a: string, b: string) => a.localeCompare(b);
+  if (sort === 'az') return [...names].sort(byName);
+  const count = (name: string) => stats.get(name)?.sessions ?? 0;
+  return [...names].sort((a, b) => count(b) - count(a) || byName(a, b));
+}
 export function getHistory(dataset: Dataset, name: string): ExerciseSession[] {
   return dataset.workouts
     .flatMap((workout) =>
