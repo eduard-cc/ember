@@ -1580,6 +1580,63 @@ th {
 .finish-button {
   min-width: 88px;
 }
+.exercise-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+.exercise-menu > [aria-expanded='true'] {
+  background: var(--soft);
+  color: var(--fg);
+}
+.exercise-menu-backdrop {
+  /* Transparent: it only catches the tap that closes the menu. */
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  -webkit-tap-highlight-color: transparent;
+}
+.exercise-menu-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 208px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.exercise-menu-list[data-side='top'] {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+.exercise-menu-list [role='menuitem'] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  text-align: left;
+  transition: background 120ms;
+}
+.exercise-menu-list [role='menuitem']:focus-visible {
+  outline-offset: -2px;
+}
+.exercise-menu-list .exercise-menu-danger {
+  color: var(--danger);
+}
+@media (hover: hover) {
+  .exercise-menu-list [role='menuitem']:hover {
+    background: var(--soft);
+  }
+}
 .exercise-heading .exercise-thumb {
   width: 40px;
   height: 40px;

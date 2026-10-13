@@ -1,6 +1,8 @@
-import {Check, Plus, Trash2} from 'lucide-react';
-import {useCallback, useRef} from 'react';
+import {Check, Plus} from 'lucide-react';
+import {useCallback, useRef, useState} from 'react';
 
+import {ExercisePicker} from '../components/AddExercise';
+import {ExerciseMenu} from '../components/ExerciseMenu';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
 import {SetRow} from '../components/SetRow';
@@ -75,6 +77,40 @@ export function WorkoutView({
     }
     return id;
   };
+  // Replace reuses the Add exercise picker; focus returns to the card's ⋯ button afterwards.
+  const [replacing, setReplacing] = useState<string | null>(null);
+  const menuButtons = useRef(new Map<string, HTMLButtonElement>());
+  const focusAfterPicker = useRef<string | null>(null);
+  const replaceExercise = (exerciseId: string, exercise: ExerciseLog) => {
+    const nextId = crypto.randomUUID();
+    identities.current.set(exercise, nextId);
+    focusAfterPicker.current = nextId;
+    // The replacement takes the same position; the old sets, completed or not, are dropped.
+    onChange((current) => ({
+      ...current,
+      exercises: current.exercises.map((ex) => (identity(ex) === exerciseId ? exercise : ex)),
+    }));
+  };
+  // Remove applies to the current draft by identity; focus moves to the neighbouring card's ⋯
+  // (next, else previous), or to Add exercise when the list is empty.
+  const list = useRef<HTMLDivElement>(null);
+  const removeExercise = (exerciseId: string) => {
+    const ids = workout.exercises.map((ex) => identity(ex));
+    const at = ids.indexOf(exerciseId);
+    const neighbour = ids[at + 1] ?? ids[at - 1];
+    onChange((current) => ({
+      ...current,
+      exercises: current.exercises.filter((ex) => identity(ex) !== exerciseId),
+    }));
+    requestAnimationFrame(() => {
+      const next = neighbour && menuButtons.current.get(neighbour);
+      if (next) return next.focus({preventScroll: true});
+      // Add exercise sits beside the list (logger tools or above it in the template editor).
+      list.current?.parentElement
+        ?.querySelector<HTMLButtonElement>('.add-exercise-button')
+        ?.focus({preventScroll: true});
+    });
+  };
   const changeExercise = (exercise: ExerciseLog, sets: SetRecord[]) => {
     const next = {...exercise, sets};
     identities.current.set(next, identity(exercise));
@@ -119,7 +155,7 @@ export function WorkoutView({
       ),
     });
   return (
-    <div className='exercise-list'>
+    <div className='exercise-list' ref={list}>
       {targetsOnly && (
         <div className='workout-name'>
           <label htmlFor='workout-name'>WORKOUT NAME</label>
@@ -159,16 +195,18 @@ export function WorkoutView({
                 )}
                 {loadCaption(ex) && <p>{loadCaption(ex)}</p>}
               </div>
-              <Button
-                size='icon'
-                variant='ghost'
-                aria-label={`Remove ${ex.name}`}
-                onClick={() =>
-                  onChange({...workout, exercises: workout.exercises.filter((_, i) => i !== ei)})
-                }
-              >
-                <Trash2 size={17} />
-              </Button>
+              <ExerciseMenu
+                name={ex.name}
+                ref={(node) => {
+                  if (node) menuButtons.current.set(identity(ex), node);
+                  else menuButtons.current.delete(identity(ex));
+                }}
+                onReplace={() => {
+                  focusAfterPicker.current = identity(ex);
+                  setReplacing(identity(ex));
+                }}
+                onRemove={() => removeExercise(identity(ex))}
+              />
             </header>
             <div className='set-table'>
               <div className='set-row set-head'>
@@ -308,6 +346,24 @@ export function WorkoutView({
           </section>
         );
       })}
+      <ExercisePicker
+        dataset={dataset}
+        open={replacing !== null}
+        onOpenChange={(open) => {
+          if (!open) setReplacing(null);
+        }}
+        onPick={(exercise) => {
+          if (replacing) replaceExercise(replacing, exercise);
+        }}
+        title='Replace exercise'
+        description='Search or filter the exercise library and choose the exercise to put in its place.'
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          const target = focusAfterPicker.current;
+          focusAfterPicker.current = null;
+          if (target) menuButtons.current.get(target)?.focus({preventScroll: true});
+        }}
+      />
     </div>
   );
 }
