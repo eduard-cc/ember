@@ -440,3 +440,17 @@ test('swiping left from the Previous column reveals Delete without opening evide
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await context.close();
 });
+
+test('plain weighted exercises carry no redundant unit caption; meaningful load hints stay', async ({
+  page,
+}) => {
+  await page.goto('/?demo=1');
+  const sheet = page.getByRole('region', {name: 'Active workout'});
+  const card = (name: string) =>
+    sheet.locator('.exercise-card').filter({has: page.getByRole('heading', {name, exact: true})});
+  await expect(card('Bench Press (Barbell)')).toBeVisible();
+  await expect(sheet.getByText('Recorded weight', {exact: false})).toHaveCount(0);
+  await expect(card('Bench Press (Barbell)').locator('.exercise-heading p')).toHaveCount(0);
+  await expect(card('Incline Bench Press (Dumbbell)')).toContainText('Weight per dumbbell · kg');
+  await expect(card('Pull Up (Assisted)')).toContainText('Assistance in kg · less is better');
+});

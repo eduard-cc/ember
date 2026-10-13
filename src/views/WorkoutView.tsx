@@ -25,6 +25,22 @@ export function validSet(set: SetRecord, type: ExerciseType) {
     (type === 'bodyweight' || bounded(set.weight, 0, 2000))
   );
 }
+/** Only load conventions worth a reminder; plain weighted work needs no caption. */
+function loadCaption(ex: ExerciseLog): string | null {
+  switch (ex.type) {
+    case 'weighted':
+      return ex.name.includes('Dumbbell') ? 'Weight per dumbbell · kg' : null;
+    case 'assisted':
+      return 'Assistance in kg · less is better';
+    case 'bodyweight':
+      return 'Bodyweight · no added load';
+    case 'duration':
+      return 'Duration in seconds';
+    case 'cardio':
+      return 'Duration in seconds · distance in km';
+  }
+}
+
 export function WorkoutView({
   workout,
   dataset,
@@ -141,19 +157,7 @@ export function WorkoutView({
                     )}
                   </span>
                 )}
-                <p>
-                  {ex.type === 'assisted'
-                    ? 'Assistance in kg · less is better'
-                    : ex.name.includes('Dumbbell')
-                      ? 'Weight per dumbbell · kg'
-                      : ex.type === 'bodyweight'
-                        ? 'Bodyweight · no added load'
-                        : ex.type === 'duration'
-                          ? 'Duration in seconds'
-                          : ex.type === 'cardio'
-                            ? 'Duration in seconds · distance in km'
-                            : 'Recorded weight · kg'}
-                </p>
+                {loadCaption(ex) && <p>{loadCaption(ex)}</p>}
               </div>
               <Button
                 size='icon'
