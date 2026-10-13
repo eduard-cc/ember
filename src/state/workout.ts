@@ -242,6 +242,48 @@ export function useWorkoutState() {
       finishing.current = false;
     }
   }, [repository]);
+  /** Owner review: exclude a recorded set from analytics or include it again. */
+  const setSetExcluded = useCallback(
+    (workoutId: string, setId: string, excluded: boolean) => {
+      if (
+        !ready.current ||
+        !writable.current ||
+        blocked.current ||
+        suspended.current ||
+        finishing.current
+      )
+        return Promise.resolve(false);
+      const revision = ++generation.current;
+      setSaveStatus('saving');
+      const job = writeQueue.current.then(async () => {
+        try {
+          // An unsaved earlier edit must be retried first; never claim it saved here.
+          if (failedWrite.current) throw new Error('Earlier changes are not saved');
+          await repository.setSetExcluded(workoutId, setId, excluded);
+          const stored = await repository.readState();
+          const history = {dataset: stored.dataset, finished: stored.finished};
+          committed.current = {...committed.current, ...history};
+          current.current = {...current.current, ...history};
+          updateState(current.current);
+          if (revision === generation.current) {
+            lastSavedGeneration.current = revision;
+            setSaveStatus('saved');
+            setError('');
+          }
+          return true;
+        } catch {
+          if (revision === generation.current) {
+            setSaveStatus('error');
+            setError('Could not save on this device. The set was not changed; retry.');
+          }
+          return false;
+        }
+      });
+      writeQueue.current = job;
+      return job;
+    },
+    [repository],
+  );
   const resetUnreadableStorage = async () => {
     if (!writable.current) return;
     if (
@@ -333,6 +375,7 @@ export function useWorkoutState() {
     ownershipError,
     saveStatus,
     finishWorkout,
+    setSetExcluded,
     recoveryError,
     resetUnreadableStorage,
     persistenceError: recoveryError || error,

@@ -1,4 +1,5 @@
 import {AppStateSchema, type LocalOperation, WorkoutSchema} from '../../shared/contracts';
+import {withSetExcluded} from '../domain/model';
 import type {Workout} from '../domain/types';
 import type {AppState} from '../state/workout';
 import {validSet} from '../views/WorkoutView';
@@ -75,6 +76,63 @@ export class WorkoutRepository {
       );
       return finished;
     });
+  }
+  /**
+   * Exclude one recorded set from analytics, or include it again, in one transaction.
+   * App-logged history queues putWorkout and synchronized imports queue putImportedWorkout;
+   * an import that has never synchronized updates the local dataset copy only (its legacy
+   * bytes stay untouched) and reaches the server through bootstrap.
+   */
+  async setSetExcluded(workoutId: string, setId: string, excluded: boolean): Promise<Workout> {
+    return this.enqueue(() =>
+      this.db.transaction(
+        'rw',
+        [this.db.meta, this.db.workouts, this.db.importSources, this.db.outbox, this.db.syncState],
+        async () => {
+          // A repeated identical toggle (double tap, stale button) is a no-op: queueing an
+          // unchanged document would be rejected by the server and block later changes.
+          const unchanged = (before: Workout, after: Workout) =>
+            JSON.stringify(before) === JSON.stringify(after);
+          const native = await this.db.workouts.get(workoutId);
+          if (native) {
+            const updated = WorkoutSchema.parse(withSetExcluded(native, setId, excluded));
+            if (unchanged(native, updated)) return native;
+            await this.db.workouts.put(updated);
+            await this.queueOperation('putWorkout', workoutId, updated);
+            return updated;
+          }
+          if ((await this.db.meta.get('imported-sync-active'))?.value === true) {
+            const record = await this.db.importSources.get('imported:' + workoutId);
+            if (!record) throw new Error('Workout not found');
+            const updated = WorkoutSchema.parse(
+              withSetExcluded(record.value as Workout, setId, excluded),
+            );
+            if (unchanged(record.value as Workout, updated)) return updated;
+            await this.db.importSources.put({key: record.key, value: updated});
+            await this.queueOperation('putImportedWorkout', workoutId, updated);
+            return updated;
+          }
+          const source =
+            (await this.db.importSources.get('current-dataset')) ??
+            (await this.db.importSources.get('legacy-v1'));
+          const dataset = (source?.value as {dataset?: AppState['dataset']} | undefined)?.dataset;
+          const workout = dataset?.workouts.find((w) => w.id === workoutId);
+          if (!dataset || !workout) throw new Error('Workout not found');
+          const updated = WorkoutSchema.parse(withSetExcluded(workout, setId, excluded));
+          if (unchanged(workout, updated)) return updated;
+          await this.db.importSources.put({
+            key: 'current-dataset',
+            value: {
+              dataset: {
+                ...dataset,
+                workouts: dataset.workouts.map((w) => (w.id === workoutId ? updated : w)),
+              },
+            },
+          });
+          return updated;
+        },
+      ),
+    );
   }
   async readState(): Promise<AppState> {
     return this.db.transaction(
@@ -285,8 +343,12 @@ export class WorkoutRepository {
           const acknowledged = new Set(
             syncState.filter((r) => r.key.startsWith('revision:')).map((r) => r.key.slice(9)),
           );
+          // Only pending creates never reached the server; a pending exclusion update
+          // (expectedRevision set) belongs to an acknowledged workout the reset purged.
           const unsent = new Set(
-            outbox.filter((o) => o.kind === 'putWorkout').map((o) => o.entityId),
+            outbox
+              .filter((o) => o.kind === 'putWorkout' && o.expectedRevision === null)
+              .map((o) => o.entityId),
           );
           const kept = workouts.filter((w) => unsent.has(w.id) || !acknowledged.has(w.id));
           for (const w of kept) unsent.add(w.id);

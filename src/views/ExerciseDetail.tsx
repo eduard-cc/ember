@@ -2,6 +2,7 @@ import {ArrowLeft, ArrowUpRight} from 'lucide-react';
 import {useState} from 'react';
 
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
+import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
 import {Button, plural} from '../components/ui';
 import {estimate1RM, getHistory, getRecords} from '../domain/model';
@@ -98,10 +99,12 @@ function HistoryTab({
   dataset,
   name,
   onSource,
+  onExclude,
 }: {
   dataset: Dataset;
   name: string;
   onSource: (id: string) => void;
+  onExclude: ExcludeSetHandler;
 }) {
   const [limit, setLimit] = useState(10);
   const history = getHistory(dataset, name);
@@ -133,10 +136,13 @@ function HistoryTab({
           <div className='session-sets'>
             <span className='session-sets-head'>Sets performed</span>
             {session.type === 'weighted' && <span className='session-sets-head'>Est. 1RM</span>}
+            <span className='session-sets-head'>
+              <span className='sr-only'>Analytics</span>
+            </span>
             {session.sets.map((set, j) => {
               const e1rm = estimate1RM(set, session.type);
               return (
-                <div key={set.id} className='session-set'>
+                <div key={set.id} className={`session-set ${set.excluded ? 'excluded-set' : ''}`}>
                   <span>
                     <b>{j + 1}</b>
                     {setLabel(set, session.type)}
@@ -144,6 +150,15 @@ function HistoryTab({
                     {set.excluded ? ' · excluded' : ''}
                   </span>
                   {session.type === 'weighted' && <span>{e1rm === null ? '—' : kg(e1rm)}</span>}
+                  <ExcludeSet
+                    workoutId={session.workoutId}
+                    date={session.date}
+                    exercise={name}
+                    set={set}
+                    number={j + 1}
+                    type={session.type}
+                    onExclude={onExclude}
+                  />
                 </div>
               );
             })}
@@ -263,11 +278,13 @@ export function ExerciseDetail({
   name,
   onBack,
   onSource,
+  onExclude,
 }: {
   dataset: Dataset;
   name: string;
   onBack: () => void;
   onSource: (id: string) => void;
+  onExclude: ExcludeSetHandler;
 }) {
   const sessions = getHistory(dataset, name).length;
   const [tab, setTab] = useState<Tab>(sessions ? 'History' : 'About');
@@ -302,7 +319,9 @@ export function ExerciseDetail({
       </div>
       <div role='tabpanel' id='exercise-tab-panel' aria-labelledby={`exercise-tab-${tab}`}>
         {tab === 'About' && <About name={name} />}
-        {tab === 'History' && <HistoryTab dataset={dataset} name={name} onSource={onSource} />}
+        {tab === 'History' && (
+          <HistoryTab dataset={dataset} name={name} onSource={onSource} onExclude={onExclude} />
+        )}
         {tab === 'Charts' && (
           <ExerciseCharts key={name} dataset={dataset} name={name} onSource={onSource} />
         )}

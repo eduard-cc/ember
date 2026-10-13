@@ -1624,3 +1624,54 @@ th {
     gap: 8px;
   }
 }
+.exclude-set {
+  min-width: 44px;
+  padding: 0 8px;
+  gap: 5px;
+  font-size: 12px;
+  justify-self: end;
+}
+.session-sets {
+  align-items: center;
+}
+.session-sets:has(.session-sets-head + .session-sets-head + .session-sets-head) {
+  grid-template-columns: 1fr auto auto;
+}
+.session-sets:not(:has(.session-sets-head + .session-sets-head + .session-sets-head)) {
+  grid-template-columns: 1fr auto;
+}
+.recorded-set {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.excluded-set > span:first-child,
+.excluded-set > div {
+  opacity: 0.6;
+}
+.flagged-sets {
+  margin-top: 14px;
+}
+.flagged-sets ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.flagged-sets li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  border-top: 1px solid var(--border);
+}
+.flagged-sets li > div {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.flagged-sets small {
+  font-size: 12px;
+  color: var(--muted);
+}

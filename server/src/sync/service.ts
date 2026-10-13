@@ -18,6 +18,15 @@ function canonical(value: any): string {
 		'}'
 	);
 }
+function withoutExclusions(payload: any) {
+	return {
+		...payload,
+		exercises: payload.exercises.map((exercise: any) => ({
+			...exercise,
+			sets: exercise.sets.map(({excluded: _excluded, ...set}: any) => set),
+		})),
+	};
+}
 export class SyncService {
 	constructor(private db: DataSource) {}
 	async operations(owner: string, body: unknown, epoch?: unknown) {
@@ -62,7 +71,14 @@ export class SyncService {
 						owner,
 						o.entityId,
 					]);
-					if (record && o.kind === 'putWorkout' && o.expectedRevision !== null) {
+					// Finished and imported workouts are immutable except for the owner's per-set
+					// exclusion flag; such an update still needs the expected revision.
+					const exclusionOnly =
+						(o.kind === 'putWorkout' || o.kind === 'putImportedWorkout') &&
+						record?.kind === o.kind &&
+						canonical(record.payload) !== canonical(o.payload) &&
+						canonical(withoutExclusions(record.payload)) === canonical(withoutExclusions(o.payload));
+					if (record && o.kind === 'putWorkout' && o.expectedRevision !== null && !exclusionOnly) {
 						const rejected = {
 							operationId: o.operationId,
 							entityId: o.entityId,
@@ -83,10 +99,14 @@ export class SyncService {
 						o.kind === 'deleteImportedWorkout'
 							? 'putImportedWorkout'
 							: o.kind === 'putImportedWorkout'
-								? 'deleteImportedWorkout'
+								? exclusionOnly
+									? 'putImportedWorkout'
+									: 'deleteImportedWorkout'
 								: o.kind === 'putTemplate' || o.kind === 'deleteTemplate'
 									? 'putTemplate'
-									: null;
+									: o.kind === 'putWorkout'
+										? 'putWorkout'
+										: null;
 					const mismatch =
 						o.expectedRevision === null
 							? !!record

@@ -135,6 +135,33 @@ export function nearestRecorded(
     ),
   };
 }
+/**
+ * Owner review flag: exclude one recorded set from analytics, or include it again.
+ * Raw values, ids, order and the import flag stay untouched; only `excluded` changes.
+ * Including again removes the key so the document matches its original form.
+ */
+export function withSetExcluded(workout: Workout, setId: string, excluded: boolean): Workout {
+  const matches = workout.exercises
+    .flatMap((exercise) => exercise.sets)
+    .filter((set) => set.id === setId);
+  if (matches.length !== 1) throw new Error('Set not found in this workout');
+  return {
+    ...workout,
+    exercises: workout.exercises.map((exercise) =>
+      exercise.sets.some((set) => set.id === setId)
+        ? {
+            ...exercise,
+            sets: exercise.sets.map((set) => {
+              if (set.id !== setId) return set;
+              const next = {...set, excluded: true};
+              if (!excluded) delete (next as SetRecord).excluded;
+              return next;
+            }),
+          }
+        : exercise,
+    ),
+  };
+}
 export function classifyExercise(name: string, sets: SetRecord[]): ExerciseType {
   if (/assisted/i.test(name)) return 'assisted';
   if (/^(Pull Up|Triceps Dip|Chest Dip|Push Up|Sit Up|Hanging Leg Raise)(?:$|\s*\()/i.test(name))

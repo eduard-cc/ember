@@ -56,6 +56,7 @@ export default function App() {
     ownershipError,
     saveStatus,
     finishWorkout,
+    setSetExcluded,
     persistenceError,
     recoveryError,
     resetUnreadableStorage,
@@ -366,6 +367,7 @@ export default function App() {
                   focusedId={focusedId}
                   onRepeat={start}
                   onTemplate={saveTemplate}
+                  onExclude={setSetExcluded}
                 />
               )}
               {view === 'Exercises' &&
@@ -376,6 +378,7 @@ export default function App() {
                     name={exercise}
                     onBack={() => setExercise(null)}
                     onSource={source}
+                    onExclude={setSetExcluded}
                   />
                 ) : (
                   <ExercisesView dataset={allDataset} onOpen={setExercise} />
@@ -384,6 +387,7 @@ export default function App() {
                 <ProfileView
                   workouts={allDataset.workouts}
                   onSettings={() => setSettingsOpen(true)}
+                  onExclude={setSetExcluded}
                 />
               )}
             </fieldset>
@@ -563,9 +567,12 @@ export default function App() {
                       const result = await commitStrongImport(repository, prepared, true);
                       await refresh();
                       setNotice(
-                        result === 'identical'
+                        (result.status === 'identical'
                           ? 'Identical file already imported. No history changed.'
-                          : 'History replaced. Your draft and finished workouts were kept.',
+                          : 'History replaced. Your draft and finished workouts were kept.') +
+                          (result.unmatchedExclusions
+                            ? ` ${plural(result.unmatchedExclusions, 'excluded set')} no longer in this export, so ${result.unmatchedExclusions === 1 ? 'its' : 'their'} exclusion was dropped.`
+                            : ''),
                       );
                       void sync.sync();
                     })();

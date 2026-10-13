@@ -12,7 +12,7 @@ it('identical exact-byte Strong import is durably a no-op', async () => {
   const prepared = await prepareStrongImport(new TextEncoder().encode(csv));
   await commitStrongImport(repo, prepared, true);
   const operations = await repo.db.outbox.toArray();
-  expect(await commitStrongImport(repo, prepared, true)).toBe('identical');
+  expect((await commitStrongImport(repo, prepared, true)).status).toBe('identical');
   expect(await repo.db.outbox.toArray()).toEqual(operations);
   expect((await repo.readState()).dataset?.workouts).toEqual(prepared.dataset.workouts);
   repo.close();
@@ -25,7 +25,7 @@ it('historical file hash does not prevent A to B to A replacement', async () => 
   );
   await commitStrongImport(repo, a, true);
   await commitStrongImport(repo, b, true);
-  expect(await commitStrongImport(repo, a, true)).toBe('imported');
+  expect((await commitStrongImport(repo, a, true)).status).toBe('imported');
   expect((await repo.readState()).dataset?.workouts).toEqual(a.dataset.workouts);
   repo.close();
 });
@@ -48,7 +48,7 @@ it('subset import removes extra peer records but retains identical overlapping r
     await repo.db.importSources.put({key: 'imported:' + workout.id, value: workout});
     await repo.db.syncState.put({key: 'revision:' + workout.id, value: 1});
   }
-  expect(await commitStrongImport(repo, prepared, true)).toBe('imported');
+  expect((await commitStrongImport(repo, prepared, true)).status).toBe('imported');
   expect((await repo.readState()).dataset?.workouts).toEqual(prepared.dataset.workouts);
   expect(await repo.db.outbox.toArray()).toEqual([
     expect.objectContaining({
@@ -65,7 +65,7 @@ it('identical-file import is a no-op on a fresh peer that already pulled that ex
   for (const workout of prepared.dataset.workouts)
     await repo.db.importSources.put({key: 'imported:' + workout.id, value: workout});
   await repo.db.meta.put({key: 'imported-sync-active', value: true});
-  expect(await commitStrongImport(repo, prepared, true)).toBe('identical');
+  expect((await commitStrongImport(repo, prepared, true)).status).toBe('identical');
   expect(await repo.db.outbox.count()).toBe(0);
   repo.close();
 });

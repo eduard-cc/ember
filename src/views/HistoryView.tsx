@@ -1,11 +1,18 @@
 import {ArrowUpRight, ChevronDown, ChevronUp, RotateCcw} from 'lucide-react';
 import {useState} from 'react';
 
+import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {Button, Input, plural} from '../components/ui';
 import type {Workout} from '../domain/types';
 import {dateLabel} from './WorkoutView';
 
-export function WorkoutDetails({workout}: {workout: Workout}) {
+export function WorkoutDetails({
+  workout,
+  onExclude,
+}: {
+  workout: Workout;
+  onExclude: ExcludeSetHandler;
+}) {
   return (
     <div className='workout-details'>
       {workout.exercises.map((ex, i) => (
@@ -13,14 +20,25 @@ export function WorkoutDetails({workout}: {workout: Workout}) {
           <h3>{ex.name}</h3>
           <div className='recorded-sets'>
             {ex.sets.map((set, j) => (
-              <span key={set.id} className={set.suspicious ? 'suspicious-set' : ''}>
-                Set {j + 1}:{' '}
-                {ex.type === 'duration' || ex.type === 'cardio'
-                  ? `${set.seconds ?? '—'} seconds${set.distance !== null ? ` · ${set.distance} km` : ''}`
-                  : `${set.weight === null ? 'Bodyweight' : `${set.weight} kg${ex.type === 'assisted' ? ' assistance' : ''}`} × ${set.reps ?? '—'} reps`}
-                {set.suspicious ? ' · review flagged' : ''}
-                {set.excluded ? ' · excluded' : ''}
-              </span>
+              <div key={set.id} className={`recorded-set ${set.excluded ? 'excluded-set' : ''}`}>
+                <span className={set.suspicious ? 'suspicious-set' : ''}>
+                  Set {j + 1}:{' '}
+                  {ex.type === 'duration' || ex.type === 'cardio'
+                    ? `${set.seconds ?? '—'} seconds${set.distance !== null ? ` · ${set.distance} km` : ''}`
+                    : `${set.weight === null ? 'Bodyweight' : `${set.weight} kg${ex.type === 'assisted' ? ' assistance' : ''}`} × ${set.reps ?? '—'} reps`}
+                  {set.suspicious ? ' · review flagged' : ''}
+                  {set.excluded ? ' · excluded' : ''}
+                </span>
+                <ExcludeSet
+                  workoutId={workout.id}
+                  date={workout.date}
+                  exercise={ex.name}
+                  set={set}
+                  number={j + 1}
+                  type={ex.type}
+                  onExclude={onExclude}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -33,11 +51,13 @@ export function HistoryView({
   focusedId,
   onRepeat,
   onTemplate,
+  onExclude,
 }: {
   workouts: Workout[];
   focusedId: string | null;
   onRepeat: (workout: Workout) => void;
   onTemplate: (workout: Workout) => void;
+  onExclude: ExcludeSetHandler;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -100,7 +120,7 @@ export function HistoryView({
                 {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </Button>
             </div>
-            {open && <WorkoutDetails workout={workout} />}
+            {open && <WorkoutDetails workout={workout} onExclude={onExclude} />}
             <footer>
               <Button
                 aria-label={`Repeat workout ${workout.name} ${dateLabel(workout.date)}`}

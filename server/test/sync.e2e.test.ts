@@ -185,6 +185,68 @@ test('immutable workout cannot be replaced using a template operation', async ()
 		await s.app.close();
 	}
 });
+test('finished workout accepts only exclusion flag changes at the expected revision', async () => {
+	const s = await env();
+	try {
+		const native = op();
+		await s.send([native]).expect(201);
+		const flag = (excluded: boolean, revision: number) => {
+			const payload = structuredClone(native.payload) as any;
+			if (excluded) payload.exercises[0].sets[0].excluded = true;
+			return {...native, operationId: randomUUID(), expectedRevision: revision, payload};
+		};
+		const exclude = await s.send([flag(true, 1)]).expect(201);
+		assert.equal(exclude.body.results[0].status, 'accepted');
+		assert.equal(exclude.body.results[0].revision, 2);
+		const feed = await s.http
+			.get('/api/v1/sync/changes?after=' + (exclude.body.results[0].changeSeq - 1))
+			.set('Cookie', s.cookie)
+			.expect(200);
+		assert.equal(feed.body.changes[0].kind, 'putWorkout');
+		assert.equal(feed.body.changes[0].payload.exercises[0].sets[0].excluded, true);
+		const stale = await s.send([flag(false, 1)]).expect(201);
+		assert.equal(stale.body.results[0].status, 'conflict');
+		const include = await s.send([flag(false, 2)]).expect(201);
+		assert.equal(include.body.results[0].status, 'accepted');
+		for (const change of [
+			(p: any) => (p.exercises[0].sets[0].reps = 6),
+			(p: any) => (p.name = 'Renamed'),
+			(p: any) => p.exercises[0].sets.push({...p.exercises[0].sets[0], id: 'extra'}),
+			(p: any) => (p.exercises[0].sets[0].suspicious = true),
+		]) {
+			const edit = flag(true, 3);
+			change(edit.payload);
+			const r = await s.send([edit]).expect(201);
+			assert.equal(r.body.results[0].status, 'rejected');
+			assert.equal(r.body.results[0].errorCode, 'IMMUTABLE_WORKOUT');
+		}
+	} finally {
+		await s.app.close();
+	}
+});
+test('imported workout accepts an exclusion flag update but no other in-place edit', async () => {
+	const s = await env();
+	try {
+		const imported = op('putImportedWorkout');
+		await s.send([imported]).expect(201);
+		const update = (revision: number, change: (p: any) => void) => {
+			const payload = structuredClone(imported.payload) as any;
+			change(payload);
+			return {...imported, operationId: randomUUID(), expectedRevision: revision, payload};
+		};
+		const exclude = await s.send([update(1, (p) => (p.exercises[0].sets[0].excluded = true))]).expect(201);
+		assert.equal(exclude.body.results[0].status, 'accepted');
+		assert.equal(exclude.body.results[0].revision, 2);
+		const include = await s.send([update(2, () => undefined)]).expect(201);
+		assert.equal(include.body.results[0].status, 'accepted');
+		const edit = await s.send([update(3, (p) => (p.exercises[0].sets[0].reps = 9))]).expect(201);
+		assert.equal(edit.body.results[0].status, 'conflict');
+		const same = await s.send([update(3, () => undefined)]).expect(201);
+		assert.equal(same.body.results[0].status, 'conflict');
+	} finally {
+		await s.app.close();
+	}
+});
 test('cursor is strictly bounded and pages preserve order', async () => {
 	const s = await env();
 	try {

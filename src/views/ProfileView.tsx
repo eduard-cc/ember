@@ -1,14 +1,25 @@
 import {ChevronRight, Settings} from 'lucide-react';
 import {useMemo} from 'react';
 
+import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {Button, plural} from '../components/ui';
 import {workoutsPerWeek} from '../domain/model';
 import type {Workout} from '../domain/types';
+import {setLabel} from './ExerciseDetail';
+import {dateLabel} from './WorkoutView';
 
 const WEEKS = 12;
 
 /** Strong-style dashboard: totals and workouts per week, nothing estimated. */
-export function ProfileView({workouts, onSettings}: {workouts: Workout[]; onSettings: () => void}) {
+export function ProfileView({
+  workouts,
+  onSettings,
+  onExclude,
+}: {
+  workouts: Workout[];
+  onSettings: () => void;
+  onExclude: ExcludeSetHandler;
+}) {
   const weeks = useMemo(() => workoutsPerWeek(workouts, WEEKS), [workouts]);
   const max = Math.max(3, ...weeks.map((w) => w.count));
   const sets = useMemo(
@@ -85,11 +96,65 @@ export function ProfileView({workouts, onSettings}: {workouts: Workout[]; onSett
           {first ? ` · logging since ${first}` : ''}.
         </p>
       </section>
+      <FlaggedSets workouts={workouts} onExclude={onExclude} />
       <nav className='profile-links' aria-label='Profile'>
         <Button variant='ghost' className='profile-link' onClick={onSettings}>
           <Settings size={18} /> Settings <ChevronRight size={16} />
         </Button>
       </nav>
     </div>
+  );
+}
+
+/** Sets the import flagged as implausible, with their source, for owner review. */
+function FlaggedSets({workouts, onExclude}: {workouts: Workout[]; onExclude: ExcludeSetHandler}) {
+  const flagged = useMemo(
+    () =>
+      workouts.flatMap((workout) =>
+        workout.exercises.flatMap((exercise) =>
+          exercise.sets
+            .map((set, index) => ({workout, exercise, set, number: index + 1}))
+            .filter(({set}) => set.suspicious),
+        ),
+      ),
+    [workouts],
+  );
+  if (!flagged.length) return null;
+  const excluded = flagged.filter(({set}) => set.excluded).length;
+  return (
+    <section className='analytics-card flagged-sets' aria-labelledby='flagged-sets'>
+      <div className='section-heading'>
+        <h2 id='flagged-sets'>Flagged sets</h2>
+        <span>
+          {plural(flagged.length, 'flagged set')} · {excluded} excluded
+        </span>
+      </div>
+      <p className='chart-note'>
+        The import flagged these values as unlikely. Excluded sets stay in your history but no
+        longer count toward records, charts or suggestions.
+      </p>
+      <ul>
+        {flagged.map(({workout, exercise, set, number}) => (
+          <li key={set.id} className={set.excluded ? 'excluded-set' : ''}>
+            <div>
+              <strong>{exercise.name}</strong>
+              <small>
+                Set {number}: {setLabel(set, exercise.type)}
+                {set.excluded ? ' · excluded' : ''} · {workout.name} · {dateLabel(workout.date)}
+              </small>
+            </div>
+            <ExcludeSet
+              workoutId={workout.id}
+              date={workout.date}
+              exercise={exercise.name}
+              set={set}
+              number={number}
+              type={exercise.type}
+              onExclude={onExclude}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
