@@ -23,10 +23,12 @@ function emittedWorker(bundle: Record<string, unknown>): string {
 }
 
 describe('finite production shell build', () => {
-  it('starts installed browser chrome and the manifest in approved Paper before hydration', () => {
+  it('paints the installed app system bars in Night and starts the page chrome in Paper', () => {
+    // Android fills the gesture-bar strip from the manifest only, so it must be Night to
+    // avoid a light strip under the dark app; the page meta still follows the theme.
     const manifest = JSON.parse(readFileSync('public/manifest.webmanifest', 'utf8'));
-    expect(manifest.background_color).toBe('#f6f1e8');
-    expect(manifest.theme_color).toBe('#f6f1e8');
+    expect(manifest.background_color).toBe('#17161b');
+    expect(manifest.theme_color).toBe('#17161b');
     expect(readFileSync('index.html', 'utf8')).toContain(
       '<meta name="theme-color" content="#f6f1e8" />',
     );

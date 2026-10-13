@@ -60,7 +60,7 @@ This document describes the implemented React app (`src/App.tsx`, `src/styles.cs
 - **Pine is the approved default**. Ocean and Copper are configurable; controls use each theme's primary/on-primary/tint trio. Preference swatches deliberately retain light-accent colors in Night.
 - Primary carries Start, Finish, confirmed checks, current navigation, links, trends and the resume bar. Tint marks completed rows and selected appearance choices. Danger colors identify destructive controls and storage/recovery errors.
 - System is the default theme and follows live `prefers-color-scheme` changes. Light and Dark are explicit overrides. A validated, versioned `gym-log:appearance:v1` setting is separate from workout data. Denied appearance storage keeps the current tab usable and reports that the preference could not be saved; it never changes workout-saving claims.
-- HTML/manifest browser chrome starts in Paper `#f6f1e8`. Hydration updates `theme-color` to Paper or Night `#17161b`; it does not rebrand the existing PWA icons.
+- The HTML `theme-color` starts in Paper `#f6f1e8`; the inline head script (before first paint) and the appearance setting switch it to Paper or Night `#17161b`, which colours the status bar. The manifest `theme_color`/`background_color` are Night: installed Android apps fill the bottom gesture-bar strip and splash from the manifest alone, which cannot follow the theme, and a light strip under the dark app looked broken (owner chose Night). Neither changes the existing PWA icons.
 
 ## Typography
 
