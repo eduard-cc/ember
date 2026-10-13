@@ -32,6 +32,23 @@ test('progress exposes source sets and selectable metrics', async ({page}) => {
   await expect(page.getByRole('button', {name: /View source workout/}).first()).toBeVisible();
 });
 
+test('About shows facts and drawings without instructions or credit text', async ({page}) => {
+  await page.goto('/?demo=1');
+  await navigate(page, 'Exercises');
+  for (const name of ['Bench Press (Barbell)', 'Plank']) {
+    await page.getByLabel('Search exercises').fill(name);
+    await page.getByRole('button', {name, exact: true}).first().click();
+    await page.getByRole('tab', {name: 'About', exact: true}).click();
+    const panel = page.getByRole('tabpanel');
+    await expect(panel.locator('.about-drawings > .drawing').first()).toBeVisible();
+    await expect(panel.getByText('Equipment', {exact: true})).toBeVisible();
+    await expect(panel.getByText('Instructions')).toHaveCount(0);
+    await expect(panel.locator('ol, .attribution')).toHaveCount(0);
+    await expect(panel.getByText(/CC BY|Everkinetic|wger|source/i)).toHaveCount(0);
+    await page.getByRole('button', {name: 'Back to exercises'}).click();
+  }
+});
+
 test('a single drawing renders at the same size as each drawing in a pair', async ({page}) => {
   await page.goto('/?demo=1');
   await navigate(page, 'Exercises');

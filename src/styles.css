@@ -1496,19 +1496,6 @@ th {
   margin: 2px 0 0;
   font-weight: 550;
 }
-.instructions {
-  padding-left: 22px;
-  line-height: 1.55;
-}
-.instructions li + li {
-  margin-top: 8px;
-}
-.attribution {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 22px;
-  line-height: 1.5;
-}
 .session-cards {
   display: flex;
   flex-direction: column;

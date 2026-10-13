@@ -27,7 +27,7 @@ function About({name}: {name: string}) {
     return (
       <div className='empty-state'>
         <h2>Custom exercise</h2>
-        <p>No instructions for this exercise. Its history, charts and records are still here.</p>
+        <p>Not in the exercise catalog. Its history, charts and records are still here.</p>
       </div>
     );
   return (
@@ -61,36 +61,6 @@ function About({name}: {name: string}) {
           </div>
         )}
       </dl>
-      {entry.instructions.length > 0 && (
-        <>
-          <h2 className='list-label'>Instructions</h2>
-          <ol className='instructions'>
-            {entry.instructions.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ol>
-        </>
-      )}
-      <p className='attribution'>
-        {entry.sources.map((source, i) => (
-          <span key={i}>
-            {source.kind === 'illustration'
-              ? 'Drawing'
-              : source.kind === 'instructions'
-                ? 'Instructions'
-                : 'Muscles'}
-            : “{source.title}” by {source.author},{' '}
-            <a href={source.licenseUrl} target='_blank' rel='noreferrer'>
-              {source.license}
-            </a>{' '}
-            (
-            <a href={source.url} target='_blank' rel='noreferrer'>
-              source
-            </a>
-            ){source.changes ? `, ${source.changes}` : ''}.{' '}
-          </span>
-        ))}
-      </p>
     </div>
   );
 }
