@@ -49,7 +49,7 @@ test('a single drawing renders at the same size as each drawing in a pair', asyn
   };
   const pair = await widths('Bench Press (Barbell)');
   expect(pair).toHaveLength(2);
-  const single = await widths('Cable Crunch');
+  const single = await widths('Plank');
   expect(single).toHaveLength(1);
   expect(Math.abs(single[0] - pair[0])).toBeLessThanOrEqual(2);
 });

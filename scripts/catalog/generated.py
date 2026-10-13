@@ -4,8 +4,10 @@
 Usage: python3 scripts/catalog/generated.py [--source-dir ~/.cache/gym-log-catalog/generated]
 
 The source directory holds one QA record per exercise (qa/<slug>.json, status
-accepted|rejected|unreviewed) and accepted raw PNGs (accepted/<slug>.png). Only
-records with status "accepted" whose PNG matches the recorded SHA-256 are bundled.
+accepted|rejected|unreviewed) and accepted raw PNGs. A record's ordered `poses`
+list (accepted/<slug>-0.png start, -1.png finish) becomes a start/finish pair;
+records without it bundle the single accepted/<slug>.png. Only accepted records
+whose PNGs match their recorded SHA-256 are bundled.
 App-owned drawings that are no longer accepted are removed; licensed Everkinetic/wger
 drawings and their sources are never modified. All inputs are validated before any
 catalog file changes. PNGs stay outside git. Re-running with the same cache is
@@ -59,18 +61,28 @@ def bundle(source_dir):
         if record['status'] != 'accepted':
             continue
         entry = by_slug[key]
-        raw = (source_dir / 'accepted' / f'{key}.png').read_bytes()
-        if hashlib.sha256(raw).hexdigest() != record.get('sha256'):
-            raise ValueError(f'{entry["name"]}: source SHA-256 does not match the reviewed PNG')
+        # Owner-reviewed start/finish pairs list their poses in order; older records hold one drawing.
+        poses = record.get('poses') or [{'file': f'{key}.png', 'sha256': record.get('sha256')}]
+        if len(poses) not in (1, 2):
+            raise ValueError(f'{entry["name"]}: expected one drawing or a start/finish pair')
+        for pose in poses:
+            if Path(pose.get('file', '')).name != pose.get('file') or not pose.get('sha256'):
+                raise ValueError(f'{entry["name"]}: each pose needs a plain filename and SHA-256')
         illustrations = [s for s in entry['sources'] if s['kind'] == 'illustration']
         if any(not is_app_owned(s) for s in illustrations):
             raise ValueError(f'{entry["name"]}: refusing to replace a licensed illustration')
         if entry['images'] and not illustrations:
             raise ValueError(f'{entry["name"]}: refusing to replace unattributed images')
-        data, size = line_mask(raw)
-        if len(data) > 40 * 1024:
-            raise ValueError(f'{entry["name"]}: image exceeds catalog size budget')
-        prepared.append((key, entry, data, size))
+        images = []
+        for pose in poses:
+            raw = (source_dir / 'accepted' / pose['file']).read_bytes()
+            if hashlib.sha256(raw).hexdigest() != pose['sha256']:
+                raise ValueError(f'{entry["name"]}: {pose["file"]} does not match the reviewed PNG')
+            data, size = line_mask(raw)
+            if len(data) > 40 * 1024:
+                raise ValueError(f'{entry["name"]}: image exceeds catalog size budget')
+            images.append((data, size))
+        prepared.append((key, entry, images, [p['sha256'] for p in poses]))
 
     accepted = {key for key, *_ in prepared}
     # A partially restored cache must not silently drop drawings that are still bundled.
@@ -86,9 +98,10 @@ def bundle(source_dir):
             entry['sources'] = [s for s in entry['sources'] if not is_app_owned(s)]
             removed.append(entry['name'])
 
-    for key, entry, data, size in prepared:
-        filename = f'{key}-0.webp'
-        entry['images'] = [{'file': filename, 'width': size[0], 'height': size[1]}]
+    for key, entry, images, _ in prepared:
+        stale_files += [OUT_IMAGES / image['file'] for image in entry['images']]
+        entry['images'] = [{'file': f'{key}-{i}.webp', 'width': size[0], 'height': size[1]}
+                           for i, (_, size) in enumerate(images)]
         # Preserve every instruction/muscle source and its order/contents.
         entry['sources'] = [s for s in entry['sources'] if s['kind'] != 'illustration'] + [{
             'kind': 'illustration', 'title': entry['name'], 'author': AUTHOR,
@@ -96,8 +109,9 @@ def bundle(source_dir):
             'url': PROVENANCE_URL, 'changes': CHANGES,
         }]
 
+    hashes = {key: shas for key, _, _, shas in prepared}
     manifest = {
-        'schemaVersion': 2,
+        'schemaVersion': 3,
         'model': 'gpt-image-2 (image_generate)',
         'conversion': 'generate.line_mask: MAX_SIDE=240, LEVELS=8, lossless WebP method=4',
         'review': ('Accepted only after a style audit against Everkinetic references, an '
@@ -108,7 +122,8 @@ def bundle(source_dir):
                 'name': by_slug[key]['name'],
                 'status': record['status'],
                 'attempts': record.get('attempts', 0),
-                **({'sha256': record['sha256']} if record['status'] == 'accepted' else {}),
+                **({'sha256': hashes[key][-1]} if key in hashes else {}),
+                **({'startSha256': hashes[key][0]} if len(hashes.get(key, [])) == 2 else {}),
                 **({'postProcessed': 'local line cleanup or thickening, re-audited'}
                    if record['status'] == 'accepted' and record.get('derived_from') else {}),
             }
@@ -125,8 +140,9 @@ def bundle(source_dir):
     for path in stale_files:
         path.unlink(missing_ok=True)
     OUT_IMAGES.mkdir(parents=True, exist_ok=True)
-    for key, _, data, _ in prepared:
-        (OUT_IMAGES / f'{key}-0.webp').write_bytes(data)
+    for key, _, images, _ in prepared:
+        for i, (data, _) in enumerate(images):
+            (OUT_IMAGES / f'{key}-{i}.webp').write_bytes(data)
     MANIFEST.write_text(json.dumps(manifest, indent=2) + '\n')
     OUT_JSON.write_text(formatted)
     total = sum(p.stat().st_size for p in OUT_IMAGES.glob('*.webp'))

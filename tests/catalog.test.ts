@@ -49,7 +49,26 @@ describe('bundled exercise catalog', () => {
       }
     }
   });
-  it('bundles exactly the accepted AI-assisted drawings, one image each, with only one illustration source', () => {
+  it('shows every AI-assisted drawing as a start/finish pair, except holds without a progression', () => {
+    const appOwned = catalog.filter((e) => e.sources.some((s) => s.license === 'app-owned'));
+    const singles = appOwned.filter((e) => e.images.length === 1).map((e) => e.name);
+    expect(singles).toEqual(['Plank']);
+    for (const entry of appOwned.filter((e) => e.name !== 'Plank'))
+      expect(entry.images.map((i) => i.file)).toEqual(
+        [0, 1].map((n) => entry.images[0].file.replace(/-\d+\.webp$/, `-${n}.webp`)),
+      );
+    // Both poses of a pair are hash-pinned to the reviewed source PNGs.
+    const manifest = JSON.parse(
+      readFileSync('scripts/catalog/generated-manifest.json', 'utf8'),
+    ) as {
+      exercises: {name: string; status: string; startSha256?: string}[];
+    };
+    for (const item of manifest.exercises.filter((e) => e.status === 'accepted')) {
+      if (item.name === 'Plank') expect(item.startSha256).toBeUndefined();
+      else expect(item.startSha256).toMatch(/^[0-9a-f]{64}$/);
+    }
+  });
+  it('bundles exactly the accepted AI-assisted drawings with only one illustration source', () => {
     const manifest = JSON.parse(
       readFileSync('scripts/catalog/generated-manifest.json', 'utf8'),
     ) as {
@@ -61,7 +80,6 @@ describe('bundled exercise catalog', () => {
     const appOwned = catalog.filter((e) => e.sources.some((s) => s.license === 'app-owned'));
     expect(appOwned.map((e) => e.name).sort()).toEqual(accepted.map((e) => e.name).sort());
     for (const entry of appOwned) {
-      expect(entry.images).toHaveLength(1);
       const illustrations = entry.sources.filter((s) => s.kind === 'illustration');
       expect(illustrations).toEqual([
         expect.objectContaining({

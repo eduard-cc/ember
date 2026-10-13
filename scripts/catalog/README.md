@@ -19,9 +19,16 @@ no reference pixels are bundled in the new assets.
 
 Raw PNGs stay outside git in `~/.cache/gym-log-catalog/generated/`: one QA record
 per exercise in `qa/<slug>.json` (status `accepted`, `rejected` or `unreviewed`,
-SHA-256, attempts, notes) and accepted sources in `accepted/<slug>.png`. The
+SHA-256, attempts, notes) and accepted sources in `accepted/<slug>.png`. Like the
+licensed drawings, each exercise shows a start and a finish pose: a record's ordered
+`poses` list (`accepted/<slug>-0.png` start, `-1.png` finish, each with its SHA-256)
+is bundled as `<slug>-0.webp` and `<slug>-1.webp`. Holds without a progression
+(Plank) keep a single drawing. Pairs were owner-reviewed for movement order,
+anatomy and matching equipment; review notes live in `reviews/`. The
 tracked `generated-manifest.json` is written from those records and lists every
-reviewed exercise, its status, attempt count and the SHA-256 of accepted sources.
+reviewed exercise, its status, attempt count and the SHA-256 of accepted sources:
+`sha256` is the finish pose (or the only drawing) and `startSha256` the start pose
+of a pair.
 Rejected and unreviewed images are never bundled, and an app-owned drawing whose
 record is no longer accepted is removed on the next run.
 
