@@ -495,6 +495,8 @@ export default function App() {
                     }
                     onDeletingChange={setDeletingSets}
                     onSource={source}
+                    onExclude={setSetExcluded}
+                    disabled={disabled}
                   />
                   <div className='logger-tools'>
                     <AddExercise

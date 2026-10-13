@@ -1,13 +1,16 @@
+import * as Dialog from '@radix-ui/react-dialog';
 import {Check, Plus} from 'lucide-react';
 import {useCallback, useRef, useState} from 'react';
 
 import {ExercisePicker} from '../components/AddExercise';
+import type {ExcludeSetHandler} from '../components/ExcludeSet';
 import {ExerciseMenu} from '../components/ExerciseMenu';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
 import {SetRow} from '../components/SetRow';
 import {Button, Input, plural} from '../components/ui';
 import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
+import {ExerciseDetail} from './ExerciseDetail';
 
 export function dateLabel(date: string) {
   return new Date(date.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-GB', {
@@ -49,6 +52,8 @@ export function WorkoutView({
   onChange,
   onSource,
   onDeletingChange,
+  onExclude,
+  disabled = false,
   targetsOnly = false,
 }: {
   workout: Workout;
@@ -56,6 +61,10 @@ export function WorkoutView({
   onChange: (update: Workout | ((current: Workout) => Workout)) => void;
   onSource: (id: string) => void;
   onDeletingChange: (deleting: boolean) => void;
+  /** Given in the active workout: names and thumbnails then open the exercise's details. */
+  onExclude?: ExcludeSetHandler;
+  /** Mirrors the logger's disabled fieldset, which the portaled details sit outside of. */
+  disabled?: boolean;
   targetsOnly?: boolean;
 }) {
   // Save/Finish must wait for every exit, not just the first animated deletion.
@@ -81,6 +90,13 @@ export function WorkoutView({
   const [replacing, setReplacing] = useState<string | null>(null);
   const menuButtons = useRef(new Map<string, HTMLButtonElement>());
   const focusAfterPicker = useRef<string | null>(null);
+  // Exercise details layer over the logger, which stays mounted underneath: values, checks,
+  // scroll position and the clock are untouched. Closing returns focus to the name button.
+  const showDetails = !!onExclude && !targetsOnly;
+  const [details, setDetails] = useState<{id: string; name: string} | null>(null);
+  const detailButtons = useRef(new Map<string, HTMLButtonElement>());
+  // Read after close, when `details` has already been cleared.
+  const detailsReturn = useRef<string | null>(null);
   const replaceExercise = (exerciseId: string, exercise: ExerciseLog) => {
     const nextId = crypto.randomUUID();
     identities.current.set(exercise, nextId);
@@ -174,9 +190,32 @@ export function WorkoutView({
         return (
           <section className='exercise-card' key={identity(ex)}>
             <header className='exercise-heading'>
-              <ExerciseThumb name={ex.name} />
-              <div>
-                <h2>{ex.name}</h2>
+              {/* The heading keeps the plain name; the button inside says what it does. */}
+              <h2 className='exercise-title' aria-labelledby={`${identity(ex)}-name`}>
+                {showDetails ? (
+                  <button
+                    className='exercise-title-button'
+                    aria-label={`Show details for ${ex.name}`}
+                    ref={(node) => {
+                      if (node) detailButtons.current.set(identity(ex), node);
+                      else detailButtons.current.delete(identity(ex));
+                    }}
+                    onClick={() => {
+                      detailsReturn.current = identity(ex);
+                      setDetails({id: identity(ex), name: ex.name});
+                    }}
+                  >
+                    <ExerciseThumb name={ex.name} />
+                    <span id={`${identity(ex)}-name`}>{ex.name}</span>
+                  </button>
+                ) : (
+                  <span className='exercise-title-button'>
+                    <ExerciseThumb name={ex.name} />
+                    <span id={`${identity(ex)}-name`}>{ex.name}</span>
+                  </span>
+                )}
+              </h2>
+              <div className='exercise-meta'>
                 {!targetsOnly && (
                   <span
                     role='status'
@@ -364,6 +403,52 @@ export function WorkoutView({
           if (target) menuButtons.current.get(target)?.focus({preventScroll: true});
         }}
       />
+      {showDetails && (
+        <Dialog.Root
+          open={details !== null}
+          onOpenChange={(open) => {
+            if (!open) setDetails(null);
+          }}
+        >
+          <Dialog.Portal>
+            <Dialog.Overlay className='dialog-overlay' />
+            <Dialog.Content
+              className='settings-panel exercise-detail-panel'
+              onCloseAutoFocus={(event) => {
+                // Return focus to the name button without scrolling the logger.
+                event.preventDefault();
+                const target = detailsReturn.current;
+                detailsReturn.current = null;
+                if (target) detailButtons.current.get(target)?.focus({preventScroll: true});
+              }}
+            >
+              <Dialog.Description className='sr-only'>
+                About, history, charts and records from finished workouts. Your workout stays as you
+                left it.
+              </Dialog.Description>
+              {/* Only finished history is passed in, so the draft never counts as history. */}
+              {details && (
+                <fieldset disabled={disabled} className='content-fieldset'>
+                  <ExerciseDetail
+                    key={details.name}
+                    dataset={dataset}
+                    name={details.name}
+                    backLabel='Back to workout'
+                    onBack={() => setDetails(null)}
+                    onSource={(id) => {
+                      // Like Previous evidence: minimizes the logger and opens History; draft kept.
+                      setDetails(null);
+                      onSource(id);
+                    }}
+                    onExclude={onExclude}
+                    renderTitle={(heading) => <Dialog.Title asChild>{heading}</Dialog.Title>}
+                  />
+                </fieldset>
+              )}
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      )}
     </div>
   );
 }

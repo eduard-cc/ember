@@ -342,3 +342,16 @@ test('Tab out of the menu continues from the ⋯ button', async ({page}) => {
     expect(await active()).toBe(fromTrigger);
   }
 });
+
+test('the ⋯ icon sits at the far right of the card, flush with the set column', async ({page}) => {
+  const cards = await start(page);
+  const card = cards.first();
+  const icon = (await options(page, 'Bench Press (Barbell)').locator('svg').boundingBox())!;
+  const check = (await card.getByRole('button', {name: /^Complete .* set 1$/}).boundingBox())!;
+  const trigger = (await options(page, 'Bench Press (Barbell)').boundingBox())!;
+  const cardBox = (await card.boundingBox())!;
+  // Lucide's ellipsis has ~1.5px of built-in side bearing at 18px.
+  expect(Math.abs(icon.x + icon.width - (check.x + check.width))).toBeLessThanOrEqual(3);
+  expect(trigger.width).toBeGreaterThanOrEqual(44);
+  expect(trigger.x + trigger.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+});

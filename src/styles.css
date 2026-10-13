@@ -375,19 +375,91 @@ select {
   border-bottom: 1px solid var(--border);
 }
 .exercise-heading {
-  display: flex;
-  justify-content: space-between;
+  /* Thumbnail | name over status/caption | ⋯. The name button spans the first two columns
+     and both rows (via subgrid), so its 44px+ target covers thumbnail, name and status. */
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-rows: minmax(22px, auto) minmax(22px, auto);
+  column-gap: 8px;
   align-items: center;
-  gap: 8px;
   margin-bottom: 4px;
-}
-.exercise-heading > div {
-  min-width: 0;
-  flex: 1;
 }
 .exercise-heading h2 {
   font-size: 17px;
   line-height: 1.35;
+}
+.exercise-title,
+.exercise-title-button {
+  display: grid;
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+  grid-template-columns: subgrid;
+  grid-template-rows: subgrid;
+  align-self: stretch;
+  min-width: 0;
+}
+.exercise-title-button {
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+}
+.exercise-title-button > .exercise-thumb {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+.exercise-title-button > span:last-child {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  overflow-wrap: anywhere;
+}
+button.exercise-title-button:focus-visible {
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  button.exercise-title-button:hover > span:last-child {
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+  }
+}
+.exercise-meta {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  min-width: 0;
+  /* Sits over the name button: taps on the status fall through to it. */
+  pointer-events: none;
+}
+.exercise-heading > .exercise-menu {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  /* Pull the 44px target into the card padding so the ⋯ glyph sits flush with the set column's right edge. */
+  margin-right: -13px;
+}
+.settings-panel.exercise-detail-panel {
+  /* Matches the sticky tab strip, which is painted in the page background. */
+  background: var(--bg);
+}
+@media (min-width: 1000px) {
+  /* Exactly covers the 500px workout column, so no logger controls peek out around it. */
+  .settings-panel.exercise-detail-panel {
+    inset: 0 max(0px, calc((100vw - 1480px) / 2)) 0 auto;
+    width: 500px;
+    border-width: 0 0 0 1px;
+    box-shadow: none;
+  }
+}
+@media (max-width: 999px) {
+  .exercise-detail-panel .tabs {
+    top: -18px;
+  }
 }
 .exercise-count,
 .exercise-done {

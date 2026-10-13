@@ -1,5 +1,5 @@
 import {ArrowLeft, ArrowUpRight} from 'lucide-react';
-import {useState} from 'react';
+import {type ReactElement, type ReactNode, useId, useState} from 'react';
 
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
@@ -279,25 +279,32 @@ export function ExerciseDetail({
   onBack,
   onSource,
   onExclude,
+  backLabel = 'Back to exercises',
+  renderTitle = (heading) => heading,
 }: {
   dataset: Dataset;
   name: string;
   onBack: () => void;
   onSource: (id: string) => void;
   onExclude: ExcludeSetHandler;
+  backLabel?: string;
+  /** Lets a dialog host wrap the name heading as its accessible title. */
+  renderTitle?: (heading: ReactElement) => ReactNode;
 }) {
   // Unique workouts, matching the Exercises list; History/Charts/Records stay per exercise block.
   const workouts = exerciseWorkoutCount(dataset, name);
   const [tab, setTab] = useState<Tab>(workouts ? 'History' : 'About');
+  // The library and the workout can both show details at once; ids must stay unique.
+  const id = useId();
   return (
     <div className='exercise-detail'>
       <header className='detail-header'>
-        <Button variant='ghost' size='icon' aria-label='Back to exercises' onClick={onBack}>
+        <Button variant='ghost' size='icon' aria-label={backLabel} onClick={onBack}>
           <ArrowLeft size={20} />
         </Button>
         <ExerciseThumb name={name} />
         <div>
-          <h2>{name}</h2>
+          {renderTitle(<h2>{name}</h2>)}
           <p>
             {bodyPartOf(name)} · {plural(workouts, 'workout')}
           </p>
@@ -308,9 +315,9 @@ export function ExerciseDetail({
           <button
             key={value}
             role='tab'
-            id={`exercise-tab-${value}`}
+            id={`${id}-tab-${value}`}
             aria-selected={tab === value}
-            aria-controls='exercise-tab-panel'
+            aria-controls={`${id}-panel`}
             className='tab'
             onClick={() => setTab(value)}
           >
@@ -318,7 +325,7 @@ export function ExerciseDetail({
           </button>
         ))}
       </div>
-      <div role='tabpanel' id='exercise-tab-panel' aria-labelledby={`exercise-tab-${tab}`}>
+      <div role='tabpanel' id={`${id}-panel`} aria-labelledby={`${id}-tab-${tab}`}>
         {tab === 'About' && <About name={name} />}
         {tab === 'History' && (
           <HistoryTab dataset={dataset} name={name} onSource={onSource} onExclude={onExclude} />
