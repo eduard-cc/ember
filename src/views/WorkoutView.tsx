@@ -176,7 +176,7 @@ export function WorkoutView({
                 <span>Previous</span>
                 <span>{timed ? 'Seconds' : ex.type === 'assisted' ? 'Assist. kg' : 'kg'}</span>
                 <span>{ex.type === 'duration' ? '' : timed ? 'km' : 'Reps'}</span>
-                <span>{targetsOnly ? '' : 'Done'}</span>
+                <span />
                 <span className='desktop-remove' />
               </div>
               {ex.sets.map((set, si) => (

@@ -454,3 +454,18 @@ test('plain weighted exercises carry no redundant unit caption; meaningful load 
   await expect(card('Incline Bench Press (Dumbbell)')).toContainText('Weight per dumbbell · kg');
   await expect(card('Pull Up (Assisted)')).toContainText('Assistance in kg · less is better');
 });
+
+test('active workout set table has no Done column heading; completion stays labelled per set', async ({
+  page,
+}) => {
+  await page.goto('/?demo=1');
+  const sheet = page.getByRole('region', {name: 'Active workout'});
+  const heads = sheet.locator('.set-head');
+  await expect(heads.first()).toContainText('Reps');
+  for (const head of await heads.all()) await expect(head).not.toContainText('Done');
+  const check = sheet.getByRole('button', {name: /^Complete .* set 1$/}).first();
+  await expect(check).toBeVisible();
+  const column = (await heads.first().locator('span').nth(4).boundingBox())!;
+  const button = (await check.boundingBox())!;
+  expect(Math.abs(column.x + column.width / 2 - (button.x + button.width / 2))).toBeLessThan(4);
+});
