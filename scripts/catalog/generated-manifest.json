@@ -326,6 +326,13 @@
       "startSha256": "797292c7dbec4eeff7b33737e7959423ab9199fb43a20d2cb847e064d9fc417c"
     },
     {
+      "name": "Pull Up (Assisted)",
+      "status": "accepted",
+      "attempts": 0,
+      "sha256": "b90b69df34bdac81218b8bda267e87359b40622673f2a576b2f278c4a601a396",
+      "startSha256": "2961835c0580e3a66e692ef5a909a45a19daed3bce787abc285be76eea0fcf70"
+    },
+    {
       "name": "Pullover (Machine)",
       "status": "accepted",
       "attempts": 11,

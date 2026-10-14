@@ -16,8 +16,16 @@ filter size brings the final mask closest to the measured `dist` stroke width
 pair was reviewed side by side for exercise, pose and start/finish order; some
 exports label start and finish backwards, so the mapping lists files in display
 order. Pairs left on `dist` were near-identical, already uncropped, or no
-better: shrugs lose their visible shoulder lift at full-figure scale, and Lying
-Leg Raise's art shows a standing leg curl either way.
+better: shrugs lose their visible shoulder lift at full-figure scale.
+
+Dumbbell and cable shrugs are cropped to the upper body (`EK_UPPER_BODY`, the
+same box for start and finish) so the small shoulder lift stays visible;
+barbell and Smith machine shrugs stay whole to keep their plates and rails.
+Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing and
+steps; it used to borrow a standing glute exercise. `EK_TEXT_ONLY` keeps
+Everkinetic's instructions but not its drawing where that drawing shows a
+different variant: Pull Up (Assisted) shows the owner-approved assisted-machine
+pair (also used by Chin Up (Assisted)) through `generated.py`.
 
 ## App-owned illustrations
 
@@ -42,6 +50,8 @@ reviewed exercise, its status, attempt count and the SHA-256 of accepted sources
 of a pair.
 Rejected and unreviewed images are never bundled, and an app-owned drawing whose
 record is no longer accepted is removed on the next run.
+`qa/pull-up-assisted.json` reuses the `chin-up-assisted-*.png` poses (same
+machine): redrawing that pair means updating both records' hashes.
 
 Reproduce the bundled additions (Pillow with WebP support and the repository's
 Node/Prettier dependencies from `npm ci --include=dev` required):

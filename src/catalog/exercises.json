@@ -2302,25 +2302,16 @@
     "images": [
       {
         "file": "pull-up-assisted-0.webp",
-        "width": 159,
+        "width": 132,
         "height": 240
       },
       {
         "file": "pull-up-assisted-1.webp",
-        "width": 202,
+        "width": 128,
         "height": 240
       }
     ],
     "sources": [
-      {
-        "kind": "illustration",
-        "title": "Pull Ups",
-        "author": "Everkinetic",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
-      },
       {
         "kind": "instructions",
         "title": "Pull Ups",
@@ -2337,6 +2328,15 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/477/view-base"
+      },
+      {
+        "kind": "illustration",
+        "title": "Pull Up (Assisted)",
+        "author": "Gym Log (AI-assisted, gpt-image-2)",
+        "license": "app-owned",
+        "licenseUrl": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md#app-owned-illustrations",
+        "url": "https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md",
+        "changes": "AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; cropped, resized and recoloured"
       }
     ]
   },
@@ -2599,12 +2599,12 @@
     "images": [
       {
         "file": "shrug-cable-0.webp",
-        "width": 99,
+        "width": 133,
         "height": 240
       },
       {
         "file": "shrug-cable-1.webp",
-        "width": 100,
+        "width": 135,
         "height": 240
       }
     ],
@@ -2646,12 +2646,12 @@
     "images": [
       {
         "file": "shrug-dumbbell-0.webp",
-        "width": 126,
+        "width": 168,
         "height": 240
       },
       {
         "file": "shrug-dumbbell-1.webp",
-        "width": 124,
+        "width": 165,
         "height": 240
       }
     ],
@@ -9942,12 +9942,12 @@
       {
         "file": "flat-bench-leg-raise-0.webp",
         "width": 240,
-        "height": 110
+        "height": 111
       },
       {
         "file": "flat-bench-leg-raise-1.webp",
         "width": 240,
-        "height": 207
+        "height": 208
       }
     ],
     "sources": [
@@ -10155,27 +10155,29 @@
     "primaryMuscles": ["Abs"],
     "secondaryMuscles": ["Serratus"],
     "instructions": [
-      "Using a post or tall weight bench for balance stand straight with your abs drawn in.",
-      "Raise one off the ground and behind you while standing on the other leg.",
-      "Slowly lower the leg and raise it again while flexing the gluts.",
-      "Repeat with your other leg."
+      "Lie on a flat bench with your hands under your hips supporting your back.",
+      "Your legs should be unsupported by the bench from below your knees.",
+      "With your feet together and your toes flexed upwards, raise your straight legs up a few cm off the bench; both of your legs should have no contact with the bench. This is your starting position.",
+      "Keep your legs straight with a slight bend in the knees and raise your legs to just before 90 degrees with your hips.",
+      "Pause at the top and lower your legs in slow controlled manner back to the starting position.",
+      "Repeat."
     ],
     "images": [
       {
         "file": "lying-leg-raise-0.webp",
-        "width": 96,
-        "height": 240
+        "width": 240,
+        "height": 111
       },
       {
         "file": "lying-leg-raise-1.webp",
-        "width": 160,
-        "height": 240
+        "width": 240,
+        "height": 208
       }
     ],
     "sources": [
       {
         "kind": "illustration",
-        "title": "Body Leg Lifts",
+        "title": "Flat Bench Leg Raises",
         "author": "Everkinetic",
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -10184,7 +10186,7 @@
       },
       {
         "kind": "instructions",
-        "title": "Body Leg Lifts",
+        "title": "Flat Bench Leg Raises",
         "author": "Everkinetic",
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",

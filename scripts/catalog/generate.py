@@ -246,7 +246,7 @@ CATALOG = [
     ('Hanging Knee Raise', 'Core', 'Bodyweight', 'bodyweight', 978, None),
     ('Hanging Leg Raise', 'Core', 'Bodyweight', 'bodyweight', 283, None),
     ('Hollow Hold', 'Core', 'Bodyweight', 'duration', 297, None),
-    ('Lying Leg Raise', 'Core', 'Bodyweight', 'bodyweight', 377, '0111'),
+    ('Lying Leg Raise', 'Core', 'Bodyweight', 'bodyweight', 377, '0021'),
     ('Mountain Climber', 'Core', 'Bodyweight', 'bodyweight', 996, None),
     ('Oblique Crunch (Decline)', 'Core', 'Bodyweight', 'bodyweight', None, '0293'),
     ('Pallof Press (Cable)', 'Core', 'Cable', 'weighted', 1194, None),
@@ -318,7 +318,8 @@ EK_LICENSE = LICENSES['CC-BY-SA 4']
 # Everkinetic's dist/png cuts some drawings off at the legs, feet or equipment. For these,
 # the artist's full-figure source exports (src/images-ai, same licence) are used instead.
 # Each pair was reviewed side by side for exercise, pose and order: (start, finish).
-# Shrugs stay on dist: at full-figure scale their small shoulder lift is invisible.
+# Shrugs stay on dist (at full-figure scale their small shoulder lift is invisible) and see
+# EK_UPPER_BODY below.
 # Exports whose own S/F labels run backwards are listed finish-file first on purpose.
 EK_FULL_FIGURE = {
     '0008': ('0008-S.ai.png', '0008-F.ai.png'),  # Front Raise (Cable)
@@ -326,6 +327,7 @@ EK_FULL_FIGURE = {
     '0014': ('0014-S.ai.png', '0014-F.ai.png'),  # Upright Row (Barbell)
     '0016': ('0016-S.ai.png', '0016-F.ai.png'),  # Upright Row (Dumbbell)
     '0020': ('0020-S new.ai.png', '0020-F new.ai.png'),  # Reverse Fly (Band)
+    '0021': ('0021-S new.ai.png', '0021-F new.ai.png'),  # Flat Bench and Lying Leg Raise
     '0026': ('0026-F new.ai.png', '0026-S new.ai.png'),  # Bent Over Row - Underhand (Barbell)
     '0031': ('0031-S.ai.png', '0031-F.ai.png'),  # Incline Shoulder Press (Dumbbell)
     '0033': ('0033-S.ai.png', '0033-F.ai.png'),  # Front Raise (Dumbbell)
@@ -361,6 +363,18 @@ EK_FULL_FIGURE = {
     '0138': ('0138-S new.ai.png', '0138-F new.ai.png'),  # Front Squat (Barbell)
     '0142': ('0142-F.ai.png', '0142-S.ai.png'),  # Leg Extension (Machine)
 }
+# Shrugs move the shoulders only a few pixels, which a whole narrow standing figure hides at
+# 240px. Crop those dist pairs to the upper body, the same box for start and finish so the
+# lift stays visible: (x0, y0, x1, y1) as fractions of the image, keeping hands and weight.
+# Barbell and Smith machine shrugs stay whole: their plates and rails set the width, so a
+# crop gains no size without dropping the equipment, and their bar already visibly rises.
+EK_UPPER_BODY = {
+    '0005': (0, 0, 1, 0.73),  # Shrug (Dumbbell)
+    '0009': (0, 0, 1, 0.72),  # Shrug (Cable)
+}
+# Exercises that keep their Everkinetic instructions but not its drawing, because the drawing
+# shows a different variant; an app-owned drawing (generated.py) fills the image instead.
+EK_TEXT_ONLY = {'Pull Up (Assisted)'}
 
 
 def slug(name):
@@ -473,13 +487,33 @@ def thicken(raw, speck=50):
             if run != main and sum(profile[run[0]:run[1]]) < speck:
                 box = (run[0], 0, run[1] - 1, height - 1) if horizontal else (0, run[0], width - 1, run[1] - 1)
                 draw.rectangle(box, fill=255)
+    return match_stroke(flat)
+
+
+def match_stroke(flat):
+    """Widen (grey minimum filter) or thin (maximum filter) the line work of a white-ground
+    greyscale image, whichever brings its line_mask closest to EK_STROKE_WIDTH."""
     candidates = []
-    for size in (1, 3, 5, 7, 9, 11):
+    for size in (-5, -3, 1, 3, 5, 7, 9, 11):
+        image = flat
+        if size > 1:
+            image = flat.filter(ImageFilter.MinFilter(size))
+        elif size < 0:
+            image = flat.filter(ImageFilter.MaxFilter(-size))
         buffer = io.BytesIO()
-        (flat.filter(ImageFilter.MinFilter(size)) if size > 1 else flat).save(buffer, 'PNG')
+        image.save(buffer, 'PNG')
         error = abs(stroke_width(line_mask(buffer.getvalue())[0]) - EK_STROKE_WIDTH)
-        candidates.append((error, size, buffer.getvalue()))
+        candidates.append((error, abs(size), buffer.getvalue()))
     return min(candidates)[2]
+
+
+def crop_fraction(raw, box):
+    """Crop a white-ground drawing to box = (x0, y0, x1, y1), fractions of the image size."""
+    image = Image.open(io.BytesIO(raw)).convert('RGBA')
+    flat = Image.alpha_composite(Image.new('RGBA', image.size, 'white'), image).convert('L')
+    width, height = flat.size
+    return flat.crop((round(box[0] * width), round(box[1] * height),
+                      round(box[2] * width), round(box[3] * height)))
 
 
 def fetch(url):
@@ -549,7 +583,7 @@ def main():
             'licenseUrl': EK_LICENSE[1],
             'url': 'https://github.com/everkinetic/data',
         }
-        if ek_id in EK_FULL_FIGURE:
+        if ek_id in EK_FULL_FIGURE and name not in EK_TEXT_ONLY:
             files = [ek_root / 'src/images-ai' / f for f in EK_FULL_FIGURE[ek_id]]
             missing = [str(f) for f in files if not f.exists()]
             if missing:
@@ -558,12 +592,14 @@ def main():
             # to the same stroke weight before the shared crop and resize.
             images = [thicken(f.read_bytes()) for f in files]
             image_source = ek_source
-        if not images and ek_id:
+        if not images and ek_id and name not in EK_TEXT_ONLY:
             files = [ek_root / f'dist/png/{ek_id}-relaxation.png', ek_root / f'dist/png/{ek_id}-tension.png']
             if all(f.exists() for f in files):
                 images = [f.read_bytes() for f in files]
+                if ek_id in EK_UPPER_BODY:
+                    images = [match_stroke(crop_fraction(raw, EK_UPPER_BODY[ek_id])) for raw in images]
                 image_source = ek_source
-        if not images and w:
+        if not images and w and name not in EK_TEXT_ONLY:
             drawings = [i for i in w['images'] if i['style'] == '1' and not i['is_ai_generated']
                         and not unclear(i.get('license_author'))]
             drawings.sort(key=lambda i: i['image'])
@@ -578,7 +614,7 @@ def main():
                 }
         # Some Everkinetic drawings exist only as finished source exports (src/images-ai,
         # start "-S" then finish "-F"), not in dist/. Same artist, licence and attribution.
-        if not images and ek_id:
+        if not images and ek_id and name not in EK_TEXT_ONLY:
             files = [ek_root / f'src/images-ai/{ek_id}-S.ai.png', ek_root / f'src/images-ai/{ek_id}-F.ai.png']
             if all(f.exists() for f in files):
                 images = [f.read_bytes() for f in files]

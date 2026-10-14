@@ -96,9 +96,21 @@ describe('bundled exercise catalog', () => {
     const licensed = catalog.filter((e) =>
       e.sources.some((s) => s.kind === 'illustration' && s.license !== 'app-owned'),
     );
-    expect(licensed.length).toBeGreaterThanOrEqual(160);
+    expect(licensed.length).toBeGreaterThanOrEqual(159);
     for (const entry of licensed)
       expect(entry.sources.some((s) => s.license === 'app-owned')).toBe(false);
+  });
+  it('shows each exercise its own movement, not a neighbouring variant', () => {
+    // Lying Leg Raise once borrowed a standing glute drawing and its instructions.
+    const legRaise = catalogEntry('Lying Leg Raise');
+    expect(legRaise?.instructions[0]).toMatch(/^Lie /);
+    expect(legRaise?.sources.find((s) => s.kind === 'illustration')?.title).toBe(
+      'Flat Bench Leg Raises',
+    );
+    // Assisted pull-ups show the assisted machine, not the unassisted pull-up drawing.
+    const assisted = catalogEntry('Pull Up (Assisted)');
+    expect(assisted?.sources.find((s) => s.kind === 'illustration')?.license).toBe('app-owned');
+    expect(assisted?.instructions).toEqual(catalogEntry('Pull Up')?.instructions);
   });
   it('gives every exercise a drawing', () => {
     expect(catalog.filter((e) => e.images.length === 0).map((e) => e.name)).toEqual([]);
