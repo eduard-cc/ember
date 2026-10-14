@@ -8,6 +8,17 @@ Everkinetic drawings come from `dist/png`; when an exercise has none there,
 licence and attribution). Build from a full Everkinetic checkout, including
 `src/`, or those drawings are dropped.
 
+Some `dist/png` drawings are cut off at the legs, feet or equipment. For the
+exercises in `EK_FULL_FIGURE` (`generate.py`), the artist's full-figure exports
+are used instead. They are cleaned of stray specks, then thickened by whichever
+filter size brings the final mask closest to the measured `dist` stroke width
+(`EK_STROKE_WIDTH`); this measuring makes a full run take about 5 minutes. Each
+pair was reviewed side by side for exercise, pose and start/finish order; some
+exports label start and finish backwards, so the mapping lists files in display
+order. Pairs left on `dist` were near-identical, already uncropped, or no
+better: shrugs lose their visible shoulder lift at full-figure scale, and Lying
+Leg Raise's art shows a standing leg curl either way.
+
 ## App-owned illustrations
 
 Missing illustrations may be generated specifically for Gym Log. They are marked

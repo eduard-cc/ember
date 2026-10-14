@@ -29,7 +29,7 @@ import sys
 import urllib.request
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageOps
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_JSON = ROOT / 'src/catalog/exercises.json'
@@ -315,6 +315,52 @@ LICENSES = {
 }
 WGER_LICENSE_IDS = {1: 'CC-BY-SA 3', 2: 'CC-BY-SA 4', 3: 'CC0', 4: 'CC-BY 4'}
 EK_LICENSE = LICENSES['CC-BY-SA 4']
+# Everkinetic's dist/png cuts some drawings off at the legs, feet or equipment. For these,
+# the artist's full-figure source exports (src/images-ai, same licence) are used instead.
+# Each pair was reviewed side by side for exercise, pose and order: (start, finish).
+# Shrugs stay on dist: at full-figure scale their small shoulder lift is invisible.
+# Exports whose own S/F labels run backwards are listed finish-file first on purpose.
+EK_FULL_FIGURE = {
+    '0008': ('0008-S.ai.png', '0008-F.ai.png'),  # Front Raise (Cable)
+    '0013': ('0013-S.ai.png', '0013-F.ai.png'),  # Upright Row (Smith Machine)
+    '0014': ('0014-S.ai.png', '0014-F.ai.png'),  # Upright Row (Barbell)
+    '0016': ('0016-S.ai.png', '0016-F.ai.png'),  # Upright Row (Dumbbell)
+    '0020': ('0020-S new.ai.png', '0020-F new.ai.png'),  # Reverse Fly (Band)
+    '0026': ('0026-F new.ai.png', '0026-S new.ai.png'),  # Bent Over Row - Underhand (Barbell)
+    '0031': ('0031-S.ai.png', '0031-F.ai.png'),  # Incline Shoulder Press (Dumbbell)
+    '0033': ('0033-S.ai.png', '0033-F.ai.png'),  # Front Raise (Dumbbell)
+    '0038': ('0038-S.ai.png', '0038-F.ai.png'),  # Overhead Press (Dumbbell, One Arm)
+    '0048': ('0048-S.ai.png', '0048-F.ai.png'),  # Cable Crossover
+    '0051': ('0051-S.ai.png', '0051-F.ai.png'),  # Decline Bench Press (Barbell)
+    '0052': ('0052-S.ai.png', '0052-F.ai.png'),  # Decline Bench Press (Dumbbell)
+    '0053': ('0053-S.ai.png', '0053-F.ai.png'),  # Decline Chest Fly (Dumbbell)
+    '0054': ('0054-S.ai.png', '0054-F.ai.png'),  # Chest Dip
+    '0055': ('0055-S.ai.png', '0055-F.ai.png'),  # Bench Press (Dumbbell)
+    '0082': ('0082-S.ai.png', '0082-F.ai.png'),  # Bench Press - Wide Grip (Barbell)
+    '0087': ('0087-S.ai.png', '0087-F.ai.png'),  # Pull Up
+    '0099': ('0099-S new.ai.png', '0099-F new.ai.png'),  # Deadlift (Barbell)
+    '0100': ('0100-S new.ai.png', '0100-F new.ai.png'),  # Deadlift (Smith Machine)
+    '0101': ('0101-S new.ai.png', '0101-F new.ai.png'),  # Good Morning (Barbell)
+    '0107': ('0107-S.ai.png', '0107-F.ai.png'),  # Deadlift (Dumbbell)
+    '0112': ('0112-S.ai.png', '0112-F.ai.png'),  # Glute Kickback (Cable)
+    '0115': ('0115-F.ai.png', '0115-S.ai.png'),  # Lunge (Dumbbell)
+    '0118': ('0118-S.ai.png', '0118-F.ai.png'),  # Romanian Deadlift (Barbell)
+    '0119': ('0119-S.ai.png', '0119-F.ai.png'),  # Seated Leg Curl (Machine)
+    '0120': ('0120-S.ai.png', '0120-F.ai.png'),  # Standing Leg Curl (Machine)
+    '0121': ('0121-F1.ai.png', '0121-S2.ai.png'),  # Walking Lunge (Dumbbell)
+    '0122': ('0122-S new.ai.png', '0122-F new.ai.png'),  # Squat (Barbell)
+    '0123': ('0123-S.ai.png', '0123-F.ai.png'),  # Hack Squat
+    '0124': ('0124-S new.ai.png', '0124-F new.ai.png'),  # Squat (Smith Machine)
+    '0125': ('0125-S new.ai.png', '0125-F new.ai.png'),  # Hack Squat (Barbell)
+    '0127': ('0127-S.ai.png', '0127-F.ai.png'),  # Leg Press
+    '0129': ('0129-F.ai.png', '0129-S.ai.png'),  # Reverse Lunge (Dumbbell)
+    '0130': ('0130-S new.ai.png', '0130-F new.ai.png'),  # Squat (Dumbbell)
+    '0133': ('0133-S new.ai.png', '0133-F new.ai.png'),  # Box Squat (Barbell)
+    '0134': ('0134-S new.ai.png', '0134-F.ai.png'),  # Step Up (Barbell)
+    '0137': ('0137-S new.ai.png', '0137-F.ai.png'),  # Step Up (Dumbbell)
+    '0138': ('0138-S new.ai.png', '0138-F new.ai.png'),  # Front Squat (Barbell)
+    '0142': ('0142-F.ai.png', '0142-S.ai.png'),  # Leg Extension (Machine)
+}
 
 
 def slug(name):
@@ -365,6 +411,75 @@ def line_mask(raw):
     buffer = io.BytesIO()
     rgba.save(buffer, 'WEBP', lossless=True, method=4)
     return buffer.getvalue(), rgba.size
+
+
+def ink_runs(profile):
+    """(start, end) spans of consecutive truthy values."""
+    runs, start = [], None
+    for index, value in enumerate(profile):
+        if value and start is None:
+            start = index
+        elif not value and start is not None:
+            runs.append((start, index))
+            start = None
+    if start is not None:
+        runs.append((start, len(profile)))
+    return runs
+
+
+def stroke_width(mask_webp):
+    """Mean width (px) of the line work in a line_mask WebP: lengths of horizontal and
+    vertical runs of opaque pixels, ignoring runs longer than a stroke (filled areas)."""
+    alpha = Image.open(io.BytesIO(mask_webp)).split()[-1]
+    width, height = alpha.size
+    pixels = alpha.load()
+    runs = []
+    for outer, inner, at in ((height, width, lambda o, i: pixels[i, o]),
+                             (width, height, lambda o, i: pixels[o, i])):
+        for o in range(outer):
+            length = 0
+            for i in range(inner + 1):
+                if i < inner and at(o, i) > 127:
+                    length += 1
+                elif length:
+                    if length <= 12:
+                        runs.append(length)
+                    length = 0
+    return sum(runs) / len(runs) if runs else 0
+
+
+# Mean stroke width of the dist/png drawings after line_mask (measured Oct 2026).
+EK_STROKE_WIDTH = 2.9
+
+
+def thicken(raw, speck=50):
+    """Prepare a full-figure export: drop stray specks outside the drawing, then widen the
+    line work uniformly (grey minimum filter). The exports' native line widths vary, so
+    the filter size is chosen by measuring the line_mask result against EK_STROKE_WIDTH."""
+    image = Image.open(io.BytesIO(raw)).convert('RGBA')
+    flat = Image.alpha_composite(Image.new('RGBA', image.size, 'white'), image).convert('L')
+    draw = ImageDraw.Draw(flat)
+    width, height = flat.size
+    for horizontal in (True, False):
+        # Same ink threshold as line_mask. Box-resizing a float image to one row (or column)
+        # averages it exactly: ink pixels per column (or row).
+        ink = flat.point(lambda v: 255 if v <= 231 else 0).convert('F')
+        line = ink.resize((width, 1) if horizontal else (1, height), Image.BOX)
+        span = height if horizontal else width
+        profile = [value * span / 255 for value in line.get_flattened_data()]
+        runs = ink_runs(profile)
+        main = max(runs, key=lambda r: sum(profile[r[0]:r[1]]), default=None)
+        for run in runs:
+            if run != main and sum(profile[run[0]:run[1]]) < speck:
+                box = (run[0], 0, run[1] - 1, height - 1) if horizontal else (0, run[0], width - 1, run[1] - 1)
+                draw.rectangle(box, fill=255)
+    candidates = []
+    for size in (1, 3, 5, 7, 9, 11):
+        buffer = io.BytesIO()
+        (flat.filter(ImageFilter.MinFilter(size)) if size > 1 else flat).save(buffer, 'PNG')
+        error = abs(stroke_width(line_mask(buffer.getvalue())[0]) - EK_STROKE_WIDTH)
+        candidates.append((error, size, buffer.getvalue()))
+    return min(candidates)[2]
 
 
 def fetch(url):
@@ -429,15 +544,25 @@ def main():
 
         # Images: Everkinetic start/end drawings, else wger line drawings (style 1, never AI).
         images, image_source = [], None
-        if ek_id:
+        ek_source = ek and {
+            'title': ek['title'], 'author': 'Everkinetic', 'license': EK_LICENSE[0],
+            'licenseUrl': EK_LICENSE[1],
+            'url': 'https://github.com/everkinetic/data',
+        }
+        if ek_id in EK_FULL_FIGURE:
+            files = [ek_root / 'src/images-ai' / f for f in EK_FULL_FIGURE[ek_id]]
+            missing = [str(f) for f in files if not f.exists()]
+            if missing:
+                sys.exit(f'{name}: full-figure Everkinetic export missing: {missing}')
+            # The exports are drawn smaller with finer lines than dist/png; thicken them
+            # to the same stroke weight before the shared crop and resize.
+            images = [thicken(f.read_bytes()) for f in files]
+            image_source = ek_source
+        if not images and ek_id:
             files = [ek_root / f'dist/png/{ek_id}-relaxation.png', ek_root / f'dist/png/{ek_id}-tension.png']
             if all(f.exists() for f in files):
                 images = [f.read_bytes() for f in files]
-                image_source = {
-                    'title': ek['title'], 'author': 'Everkinetic', 'license': EK_LICENSE[0],
-                    'licenseUrl': EK_LICENSE[1],
-                    'url': 'https://github.com/everkinetic/data',
-                }
+                image_source = ek_source
         if not images and w:
             drawings = [i for i in w['images'] if i['style'] == '1' and not i['is_ai_generated']
                         and not unclear(i.get('license_author'))]
@@ -457,11 +582,7 @@ def main():
             files = [ek_root / f'src/images-ai/{ek_id}-S.ai.png', ek_root / f'src/images-ai/{ek_id}-F.ai.png']
             if all(f.exists() for f in files):
                 images = [f.read_bytes() for f in files]
-                image_source = {
-                    'title': ek['title'], 'author': 'Everkinetic', 'license': EK_LICENSE[0],
-                    'licenseUrl': EK_LICENSE[1],
-                    'url': 'https://github.com/everkinetic/data',
-                }
+                image_source = ek_source
         files_out = []
         for index, raw in enumerate(images):
             data, size = line_mask(raw)

@@ -75,12 +75,12 @@
     "images": [
       {
         "file": "bench-press-dumbbell-0.webp",
-        "width": 240,
-        "height": 208
+        "width": 214,
+        "height": 240
       },
       {
         "file": "bench-press-dumbbell-1.webp",
-        "width": 191,
+        "width": 168,
         "height": 240
       }
     ],
@@ -179,12 +179,12 @@
       {
         "file": "bench-press-wide-grip-barbell-0.webp",
         "width": 240,
-        "height": 175
+        "height": 166
       },
       {
         "file": "bench-press-wide-grip-barbell-1.webp",
         "width": 240,
-        "height": 203
+        "height": 237
       }
     ],
     "sources": [
@@ -225,12 +225,12 @@
     "images": [
       {
         "file": "cable-crossover-0.webp",
-        "width": 221,
+        "width": 206,
         "height": 240
       },
       {
         "file": "cable-crossover-1.webp",
-        "width": 227,
+        "width": 208,
         "height": 240
       }
     ],
@@ -280,12 +280,12 @@
     "images": [
       {
         "file": "chest-dip-0.webp",
-        "width": 194,
+        "width": 149,
         "height": 240
       },
       {
         "file": "chest-dip-1.webp",
-        "width": 134,
+        "width": 133,
         "height": 240
       }
     ],
@@ -612,12 +612,12 @@
       {
         "file": "decline-bench-press-barbell-0.webp",
         "width": 240,
-        "height": 161
+        "height": 160
       },
       {
         "file": "decline-bench-press-barbell-1.webp",
         "width": 240,
-        "height": 204
+        "height": 203
       }
     ],
     "sources": [
@@ -666,11 +666,11 @@
       {
         "file": "decline-bench-press-dumbbell-0.webp",
         "width": 240,
-        "height": 169
+        "height": 178
       },
       {
         "file": "decline-bench-press-dumbbell-1.webp",
-        "width": 204,
+        "width": 230,
         "height": 240
       }
     ],
@@ -721,11 +721,11 @@
       {
         "file": "decline-chest-fly-dumbbell-0.webp",
         "width": 240,
-        "height": 147
+        "height": 150
       },
       {
         "file": "decline-chest-fly-dumbbell-1.webp",
-        "width": 223,
+        "width": 234,
         "height": 240
       }
     ],
@@ -1546,12 +1546,12 @@
     "images": [
       {
         "file": "bent-over-row-underhand-barbell-0.webp",
-        "width": 228,
+        "width": 212,
         "height": 240
       },
       {
         "file": "bent-over-row-underhand-barbell-1.webp",
-        "width": 231,
+        "width": 226,
         "height": 240
       }
     ],
@@ -1736,11 +1736,11 @@
       {
         "file": "deadlift-barbell-0.webp",
         "width": 240,
-        "height": 207
+        "height": 232
       },
       {
         "file": "deadlift-barbell-1.webp",
-        "width": 187,
+        "width": 165,
         "height": 240
       }
     ],
@@ -1792,12 +1792,12 @@
     "images": [
       {
         "file": "deadlift-dumbbell-0.webp",
-        "width": 230,
+        "width": 173,
         "height": 240
       },
       {
         "file": "deadlift-dumbbell-1.webp",
-        "width": 79,
+        "width": 66,
         "height": 240
       }
     ],
@@ -1847,12 +1847,12 @@
     "images": [
       {
         "file": "deadlift-smith-machine-0.webp",
-        "width": 154,
+        "width": 146,
         "height": 240
       },
       {
         "file": "deadlift-smith-machine-1.webp",
-        "width": 168,
+        "width": 146,
         "height": 240
       }
     ],
@@ -2245,12 +2245,12 @@
     "images": [
       {
         "file": "pull-up-0.webp",
-        "width": 193,
+        "width": 159,
         "height": 240
       },
       {
         "file": "pull-up-1.webp",
-        "width": 200,
+        "width": 202,
         "height": 240
       }
     ],
@@ -2302,12 +2302,12 @@
     "images": [
       {
         "file": "pull-up-assisted-0.webp",
-        "width": 193,
+        "width": 159,
         "height": 240
       },
       {
         "file": "pull-up-assisted-1.webp",
-        "width": 200,
+        "width": 202,
         "height": 240
       }
     ],
@@ -3102,12 +3102,12 @@
     "images": [
       {
         "file": "front-raise-cable-0.webp",
-        "width": 110,
+        "width": 118,
         "height": 240
       },
       {
         "file": "front-raise-cable-1.webp",
-        "width": 113,
+        "width": 118,
         "height": 240
       }
     ],
@@ -3156,12 +3156,12 @@
     "images": [
       {
         "file": "front-raise-dumbbell-0.webp",
-        "width": 114,
+        "width": 95,
         "height": 240
       },
       {
         "file": "front-raise-dumbbell-1.webp",
-        "width": 111,
+        "width": 91,
         "height": 240
       }
     ],
@@ -3210,12 +3210,12 @@
     "images": [
       {
         "file": "incline-shoulder-press-dumbbell-0.webp",
-        "width": 239,
+        "width": 198,
         "height": 240
       },
       {
         "file": "incline-shoulder-press-dumbbell-1.webp",
-        "width": 174,
+        "width": 151,
         "height": 240
       }
     ],
@@ -3557,12 +3557,12 @@
     "images": [
       {
         "file": "overhead-press-dumbbell-one-arm-0.webp",
-        "width": 179,
+        "width": 133,
         "height": 240
       },
       {
         "file": "overhead-press-dumbbell-one-arm-1.webp",
-        "width": 126,
+        "width": 99,
         "height": 240
       }
     ],
@@ -3809,12 +3809,12 @@
     "images": [
       {
         "file": "reverse-fly-band-0.webp",
-        "width": 196,
+        "width": 169,
         "height": 240
       },
       {
         "file": "reverse-fly-band-1.webp",
-        "width": 222,
+        "width": 190,
         "height": 240
       }
     ],
@@ -4267,13 +4267,13 @@
     "images": [
       {
         "file": "upright-row-barbell-0.webp",
-        "width": 240,
-        "height": 221
+        "width": 210,
+        "height": 240
       },
       {
         "file": "upright-row-barbell-1.webp",
-        "width": 240,
-        "height": 221
+        "width": 209,
+        "height": 240
       }
     ],
     "sources": [
@@ -4363,12 +4363,12 @@
     "images": [
       {
         "file": "upright-row-dumbbell-0.webp",
-        "width": 99,
+        "width": 90,
         "height": 240
       },
       {
         "file": "upright-row-dumbbell-1.webp",
-        "width": 126,
+        "width": 115,
         "height": 240
       }
     ],
@@ -4418,12 +4418,12 @@
     "images": [
       {
         "file": "upright-row-smith-machine-0.webp",
-        "width": 230,
+        "width": 193,
         "height": 240
       },
       {
         "file": "upright-row-smith-machine-1.webp",
-        "width": 230,
+        "width": 193,
         "height": 240
       }
     ],
@@ -6862,12 +6862,12 @@
       {
         "file": "box-squat-barbell-0.webp",
         "width": 240,
-        "height": 130
+        "height": 209
       },
       {
         "file": "box-squat-barbell-1.webp",
-        "width": 240,
-        "height": 207
+        "width": 200,
+        "height": 240
       }
     ],
     "sources": [
@@ -7058,12 +7058,12 @@
       {
         "file": "front-squat-barbell-0.webp",
         "width": 240,
-        "height": 153
+        "height": 221
       },
       {
         "file": "front-squat-barbell-1.webp",
-        "width": 240,
-        "height": 224
+        "width": 199,
+        "height": 240
       }
     ],
     "sources": [
@@ -7163,12 +7163,12 @@
     "images": [
       {
         "file": "glute-kickback-cable-0.webp",
-        "width": 108,
+        "width": 96,
         "height": 240
       },
       {
         "file": "glute-kickback-cable-1.webp",
-        "width": 189,
+        "width": 163,
         "height": 240
       }
     ],
@@ -7311,13 +7311,13 @@
     "images": [
       {
         "file": "good-morning-barbell-0.webp",
-        "width": 226,
+        "width": 201,
         "height": 240
       },
       {
         "file": "good-morning-barbell-1.webp",
         "width": 240,
-        "height": 179
+        "height": 211
       }
     ],
     "sources": [
@@ -7369,12 +7369,12 @@
       {
         "file": "hack-squat-0.webp",
         "width": 240,
-        "height": 164
+        "height": 198
       },
       {
         "file": "hack-squat-1.webp",
         "width": 240,
-        "height": 167
+        "height": 166
       }
     ],
     "sources": [
@@ -7425,12 +7425,12 @@
       {
         "file": "hack-squat-barbell-0.webp",
         "width": 240,
-        "height": 139
+        "height": 206
       },
       {
         "file": "hack-squat-barbell-1.webp",
-        "width": 240,
-        "height": 217
+        "width": 198,
+        "height": 240
       }
     ],
     "sources": [
@@ -7633,12 +7633,12 @@
     "images": [
       {
         "file": "leg-extension-machine-0.webp",
-        "width": 148,
+        "width": 144,
         "height": 240
       },
       {
         "file": "leg-extension-machine-1.webp",
-        "width": 157,
+        "width": 158,
         "height": 240
       }
     ],
@@ -7689,12 +7689,12 @@
       {
         "file": "leg-press-0.webp",
         "width": 240,
-        "height": 141
+        "height": 159
       },
       {
         "file": "leg-press-1.webp",
         "width": 240,
-        "height": 165
+        "height": 158
       }
     ],
     "sources": [
@@ -7847,12 +7847,12 @@
     "images": [
       {
         "file": "lunge-dumbbell-0.webp",
-        "width": 126,
+        "width": 111,
         "height": 240
       },
       {
         "file": "lunge-dumbbell-1.webp",
-        "width": 209,
+        "width": 172,
         "height": 240
       }
     ],
@@ -8162,12 +8162,12 @@
     "images": [
       {
         "file": "reverse-lunge-dumbbell-0.webp",
-        "width": 126,
+        "width": 111,
         "height": 240
       },
       {
         "file": "reverse-lunge-dumbbell-1.webp",
-        "width": 210,
+        "width": 172,
         "height": 240
       }
     ],
@@ -8219,11 +8219,11 @@
       {
         "file": "romanian-deadlift-barbell-0.webp",
         "width": 240,
-        "height": 207
+        "height": 232
       },
       {
         "file": "romanian-deadlift-barbell-1.webp",
-        "width": 192,
+        "width": 165,
         "height": 240
       }
     ],
@@ -8417,12 +8417,12 @@
     "images": [
       {
         "file": "seated-leg-curl-machine-0.webp",
-        "width": 166,
+        "width": 161,
         "height": 240
       },
       {
         "file": "seated-leg-curl-machine-1.webp",
-        "width": 148,
+        "width": 144,
         "height": 240
       }
     ],
@@ -8473,12 +8473,12 @@
       {
         "file": "seated-leg-press-machine-0.webp",
         "width": 240,
-        "height": 141
+        "height": 159
       },
       {
         "file": "seated-leg-press-machine-1.webp",
         "width": 240,
-        "height": 165
+        "height": 158
       }
     ],
     "sources": [
@@ -8668,12 +8668,12 @@
       {
         "file": "squat-barbell-0.webp",
         "width": 240,
-        "height": 130
+        "height": 207
       },
       {
         "file": "squat-barbell-1.webp",
-        "width": 240,
-        "height": 207
+        "width": 200,
+        "height": 240
       }
     ],
     "sources": [
@@ -8774,12 +8774,12 @@
     "images": [
       {
         "file": "squat-dumbbell-0.webp",
-        "width": 167,
+        "width": 144,
         "height": 240
       },
       {
         "file": "squat-dumbbell-1.webp",
-        "width": 115,
+        "width": 103,
         "height": 240
       }
     ],
@@ -8823,13 +8823,13 @@
     "images": [
       {
         "file": "squat-smith-machine-0.webp",
-        "width": 240,
-        "height": 233
+        "width": 180,
+        "height": 240
       },
       {
         "file": "squat-smith-machine-1.webp",
-        "width": 240,
-        "height": 233
+        "width": 180,
+        "height": 240
       }
     ],
     "sources": [
@@ -9079,12 +9079,12 @@
     "images": [
       {
         "file": "standing-leg-curl-machine-0.webp",
-        "width": 147,
+        "width": 133,
         "height": 240
       },
       {
         "file": "standing-leg-curl-machine-1.webp",
-        "width": 192,
+        "width": 182,
         "height": 240
       }
     ],
@@ -9135,12 +9135,12 @@
     "images": [
       {
         "file": "step-up-barbell-0.webp",
-        "width": 221,
+        "width": 210,
         "height": 240
       },
       {
         "file": "step-up-barbell-1.webp",
-        "width": 221,
+        "width": 175,
         "height": 240
       }
     ],
@@ -9183,12 +9183,12 @@
     "images": [
       {
         "file": "step-up-dumbbell-0.webp",
-        "width": 206,
+        "width": 153,
         "height": 240
       },
       {
         "file": "step-up-dumbbell-1.webp",
-        "width": 207,
+        "width": 131,
         "height": 240
       }
     ],
@@ -9326,12 +9326,12 @@
     "images": [
       {
         "file": "walking-lunge-dumbbell-0.webp",
-        "width": 132,
+        "width": 111,
         "height": 240
       },
       {
         "file": "walking-lunge-dumbbell-1.webp",
-        "width": 181,
+        "width": 172,
         "height": 240
       }
     ],
