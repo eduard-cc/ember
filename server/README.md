@@ -130,9 +130,13 @@ This constant-space local limiter is not a distributed or restart-resistant depl
 
 `POST /sync/operations` accepts `{version:1,operations:[...]}` (1–50, at most 10 MiB).
 Operation fields match the plan: UUID `operationId`, nonempty string `entityId`,
-`kind` (`putWorkout`, `putTemplate`, `deleteTemplate`, `putImportedWorkout`,
+`kind` (`putBodyWeight`, `putWorkout`, `putTemplate`, `deleteTemplate`, `putImportedWorkout`,
 `deleteImportedWorkout`), nullable `expectedRevision`,
-and `payload` (Workout or null). Source entity/set IDs are not forced to UUIDs.
+and `payload` (Workout, BodyWeight or null). A BodyWeight is `{id,date,kg,deleted}`: a calendar-valid
+local wall time, kg above 0 and at most 500 with at most two decimals, and a tombstone flag. It is
+stored in the same generic `records`/`changes` tables; each kind may only revise records of its own
+kind, so measurements and workouts can never overwrite each other. Measurement updates and
+tombstones require the current revision, like templates. Source entity/set IDs are not forced to UUIDs.
 All Workout fields including optional set flags and string-valued `original` evidence
 are preserved, with no timestamp conversion, name merging, set deduplication or analytics.
 Unknown fields, nonfinite values and ID mismatches are rejected. Defensive bounds:
@@ -163,6 +167,14 @@ at the current revision, and reimport may revive an imported tombstone at that e
 `GET /sync/changes?after=0&limit=100` accepts safe integer cursor and limit 1–100.
 Returns `{changes,nextCursor,hasMore}`; each change has
 `{entityId,kind,revision,changeSeq,payload}`. Deleted-template payloads are null.
+Body-weight changes require `X-Sync-Body-Weight: 1`; older apps receive only the kinds they
+understand. Filtering happens before pagination, so the cursor remains the last returned change.
+Upgraded apps replay from zero once to recover measurements hidden behind an older cursor.
+
+Rollout is two releases: deploy this API compatibility bridge without the new frontend first,
+then deploy the body-weight UI. Keep the bridge as the immediate rollback release: it accepts
+measurement operations from cached new apps while keeping old apps' change feeds compatible.
+Reverting the UI must retain the bridge; do not deploy a pre-bridge API after measurements exist.
 Records, feed writes, sequence allocation and ledger writes commit atomically.
 An owner-scoped transaction advisory lock is acquired **before** allocating sequence
 values; the transactional sequence row prevents uncommitted writes from being skipped.

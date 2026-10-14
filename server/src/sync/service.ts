@@ -95,18 +95,22 @@ export class SyncService {
 						]);
 						return rejected;
 					}
+					// Each kind may only revise records of its own kind, so a measurement can
+					// never overwrite workout history and vice versa.
 					const allowedKind =
-						o.kind === 'deleteImportedWorkout'
-							? 'putImportedWorkout'
-							: o.kind === 'putImportedWorkout'
-								? exclusionOnly
-									? 'putImportedWorkout'
-									: 'deleteImportedWorkout'
-								: o.kind === 'putTemplate' || o.kind === 'deleteTemplate'
-									? 'putTemplate'
-									: o.kind === 'putWorkout'
-										? 'putWorkout'
-										: null;
+						o.kind === 'putBodyWeight'
+							? 'putBodyWeight'
+							: o.kind === 'deleteImportedWorkout'
+								? 'putImportedWorkout'
+								: o.kind === 'putImportedWorkout'
+									? exclusionOnly
+										? 'putImportedWorkout'
+										: 'deleteImportedWorkout'
+									: o.kind === 'putTemplate' || o.kind === 'deleteTemplate'
+										? 'putTemplate'
+										: o.kind === 'putWorkout'
+											? 'putWorkout'
+											: null;
 					const mismatch =
 						o.expectedRevision === null
 							? !!record
@@ -168,7 +172,13 @@ export class SyncService {
 		}
 		return {results};
 	}
-	async changes(owner: string, after: string = '0', limit: string = '100', epoch?: unknown) {
+	async changes(
+		owner: string,
+		after: string = '0',
+		limit: string = '100',
+		epoch?: unknown,
+		includeBodyWeight = false,
+	) {
 		if (
 			typeof after !== 'string' ||
 			!/^(0|[1-9][0-9]*)$/.test(after) ||
@@ -181,11 +191,12 @@ export class SyncService {
 		const rows = await this.db.transaction(async (tx) => {
 			await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
 			await requireEpoch(tx, owner, epoch);
-			return tx.query('SELECT * FROM changes WHERE owner_id=$1 AND seq>$2 ORDER BY seq LIMIT $3', [
-				owner,
-				after,
-				Number(limit) + 1,
-			]);
+			// Filter before pagination: legacy cursors remain the last visible change,
+			// never a skipped measurement that their strict page validator cannot read.
+			return tx.query(
+				"SELECT * FROM changes WHERE owner_id=$1 AND seq>$2 AND ($4 OR kind <> 'putBodyWeight') ORDER BY seq LIMIT $3",
+				[owner, after, Number(limit) + 1, includeBodyWeight],
+			);
 		});
 		const hasMore = rows.length > Number(limit);
 		const page = rows.slice(0, Number(limit));

@@ -52,7 +52,13 @@ export async function createApp() {
 			@Query('limit') limit: string,
 		) {
 			const s = await auth.session(req);
-			return sync.changes(s.owner_id, after, limit, req.headers['x-dataset-epoch']);
+			return sync.changes(
+				s.owner_id,
+				after,
+				limit,
+				req.headers['x-dataset-epoch'],
+				req.headers['x-sync-body-weight'] === '1',
+			);
 		}
 	}
 	@Module({controllers: [Api]})

@@ -40,13 +40,32 @@ export const workout = z.strictObject({
 		)
 		.max(1000),
 });
+/** Body weight is its own record kind: never part of workouts, volume, records or imports. */
+export const bodyWeight = z.strictObject({
+	id,
+	date: date.refine((value) => value !== '', 'Measurement date is required'),
+	kg: z
+		.number()
+		.finite()
+		.positive()
+		.max(500)
+		.refine((kg) => Number(kg.toFixed(2)) === kg, 'At most two decimals'),
+	deleted: z.boolean(),
+});
 export const operation = z
 	.strictObject({
 		operationId: z.uuid(),
 		entityId: id,
-		kind: z.enum(['putWorkout', 'putTemplate', 'deleteTemplate', 'putImportedWorkout', 'deleteImportedWorkout']),
+		kind: z.enum([
+			'putBodyWeight',
+			'putWorkout',
+			'putTemplate',
+			'deleteTemplate',
+			'putImportedWorkout',
+			'deleteImportedWorkout',
+		]),
 		expectedRevision: z.number().int().positive().nullable(),
-		payload: workout.nullable(),
+		payload: z.union([workout, bodyWeight]).nullable(),
 	})
 	.superRefine((o, ctx) => {
 		if (o.kind === 'deleteTemplate' || o.kind === 'deleteImportedWorkout') {
@@ -58,7 +77,11 @@ export const operation = z
 			ctx.addIssue({code: 'custom', message: 'Payload identity mismatch'});
 			return;
 		}
-		if (o.kind === 'putWorkout' || o.kind === 'putImportedWorkout') {
+		if ((o.kind === 'putBodyWeight') !== !('exercises' in o.payload)) {
+			ctx.addIssue({code: 'custom', message: 'Payload does not match operation kind'});
+			return;
+		}
+		if ((o.kind === 'putWorkout' || o.kind === 'putImportedWorkout') && 'exercises' in o.payload) {
 			const sets = o.payload.exercises.flatMap((e) => e.sets);
 			if (!sets.length || sets.some((s) => s.completed === false))
 				ctx.addIssue({code: 'custom', message: 'Active or empty drafts cannot sync'});
