@@ -28,6 +28,44 @@ export const fixture: Workout = {
   ],
 };
 describe('durable repository', () => {
+  it('atomically saves elapsed minutes in history and the queued workout without changing past durations', async () => {
+    const repository = new WorkoutRepository(`test-${crypto.randomUUID()}`, () =>
+      new Date('2026-01-10T12:45:59').getTime(),
+    );
+    const past = {...fixture, id: 'past-workout', duration: 0};
+    const imported = {...fixture, id: 'imported-workout', duration: 62.5};
+    const active = {
+      ...fixture,
+      duration: 0,
+      exercises: [
+        {...fixture.exercises[0], sets: [{...fixture.exercises[0].sets[0], completed: true}]},
+      ],
+    };
+    await repository.db.workouts.add(past);
+    await repository.commitState({
+      version: 1,
+      dataset: {
+        sourceLabel: 'Synthetic import',
+        workouts: [imported],
+        warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+      },
+      active,
+      finished: [past],
+      templates: [],
+    });
+    const finished = await repository.finishWorkout(active);
+    expect(finished.duration).toBe(45);
+    expect(await repository.db.workouts.get(active.id)).toEqual(finished);
+    expect(await repository.db.outbox.toArray()).toMatchObject([
+      {kind: 'putWorkout', entityId: active.id, payload: finished},
+    ]);
+    const state = await repository.readState();
+    expect(state.active).toBeNull();
+    expect(state.finished.find((w) => w.id === past.id)).toEqual(past);
+    expect(state.dataset?.workouts).toEqual([imported]);
+    expect(active.duration).toBe(0);
+    repository.close();
+  });
   it('checks the original editor document even when previous state has refreshed to the peer winner', async () => {
     const repository = new WorkoutRepository(`test-${crypto.randomUUID()}`);
     const initial = {

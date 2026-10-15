@@ -1,0 +1,30 @@
+import {devices, expect, test} from '@playwright/test';
+
+import {addExercise} from '../navigation';
+
+test.use({...devices['Pixel 6']});
+
+test('finishing saves elapsed minutes in history on Pixel 6', async ({page}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile', 'Pixel 6 flow');
+  await page.clock.install({time: new Date('2026-01-10T12:00:00')});
+  await page.goto('/');
+  await page.getByRole('button', {name: 'Start empty workout'}).click();
+  await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Synthetic timed workout');
+  await addExercise(page, 'Synthetic timed press');
+  await page.getByLabel('Weight for Synthetic timed press set 1').fill('30');
+  await page.getByLabel('Reps for Synthetic timed press set 1').fill('8');
+  await page.clock.fastForward(45 * 60 * 1000);
+  await page.getByRole('button', {name: 'Complete Synthetic timed press set 1'}).click();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await page.getByRole('button', {name: 'Finish workout'}).click();
+  await page.getByRole('button', {name: 'Save finished workout'}).click();
+  const card = page.locator('.history-card', {hasText: 'Synthetic timed workout'});
+  await expect(card.locator('.eyebrow')).toContainText('· 45 MIN');
+  await expect(card).toContainText('1 completed set');
+  await page.reload();
+  await page
+    .getByRole('navigation', {name: 'Main navigation'})
+    .getByRole('button', {name: 'History', exact: true})
+    .click();
+  await expect(card.locator('.eyebrow')).toContainText('· 45 MIN');
+});

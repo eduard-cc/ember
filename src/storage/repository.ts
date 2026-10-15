@@ -1,6 +1,7 @@
 import {AppStateSchema, type LocalOperation, WorkoutSchema} from '../../shared/contracts';
 import {withSetExcluded} from '../domain/model';
 import type {Workout} from '../domain/types';
+import {elapsedMinutes} from '../domain/workout-duration';
 import type {AppState} from '../state/workout';
 import {validSet} from '../views/WorkoutView';
 import {GymDatabase} from './db';
@@ -8,7 +9,10 @@ import {GymDatabase} from './db';
 export class WorkoutRepository {
   readonly db: GymDatabase;
   private pending: Promise<unknown> = Promise.resolve();
-  constructor(name = 'gym-log') {
+  constructor(
+    name = 'gym-log',
+    private readonly now: () => number = () => Date.now(),
+  ) {
     this.db = new GymDatabase(name);
   }
   private enqueue<T>(action: () => Promise<T>): Promise<T> {
@@ -51,6 +55,7 @@ export class WorkoutRepository {
     const parsed = WorkoutSchema.parse(workout);
     const finished = {
       ...parsed,
+      duration: elapsedMinutes(parsed.date, this.now()),
       exercises: parsed.exercises
         .map((ex) => ({
           ...ex,

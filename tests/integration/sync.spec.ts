@@ -41,6 +41,7 @@ test('offline finish survives reopen and fresh independent peer sees only comple
   context,
   browser,
 }) => {
+  await page.clock.setFixedTime(new Date('2026-01-01T12:45:00'));
   await page.addInitScript((active) => {
     if (!localStorage.getItem('seeded')) {
       localStorage.setItem(
@@ -74,6 +75,9 @@ test('offline finish survives reopen and fresh independent peer sees only comple
   await expect(fresh.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await navigate(fresh, 'History');
   await expect(fresh.getByText('Offline finished', {exact: true}).first()).toBeVisible();
+  await expect(
+    fresh.locator('.history-card', {hasText: 'Offline finished'}).locator('.eyebrow'),
+  ).toContainText('· 45 MIN');
   await navigate(fresh, 'Workouts');
   await expect(fresh.getByRole('heading', {name: 'Quick start', exact: true})).toBeVisible();
   await peer.close();

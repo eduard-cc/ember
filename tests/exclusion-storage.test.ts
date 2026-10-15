@@ -27,7 +27,10 @@ const csv =
   '2026-01-01 10:00:00;Upper;Press;1;40;kg;8;;30m\n' +
   '2026-01-01 10:00:00;Upper;Press;2;40;kg;60;;30m\n' +
   '2026-01-08 10:00:00;Upper;Press;1;42;kg;8;;30m';
-const repo = () => new WorkoutRepository('exclusion-' + crypto.randomUUID());
+const repo = () =>
+  new WorkoutRepository('exclusion-' + crypto.randomUUID(), () =>
+    new Date('2026-03-01T10:30:00').getTime(),
+  );
 const finish = async (repository: WorkoutRepository) => {
   await repository.commitDraft(native);
   await repository.finishWorkout(native);
