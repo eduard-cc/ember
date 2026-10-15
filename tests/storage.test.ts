@@ -66,6 +66,26 @@ describe('durable repository', () => {
     expect(active.duration).toBe(0);
     repository.close();
   });
+  it('saves a sub-minute finish as a nonzero fraction in history and the queued workout', async () => {
+    const repository = new WorkoutRepository(`test-${crypto.randomUUID()}`, () =>
+      new Date('2026-01-10T12:00:30').getTime(),
+    );
+    const active = {
+      ...fixture,
+      duration: 0,
+      exercises: [
+        {...fixture.exercises[0], sets: [{...fixture.exercises[0].sets[0], completed: true}]},
+      ],
+    };
+    await repository.commitDraft(active);
+    const finished = await repository.finishWorkout(active);
+    expect(finished.duration).toBe(0.5);
+    expect(await repository.db.workouts.get(active.id)).toEqual(finished);
+    expect(await repository.db.outbox.toArray()).toMatchObject([
+      {kind: 'putWorkout', entityId: active.id, payload: {duration: 0.5}},
+    ]);
+    repository.close();
+  });
   it('checks the original editor document even when previous state has refreshed to the peer winner', async () => {
     const repository = new WorkoutRepository(`test-${crypto.randomUUID()}`);
     const initial = {

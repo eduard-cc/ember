@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {Button, Input, plural} from '../components/ui';
 import type {Workout} from '../domain/types';
+import {durationLabel} from '../domain/workout-duration';
 import {dateLabel} from './WorkoutView';
 
 export function WorkoutDetails({
@@ -100,7 +101,7 @@ export function HistoryView({
               <div>
                 <span className='eyebrow'>
                   {dateLabel(workout.date)}
-                  {workout.duration ? ` · ${workout.duration} MIN` : ''}
+                  {workout.duration ? ` · ${durationLabel(workout.duration)}` : ''}
                 </span>
                 <h2>{workout.name}</h2>
                 <p>
