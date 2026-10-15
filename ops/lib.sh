@@ -65,11 +65,59 @@ point_current() {
 
 fetch() { curl --fail --silent --show-error --max-time 10 --retry 10 --retry-delay 2 --retry-all-errors "$@"; }
 
+# Without --retry-all-errors curl retries only timeouts, refused connections and
+# 408/429/500/502/503/504, so a missing file fails at once instead of stalling the deploy.
+fetch_file() { curl --fail --silent --show-error --max-time 10 --retry 3 --retry-delay 1 --retry-connrefused "$@"; }
+
+# Why the last health check failed, when the server's journal will not say (it never logs
+# a 404); switch_release puts it in the Discord alert.
+HEALTH_DETAIL=
+unhealthy() {
+	HEALTH_DETAIL=$1
+	log "$1" >&2
+	return 1
+}
+
+# The service worker's install fails on a single missing file, which leaves installed apps
+# on the old shell while the API looks healthy. So Serve must return the worker, the
+# manifest and every file the worker precaches byte for byte from this release.
+shell_served() {
+	local origin=$1 dist=$CURRENT/dist url urls=()
+	[[ -f $dist/sw.js ]] || {
+		unhealthy 'this release has no dist/sw.js'
+		return
+	}
+	# The URLS line is written by scripts/pwa-build.ts.
+	mapfile -t urls < <(node -e '
+		const match = /^const URLS = (\[.*\]);$/m.exec(require("node:fs").readFileSync(process.argv[1], "utf8"));
+		if (!match) throw new Error("no URLS list");
+		const urls = JSON.parse(match[1]);
+		if (!urls.length) throw new Error("empty URLS list");
+		for (const url of new Set(["/sw.js", "/manifest.webmanifest", ...urls])) console.log(url);
+	' "$dist/sw.js" 2>/dev/null || echo ERROR)
+	[[ ${#urls[@]} -gt 2 && ${urls[-1]} != ERROR ]] || {
+		unhealthy 'could not read the precache list from dist/sw.js'
+		return
+	}
+	for url in "${urls[@]}"; do
+		# A path outside dist/ would compare the wrong file; the server never serves one anyway.
+		[[ $url =~ ^/[A-Za-z0-9_][A-Za-z0-9_./-]*$ && $url != *..* ]] || {
+			unhealthy "dist/sw.js precaches an unexpected path: $url"
+			return
+		}
+		fetch_file "$origin$url" | cmp -s - "$dist$url" || {
+			unhealthy "Serve did not return $url"
+			return
+		}
+	done
+}
+
 # The unit's own process owns the port (not a leftover one), the API answers on
-# loopback and through Serve, and Serve returns this release's shell. Startup runs
-# migrations, so the first answer may take a while.
+# loopback and through Serve, and Serve returns this release's shell and every file its
+# service worker precaches. Startup runs migrations, so the first answer may take a while.
 healthy() {
 	local port origin pid deadline=$((SECONDS + ${GYM_LOG_START_TIMEOUT:-120}))
+	HEALTH_DETAIL=
 	port=$(setting GYM_LOG_PORT)
 	origin=$(setting GYM_LOG_ORIGIN)
 	until curl -fsS --max-time 5 --output /dev/null "http://127.0.0.1:$port/api/v1/health" 2>/dev/null; do
@@ -93,6 +141,7 @@ healthy() {
 		log 'Tailscale Serve did not return the current release shell' >&2
 		return 1
 	}
+	shell_served "$origin"
 }
 
 restart_and_check() {
@@ -148,7 +197,7 @@ switch_release() {
 		return 3
 	}
 	if ! restart_and_check; then
-		problem="Deploy of ${sha:0:12} failed its health check"
+		problem="Deploy of ${sha:0:12} failed its health check${HEALTH_DETAIL:+ ($HEALTH_DETAIL)}"
 	elif [[ $extra_before == true ]] && ! extra_recovered; then
 		# Correlation, not proof: an endpoint may also restart on its own.
 		problem="The extra health endpoints stopped responding after Gym Log deployed ${sha:0:12}"

@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {Plugin} from 'vite';
 
-const publicShell = ['manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
+import {isServedShellFile, publicShellFiles} from '../server/src/static-files.ts';
 
 /** Build-only, finite app-shell allowlist. Never discovers or caches user data. */
 export function pwaShell(): Plugin {
@@ -31,15 +31,21 @@ export function pwaShell(): Plugin {
               /\.(?:js|css|woff2?|ttf|otf|png|jpe?g|webp|avif|svg|ico)$/i.test(name)),
         )
         .sort();
+      // The worker's cache.addAll fails on a single 404, which leaves installed apps on the
+      // old shell while health checks stay green; refuse to emit a list the server can't serve.
+      const unserved = names.filter((name) => !isServedShellFile(name));
+      if (unserved.length)
+        throw new Error(`Production server would not serve precached ${unserved.join(', ')}`);
       const hash = createHash('sha256');
       for (const name of names) {
         const entry = bundle[name];
         hash.update(name).update(entry.type === 'chunk' ? entry.code : entry.source);
       }
-      for (const name of publicShell)
+      for (const name of publicShellFiles)
         hash.update(name).update(readFileSync(resolve(root, 'public', name)));
-      const urls = [...names, ...publicShell].map((name) => `/${name}`);
+      const urls = [...names, ...publicShellFiles].map((name) => `/${name}`);
       const cache = `gym-log-shell-${hash.digest('hex').slice(0, 24)}`;
+      // ops/lib.sh reads the `const URLS = [...];` line to check every file is served.
       this.emitFile({
         type: 'asset',
         fileName: 'sw.js',

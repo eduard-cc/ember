@@ -4,6 +4,7 @@ import {isAbsolute, join, resolve, sep} from 'node:path';
 
 import {createApp} from './app';
 import {config} from './config';
+import {isServedShellFile} from './static-files';
 
 async function main() {
 	// tsc emits server/dist/trial.js; two levels up is the repository root.
@@ -32,11 +33,7 @@ async function main() {
 			return;
 		}
 		const file = path === '/' ? 'index.html' : path.slice(1);
-		if (
-			!['index.html', 'manifest.webmanifest', 'sw.js'].includes(file) &&
-			!/^assets\/[A-Za-z0-9_-]+\.(?:js|css|woff2|webp)$/.test(file) &&
-			!/^icons\/icon-(?:192|512)\.png$/.test(file)
-		) {
+		if (!isServedShellFile(file)) {
 			next();
 			return;
 		}

@@ -24,19 +24,34 @@ mkdir -p "$GYM_LOG_HOME/releases"
 printf 'GYM_LOG_PORT="%s"\nGYM_LOG_ORIGIN="http://127.0.0.1:%s"\nGYM_LOG_WEB_ROOT="%s"\n' \
 	"$port" "$port" "$GYM_LOG_HOME/current/dist" >"$GYM_LOG_ENV"
 
-# A synthetic release serves its own shell; a broken one exits at startup.
+# A synthetic release serves its own shell and the files its service worker precaches;
+# a broken one exits at startup. Like the real server, it refuses PNGs under assets/, so
+# an "unserved" release, whose worker precaches one, 404s on it.
 release() {
-	local dir=$GYM_LOG_HOME/releases/$1
-	mkdir -p "$dir/dist" "$dir/server/dist"
+	local dir=$GYM_LOG_HOME/releases/$1 extra=
+	mkdir -p "$dir/dist/assets" "$dir/server/dist"
 	echo "<!doctype html><title>$1</title>" >"$dir/dist/index.html"
+	echo "{\"name\": \"$1\"}" >"$dir/dist/manifest.webmanifest"
+	echo "console.log('$1')" >"$dir/dist/assets/index-$1.js"
+	if [[ ${2:-} == unserved ]]; then
+		echo "synthetic drawing $1" >"$dir/dist/assets/drawing-$1.png"
+		extra=",\"/assets/drawing-$1.png\""
+	fi
+	printf 'const CACHE = "gym-log-shell-%s";\nconst URLS = ["/index.html","/assets/index-%s.js"%s,"/manifest.webmanifest"];\n' \
+		"$1" "$1" "$extra" >"$dir/dist/sw.js"
 	if [[ ${2:-} == broken ]]; then
 		echo 'process.exit(1)' >"$dir/server/dist/trial.js"
 	else
 		cat >"$dir/server/dist/trial.js" <<-'EOF'
-			const {readFileSync} = require('node:fs');
+			const {existsSync, readFileSync} = require('node:fs');
 			require('node:http').createServer((req, res) => {
 				if (req.url === '/api/v1/health') return res.end('{"status":"ready"}');
-				res.end(readFileSync(process.env.GYM_LOG_WEB_ROOT + '/index.html'));
+				const file = process.env.GYM_LOG_WEB_ROOT + (req.url === '/' ? '/index.html' : req.url);
+				if (/^\/assets\/.*\.png$/.test(req.url) || !existsSync(file)) {
+					res.statusCode = 404;
+					return res.end();
+				}
+				res.end(readFileSync(file));
 			}).listen(+process.env.GYM_LOG_PORT, '127.0.0.1');
 		EOF
 	fi
@@ -84,6 +99,22 @@ roll_back >/dev/null && serving bbb || fail 'first rollback should serve bbb'
 roll_back >/dev/null && serving aaa || fail 'second rollback should serve aaa'
 roll_back 2>/dev/null && fail 'rollback with no earlier release must fail'
 serving aaa || fail 'a refused rollback must leave aaa serving'
+
+# A release whose service worker precaches a file the server refuses fails the check
+# quickly (a 404 is not retried), names the file, and rolls back.
+release unserved unserved
+point_current unserved
+started=$SECONDS
+restart_and_check 2>"$sandbox/unserved.log" && fail 'a release with an unserved precached file must fail the health check'
+grep -q '/assets/drawing-unserved.png' "$sandbox/unserved.log" || fail 'the failed health check must name the unserved file'
+((SECONDS - started < 15)) || fail "a 404 must fail fast, took $((SECONDS - started))s"
+roll_back >/dev/null && [[ $(current_release) == aaa ]] && serving aaa || fail 'an unserved release should roll back to aaa'
+# A release missing its service worker is not a complete shell either.
+release noworker
+rm -- "$GYM_LOG_HOME/releases/noworker/dist/sw.js"
+point_current noworker
+restart_and_check 2>/dev/null && fail 'a release without sw.js must fail the health check'
+roll_back >/dev/null && [[ $(current_release) == aaa ]] || fail 'a release without sw.js should roll back to aaa'
 
 # A missing or incomplete release is skipped, never switched to.
 deploy bbb && deploy ccc || fail 'redeploys'
@@ -147,6 +178,11 @@ touch "$sandbox/extra-health"
 [[ $(switched bad true) == 1 && $(current_release) == bbb ]] || fail 'a broken release must roll back'
 grep -q 'failed its health check, so it was rolled back to bbb. The extra endpoints are healthy again' "$alerts" ||
 	fail 'a broken release must alert Discord'
+# The server never logs a 404, so the alert itself names the missing offline file.
+: >"$alerts"
+[[ $(switched unserved true) == 1 && $(current_release) == bbb ]] || fail 'an unserved release must roll back'
+grep -q 'unserved failed its health check (Serve did not return /assets/drawing-unserved.png)' "$alerts" ||
+	fail 'the alert must name the unserved file'
 [[ $(switched ccc true) == 0 ]] && serving ccc || fail 'a harmless switch with the extra endpoints healthy should pass'
 # A release that applied migrations is never rolled back onto the old schema for the
 # extra endpoints' sake: it stays live and Discord is asked to check.
