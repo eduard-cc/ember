@@ -24,12 +24,13 @@ Start a template or repeat a historical workout. Adjust prefilled weight/repetit
 
 ## Capabilities and Constraints
 
-Implemented: unlimited editable templates, empty start, custom exercises, repeat-from-history, resilient device-local active-workout saving, per-exercise analytics and CSV migration. Weighted, assisted, bodyweight, duration and cardio exercise rows are supported; separate bodyweight tracking and broader cardio workflows remain future scope. No rest timers, notifications required for core use, nutrition, body-part measurements, social features, or watch support initially. Silent Android active-workout notifications remain optional and unverified on-device.
+Implemented: unlimited editable templates, empty start, custom exercises, repeat-from-history, resilient device-local active-workout saving, per-exercise analytics, CSV migration and body-weight logging. Weighted, assisted, bodyweight, duration and cardio exercise rows are supported; broader cardio workflows remain future scope. No rest timers, notifications required for core use, nutrition, body-part measurements, social features, or watch support initially. Silent Android active-workout notifications remain optional and unverified on-device.
 The private mobile trial uses the owner's Tailscale identity with no separate app password. Completed history and templates sync automatically while connected; unfinished workouts remain device-local. Sync is not off-device backup; the server database is backed up nightly, encrypted, off-device, and a restore from it has been verified on this host. Routine sync is silent, with no manual Sync Now or Backup & Recovery panel; actionable failures remain visible. Storage recovery APIs and database backup safeguards remain intact. Conflict merge, a recovery rehearsal on a rebuilt machine and real phone acceptance remain incomplete.
 
 ### Implemented Phase 2 navigation and evidence
 
 - **Profile:** workout/set totals, this week's workout count, a 12-week frequency chart, a Flagged sets review list (only when the import flagged sets) and Settings.
+- **Body weight (Settings):** kg entries with date and time (default now, editable for backdating), a chart of the full history and newest-first rows that open for correction or deletion (with Undo). Fewer than two entries show an explicit empty/one-entry state, never a drawn line. Entries sync between devices like history and are included in recovery exports. They are independent of lifted weights, volume, records, drafts, templates and Strong imports; the Strong CSV has no body-weight data and none is inferred.
 - **History:** complete source details, search/pagination, Repeat and Save as template. Finishing an in-app workout records elapsed minutes from its local start time (whole minutes from one minute on); sessions under a minute show "<1 MIN", and unknown (zero) durations show none. Existing completed/imported durations are preserved, and repeats/templates start fresh.
 - **Workout:** empty start and editable templates. Exercise additions use a full-screen searchable/filterable catalog picker, also in template editing, with custom-name creation and an explicit type choice. Set deletion has no undo banner. Targets remain unchecked until completed; minimize/resume keeps the local draft and shows elapsed time and completed/total sets. Tapping an exercise's name or drawing in the active workout opens its details over the logger; closing them returns to the workout unchanged.
 - **Exercises:** searchable catalog and exact recorded/custom names, body-part filters and recent exercises, with each exercise's workout count at the right and a remembered A–Z / Most done sort. Details have **About / History / Charts / Records**, with available instructional content, actual sets, exact trend tables and source-linked records.
@@ -44,7 +45,7 @@ Gym Log is a temporary name. Use a restrained shadcn-style visual family with an
 
 ## Evidence on Hand
 
-A private Strong CSV is available outside the repository. Its historical set rows support history import and performance analytics; it does not contain separate templates or bodyweight logs. Publishable examples and tests must be synthetic.
+A private Strong CSV is available outside the repository. Its historical set rows support history import and performance analytics; it does not contain separate templates or bodyweight logs, so body weight starts empty and is entered in the app. Publishable examples and tests must be synthetic.
 
 ## Product Principles
 

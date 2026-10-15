@@ -1,6 +1,6 @@
 import Dexie, {type Table} from 'dexie';
 
-import type {LocalOperation} from '../../shared/contracts';
+import type {BodyWeight, LocalOperation} from '../../shared/contracts';
 import type {Workout} from '../domain/types';
 
 export class GymDatabase extends Dexie {
@@ -8,6 +8,7 @@ export class GymDatabase extends Dexie {
   drafts!: Table<{key: string; workout: Workout}, string>;
   workouts!: Table<Workout, string>;
   templates!: Table<Workout, string>;
+  bodyWeights!: Table<BodyWeight, string>;
   outbox!: Table<LocalOperation, string>;
   syncState!: Table<{key: string; value: unknown}, string>;
   importSources!: Table<{key: string; value: unknown}, string>;
@@ -22,5 +23,6 @@ export class GymDatabase extends Dexie {
       syncState: '&key',
       importSources: '&key',
     });
+    this.version(2).stores({bodyWeights: '&id'});
   }
 }

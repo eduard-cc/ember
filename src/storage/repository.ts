@@ -1,4 +1,10 @@
-import {AppStateSchema, type LocalOperation, WorkoutSchema} from '../../shared/contracts';
+import {
+  AppStateSchema,
+  type BodyWeight,
+  BodyWeightSchema,
+  type LocalOperation,
+  WorkoutSchema,
+} from '../../shared/contracts';
 import {withSetExcluded} from '../domain/model';
 import type {Workout} from '../domain/types';
 import {elapsedMinutes} from '../domain/workout-duration';
@@ -23,7 +29,7 @@ export class WorkoutRepository {
   async queueOperation(
     kind: LocalOperation['kind'],
     entityId: string,
-    payload: Workout | null,
+    payload: LocalOperation['payload'],
   ): Promise<void> {
     if (
       (kind === 'putTemplate' || kind === 'deleteTemplate') &&
@@ -42,6 +48,38 @@ export class WorkoutRepository {
       key: 'queue-order',
       value: [...(order ?? []), operation.operationId],
     });
+  }
+  /**
+   * Add, correct or tombstone one body-weight measurement and queue its sync operation in
+   * the same transaction. `base` is the version the owner saw; a newer stored version (for
+   * example pulled from another device meanwhile) refuses the write rather than overwrite it.
+   * Measurements are independent of workouts, templates and imports.
+   */
+  async putBodyWeight(measurement: BodyWeight, base: BodyWeight | null): Promise<void> {
+    const snapshot = BodyWeightSchema.parse(measurement);
+    const original = base ? BodyWeightSchema.parse(base) : null;
+    return this.enqueue(() =>
+      this.db.transaction(
+        'rw',
+        [this.db.meta, this.db.bodyWeights, this.db.outbox, this.db.syncState],
+        async () => {
+          if (
+            (await this.db.meta.get('ownerId')) &&
+            !(await this.db.meta.get('local-trust'))?.value
+          )
+            throw new Error('Reconnect before editing measurements');
+          const stored = await this.db.bodyWeights.get(snapshot.id);
+          if (JSON.stringify(stored ?? null) !== JSON.stringify(original))
+            throw new Error('Measurement changed since it was displayed');
+          if (JSON.stringify(snapshot) === JSON.stringify(original)) return;
+          await this.db.bodyWeights.put(snapshot);
+          await this.queueOperation('putBodyWeight', snapshot.id, snapshot);
+        },
+      ),
+    );
+  }
+  async readBodyWeights(): Promise<BodyWeight[]> {
+    return this.db.bodyWeights.toArray();
   }
   async commitDraft(workout: Workout): Promise<void> {
     const snapshot = WorkoutSchema.parse(workout);
@@ -266,6 +304,52 @@ export class WorkoutRepository {
       );
     });
   }
+  /**
+   * Legacy (pre-body-weight) frontends adopt dataset resets without seeing the
+   * bodyWeights table, so its rows and body-weight-epoch outlive the reset. Their
+   * private reset archives keep the revisions they cleared: measurements acknowledged
+   * in the measurement epoch were purged by the server and must not be re-created.
+   * Runs inside a transaction covering meta, bodyWeights and outbox; returns the
+   * current dataset epoch.
+   */
+  private async dropLegacyPurgedMeasurements(): Promise<string> {
+    const epoch = ((await this.db.meta.get('dataset-epoch'))?.value as string) ?? 'initial';
+    const measurementEpoch = (await this.db.meta.get('body-weight-epoch'))?.value ?? 'initial';
+    if (measurementEpoch === epoch) return epoch;
+    // Every reset since the measurement epoch ended purged what it acknowledged,
+    // including measurements a legacy app uploaded in a later epoch.
+    const archives = (await this.db.meta.toArray())
+      .filter((r) => r.key.startsWith('dataset-reset-archive:'))
+      .map((r) => r.value as {epoch: string; resetAt?: string; syncState?: {key: string}[]});
+    const since = archives
+      .filter((a) => a.epoch === measurementEpoch && a.resetAt)
+      .map((a) => a.resetAt!)
+      .sort()[0];
+    const acknowledged = new Set(
+      archives
+        .filter((a) => since !== undefined && a.resetAt !== undefined && a.resetAt >= since)
+        .flatMap((archive) => archive.syncState ?? [])
+        .filter((r) => r.key.startsWith('revision:'))
+        .map((r) => r.key.slice(9)),
+    );
+    const purged = (await this.db.bodyWeights.toArray()).filter((m) => acknowledged.has(m.id));
+    if (purged.length) {
+      const ids = new Set(purged.map((m) => m.id));
+      const outbox = (await this.db.outbox.toArray()).filter((o) => ids.has(o.entityId));
+      await this.db.meta.put({
+        key: 'dataset-reset-archive:' + crypto.randomUUID(),
+        value: {
+          epoch: measurementEpoch,
+          resetAt: new Date().toISOString(),
+          bodyWeights: purged,
+          outbox,
+        },
+      });
+      await this.db.bodyWeights.bulkDelete([...ids]);
+      await this.db.outbox.bulkDelete(outbox.map((o) => o.operationId));
+    }
+    return epoch;
+  }
   async bootstrapSync(): Promise<void> {
     await this.enqueue(async () => {
       await this.db.transaction(
@@ -273,6 +357,7 @@ export class WorkoutRepository {
         [
           this.db.meta,
           this.db.workouts,
+          this.db.bodyWeights,
           this.db.templates,
           this.db.outbox,
           this.db.syncState,
@@ -283,6 +368,7 @@ export class WorkoutRepository {
             throw new Error(
               'Demo data cannot be synchronized. Use a separate empty browser profile for real data.',
             );
+          const epoch = await this.dropLegacyPurgedMeasurements();
           if (!(await this.db.meta.get('imported-sync-active'))?.value) {
             const source =
               (await this.db.importSources.get('current-dataset')) ??
@@ -298,6 +384,7 @@ export class WorkoutRepository {
             .filter((r) => r.key.startsWith('imported:'))
             .map((r) => r.value as Workout);
           for (const [kind, records] of [
+            ['putBodyWeight', await this.db.bodyWeights.toArray()],
             ['putWorkout', await this.db.workouts.toArray()],
             ['putTemplate', await this.db.templates.toArray()],
             ['putImportedWorkout', imported],
@@ -309,6 +396,7 @@ export class WorkoutRepository {
               )
                 await this.queueOperation(kind, record.id, record);
           }
+          await this.db.meta.put({key: 'body-weight-epoch', value: epoch});
         },
       );
     });
@@ -324,8 +412,17 @@ export class WorkoutRepository {
       const db = this.db;
       await db.transaction(
         'rw',
-        [db.meta, db.workouts, db.templates, db.outbox, db.syncState, db.importSources],
+        [
+          db.meta,
+          db.workouts,
+          db.templates,
+          db.bodyWeights,
+          db.outbox,
+          db.syncState,
+          db.importSources,
+        ],
         async () => {
+          await this.dropLegacyPurgedMeasurements();
           // Keep a private, non-replayed snapshot before dropping stale synced copies.
           // Offline template/import edits and legacy evidence remain recoverable here.
           const outbox = await db.outbox.toArray();
@@ -333,6 +430,7 @@ export class WorkoutRepository {
           const workouts = await db.workouts.toArray();
           const templates = await db.templates.toArray();
           const importSources = await db.importSources.toArray();
+          const bodyWeights = await db.bodyWeights.toArray();
           await db.meta.put({
             key: 'dataset-reset-archive:' + crypto.randomUUID(),
             value: {
@@ -343,6 +441,7 @@ export class WorkoutRepository {
               workouts,
               templates,
               importSources,
+              bodyWeights,
             },
           });
           const acknowledged = new Set(
@@ -357,9 +456,13 @@ export class WorkoutRepository {
           );
           const kept = workouts.filter((w) => unsent.has(w.id) || !acknowledged.has(w.id));
           for (const w of kept) unsent.add(w.id);
+          // Measurements follow the same rule: only ones the server never acknowledged
+          // survive a reset (their latest local state is re-created there).
+          const keptMeasurements = bodyWeights.filter((m) => !acknowledged.has(m.id));
           await Promise.all([
             db.workouts.clear(),
             db.templates.clear(),
+            db.bodyWeights.clear(),
             db.outbox.clear(),
             db.syncState.clear(),
             db.importSources.clear(),
@@ -367,6 +470,10 @@ export class WorkoutRepository {
           for (const workout of kept) {
             await db.workouts.add(workout);
             await this.queueOperation('putWorkout', workout.id, workout);
+          }
+          for (const measurement of keptMeasurements) {
+            await db.bodyWeights.add(measurement);
+            await this.queueOperation('putBodyWeight', measurement.id, measurement);
           }
           const order =
             ((await db.meta.get('finished-order'))?.value as string[] | undefined) ?? [];
@@ -376,6 +483,7 @@ export class WorkoutRepository {
           // Imported history now arrives only from the server feed; nothing local re-uploads.
           await db.meta.put({key: 'imported-sync-active', value: true});
           await db.meta.put({key: 'dataset-epoch', value: epoch});
+          await db.meta.put({key: 'body-weight-epoch', value: epoch});
         },
       );
     });

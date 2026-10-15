@@ -1,21 +1,32 @@
 import {z} from 'zod';
 
-import {WorkoutSchema} from '../../shared/contracts';
+import {type BodyWeight, BodyWeightSchema, WorkoutSchema} from '../../shared/contracts';
+import type {Workout} from '../domain/types';
 import type {WorkoutRepository} from '../storage/repository';
 
-const changeSchema = z.strictObject({
-  entityId: z.string().min(1),
-  kind: z.enum([
-    'putWorkout',
-    'putTemplate',
-    'deleteTemplate',
-    'putImportedWorkout',
-    'deleteImportedWorkout',
-  ]),
-  revision: z.number().int().positive(),
-  changeSeq: z.number().int().positive(),
-  payload: WorkoutSchema.nullable(),
-});
+// Unknown kinds fail the whole page before the cursor moves, so a newer server's
+// records are never skipped or written into the wrong table.
+const changeSchema = z
+  .strictObject({
+    entityId: z.string().min(1),
+    kind: z.enum([
+      'putBodyWeight',
+      'putWorkout',
+      'putTemplate',
+      'deleteTemplate',
+      'putImportedWorkout',
+      'deleteImportedWorkout',
+    ]),
+    revision: z.number().int().positive(),
+    changeSeq: z.number().int().positive(),
+    payload: z.union([WorkoutSchema, BodyWeightSchema]).nullable(),
+  })
+  .refine(
+    (c) =>
+      c.payload === null ||
+      (c.kind === 'putBodyWeight' ? BodyWeightSchema : WorkoutSchema).safeParse(c.payload).success,
+    'Payload does not match change kind',
+  );
 export interface Session {
   ownerId: string;
   csrfToken: string;
@@ -128,10 +139,13 @@ export class SyncEngine {
         }
       });
     }
-    let cursor = Number((await db.syncState.get('cursor'))?.value ?? 0);
+    // Keep the opt-in cursor separate: a rolled-back legacy app can advance its
+    // own cursor past hidden measurements. Missing opt-in state replays from zero.
+    let cursor = Number((await db.syncState.get('body-weight-cursor'))?.value ?? 0);
     for (;;) {
       const response = await this.call('/api/v1/sync/changes?after=' + cursor + '&limit=100', {
         credentials: 'same-origin',
+        headers: {'X-Sync-Body-Weight': '1'},
       });
       if (response.status === 401) throw new SessionExpired('Sign in to resume sync');
       if (!response.ok) throw new Error('Could not read server changes');
@@ -157,7 +171,15 @@ export class SyncEngine {
         throw new Error('Invalid cursor');
       await db.transaction(
         'rw',
-        [db.syncState, db.workouts, db.templates, db.outbox, db.meta, db.importSources],
+        [
+          db.syncState,
+          db.workouts,
+          db.templates,
+          db.bodyWeights,
+          db.outbox,
+          db.meta,
+          db.importSources,
+        ],
         async () => {
           for (const c of page.changes) {
             const pending = (await db.outbox.toArray()).some((o) => o.entityId === c.entityId);
@@ -165,21 +187,23 @@ export class SyncEngine {
             if (c.revision >= old) {
               await db.syncState.put({key: 'revision:' + c.entityId, value: c.revision});
               if (!pending) {
-                if (c.kind === 'putWorkout') await db.workouts.put(c.payload!);
+                if (c.kind === 'putBodyWeight') await db.bodyWeights.put(c.payload as BodyWeight);
+                else if (c.kind === 'putWorkout') await db.workouts.put(c.payload as Workout);
                 else if (c.kind === 'putTemplate') {
-                  await db.templates.put(c.payload!);
+                  await db.templates.put(c.payload as Workout);
                   await db.meta.put({key: 'templates-null', value: false});
                 } else if (c.kind === 'deleteTemplate') await db.templates.delete(c.entityId);
                 else {
                   await db.meta.put({key: 'imported-sync-active', value: true});
                   if (c.kind === 'putImportedWorkout')
-                    await db.importSources.put({key: 'imported:' + c.entityId, value: c.payload!});
+                    await db.importSources.put({key: 'imported:' + c.entityId, value: c.payload});
                   else await db.importSources.delete('imported:' + c.entityId);
                 }
               }
             }
           }
           await db.syncState.put({key: 'cursor', value: page.nextCursor});
+          await db.syncState.put({key: 'body-weight-cursor', value: page.nextCursor});
         },
       );
       cursor = page.nextCursor;

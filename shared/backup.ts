@@ -1,11 +1,12 @@
 import {z} from 'zod';
 
-import {AppStateSchema, LocalOperationSchema} from './contracts';
+import {AppStateSchema, BodyWeightSchema, LocalOperationSchema} from './contracts';
 
 export const BackupSchema = z
   .object({
     format: z.literal('gym-log-backup'),
-    version: z.literal(1),
+    version: z.union([z.literal(1), z.literal(2)]),
+    bodyWeights: z.array(BodyWeightSchema).optional(),
     exportedAt: z.iso.datetime(),
     state: AppStateSchema,
     sources: z.array(
@@ -49,9 +50,20 @@ export const BackupSchema = z
       if (new Set(ids).size !== ids.length)
         context.addIssue({code: 'custom', message: `Duplicate ${label} identity`});
     };
+    // Version 1 predates measurements; version 2 always lists them, even when empty,
+    // so a truncated archive cannot silently restore as "no measurements".
+    if (
+      backup.version === 1 &&
+      (backup.bodyWeights !== undefined ||
+        backup.pendingOperations.operations.some((o) => o.kind === 'putBodyWeight'))
+    )
+      context.addIssue({code: 'custom', message: 'Measurements require backup version 2'});
+    if (backup.version === 2 && backup.bodyWeights === undefined)
+      context.addIssue({code: 'custom', message: 'Version 2 backups must list measurements'});
     const history = [...(backup.state.dataset?.workouts ?? []), ...backup.state.finished];
     unique(
       [
+        ...(backup.bodyWeights ?? []),
         ...history,
         ...(backup.state.templates ?? []),
         ...(backup.state.active ? [backup.state.active] : []),

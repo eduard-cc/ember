@@ -17,6 +17,22 @@ const date = z
         new Date(value + 'Z').toISOString().slice(0, 19) === value),
     'Invalid local timestamp',
   );
+/**
+ * One body-weight measurement, independent of workouts. `deleted` is a reversible
+ * tombstone so deletions sync and can be undone without losing revision history.
+ */
+export const BodyWeightSchema = z.strictObject({
+  id,
+  date: date.refine((value) => value !== '', 'Measurement date is required'),
+  kg: z
+    .number()
+    .finite()
+    .positive()
+    .max(500)
+    .refine((kg) => Number(kg.toFixed(2)) === kg, 'At most two decimals'),
+  deleted: z.boolean(),
+});
+export type BodyWeight = z.infer<typeof BodyWeightSchema>;
 export const SetRecordSchema = z
   .object({
     id,
@@ -74,19 +90,22 @@ export interface LocalOperation {
   operationId: string;
   entityId: string;
   kind:
+    | 'putBodyWeight'
     | 'putWorkout'
     | 'putTemplate'
     | 'deleteTemplate'
     | 'putImportedWorkout'
     | 'deleteImportedWorkout';
   expectedRevision: number | null;
-  payload: Workout | null;
+  /** A BodyWeight only for putBodyWeight; validated per kind by LocalOperationSchema. */
+  payload: Workout | BodyWeight | null;
 }
 export const LocalOperationSchema = z
   .object({
     operationId: z.uuid(),
     entityId: id,
     kind: z.enum([
+      'putBodyWeight',
       'putWorkout',
       'putTemplate',
       'deleteTemplate',
@@ -94,14 +113,18 @@ export const LocalOperationSchema = z
       'deleteImportedWorkout',
     ]),
     expectedRevision: z.number().int().nonnegative().nullable(),
-    payload: WorkoutSchema.nullable(),
+    payload: z.union([WorkoutSchema, BodyWeightSchema]).nullable(),
   })
   .strict()
   .superRefine((operation, context) => {
     if (
       operation.kind === 'deleteTemplate' || operation.kind === 'deleteImportedWorkout'
         ? operation.payload !== null
-        : operation.payload === null || operation.payload.id !== operation.entityId
+        : operation.payload === null ||
+          operation.payload.id !== operation.entityId ||
+          !(operation.kind === 'putBodyWeight' ? BodyWeightSchema : WorkoutSchema).safeParse(
+            operation.payload,
+          ).success
     )
       context.addIssue({
         code: 'custom',

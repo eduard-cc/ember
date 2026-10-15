@@ -14,6 +14,7 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 
 import {AddExercise} from './components/AddExercise';
 import {AppearanceSettings, useAppearance} from './components/AppearanceSettings';
+import {BodyWeightSettings} from './components/BodyWeightSettings';
 import {ElapsedTimer} from './components/ElapsedTimer';
 import {ImportPanel} from './components/ImportPanel';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
@@ -545,11 +546,15 @@ export default function App() {
               </Dialog.Close>
             </div>
             <Dialog.Description className='sr-only'>
-              Appearance, Strong import and app updates.
+              Appearance, body weight, Strong import and app updates.
             </Dialog.Description>
             {errors}
             {feedback}
             <AppearanceSettings settings={appearance} />
+            {/* Personal history: unmounted while sync is locked, like other owned data. */}
+            {hydrated && !sync.locked && !recoveryError && (
+              <BodyWeightSettings repository={repository} disabled={disabled} />
+            )}
             <Button
               aria-label='Import CSV'
               disabled={disabled}

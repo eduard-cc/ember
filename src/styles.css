@@ -1157,6 +1157,107 @@ th {
   color: var(--muted);
 }
 
+/* Body weight: chart card over newest-first entries, existing card and row tokens. */
+.body-weight {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.body-weight > p {
+  margin-top: 4px;
+}
+.body-weight-form {
+  margin-top: 16px;
+}
+.body-weight-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+}
+.body-weight-fields .field-label {
+  margin-top: 0;
+}
+.body-weight-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.body-weight-actions .button-danger {
+  margin-left: auto;
+}
+.body-weight > .notice {
+  margin: 16px 0 0;
+}
+.body-weight-chart {
+  margin-top: 16px;
+}
+.body-weight-chart h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+.body-weight-chart .empty-chart {
+  padding: 28px 0 12px;
+}
+.body-weight-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+.body-weight-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.body-weight-list > li:last-child .body-weight-row {
+  border-bottom: 0;
+}
+.body-weight-row > span:first-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.body-weight-row strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.body-weight-row small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.body-weight-value {
+  font-size: 17px;
+  font-weight: 650;
+}
+.body-weight-row > svg {
+  color: var(--muted);
+}
+@media (hover: hover) {
+  .body-weight-row:hover:not(:disabled) {
+    background: var(--soft);
+  }
+}
+.body-weight-row:focus-visible {
+  outline-offset: -2px;
+}
+@media (max-width: 480px) {
+  .body-weight-fields {
+    grid-template-columns: 1fr;
+  }
+}
 .appearance-settings {
   padding-bottom: 24px;
   margin-bottom: 24px;

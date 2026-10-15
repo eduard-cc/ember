@@ -71,6 +71,7 @@ export async function restoreBackup(
           value: {raw: source.raw, hash: source.hash, workoutIds: source.workoutIds},
         });
     }
+    await db.bodyWeights.bulkAdd(backup.bodyWeights ?? []);
     await db.workouts.bulkAdd(state.finished);
     if (state.templates) await db.templates.bulkAdd(state.templates);
     if (state.active) await db.drafts.add({key: 'active', workout: state.active});
@@ -78,6 +79,13 @@ export async function restoreBackup(
     for (const workout of state.dataset?.workouts ?? [])
       await db.importSources.put({key: 'imported:' + workout.id, value: workout});
     const operations = [
+      ...(backup.bodyWeights ?? []).map((measurement) => ({
+        operationId: crypto.randomUUID(),
+        entityId: measurement.id,
+        kind: 'putBodyWeight' as const,
+        expectedRevision: null,
+        payload: measurement,
+      })),
       ...(state.dataset?.workouts ?? []).map((workout) => ({
         operationId: crypto.randomUUID(),
         entityId: workout.id,
@@ -111,7 +119,8 @@ export async function exportBackup(repository: WorkoutRepository): Promise<strin
   return db.transaction('r', db.tables, async () => {
     const backup: Backup = {
       format: 'gym-log-backup',
-      version: 1,
+      version: 2,
+      bodyWeights: await db.bodyWeights.toArray(),
       exportedAt: new Date().toISOString(),
       state: await repository.readState(),
       sources: (await db.importSources.toArray()).flatMap((row) => {

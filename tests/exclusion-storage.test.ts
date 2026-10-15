@@ -82,7 +82,7 @@ it('excludes an imported set with putImportedWorkout and keeps raw source values
   expect(flagged(state.dataset!.workouts)).toEqual({...set, excluded: true});
   const [operation] = await repository.db.outbox.toArray();
   expect(operation).toMatchObject({kind: 'putImportedWorkout', entityId: target.id});
-  expect(flagged([operation.payload!]).original).toEqual(set.original);
+  expect(flagged([operation.payload as Workout]).original).toEqual(set.original);
   repository.close();
 });
 

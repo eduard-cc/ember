@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto';
 
 import {expect, it} from 'vitest';
 
+import type {Workout} from '../src/domain/types';
 import {WorkoutRepository} from '../src/storage/repository';
 import {SyncEngine} from '../src/sync/engine';
 
@@ -80,7 +81,11 @@ it('queues offline template edits in projected revision order with immutable pay
   const order = (await repo.db.syncState.get('queue-order'))?.value as string[];
   const pending = await Promise.all(order.map((id) => repo.db.outbox.get(id)));
   expect(pending.map((o) => o?.expectedRevision)).toEqual([null, 1, 2]);
-  expect(pending.map((o) => o?.payload?.name ?? null)).toEqual(['Test', 'Edited', null]);
+  expect(pending.map((o) => (o?.payload as Workout | null)?.name ?? null)).toEqual([
+    'Test',
+    'Edited',
+    null,
+  ]);
   expect(pending.map((o) => o?.kind)).toEqual(['putTemplate', 'putTemplate', 'deleteTemplate']);
   repo.close();
 });
