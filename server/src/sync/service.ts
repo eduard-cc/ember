@@ -1,9 +1,12 @@
 import {BadRequestException} from '@nestjs/common';
 import {createHash} from 'node:crypto';
 import {DataSource} from 'typeorm';
+import type {z} from 'zod';
 
 import {requireEpoch} from './reset';
 import {batch, operation} from './schema';
+
+type OperationKind = z.infer<typeof operation>['kind'];
 
 function canonical(value: any): string {
 	if (value === null || typeof value !== 'object') return JSON.stringify(value);
@@ -17,15 +20,6 @@ function canonical(value: any): string {
 			.join(',') +
 		'}'
 	);
-}
-function withoutExclusions(payload: any) {
-	return {
-		...payload,
-		exercises: payload.exercises.map((exercise: any) => ({
-			...exercise,
-			sets: exercise.sets.map(({excluded: _excluded, ...set}: any) => set),
-		})),
-	};
 }
 export class SyncService {
 	constructor(private db: DataSource) {}
@@ -71,53 +65,27 @@ export class SyncService {
 						owner,
 						o.entityId,
 					]);
-					// Finished and imported workouts are immutable except for the owner's per-set
-					// exclusion flag; such an update still needs the expected revision.
-					const exclusionOnly =
-						(o.kind === 'putWorkout' || o.kind === 'putImportedWorkout') &&
-						record?.kind === o.kind &&
-						canonical(record.payload) !== canonical(o.payload) &&
-						canonical(withoutExclusions(record.payload)) === canonical(withoutExclusions(o.payload));
-					if (record && o.kind === 'putWorkout' && o.expectedRevision !== null && !exclusionOnly) {
-						const rejected = {
-							operationId: o.operationId,
-							entityId: o.entityId,
-							status: 'rejected',
-							revision: record.revision,
-							changeSeq: null,
-							errorCode: 'IMMUTABLE_WORKOUT',
-						};
-						await tx.query('INSERT INTO operation_ledger VALUES ($1,$2,$3,$4)', [
-							owner,
-							o.operationId,
-							hash,
-							rejected,
-						]);
-						return rejected;
-					}
-					// Each kind may only revise records of its own kind, so a measurement can
-					// never overwrite workout history and vice versa.
-					const allowedKind =
-						o.kind === 'putBodyWeight'
-							? 'putBodyWeight'
-							: o.kind === 'deleteImportedWorkout'
-								? 'putImportedWorkout'
-								: o.kind === 'putImportedWorkout'
-									? exclusionOnly
-										? 'putImportedWorkout'
-										: 'deleteImportedWorkout'
-									: o.kind === 'putTemplate' || o.kind === 'deleteTemplate'
-										? 'putTemplate'
-										: o.kind === 'putWorkout'
-											? 'putWorkout'
-											: null;
+					// Each kind may only revise records of its own kind, so a measurement can never
+					// overwrite workout history, nor native history an import, and vice versa.
+					// The owner may edit finished and imported workouts and delete them; every
+					// update needs the expected revision and earlier revisions stay in `changes`.
+					// Native workout tombstones are final; imported ones are revived by reimport.
+					// Keyed by the schema's kind enum, so a new kind without an entry fails to compile.
+					const allowedKinds: Record<OperationKind, readonly OperationKind[]> = {
+						putBodyWeight: ['putBodyWeight'],
+						putWorkout: ['putWorkout'],
+						deleteWorkout: ['putWorkout'],
+						putImportedWorkout: ['putImportedWorkout', 'deleteImportedWorkout'],
+						deleteImportedWorkout: ['putImportedWorkout'],
+						putTemplate: ['putTemplate'],
+						deleteTemplate: ['putTemplate'],
+					};
 					const mismatch =
 						o.expectedRevision === null
 							? !!record
 							: !record ||
 								record.revision !== o.expectedRevision ||
-								allowedKind === null ||
-								record.kind !== allowedKind;
+								!allowedKinds[o.kind].includes(record.kind);
 					if (mismatch) {
 						const conflict = {
 							operationId: o.operationId,
@@ -178,6 +146,7 @@ export class SyncService {
 		limit: string = '100',
 		epoch?: unknown,
 		includeBodyWeight = false,
+		includeWorkoutDeletes = false,
 	) {
 		if (
 			typeof after !== 'string' ||
@@ -192,10 +161,10 @@ export class SyncService {
 			await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
 			await requireEpoch(tx, owner, epoch);
 			// Filter before pagination: legacy cursors remain the last visible change,
-			// never a skipped measurement that their strict page validator cannot read.
+			// never a skipped record kind that their strict page validator cannot read.
 			return tx.query(
-				"SELECT * FROM changes WHERE owner_id=$1 AND seq>$2 AND ($4 OR kind <> 'putBodyWeight') ORDER BY seq LIMIT $3",
-				[owner, after, Number(limit) + 1, includeBodyWeight],
+				"SELECT * FROM changes WHERE owner_id=$1 AND seq>$2 AND ($4 OR kind <> 'putBodyWeight') AND ($5 OR kind <> 'deleteWorkout') ORDER BY seq LIMIT $3",
+				[owner, after, Number(limit) + 1, includeBodyWeight, includeWorkoutDeletes],
 			);
 		});
 		const hasMore = rows.length > Number(limit);

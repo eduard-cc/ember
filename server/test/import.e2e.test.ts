@@ -87,9 +87,10 @@ test('explicit imported record creates and revisioned removal preserve native hi
 		assert.equal(resurrection.body.results[0].revision, 3);
 		const replay = await send([revival]).expect(201);
 		assert.deepEqual(replay.body, resurrection.body);
+		// Stale revisions and native records stay refused; the current revision is an owner edit.
+		const edited = {...workout(importedId), name: 'Edited'};
 		const denied = await send([
 			{...imported, operationId: randomUUID(), expectedRevision: 2},
-			{...imported, operationId: randomUUID(), expectedRevision: 3},
 			{
 				...imported,
 				operationId: randomUUID(),
@@ -97,10 +98,11 @@ test('explicit imported record creates and revisioned removal preserve native hi
 				expectedRevision: 1,
 				payload: workout(nativeId),
 			},
+			{...imported, operationId: randomUUID(), expectedRevision: 3, payload: edited},
 		]).expect(201);
 		assert.deepEqual(
 			denied.body.results.map((a: any) => a.status),
-			['conflict', 'conflict', 'conflict'],
+			['conflict', 'conflict', 'accepted'],
 		);
 		const revivedFeed = await s.http
 			.get('/api/v1/sync/changes?after=' + result.body.results[1].changeSeq)
@@ -111,9 +113,11 @@ test('explicit imported record creates and revisioned removal preserve native hi
 			[
 				['deleteImportedWorkout', 2],
 				['putImportedWorkout', 3],
+				['putImportedWorkout', 4],
 			],
 		);
 		assert.deepEqual(revivedFeed.body.changes[1].payload, imported.payload);
+		assert.deepEqual(revivedFeed.body.changes[2].payload, edited);
 	} finally {
 		await s.app.close();
 	}

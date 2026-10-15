@@ -169,23 +169,25 @@ test('invalid operations are rejected independently without syncing drafts or mi
 		await s.app.close();
 	}
 });
-test('immutable workout cannot be replaced using a template operation', async () => {
+test('workouts and templates can never revise each other', async () => {
 	const s = await env();
 	try {
 		const initial = op('putTemplate');
 		await s.send([initial]);
 		const wrong = {...initial, operationId: randomUUID(), kind: 'putWorkout', expectedRevision: 1};
 		const r = await s.send([wrong]).expect(201);
-		assert.equal(r.body.results[0].status, 'rejected');
+		assert.equal(r.body.results[0].status, 'conflict');
 		const native = op();
 		await s.send([native]);
-		const changed = await s.send([{...native, operationId: randomUUID(), expectedRevision: 1}]);
-		assert.equal(changed.body.results[0].status, 'rejected');
+		const asTemplate = await s.send([
+			{...native, operationId: randomUUID(), kind: 'putTemplate', expectedRevision: 1},
+		]);
+		assert.equal(asTemplate.body.results[0].status, 'conflict');
 	} finally {
 		await s.app.close();
 	}
 });
-test('finished workout accepts only exclusion flag changes at the expected revision', async () => {
+test('finished workout accepts exclusion flags and owner edits at the expected revision', async () => {
 	const s = await env();
 	try {
 		const native = op();
@@ -208,23 +210,38 @@ test('finished workout accepts only exclusion flag changes at the expected revis
 		assert.equal(stale.body.results[0].status, 'conflict');
 		const include = await s.send([flag(false, 2)]).expect(201);
 		assert.equal(include.body.results[0].status, 'accepted');
+		// Owner edits from History: values, name, date, duration and added sets.
+		let revision = 3;
 		for (const change of [
 			(p: any) => (p.exercises[0].sets[0].reps = 6),
 			(p: any) => (p.name = 'Renamed'),
+			(p: any) => ((p.date = '2026-01-02T08:30:00'), (p.duration = 55)),
 			(p: any) => p.exercises[0].sets.push({...p.exercises[0].sets[0], id: 'extra'}),
-			(p: any) => (p.exercises[0].sets[0].suspicious = true),
 		]) {
-			const edit = flag(true, 3);
+			const edit = flag(false, revision);
 			change(edit.payload);
 			const r = await s.send([edit]).expect(201);
-			assert.equal(r.body.results[0].status, 'rejected');
-			assert.equal(r.body.results[0].errorCode, 'IMMUTABLE_WORKOUT');
+			assert.equal(r.body.results[0].status, 'accepted');
+			assert.equal(r.body.results[0].revision, ++revision);
 		}
+		const staleEdit = flag(false, 3);
+		staleEdit.payload.name = 'Lost update';
+		assert.equal((await s.send([staleEdit]).expect(201)).body.results[0].status, 'conflict');
+		// An edit can never turn history back into a draft or an empty workout.
+		const draft = flag(false, revision);
+		draft.payload.exercises[0].sets[0].completed = false;
+		const empty = flag(false, revision);
+		empty.payload.exercises = [];
+		const invalid = await s.send([draft, empty]).expect(201);
+		assert.deepEqual(
+			invalid.body.results.map((a: any) => a.status),
+			['rejected', 'rejected'],
+		);
 	} finally {
 		await s.app.close();
 	}
 });
-test('imported workout accepts an exclusion flag update but no other in-place edit', async () => {
+test('imported workout accepts exclusion flags and owner edits at the expected revision', async () => {
 	const s = await env();
 	try {
 		const imported = op('putImportedWorkout');
@@ -240,9 +257,134 @@ test('imported workout accepts an exclusion flag update but no other in-place ed
 		const include = await s.send([update(2, () => undefined)]).expect(201);
 		assert.equal(include.body.results[0].status, 'accepted');
 		const edit = await s.send([update(3, (p) => (p.exercises[0].sets[0].reps = 9))]).expect(201);
-		assert.equal(edit.body.results[0].status, 'conflict');
-		const same = await s.send([update(3, () => undefined)]).expect(201);
-		assert.equal(same.body.results[0].status, 'conflict');
+		assert.equal(edit.body.results[0].status, 'accepted');
+		assert.equal(edit.body.results[0].revision, 4);
+		const stale = await s.send([update(3, () => undefined)]).expect(201);
+		assert.equal(stale.body.results[0].status, 'conflict');
+		// Native and imported kinds stay separate: neither may revise the other.
+		const crossed = await s.send([{...update(4, () => undefined), kind: 'putWorkout'}]).expect(201);
+		assert.equal(crossed.body.results[0].status, 'conflict');
+	} finally {
+		await s.app.close();
+	}
+});
+test('deleted native workout leaves a tombstone only opted-in clients receive', async () => {
+	const s = await env();
+	try {
+		const page = (after: number, limit: number, optIn: boolean) => {
+			const request = s.http
+				.get('/api/v1/sync/changes?after=' + after + '&limit=' + limit)
+				.set('Cookie', s.cookie);
+			if (optIn) request.set('X-Sync-Workout-Deletes', '1');
+			return request.expect(200);
+		};
+		let start = 0;
+		for (;;) {
+			const r = (await page(start, 100, true)).body;
+			start = r.nextCursor;
+			if (!r.hasMore) break;
+		}
+		const native = op();
+		const kept = op();
+		await s.send([native, kept]).expect(201);
+		const remove = (entityId: string, expectedRevision: number | null) => ({
+			operationId: randomUUID(),
+			entityId,
+			kind: 'deleteWorkout',
+			expectedRevision,
+			payload: null,
+		});
+		const template = op('putTemplate');
+		const imported = op('putImportedWorkout');
+		await s.send([template, imported]).expect(201);
+		const refused = await s
+			.send([
+				remove(native.entityId, null),
+				{...remove(native.entityId, 1), payload: native.payload},
+				remove(template.entityId, 1),
+				remove(imported.entityId, 1),
+				remove(native.entityId, 2),
+			])
+			.expect(201);
+		assert.deepEqual(
+			refused.body.results.map((a: any) => a.status),
+			['rejected', 'rejected', 'conflict', 'conflict', 'conflict'],
+		);
+		const deleted = await s.send([remove(native.entityId, 1)]).expect(201);
+		assert.equal(deleted.body.results[0].status, 'accepted');
+		assert.equal(deleted.body.results[0].revision, 2);
+		const third = op();
+		await s.send([third]).expect(201);
+		// The tombstone cannot be resurrected or edited.
+		const revive = await s.send([{...native, operationId: randomUUID(), expectedRevision: 2}]).expect(201);
+		assert.equal(revive.body.results[0].status, 'conflict');
+		// Older apps can't read the new kind: it is filtered out before pagination.
+		// Each legacy page must satisfy the old client's checks: known kinds, a cursor at the
+		// last returned change, and never an empty page that claims more.
+		const legacyKinds = [
+			'putWorkout',
+			'putTemplate',
+			'deleteTemplate',
+			'putImportedWorkout',
+			'deleteImportedWorkout',
+		];
+		const readLegacy = async (limit: number, header?: [string, string]) => {
+			const seen: any[] = [];
+			for (let cursor = start; ;) {
+				const request = s.http
+					.get('/api/v1/sync/changes?after=' + cursor + '&limit=' + limit)
+					.set('Cookie', s.cookie);
+				if (header) request.set(...header);
+				const r = (await request.expect(200)).body;
+				assert.equal(r.nextCursor, r.changes.length ? r.changes.at(-1).changeSeq : cursor);
+				assert.ok(!(r.hasMore && r.changes.length === 0));
+				assert.ok(r.changes.every((c: any) => legacyKinds.includes(c.kind) || c.kind === 'putBodyWeight'));
+				seen.push(...r.changes);
+				cursor = r.nextCursor;
+				if (!r.hasMore) break;
+			}
+			return seen;
+		};
+		for (const limit of [1, 2, 100]) {
+			const legacy = await readLegacy(limit);
+			assert.ok(legacy.every((c: any) => c.kind !== 'deleteWorkout'));
+			assert.ok(legacy.some((c: any) => c.entityId === third.entityId));
+		}
+		// The body-weight opt-in alone never exposes workout tombstones.
+		const bodyWeightOnly = await readLegacy(1, ['X-Sync-Body-Weight', '1']);
+		assert.ok(bodyWeightOnly.every((c: any) => c.kind !== 'deleteWorkout'));
+		// A tombstone as the newest change: the legacy feed ends at the change before it.
+		const last = op();
+		await s.send([last]).expect(201);
+		const lastDeleted = await s.send([remove(last.entityId, 1)]).expect(201);
+		assert.equal(lastDeleted.body.results[0].status, 'accepted');
+		const tail = await readLegacy(1);
+		assert.equal(tail.at(-1).entityId, last.entityId);
+		assert.equal(tail.at(-1).kind, 'putWorkout');
+		// Cross-kind revival of a native tombstone is refused, and deletes are not repeatable.
+		const crossRevive = await s
+			.send([
+				{
+					...imported,
+					operationId: randomUUID(),
+					entityId: native.entityId,
+					expectedRevision: 2,
+					payload: {...imported.payload, id: native.entityId},
+				},
+				remove(native.entityId, 2),
+			])
+			.expect(201);
+		assert.deepEqual(
+			crossRevive.body.results.map((a: any) => a.status),
+			['conflict', 'conflict'],
+		);
+		const upgraded = (await page(start, 100, true)).body.changes;
+		const tombstone = upgraded.find((c: any) => c.kind === 'deleteWorkout');
+		assert.deepEqual(
+			{entityId: tombstone.entityId, revision: tombstone.revision, payload: tombstone.payload},
+			{entityId: native.entityId, revision: 2, payload: null},
+		);
+		assert.ok(upgraded.some((c: any) => c.entityId === kept.entityId && c.kind === 'putWorkout'));
 	} finally {
 		await s.app.close();
 	}

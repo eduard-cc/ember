@@ -63,12 +63,13 @@ export const operation = z
 			'deleteTemplate',
 			'putImportedWorkout',
 			'deleteImportedWorkout',
+			'deleteWorkout',
 		]),
 		expectedRevision: z.number().int().positive().nullable(),
 		payload: z.union([workout, bodyWeight]).nullable(),
 	})
 	.superRefine((o, ctx) => {
-		if (o.kind === 'deleteTemplate' || o.kind === 'deleteImportedWorkout') {
+		if (o.kind === 'deleteTemplate' || o.kind === 'deleteImportedWorkout' || o.kind === 'deleteWorkout') {
 			if (o.payload !== null || o.expectedRevision === null)
 				ctx.addIssue({code: 'custom', message: 'Delete requires null payload and a revision'});
 			return;

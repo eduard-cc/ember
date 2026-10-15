@@ -130,8 +130,8 @@ This constant-space local limiter is not a distributed or restart-resistant depl
 
 `POST /sync/operations` accepts `{version:1,operations:[...]}` (1–50, at most 10 MiB).
 Operation fields match the plan: UUID `operationId`, nonempty string `entityId`,
-`kind` (`putBodyWeight`, `putWorkout`, `putTemplate`, `deleteTemplate`, `putImportedWorkout`,
-`deleteImportedWorkout`), nullable `expectedRevision`,
+`kind` (`putBodyWeight`, `putWorkout`, `deleteWorkout`, `putTemplate`, `deleteTemplate`,
+`putImportedWorkout`, `deleteImportedWorkout`), nullable `expectedRevision`,
 and `payload` (Workout, BodyWeight or null). A BodyWeight is `{id,date,kg,deleted}`: a calendar-valid
 local wall time, kg above 0 and at most 500 with at most two decimals, and a tombstone flag. It is
 stored in the same generic `records`/`changes` tables; each kind may only revise records of its own
@@ -160,7 +160,12 @@ Same operation ID/same content returns its original accepted/conflict/semantic r
 different validated content returns `OPERATION_ID_REUSED` conflict without writes.
 `expectedRevision:null` is create-only. Existing IDs cannot be silently recreated.
 Template updates/deletes require the current revision. Deletion keeps a revisioned
-tombstone that cannot be resurrected in this milestone. Native workout history is immutable.
+tombstone that cannot be resurrected in this milestone. The owner may edit finished
+(`putWorkout`) and imported (`putImportedWorkout`) workouts at the current revision; an edit
+still needs at least one set and no uncompleted set. `deleteWorkout` tombstones a native
+workout at its current revision and is final. Every earlier revision stays in `changes`.
+Each kind revises only its own records: native and imported history, templates and
+measurements can never overwrite one another.
 Imported history uses separate operation kinds: replacement removes only imported records
 at the current revision, and reimport may revive an imported tombstone at that exact revision.
 
@@ -170,6 +175,10 @@ Returns `{changes,nextCursor,hasMore}`; each change has
 Body-weight changes require `X-Sync-Body-Weight: 1`; older apps receive only the kinds they
 understand. Filtering happens before pagination, so the cursor remains the last returned change.
 Upgraded apps replay from zero once to recover measurements hidden behind an older cursor.
+`deleteWorkout` tombstones likewise require `X-Sync-Workout-Deletes: 1`, filtered before
+pagination, and apps that send it keep their own cursor and replay from zero once.
+The server bridge for an opt-in kind ships one release before the UI that writes it, so a
+UI rollback lands on a server that still hides the new kind from the older app.
 
 Rollout is two releases: deploy this API compatibility bridge without the new frontend first,
 then deploy the body-weight UI. Keep the bridge as the immediate rollback release: it accepts

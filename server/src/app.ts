@@ -58,6 +58,7 @@ export async function createApp() {
 				limit,
 				req.headers['x-dataset-epoch'],
 				req.headers['x-sync-body-weight'] === '1',
+				req.headers['x-sync-workout-deletes'] === '1',
 			);
 		}
 	}
