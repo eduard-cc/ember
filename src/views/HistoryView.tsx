@@ -1,9 +1,12 @@
-import {ArrowUpRight, ChevronDown, ChevronUp, RotateCcw} from 'lucide-react';
-import {useState} from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import {ArrowUpRight, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2} from 'lucide-react';
+import {useRef, useState} from 'react';
 
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
+import {OptionsMenu} from '../components/ExerciseMenu';
+import {HistoryEditor} from '../components/HistoryEditor';
 import {Button, Input, plural} from '../components/ui';
-import type {Workout} from '../domain/types';
+import type {Dataset, Workout} from '../domain/types';
 import {durationLabel} from '../domain/workout-duration';
 import {dateLabel} from './WorkoutView';
 
@@ -48,18 +51,40 @@ export function WorkoutDetails({
   );
 }
 export function HistoryView({
-  workouts,
+  dataset,
   focusedId,
   onRepeat,
   onTemplate,
   onExclude,
+  onChange,
+  disabled,
+  locked,
 }: {
-  workouts: Workout[];
+  dataset: Dataset;
   focusedId: string | null;
   onRepeat: (workout: Workout) => void;
   onTemplate: (workout: Workout) => void;
   onExclude: ExcludeSetHandler;
+  /** Save an edited workout (`next`) or delete it (`next` null). */
+  onChange: (base: Workout, next: Workout | null) => Promise<boolean>;
+  /** Mirrors the library's disabled fieldset, which the portaled editor sits outside of. */
+  disabled: boolean;
+  /** Sync is locked: portaled dialogs escape <main hidden>, so they must unmount. */
+  locked: boolean;
 }) {
+  const workouts = dataset.workouts;
+  const [editing, setEditing] = useState<Workout | null>(null);
+  const [deleting, setDeleting] = useState<Workout | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+  const menus = useRef(new Map<string, HTMLButtonElement>());
+  // Focus returns to the card's ⋯ after the editor or confirmation closes, if it still exists.
+  const returnTo = useRef<string | null>(null);
+  const restoreFocus = (event: Event) => {
+    event.preventDefault();
+    const id = returnTo.current;
+    returnTo.current = null;
+    if (id) menus.current.get(id)?.focus({preventScroll: true});
+  };
   const [expanded, setExpanded] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [limit, setLimit] = useState(20);
@@ -111,15 +136,44 @@ export function HistoryView({
                   {workout.exercises.map((ex) => ex.name).join(' · ')}
                 </p>
               </div>
-              <Button
-                size='icon'
-                variant='ghost'
-                aria-label={`View sets for ${workout.name} ${dateLabel(workout.date)}`}
-                aria-expanded={open}
-                onClick={() => setExpanded(open ? null : workout.id)}
-              >
-                {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-              </Button>
+              <div className='history-card-actions'>
+                <Button
+                  size='icon'
+                  variant='ghost'
+                  aria-label={`View sets for ${workout.name} ${dateLabel(workout.date)}`}
+                  aria-expanded={open}
+                  onClick={() => setExpanded(open ? null : workout.id)}
+                >
+                  {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </Button>
+                <OptionsMenu
+                  label={`Workout options for ${workout.name} ${dateLabel(workout.date)}`}
+                  ref={(node) => {
+                    if (node) menus.current.set(workout.id, node);
+                    else menus.current.delete(workout.id);
+                  }}
+                  items={[
+                    {
+                      label: 'Edit workout',
+                      icon: Pencil,
+                      onSelect: () => {
+                        returnTo.current = workout.id;
+                        setEditing(workout);
+                      },
+                    },
+                    {
+                      label: 'Delete workout',
+                      icon: Trash2,
+                      danger: true,
+                      onSelect: () => {
+                        returnTo.current = workout.id;
+                        setDeleteError('');
+                        setDeleting(workout);
+                      },
+                    },
+                  ]}
+                />
+              </div>
             </div>
             {open && <WorkoutDetails workout={workout} onExclude={onExclude} />}
             <footer>
@@ -145,6 +199,63 @@ export function HistoryView({
           <p>Try another search or finish your first workout.</p>
         </div>
       )}
+      {editing && !locked && (
+        <HistoryEditor
+          key={editing.id}
+          workout={editing}
+          dataset={dataset}
+          disabled={disabled}
+          onSave={onChange}
+          onClose={() => {
+            setEditing(null);
+            requestAnimationFrame(() => {
+              const id = returnTo.current;
+              returnTo.current = null;
+              if (id) menus.current.get(id)?.focus({preventScroll: true});
+            });
+          }}
+        />
+      )}
+      <Dialog.Root
+        open={!!deleting && !locked}
+        onOpenChange={(open) => {
+          if (!open) setDeleting(null);
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className='dialog-overlay' />
+          <Dialog.Content className='dialog-content' onCloseAutoFocus={restoreFocus}>
+            <Dialog.Title>Delete this workout?</Dialog.Title>
+            <Dialog.Description>
+              {deleting &&
+                `${deleting.name} on ${dateLabel(deleting.date)} and its ${plural(
+                  deleting.exercises.reduce((n, ex) => n + ex.sets.length, 0),
+                  'set',
+                )} will be removed from history, records and charts on every device.`}
+            </Dialog.Description>
+            {deleteError && <p role='alert'>{deleteError}</p>}
+            <div className='dialog-actions'>
+              <Dialog.Close asChild>
+                <Button>Keep workout</Button>
+              </Dialog.Close>
+              <Button
+                variant='danger'
+                disabled={disabled}
+                onClick={async () => {
+                  if (!deleting) return;
+                  if (await onChange(deleting, null)) setDeleting(null);
+                  else
+                    setDeleteError(
+                      'Not deleted. The workout may have changed on another device; close and retry.',
+                    );
+                }}
+              >
+                Delete workout
+              </Button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }

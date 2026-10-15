@@ -95,11 +95,14 @@ export interface LocalOperation {
     | 'putTemplate'
     | 'deleteTemplate'
     | 'putImportedWorkout'
-    | 'deleteImportedWorkout';
+    | 'deleteImportedWorkout'
+    | 'deleteWorkout';
   expectedRevision: number | null;
   /** A BodyWeight only for putBodyWeight; validated per kind by LocalOperationSchema. */
   payload: Workout | BodyWeight | null;
 }
+export const DELETE_KINDS = ['deleteTemplate', 'deleteImportedWorkout', 'deleteWorkout'] as const;
+export const isDeleteKind = (kind: string) => (DELETE_KINDS as readonly string[]).includes(kind);
 export const LocalOperationSchema = z
   .object({
     operationId: z.uuid(),
@@ -111,6 +114,7 @@ export const LocalOperationSchema = z
       'deleteTemplate',
       'putImportedWorkout',
       'deleteImportedWorkout',
+      'deleteWorkout',
     ]),
     expectedRevision: z.number().int().nonnegative().nullable(),
     payload: z.union([WorkoutSchema, BodyWeightSchema]).nullable(),
@@ -118,7 +122,7 @@ export const LocalOperationSchema = z
   .strict()
   .superRefine((operation, context) => {
     if (
-      operation.kind === 'deleteTemplate' || operation.kind === 'deleteImportedWorkout'
+      isDeleteKind(operation.kind)
         ? operation.payload !== null
         : operation.payload === null ||
           operation.payload.id !== operation.entityId ||

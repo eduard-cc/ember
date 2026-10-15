@@ -1,4 +1,4 @@
-import {Ellipsis, Replace, Trash2} from 'lucide-react';
+import {Ellipsis, type LucideIcon, Replace, Trash2} from 'lucide-react';
 import {
   type KeyboardEvent,
   forwardRef,
@@ -27,17 +27,24 @@ function clipBox(node: HTMLElement) {
   return {top, bottom};
 }
 
+export interface MenuItem {
+  label: string;
+  icon: LucideIcon;
+  onSelect: () => void;
+  danger?: boolean;
+}
+
 /**
- * Per-exercise ⋯ menu. Rendered inline (not portaled) so it stays inside the logger and is
+ * A ⋯ options menu. Rendered inline (not portaled) so it stays inside its card and is
  * hidden with it. It opens below the trigger, or above it when there is no room below.
  * Escape or a tap outside closes it and returns focus to ⋯; Tab continues from ⋯; focus
  * moving anywhere else closes it. A transparent backdrop takes the closing tap, so that tap
  * never also presses whatever was underneath.
  */
-export const ExerciseMenu = forwardRef<
+export const OptionsMenu = forwardRef<
   HTMLButtonElement,
-  {name: string; onReplace: () => void; onRemove: () => void}
->(({name, onReplace, onRemove}, ref) => {
+  {label: string; items: MenuItem[]; className?: string}
+>(({label, items: entries, className = ''}, ref) => {
   const [open, setOpen] = useState(false);
   const [upward, setUpward] = useState(false);
   // The backdrop outlives the menu by one tap: it closes on pointerdown, then eats the click.
@@ -45,7 +52,6 @@ export const ExerciseMenu = forwardRef<
   const menu = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const id = useId();
-  const label = `Exercise options for ${name}`;
   const items = () =>
     Array.from(menu.current?.querySelectorAll<HTMLElement>('[role=menuitem]') ?? []);
 
@@ -102,7 +108,7 @@ export const ExerciseMenu = forwardRef<
 
   return (
     <div
-      className='exercise-menu'
+      className={`exercise-menu ${className}`}
       onBlur={(event) => {
         // Focus moving outside (another ⋯, a field) closes this menu; only one is ever open.
         if (open && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
@@ -160,23 +166,38 @@ export const ExerciseMenu = forwardRef<
           data-side={upward ? 'top' : 'bottom'}
           onKeyDown={onMenuKey}
         >
-          <button type='button' role='menuitem' tabIndex={-1} onClick={() => choose(onReplace)}>
-            <Replace size={16} aria-hidden='true' />
-            Replace exercise
-          </button>
-          <button
-            type='button'
-            role='menuitem'
-            tabIndex={-1}
-            className='exercise-menu-danger'
-            onClick={() => choose(onRemove)}
-          >
-            <Trash2 size={16} aria-hidden='true' />
-            Remove exercise
-          </button>
+          {entries.map(({label, icon: Icon, onSelect, danger}) => (
+            <button
+              key={label}
+              type='button'
+              role='menuitem'
+              tabIndex={-1}
+              className={danger ? 'exercise-menu-danger' : undefined}
+              onClick={() => choose(onSelect)}
+            >
+              <Icon size={16} aria-hidden='true' />
+              {label}
+            </button>
+          ))}
         </div>
       )}
     </div>
   );
 });
+OptionsMenu.displayName = 'OptionsMenu';
+
+/** Per-exercise ⋯ menu in the logger and the template editor. */
+export const ExerciseMenu = forwardRef<
+  HTMLButtonElement,
+  {name: string; onReplace: () => void; onRemove: () => void}
+>(({name, onReplace, onRemove}, ref) => (
+  <OptionsMenu
+    ref={ref}
+    label={`Exercise options for ${name}`}
+    items={[
+      {label: 'Replace exercise', icon: Replace, onSelect: onReplace},
+      {label: 'Remove exercise', icon: Trash2, onSelect: onRemove, danger: true},
+    ]}
+  />
+));
 ExerciseMenu.displayName = 'ExerciseMenu';

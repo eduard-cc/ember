@@ -10,6 +10,7 @@ import type {Workout} from '../domain/types';
 import {elapsedMinutes} from '../domain/workout-duration';
 import type {AppState} from '../state/workout';
 import {validSet} from '../views/WorkoutView';
+import {canonical} from './canonical';
 import {GymDatabase} from './db';
 
 export class WorkoutRepository {
@@ -176,6 +177,88 @@ export class WorkoutRepository {
         },
       ),
     );
+  }
+  /**
+   * Owner edit of a finished or imported workout from History, or its deletion (`next` null).
+   * Refused when the stored workout no longer matches what the editor displayed, so a peer's
+   * synced change is never silently overwritten. Synced history queues a revisioned update
+   * or tombstone; an import that never synchronized changes the local dataset copy only.
+   */
+  async changeHistoryWorkout(base: Workout, next: Workout | null): Promise<void> {
+    const updated = next && WorkoutSchema.parse(next);
+    if (updated && updated.id !== base.id) throw new Error('Workout identity changed');
+    if (updated && !updated.exercises.some((ex) => ex.sets.length))
+      throw new Error('A workout needs at least one set');
+    const same = (a: unknown, b: unknown) => canonical(a) === canonical(b);
+    return this.enqueue(() =>
+      this.db.transaction(
+        'rw',
+        [this.db.meta, this.db.workouts, this.db.importSources, this.db.outbox, this.db.syncState],
+        async () => {
+          const changed = () => new Error('Workout changed since displayed; reopen it to edit');
+          const native = await this.db.workouts.get(base.id);
+          if (native) {
+            if (!same(native, base)) throw changed();
+            if (updated) {
+              if (same(native, updated)) return;
+              await this.db.workouts.put(updated);
+              await this.queueOperation('putWorkout', base.id, updated);
+              return;
+            }
+            await this.db.workouts.delete(base.id);
+            const order = (await this.db.meta.get('finished-order'))?.value as string[] | undefined;
+            if (order)
+              await this.db.meta.put({
+                key: 'finished-order',
+                value: order.filter((id) => id !== base.id),
+              });
+            await this.queueTombstone('deleteWorkout', base.id);
+            return;
+          }
+          if ((await this.db.meta.get('imported-sync-active'))?.value === true) {
+            const record = await this.db.importSources.get('imported:' + base.id);
+            if (!record) throw changed();
+            if (!same(record.value, base)) throw changed();
+            if (updated) {
+              if (same(record.value, updated)) return;
+              await this.db.importSources.put({key: record.key, value: updated});
+              await this.queueOperation('putImportedWorkout', base.id, updated);
+              return;
+            }
+            await this.db.importSources.delete(record.key);
+            await this.queueTombstone('deleteImportedWorkout', base.id);
+            return;
+          }
+          const source =
+            (await this.db.importSources.get('current-dataset')) ??
+            (await this.db.importSources.get('legacy-v1'));
+          const dataset = (source?.value as {dataset?: AppState['dataset']} | undefined)?.dataset;
+          const workout = dataset?.workouts.find((w) => w.id === base.id);
+          if (!dataset || !workout || !same(workout, base)) throw changed();
+          await this.db.importSources.put({
+            key: 'current-dataset',
+            value: {
+              dataset: {
+                ...dataset,
+                workouts: updated
+                  ? dataset.workouts.map((w) => (w.id === base.id ? updated : w))
+                  : dataset.workouts.filter((w) => w.id !== base.id),
+              },
+            },
+          });
+        },
+      ),
+    );
+  }
+  /**
+   * A tombstone needs the server revision. A record the server never saw and has no pending
+   * create was never sent, so dropping it locally is the whole deletion.
+   */
+  private async queueTombstone(kind: 'deleteWorkout' | 'deleteImportedWorkout', id: string) {
+    const sent =
+      (await this.db.syncState.get('revision:' + id)) ||
+      (await this.db.outbox.toArray()).some((o) => o.entityId === id);
+    if (sent) await this.queueOperation(kind, id, null);
   }
   async readState(): Promise<AppState> {
     return this.db.transaction(

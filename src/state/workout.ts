@@ -284,6 +284,49 @@ export function useWorkoutState() {
     },
     [repository],
   );
+  /** Owner edit (`next`) or deletion (`next` null) of a finished or imported workout. */
+  const changeHistoryWorkout = useCallback(
+    (base: Workout, next: Workout | null) => {
+      if (
+        !ready.current ||
+        !writable.current ||
+        blocked.current ||
+        suspended.current ||
+        finishing.current
+      )
+        return Promise.resolve(false);
+      const revision = ++generation.current;
+      setSaveStatus('saving');
+      const job = writeQueue.current.then(async () => {
+        try {
+          // An unsaved earlier edit must be retried first; never claim it saved here.
+          if (failedWrite.current) throw new Error('Earlier changes are not saved');
+          await repository.changeHistoryWorkout(base, next);
+          const stored = await repository.readState();
+          const history = {dataset: stored.dataset, finished: stored.finished};
+          committed.current = {...committed.current, ...history};
+          current.current = {...current.current, ...history};
+          updateState(current.current);
+          if (revision === generation.current) {
+            lastSavedGeneration.current = revision;
+            setSaveStatus('saved');
+            setError('');
+          }
+          return true;
+        } catch {
+          // Nothing was written; the editor keeps the owner's changes and says so itself.
+          if (revision === generation.current) {
+            lastSavedGeneration.current = revision;
+            setSaveStatus(failedWrite.current ? 'error' : 'saved');
+          }
+          return false;
+        }
+      });
+      writeQueue.current = job;
+      return job;
+    },
+    [repository],
+  );
   const resetUnreadableStorage = async () => {
     if (!writable.current) return;
     if (
@@ -376,6 +419,7 @@ export function useWorkoutState() {
     saveStatus,
     finishWorkout,
     setSetExcluded,
+    changeHistoryWorkout,
     recoveryError,
     resetUnreadableStorage,
     persistenceError: recoveryError || error,

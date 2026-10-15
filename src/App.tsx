@@ -58,6 +58,7 @@ export default function App() {
     saveStatus,
     finishWorkout,
     setSetExcluded,
+    changeHistoryWorkout,
     persistenceError,
     recoveryError,
     resetUnreadableStorage,
@@ -364,11 +365,14 @@ export default function App() {
               )}
               {view === 'History' && (
                 <HistoryView
-                  workouts={allDataset.workouts}
+                  dataset={allDataset}
                   focusedId={focusedId}
                   onRepeat={start}
                   onTemplate={saveTemplate}
                   onExclude={setSetExcluded}
+                  onChange={changeHistoryWorkout}
+                  disabled={disabled}
+                  locked={sync.locked}
                 />
               )}
               {view === 'Exercises' &&

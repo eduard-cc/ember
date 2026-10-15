@@ -179,6 +179,11 @@ Upgraded apps replay from zero once to recover measurements hidden behind an old
 pagination, and apps that send it keep their own cursor and replay from zero once.
 The server bridge for an opt-in kind ships one release before the UI that writes it, so a
 UI rollback lands on a server that still hides the new kind from the older app.
+Legacy or rolled-back apps keep displaying deleted native workouts until upgraded; edits to
+those stale copies conflict rather than resurrect them. Re-upgrading resumes the independent
+workout-deletes cursor even if a legacy cursor has advanced meanwhile. A rolled-back app's
+backup validator cannot export a still-pending `deleteWorkout`; let that operation sync or
+return to the updated app before exporting.
 
 Rollout is two releases: deploy this API compatibility bridge without the new frontend first,
 then deploy the body-weight UI. Keep the bridge as the immediate rollback release: it accepts

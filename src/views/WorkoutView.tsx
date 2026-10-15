@@ -55,6 +55,7 @@ export function WorkoutView({
   onExclude,
   disabled = false,
   targetsOnly = false,
+  nameField = targetsOnly,
 }: {
   workout: Workout;
   dataset: Dataset;
@@ -66,6 +67,8 @@ export function WorkoutView({
   /** Mirrors the logger's disabled fieldset, which the portaled details sit outside of. */
   disabled?: boolean;
   targetsOnly?: boolean;
+  /** The targets-only editors' own name field; History editing renders its own fields. */
+  nameField?: boolean;
 }) {
   // Save/Finish must wait for every exit, not just the first animated deletion.
   const deletingSets = useRef(new Set<string>());
@@ -172,7 +175,7 @@ export function WorkoutView({
     });
   return (
     <div className='exercise-list' ref={list}>
-      {targetsOnly && (
+      {nameField && (
         <div className='workout-name'>
           <label htmlFor='workout-name'>WORKOUT NAME</label>
           <Input

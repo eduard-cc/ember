@@ -2,6 +2,7 @@ import {DatasetSchema} from '../../shared/contracts';
 import {parseStrongCsv} from '../domain/model';
 import type {Dataset, Workout} from '../domain/types';
 import type {AppState} from '../state/workout';
+import {canonical} from './canonical';
 import type {WorkoutRepository} from './repository';
 
 export interface PreparedImport {
@@ -29,19 +30,6 @@ export async function prepareStrongImport(bytes: Uint8Array): Promise<PreparedIm
   }));
   return {hash, raw, dataset: DatasetSchema.parse(dataset)};
 }
-const canonical = (value: unknown): string => {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
-  const object = value as Record<string, unknown>;
-  return (
-    '{' +
-    Object.keys(object)
-      .sort()
-      .map((key) => JSON.stringify(key) + ':' + canonical(object[key]))
-      .join(',') +
-    '}'
-  );
-};
 /**
  * Carry owner exclusions to the same raw source row in a new export. A row is identified by
  * its complete original cells; identical repeated rows match by occurrence order. Raw values

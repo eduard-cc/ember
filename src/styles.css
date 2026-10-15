@@ -815,6 +815,39 @@ button.exercise-title-button:focus-visible {
 .history-card-top > div {
   min-width: 0;
 }
+.history-card-top > .history-card-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  /* Pull the 44px ⋯ target into the card padding so its glyph sits at the content edge. */
+  margin-right: -13px;
+}
+.history-editor {
+  --row-bg: var(--surface);
+}
+.history-editor-fields {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.history-editor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 8rem);
+  gap: 12px;
+}
+.history-editor-row > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.history-editor > .content-fieldset > .add-exercise-button {
+  margin-block: 16px;
+}
+.history-editor-problem {
+  margin-top: 16px;
+  color: var(--danger);
+  font-size: 14px;
+}
 .history-card h2 {
   margin: 8px 0;
 }

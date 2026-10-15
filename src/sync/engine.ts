@@ -1,9 +1,20 @@
 import {z} from 'zod';
 
-import {type BodyWeight, BodyWeightSchema, WorkoutSchema} from '../../shared/contracts';
+import {
+  type BodyWeight,
+  BodyWeightSchema,
+  WorkoutSchema,
+  isDeleteKind,
+} from '../../shared/contracts';
 import type {Workout} from '../domain/types';
 import type {WorkoutRepository} from '../storage/repository';
 
+/**
+ * Opt-in feed kinds (body weight, workout deletions) share one cursor of their own: an older
+ * app version's cursor may already be past records it never saw, so the first sync of an app
+ * that understands every kind replays the feed from zero.
+ */
+export const DELETES_CURSOR = 'workout-deletes-cursor';
 // Unknown kinds fail the whole page before the cursor moves, so a newer server's
 // records are never skipped or written into the wrong table.
 const changeSchema = z
@@ -12,6 +23,7 @@ const changeSchema = z
     kind: z.enum([
       'putBodyWeight',
       'putWorkout',
+      'deleteWorkout',
       'putTemplate',
       'deleteTemplate',
       'putImportedWorkout',
@@ -139,13 +151,11 @@ export class SyncEngine {
         }
       });
     }
-    // Keep the opt-in cursor separate: a rolled-back legacy app can advance its
-    // own cursor past hidden measurements. Missing opt-in state replays from zero.
-    let cursor = Number((await db.syncState.get('body-weight-cursor'))?.value ?? 0);
+    let cursor = Number((await db.syncState.get(DELETES_CURSOR))?.value ?? 0);
     for (;;) {
       const response = await this.call('/api/v1/sync/changes?after=' + cursor + '&limit=100', {
         credentials: 'same-origin',
-        headers: {'X-Sync-Body-Weight': '1'},
+        headers: {'X-Sync-Body-Weight': '1', 'X-Sync-Workout-Deletes': '1'},
       });
       if (response.status === 401) throw new SessionExpired('Sign in to resume sync');
       if (!response.ok) throw new Error('Could not read server changes');
@@ -160,9 +170,7 @@ export class SyncEngine {
       for (const c of page.changes) {
         if (
           c.changeSeq <= previous ||
-          (c.kind === 'deleteTemplate' || c.kind === 'deleteImportedWorkout'
-            ? c.payload !== null
-            : c.payload?.id !== c.entityId)
+          (isDeleteKind(c.kind) ? c.payload !== null : c.payload?.id !== c.entityId)
         )
           throw new Error('Invalid change page');
         previous = c.changeSeq;
@@ -189,6 +197,7 @@ export class SyncEngine {
               if (!pending) {
                 if (c.kind === 'putBodyWeight') await db.bodyWeights.put(c.payload as BodyWeight);
                 else if (c.kind === 'putWorkout') await db.workouts.put(c.payload as Workout);
+                else if (c.kind === 'deleteWorkout') await db.workouts.delete(c.entityId);
                 else if (c.kind === 'putTemplate') {
                   await db.templates.put(c.payload as Workout);
                   await db.meta.put({key: 'templates-null', value: false});
@@ -202,8 +211,10 @@ export class SyncEngine {
               }
             }
           }
+          // The legacy cursor stays current too, so a rolled-back app resumes from here.
           await db.syncState.put({key: 'cursor', value: page.nextCursor});
           await db.syncState.put({key: 'body-weight-cursor', value: page.nextCursor});
+          await db.syncState.put({key: DELETES_CURSOR, value: page.nextCursor});
         },
       );
       cursor = page.nextCursor;
