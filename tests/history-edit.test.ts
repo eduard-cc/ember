@@ -242,6 +242,23 @@ it.each(['edit', 'delete'] as const)(
   },
 );
 
+it('a Strong reimport overwrites edited and deleted imported workouts with the export', async () => {
+  // Owner decision: importing replaces imported history wholesale; edits are not kept.
+  const repository = repo();
+  try {
+    const bytes = new TextEncoder().encode(csv);
+    await commitStrongImport(repository, await prepareStrongImport(bytes), true);
+    const original = (await repository.readState()).dataset!.workouts;
+    const [later, earlier] = original;
+    await repository.changeHistoryWorkout(earlier, {...earlier, name: 'Edited in app'});
+    await repository.changeHistoryWorkout(later, null);
+    await commitStrongImport(repository, await prepareStrongImport(bytes), true);
+    expect((await repository.readState()).dataset!.workouts).toEqual(original);
+  } finally {
+    repository.close();
+  }
+});
+
 it('edits and deletes a never-synchronized import in the local dataset copy only', async () => {
   const repository = repo();
   const dataset = (await prepareStrongImport(new TextEncoder().encode(csv))).dataset;
