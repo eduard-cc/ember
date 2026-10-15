@@ -8,6 +8,7 @@ import {HistoryEditor} from '../components/HistoryEditor';
 import {Button, Input, plural} from '../components/ui';
 import type {Dataset, Workout} from '../domain/types';
 import {durationLabel} from '../domain/workout-duration';
+import {useBackLayer} from '../state/back';
 import {dateLabel} from './WorkoutView';
 
 export function WorkoutDetails({
@@ -76,6 +77,7 @@ export function HistoryView({
   const [editing, setEditing] = useState<Workout | null>(null);
   const [deleting, setDeleting] = useState<Workout | null>(null);
   const [deleteError, setDeleteError] = useState('');
+  useBackLayer(!!deleting && !locked, () => setDeleting(null));
   const menus = useRef(new Map<string, HTMLButtonElement>());
   // Focus returns to the card's ⋯ after the editor or confirmation closes, if it still exists.
   const returnTo = useRef<string | null>(null);

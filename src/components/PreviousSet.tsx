@@ -4,6 +4,7 @@ import {useId, useMemo, useState} from 'react';
 
 import {bestComparable, getHistory, nearestRecorded} from '../domain/model';
 import type {Dataset, ExerciseLog, SetRecord} from '../domain/types';
+import {useBackLayer} from '../state/back';
 import {dateLabel} from '../views/WorkoutView';
 import {Button} from './ui';
 
@@ -28,6 +29,7 @@ export function PreviousSet({
   onSource: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  useBackLayer(open, () => setOpen(false));
   // Every row re-renders per keystroke: scan history once per dataset/exercise, not per render.
   const previous = useMemo(
     () => getHistory(dataset, exercise.name).find((session) => session.type === exercise.type),

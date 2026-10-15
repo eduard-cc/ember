@@ -4,6 +4,7 @@ import {type ReactNode, useState} from 'react';
 
 import {exerciseTypeFor} from '../catalog/catalog';
 import type {Dataset, ExerciseLog, ExerciseType} from '../domain/types';
+import {useBackLayer} from '../state/back';
 import {ExerciseList} from './ExerciseList';
 import {Button} from './ui';
 import {historyTargets} from './workout-targets';
@@ -44,6 +45,7 @@ export function ExercisePicker({
     onOpenChange(next);
     setCustom(null);
   };
+  useBackLayer(open, () => toggle(false));
   const pick = (name: string, type = exerciseTypeFor(name, dataset) ?? 'weighted') => {
     onPick(historyTargets(dataset, name, type));
     toggle(false);

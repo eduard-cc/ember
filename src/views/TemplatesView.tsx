@@ -7,6 +7,7 @@ import {AddExercise} from '../components/AddExercise';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {Button, Input, plural} from '../components/ui';
 import type {Dataset, Workout} from '../domain/types';
+import {useBackLayer} from '../state/back';
 import {newWorkout} from '../state/workout';
 import {WorkoutView, dateLabel} from './WorkoutView';
 
@@ -31,6 +32,8 @@ export function TemplatesView({
   const [editingBase, setEditingBase] = useState<Workout | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [preview, setPreview] = useState<Workout | null>(null);
+  useBackLayer(!!editing, () => setEditing(null));
+  useBackLayer(!!preview, () => setPreview(null));
   return (
     <div className='templates-view'>
       <div className='section-heading templates-heading'>

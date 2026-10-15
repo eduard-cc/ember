@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react';
 
+import {useBackLayer} from '../state/back';
 import {Button} from './ui';
 
 /** How long the backdrop waits for the click that follows its closing tap. */
@@ -81,6 +82,7 @@ export const OptionsMenu = forwardRef<
     setOpen(false);
     if (refocus) trigger.current?.focus({preventScroll: true});
   };
+  useBackLayer(open, close);
   const onMenuKey = (event: KeyboardEvent) => {
     const list = items();
     const at = list.indexOf(document.activeElement as HTMLElement);

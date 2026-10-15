@@ -10,6 +10,7 @@ import {PreviousSet} from '../components/PreviousSet';
 import {SetRow} from '../components/SetRow';
 import {Button, Input, plural} from '../components/ui';
 import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
+import {useBackLayer} from '../state/back';
 import {ExerciseDetail} from './ExerciseDetail';
 
 export function dateLabel(date: string) {
@@ -98,6 +99,7 @@ export function WorkoutView({
   const showDetails = !!onExclude && !targetsOnly;
   const [details, setDetails] = useState<{id: string; name: string} | null>(null);
   const detailButtons = useRef(new Map<string, HTMLButtonElement>());
+  useBackLayer(details !== null, () => setDetails(null));
   // Read after close, when `details` has already been cleared.
   const detailsReturn = useRef<string | null>(null);
   const replaceExercise = (exerciseId: string, exercise: ExerciseLog) => {

@@ -11,6 +11,7 @@ import {
   sortedMeasurements,
   toLocalInput,
 } from '../domain/body-weight';
+import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {dateLabel} from '../views/WorkoutView';
 import {Button, Input} from './ui';
@@ -162,6 +163,7 @@ export function BodyWeightSettings({
     setEditing(null);
     setError('');
   };
+  useBackLayer(!!editing, close);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!editing || saving || disabled) return;

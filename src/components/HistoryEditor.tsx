@@ -4,6 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 
 import {editableCopy, editedHistory} from '../domain/history-edit';
 import type {Dataset, Workout} from '../domain/types';
+import {useBackLayer} from '../state/back';
 import {WorkoutView} from '../views/WorkoutView';
 import {AddExercise} from './AddExercise';
 import {Button, Input} from './ui';
@@ -43,6 +44,8 @@ export function HistoryEditor({
   const dirty = JSON.stringify(draft) !== initial;
   const {workout: next, problem} = editedHistory(workout, draft);
   const close = () => (dirty ? setDiscardRequest((n) => n + 1) : onClose());
+  // Unsaved changes stay open behind the discard prompt, like the close button.
+  useBackLayer(true, close);
   return (
     <Dialog.Root open onOpenChange={(open) => !open && close()}>
       <Dialog.Portal>

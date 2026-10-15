@@ -23,6 +23,7 @@ import {Button, Input, plural} from './components/ui';
 import {routineTargets} from './components/workout-targets';
 import {parseStrongCsv} from './domain/model';
 import type {Workout} from './domain/types';
+import {useBackLayer} from './state/back';
 import {newWorkout, useWorkoutState} from './state/workout';
 import {commitStrongImport} from './storage/import';
 import {useSync} from './sync/use-sync';
@@ -251,6 +252,14 @@ export default function App() {
   };
   const disabled = !hydrated || readOnly || sync.locked || maintenance || !!recoveryError;
   const showSheet = !!state.active && expanded && !sync.locked;
+  // Back closes the newest layer; on a main tab with nothing open it leaves the app as before.
+  // The expanded workout counts only on mobile, where it covers the tabs.
+  useBackLayer(showSheet && mobile, () => setExpanded(false));
+  useBackLayer(view === 'Exercises' && !!exercise, () => setExercise(null));
+  useBackLayer(settingsOpen, () => setSettingsOpen(false));
+  useBackLayer(!!pendingWorkout && !sync.locked, () => setPendingWorkout(null));
+  useBackLayer(confirmCancel && !sync.locked, () => setConfirmCancel(false));
+  useBackLayer(confirmFinish && !sync.locked, () => setConfirmFinish(false));
   const feedback = notice && (
     <div className='notice' role='status'>
       {notice}
