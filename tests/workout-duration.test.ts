@@ -68,3 +68,63 @@ it('repeats and templates start with zero duration and unchecked targets without
   expect(historical.duration).toBe(62.5);
   expect(historical.exercises[0].sets[0].completed).toBe(true);
 });
+
+it('repeats and templates start clean of imported source evidence, flags and exclusions', () => {
+  const evidence = {Date: '2026-01-03 09:00:00', 'Exercise Name': 'Press', Weight: '40', Reps: '5'};
+  const historical: Workout = {
+    id: 'import:synthetic:0',
+    name: 'Synthetic import',
+    date: '2026-01-03T09:00:00',
+    duration: 50,
+    exercises: [
+      {
+        name: 'Press',
+        type: 'weighted',
+        sets: [
+          {
+            id: 'import:synthetic:1',
+            weight: 40,
+            reps: 5,
+            seconds: null,
+            distance: null,
+            original: evidence,
+          },
+          {
+            id: 'import:synthetic:2',
+            weight: 40,
+            reps: 50,
+            seconds: null,
+            distance: null,
+            suspicious: true,
+            excluded: true,
+            original: {...evidence, Reps: '50'},
+          },
+        ],
+      },
+    ],
+  };
+  const repeat = newWorkout(historical);
+  const fromTemplate = newWorkout(newWorkout(historical));
+  for (const fresh of [repeat, fromTemplate]) {
+    const [first, second] = fresh.exercises[0].sets;
+    expect(first).toEqual({
+      id: first.id,
+      weight: 40,
+      reps: 5,
+      seconds: null,
+      distance: null,
+      completed: false,
+    });
+    expect(second).toEqual({
+      id: second.id,
+      weight: 40,
+      reps: 50,
+      seconds: null,
+      distance: null,
+      completed: false,
+    });
+    expect(first.id).not.toMatch(/^import:/);
+  }
+  expect(historical.exercises[0].sets[1]).toMatchObject({suspicious: true, excluded: true});
+  expect(historical.exercises[0].sets[0].original).toBe(evidence);
+});

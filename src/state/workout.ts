@@ -18,7 +18,16 @@ export function newWorkout(workout?: Workout): Workout {
     exercises:
       workout?.exercises.map((ex) => ({
         ...ex,
-        sets: ex.sets.map((set) => ({...set, id: crypto.randomUUID(), completed: false})),
+        // Only the targets carry over: source evidence, review flags and exclusions belong to
+        // the recorded set, not to a new session prefilled from it.
+        sets: ex.sets.map(({weight, reps, seconds, distance}) => ({
+          id: crypto.randomUUID(),
+          weight,
+          reps,
+          seconds,
+          distance,
+          completed: false,
+        })),
       })) ?? [],
   };
 }

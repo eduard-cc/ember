@@ -140,3 +140,53 @@ test('the source workout and Profile offer the same reversible exclusion', async
   await expect(details.getByRole('button', {name: /in analytics again/})).toHaveCount(1);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
 });
+
+test('repeating a workout with flagged and excluded sets starts clean on Pixel 6', async ({
+  page,
+}) => {
+  const withExcluded = structuredClone(seeded);
+  Object.assign(withExcluded.dataset.workouts[0].exercises[0].sets[1], {
+    excluded: true,
+    original: {'Exercise Name': 'Synthetic Curl', Weight: '20', Reps: '60'},
+  });
+  await page.clock.install({time: new Date('2026-03-01T10:00:00')});
+  await page.addInitScript(
+    (value) => localStorage.setItem('gym-log:v1', JSON.stringify(value)),
+    withExcluded,
+  );
+  await page.goto('/?demo=1');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await navigate(page, 'History');
+  await page.getByRole('button', {name: 'Repeat workout Arms day 1 Feb 2026'}).click();
+  // The targets carry over; the flag and the exclusion do not.
+  await expect(page.getByLabel('Reps for Synthetic Curl set 2')).toHaveValue('60');
+  await page.getByRole('button', {name: 'Complete Synthetic Curl set 1'}).click();
+  await page.getByRole('button', {name: 'Complete Synthetic Curl set 2'}).click();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await page.getByRole('button', {name: 'Finish workout'}).click();
+  await page.getByRole('button', {name: 'Save finished workout'}).click();
+
+  await page
+    .getByRole('button', {name: /View sets for Arms day/})
+    .first()
+    .click();
+  const repeat = page.locator('.workout-details').first();
+  await expect(repeat).toContainText('20 kg × 60');
+  await expect(repeat).not.toContainText('flagged');
+  await expect(repeat).not.toContainText('excluded');
+  await expect(
+    repeat.getByRole('button', {
+      name: 'Exclude Synthetic Curl set 2 (20 kg × 60) on 1 Mar 2026 from analytics',
+    }),
+  ).toBeVisible();
+  // The source set keeps its own exclusion.
+  await page
+    .getByRole('button', {name: /View sets for Arms day/})
+    .nth(1)
+    .click();
+  await expect(
+    page.getByRole('button', {
+      name: 'Include Synthetic Curl set 2 (20 kg × 60) on 1 Feb 2026 in analytics again',
+    }),
+  ).toBeVisible();
+});
