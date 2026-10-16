@@ -1,9 +1,10 @@
 import {ArrowUpRight} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 
-import {Button, plural} from '../components/ui';
+import {Button} from '../components/ui/button';
 import {getHistory, getTrend} from '../domain/model';
 import type {Dataset, Metric} from '../domain/types';
+import {plural} from '../utils/plural';
 import {dateLabel} from './WorkoutView';
 
 const labels: Record<Metric, string> = {

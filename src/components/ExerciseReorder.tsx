@@ -3,8 +3,8 @@ import {type PointerEvent as ReactPointerEvent, useEffect, useLayoutEffect, useR
 
 import {reorderShift, reorderTarget} from '../domain/reorder';
 import type {ExerciseLog} from '../domain/types';
+import {plural} from '../utils/plural';
 import {ExerciseThumb} from './ExerciseThumb';
-import {plural} from './ui';
 
 /** Completed of total, like the card's status line; validity is the card's rule. */
 export type SetProgress = (exercise: ExerciseLog) => string;
@@ -401,17 +401,23 @@ export function ReorderList({
   }, []);
 
   return (
-    <ol className='reorder-list' ref={list} aria-label='Reorder exercises'>
+    <ol
+      className='reorder-list relative m-0 flex touch-none list-none flex-col gap-1.5 px-4 py-3 select-none narrow:px-3 [.workout-sheet_&]:desk:px-6 [.workout-sheet_&]:desk:py-[14px]'
+      ref={list}
+      aria-label='Reorder exercises'
+    >
       {exercises.map((ex, i) => (
         <li
           key={identity(ex)}
-          className='reorder-row'
+          className='reorder-row grid min-h-14 grid-cols-[40px_minmax(0,1fr)_auto_18px] items-center gap-3 border py-0 pr-3 pl-2 [-webkit-tap-highlight-color:transparent]'
           data-held={i === from || undefined}
           aria-current={i === from || undefined}
         >
           <ExerciseThumb name={ex.name} />
-          <span className='reorder-name'>{ex.name}</span>
-          <span className='reorder-count'>{progress(ex)}</span>
+          <span className='reorder-name truncate text-[16px] font-semibold text-foreground'>
+            {ex.name}
+          </span>
+          <span className='reorder-count text-[12px] tabular-nums'>{progress(ex)}</span>
           <GripVertical size={18} aria-hidden='true' />
         </li>
       ))}

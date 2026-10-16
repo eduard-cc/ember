@@ -359,3 +359,13 @@ test('the ⋯ icon sits at the far right of the card, flush with the set column'
   expect(trigger.width).toBeGreaterThanOrEqual(44);
   expect(trigger.x + trigger.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
 });
+
+test('a keyboard-focused menu item keeps its inset focus ring', async ({page}) => {
+  await start(page);
+  await options(page, 'Bench Press (Barbell)').focus();
+  await page.keyboard.press('Enter');
+  const menu = page.getByRole('menu', {name: 'Exercise options for Bench Press (Barbell)'});
+  const focused = menu.getByRole('menuitem').first();
+  await expect(focused).toBeFocused();
+  await expect(focused).toHaveCSS('outline-offset', '-2px');
+});

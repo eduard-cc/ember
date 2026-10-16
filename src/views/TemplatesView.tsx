@@ -5,10 +5,12 @@ import {useState} from 'react';
 import {bodyPartOf} from '../catalog/catalog';
 import {AddExercise} from '../components/AddExercise';
 import {ExerciseThumb} from '../components/ExerciseThumb';
-import {Button, Input, plural} from '../components/ui';
+import {Button} from '../components/ui/button';
+import {Input} from '../components/ui/input';
 import type {Dataset, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {newWorkout} from '../state/workout';
+import {plural} from '../utils/plural';
 import {WorkoutView, dateLabel} from './WorkoutView';
 
 /** Latest finished session with the template's exact name, if any. */
@@ -36,7 +38,7 @@ export function TemplatesView({
   useBackLayer(!!preview, () => setPreview(null));
   return (
     <div className='templates-view'>
-      <div className='section-heading templates-heading'>
+      <div className='section-heading templates-heading mt-7'>
         <h2>My templates</h2>
         <Button
           variant='ghost'
@@ -129,13 +131,18 @@ export function TemplatesView({
       ) : (
         <>
           {!!templates.length && (
-            <div className='template-grid'>
+            <div className='template-grid grid grid-cols-1 gap-0 border border-border bg-card desk:grid-cols-2 desk:logger-open:grid-cols-1'>
               {templates.map((template) => {
                 const last = lastPerformed(dataset, template.name);
                 return (
-                  <article className='template-card' key={template.id}>
-                    <header>
-                      <h3>{template.name}</h3>
+                  <article
+                    className='template-card flex min-w-0 flex-col self-stretch border-0 border-t border-border first:border-t-0 desk:last:odd:col-span-full desk:even:border-l desk:nth-2:border-t-0 desk:logger-open:last:odd:col-auto desk:logger-open:even:border-l-0 desk:logger-open:nth-2:border-t'
+                    key={template.id}
+                  >
+                    <header className='flex items-center gap-0.5 pt-1.5 pr-1.5 pl-4'>
+                      <h3 className='min-w-0 flex-1 truncate text-[16px] font-semibold'>
+                        {template.name}
+                      </h3>
                       <Button
                         variant='ghost'
                         size='icon'
@@ -157,26 +164,30 @@ export function TemplatesView({
                       </Button>
                     </header>
                     <button
-                      className='template-open'
+                      className='template-open min-h-11 border-0 bg-transparent px-4 pt-1 pb-3.5 text-left text-inherit [font:inherit]'
                       aria-label={`Open template ${template.name}`}
                       onClick={() => setPreview(template)}
                     >
-                      <ul>
+                      <ul className='mb-2 list-none p-0 text-[14px] leading-[1.6] text-muted-foreground'>
                         {template.exercises.slice(0, 6).map((ex, i) => (
-                          <li key={`${ex.name}-${i}`}>
+                          <li className='[overflow-wrap:anywhere]' key={`${ex.name}-${i}`}>
                             {ex.sets.length} × {ex.name}
                           </li>
                         ))}
                         {template.exercises.length > 6 && (
-                          <li>+ {plural(template.exercises.length - 6, 'more exercise')}</li>
+                          <li className='[overflow-wrap:anywhere]'>
+                            + {plural(template.exercises.length - 6, 'more exercise')}
+                          </li>
                         )}
                       </ul>
-                      <small>
+                      <small className='text-[12px] text-muted-foreground'>
                         {last ? `Last performed ${dateLabel(last)}` : 'Not performed yet'}
                       </small>
                     </button>
                     {deleteId === template.id && (
-                      <div className='inline-confirm'>
+                      /* `pt-0!` beats the unlayered shared .inline-confirm padding-top (styles.css); drop it
+                         when .inline-confirm ports with History (PR 4/5). */
+                      <div className='inline-confirm px-4 pt-0! pb-3.5'>
                         <p>Delete this template? Your workout history is kept.</p>
                         <Button onClick={() => setDeleteId(null)}>Cancel</Button>
                         <Button
@@ -214,7 +225,9 @@ export function TemplatesView({
                 ? `Last performed ${dateLabel(lastPerformed(dataset, preview.name)!)}`
                 : 'Not performed yet'}
             </Dialog.Description>
-            <ul className='exercise-rows'>
+            {/* `!` beats the unlayered shared .exercise-rows margin:0 (styles.css); drop it when
+                .exercise-rows ports (PR 4/5). */}
+            <ul className='exercise-rows mt-3.5! mb-4.5!'>
               {preview?.exercises.map((ex, i) => (
                 <li key={`${ex.name}-${i}`} className='exercise-row static'>
                   <ExerciseThumb name={ex.name} />
@@ -229,7 +242,7 @@ export function TemplatesView({
             </ul>
             <Button
               variant='primary'
-              className='wide-action'
+              className='min-h-12 w-full'
               aria-label={`Start template ${preview?.name ?? ''}`}
               onClick={() => {
                 if (preview) onStart(preview);

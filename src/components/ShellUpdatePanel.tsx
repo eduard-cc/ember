@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 
 import {requestShellUpdate} from '../pwa/register';
 import type {WorkoutRepository} from '../storage/repository';
-import {Button} from './ui';
+import {Button} from './ui/button';
 
 interface Props {
   repository: WorkoutRepository;

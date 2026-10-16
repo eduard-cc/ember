@@ -71,9 +71,24 @@ async function capture(outDir) {
 }
 
 async function compare(beforeDir, afterDir) {
-  const names = readdirSync(beforeDir)
-    .filter((f) => f.endsWith('.png'))
-    .sort();
+  const pngs = (dir) =>
+    readdirSync(dir)
+      .filter((f) => f.endsWith('.png') && !f.endsWith('.diff.png'))
+      .sort();
+  const names = pngs(beforeDir);
+  let failed = false;
+  // The two sets must list the same screens, or a lost capture would pass silently.
+  const afterNames = new Set(pngs(afterDir));
+  for (const name of names)
+    if (!afterNames.has(name)) {
+      console.log(`${name}: missing in ${afterDir} FAIL`);
+      failed = true;
+    }
+  for (const name of afterNames)
+    if (!names.includes(name)) {
+      console.log(`${name}: missing in ${beforeDir} FAIL`);
+      failed = true;
+    }
   const browser = await launch();
   const page = await browser.newPage();
   // Decode PNGs with the browser's canvas so no image dependency is needed.
@@ -88,8 +103,10 @@ async function compare(beforeDir, afterDir) {
             img.src = src;
           });
         const [ia, ib] = await Promise.all([load(a), load(b)]);
-        const w = Math.max(ia.width, ib.width);
-        const h = Math.max(ia.height, ib.height);
+        if (ia.width !== ib.width || ia.height !== ib.height)
+          return {size: `size differs ${ia.width}x${ia.height} vs ${ib.width}x${ib.height}`};
+        const w = ia.width;
+        const h = ia.height;
         const data = (img) => {
           const c = document.createElement('canvas');
           c.width = w;
@@ -125,13 +142,17 @@ async function compare(beforeDir, afterDir) {
       [a, b],
     );
   const url = (dir, n) => `data:image/png;base64,${readFileSync(join(dir, n)).toString('base64')}`;
-  let failed = false;
-  for (const name of names) {
+  for (const name of names.filter((n) => afterNames.has(n))) {
     let r;
     try {
       r = await diffOne(url(beforeDir, name), url(afterDir, name));
     } catch {
       console.log(`${name}: missing or unreadable in ${afterDir}`);
+      failed = true;
+      continue;
+    }
+    if (r.size) {
+      console.log(`${name}: ${r.size} FAIL`);
       failed = true;
       continue;
     }

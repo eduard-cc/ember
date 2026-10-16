@@ -10,7 +10,8 @@ import {
 } from 'react';
 
 import {useBackLayer} from '../state/back';
-import {Button} from './ui';
+import {cn} from '../utils/cn';
+import {Button} from './ui/button';
 
 /** How long the backdrop waits for the click that follows its closing tap. */
 const SWALLOW_MS = 700;
@@ -110,7 +111,7 @@ export const OptionsMenu = forwardRef<
 
   return (
     <div
-      className={`exercise-menu ${className}`}
+      className={cn('exercise-menu relative shrink-0', className)}
       onBlur={(event) => {
         // Focus moving outside (another ⋯, a field) closes this menu; only one is ever open.
         if (open && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
@@ -124,6 +125,7 @@ export const OptionsMenu = forwardRef<
         }}
         size='icon'
         variant='ghost'
+        className='aria-expanded:bg-accent aria-expanded:text-foreground'
         aria-label={label}
         aria-haspopup='menu'
         aria-expanded={open}
@@ -140,7 +142,7 @@ export const OptionsMenu = forwardRef<
       </Button>
       {(open || swallowing) && (
         <div
-          className='exercise-menu-backdrop'
+          className='exercise-menu-backdrop fixed inset-0 z-[19] [-webkit-tap-highlight-color:transparent]'
           aria-hidden='true'
           onPointerDown={(event) => {
             // Keeps focus where it is and presses nothing underneath: this tap only closes.
@@ -164,7 +166,7 @@ export const OptionsMenu = forwardRef<
           aria-label={label}
           // Focusable, so a press on its padding keeps focus inside instead of closing it.
           tabIndex={-1}
-          className='exercise-menu-list'
+          className='exercise-menu-list absolute top-[calc(100%+4px)] right-0 z-20 flex min-w-[208px] flex-col border border-border bg-card p-1 [box-shadow:var(--shadow)] data-[side=top]:top-auto data-[side=top]:bottom-[calc(100%+4px)]'
           data-side={upward ? 'top' : 'bottom'}
           onKeyDown={onMenuKey}
         >
@@ -174,7 +176,10 @@ export const OptionsMenu = forwardRef<
               type='button'
               role='menuitem'
               tabIndex={-1}
-              className={danger ? 'exercise-menu-danger' : undefined}
+              className={cn(
+                'flex min-h-11 items-center gap-2.5 bg-transparent px-3 text-left text-[14px] font-medium transition-[background] duration-[120ms] ease-[ease] hover:bg-accent focus-visible:outline-offset-[-2px]',
+                danger && 'exercise-menu-danger text-destructive',
+              )}
               onClick={() => choose(onSelect)}
             >
               <Icon size={16} aria-hidden='true' />
@@ -197,10 +202,12 @@ export const ExerciseMenu = forwardRef<
     onRemove: () => void;
     onMoveUp?: () => void;
     onMoveDown?: () => void;
+    className?: string;
   }
->(({name, onReplace, onRemove, onMoveUp, onMoveDown}, ref) => (
+>(({name, onReplace, onRemove, onMoveUp, onMoveDown, className}, ref) => (
   <OptionsMenu
     ref={ref}
+    className={className}
     label={`Exercise options for ${name}`}
     items={[
       {label: 'Replace exercise', icon: Replace, onSelect: onReplace},

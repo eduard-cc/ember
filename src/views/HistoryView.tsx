@@ -5,10 +5,12 @@ import {useRef, useState} from 'react';
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {OptionsMenu} from '../components/ExerciseMenu';
 import {HistoryEditor} from '../components/HistoryEditor';
-import {Button, Input, plural} from '../components/ui';
+import {Button} from '../components/ui/button';
+import {Input} from '../components/ui/input';
 import type {Dataset, Workout} from '../domain/types';
 import {durationLabel} from '../domain/workout-duration';
 import {useBackLayer} from '../state/back';
+import {plural} from '../utils/plural';
 import {dateLabel} from './WorkoutView';
 
 export function WorkoutDetails({

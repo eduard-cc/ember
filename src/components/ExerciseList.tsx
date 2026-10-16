@@ -9,8 +9,9 @@ import {
   sortExerciseNames,
 } from '../domain/model';
 import type {Dataset} from '../domain/types';
+import {plural} from '../utils/plural';
 import {ExerciseThumb} from './ExerciseThumb';
-import {Input, plural} from './ui';
+import {Input} from './ui/input';
 
 const sortKey = 'gym-log:exercise-sort:v1';
 const sortOptions = [

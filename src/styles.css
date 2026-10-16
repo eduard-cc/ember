@@ -23,53 +23,6 @@ body {
   font-size: 14px;
   line-height: 1.5;
 }
-button,
-input,
-select {
-  font: inherit;
-  color: inherit;
-}
-button {
-  cursor: pointer;
-  touch-action: manipulation;
-}
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-a {
-  color: inherit;
-  text-underline-offset: 3px;
-}
-:focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
-}
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-h1 {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  line-height: calc(2 / 1.5);
-}
-h2 {
-  font-size: 18px;
-  font-weight: 600;
-}
-h3 {
-  font-size: 16px;
-  font-weight: 600;
-}
-p {
-  font-size: 14px;
-  line-height: 1.5;
-  color: hsl(var(--muted-foreground));
-}
 [hidden] {
   display: none !important;
 }
@@ -99,50 +52,6 @@ input {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--border)) transparent;
 }
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 15px;
-  border-radius: 0;
-  border: 1px solid transparent;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 120ms;
-}
-.button-primary {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-}
-.button-secondary {
-  background: hsl(var(--card));
-  border-color: hsl(var(--border));
-}
-.button-ghost {
-  background: transparent;
-  color: hsl(var(--muted-foreground));
-}
-.button-danger {
-  background: hsl(var(--destructive-foreground));
-  color: hsl(var(--destructive));
-}
-.button-icon {
-  width: 44px;
-  padding: 0;
-  flex-shrink: 0;
-}
-@media (hover: hover) {
-  .button-primary:hover:not(:disabled) {
-    filter: brightness(0.94);
-  }
-  .button-secondary:hover:not(:disabled),
-  .button-ghost:hover:not(:disabled) {
-    background: hsl(var(--accent));
-  }
-}
-.input,
 select {
   min-height: 44px;
   border: 1px solid hsl(var(--border));
@@ -152,17 +61,6 @@ select {
   font-size: 16px;
   width: 100%;
   min-width: 0;
-}
-.input:disabled {
-  background: hsl(var(--accent));
-}
-.input[type='number'] {
-  font-variant-numeric: tabular-nums;
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-.input::-webkit-inner-spin-button {
-  appearance: none;
 }
 .app-shell {
   height: 100dvh;
@@ -233,281 +131,11 @@ select {
   font-weight: 600;
   border-top-color: hsl(var(--primary));
 }
-.resume-bar {
-  width: 100%;
-  min-height: 64px;
-  text-align: left;
-  padding: 10px 18px;
-  flex-shrink: 0;
-  gap: 12px;
-  justify-content: flex-start;
-  border-radius: 0;
-  background: hsl(var(--card));
-  border: 0;
-  border-top: 1px solid hsl(var(--border));
-  box-shadow: inset 3px 0 0 hsl(var(--primary));
-  color: hsl(var(--foreground));
-}
-.resume-bar svg {
-  color: hsl(var(--primary));
-}
-.resume-bar div {
-  min-width: 0;
-}
-.resume-bar strong {
-  font-weight: 600;
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.resume-bar span,
-.resume-bar .elapsed {
-  color: hsl(var(--muted-foreground));
-  font-size: 12px;
-}
-.resume-bar span {
-  display: block;
-}
-.workout-sheet {
-  width: 500px;
-  flex-shrink: 0;
-  height: 100%;
-  background: hsl(var(--background));
-  border-left: 1px solid hsl(var(--border));
-  display: flex;
-  flex-direction: column;
-}
-.workout-fieldset {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-.workout-top {
-  flex-shrink: 0;
-  border-bottom: 1px solid hsl(var(--border));
-  background: hsl(var(--card));
-  padding: 8px 12px 12px;
-}
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.workout-title {
-  background: none;
-  border: 0;
-  padding: 0 4px;
-  flex: 1;
-  font-size: 18px;
-  font-weight: 600;
-}
-.workout-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  margin: 4px 4px 0;
-  font-variant-numeric: tabular-nums;
-}
-.workout-meta strong {
-  color: hsl(var(--foreground));
-  font-weight: 500;
-}
-.workout-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scroll-padding: 14px 0 30px;
-}
-.logger-tools {
-  padding: 18px 16px 30px;
-}
-.logger-footer,
 .editor-footer {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 18px;
-}
-.exercise-list {
-  display: flex;
-  flex-direction: column;
-}
-.exercise-card {
-  padding: 20px 16px 18px;
-  border-bottom: 1px solid hsl(var(--border));
-}
-.exercise-heading {
-  /* Thumbnail | name over status/caption | ⋯. The name button spans the first two columns
-     and both rows (via subgrid), so its 44px+ target covers thumbnail, name and status. */
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
-  grid-template-rows: minmax(22px, auto) minmax(22px, auto);
-  column-gap: 8px;
-  align-items: center;
-  margin-bottom: 4px;
-}
-.exercise-heading {
-  /* Press-and-hold lifts the card: no text selection or Android callout on the way. */
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-/* Held: the heading sinks slowly, so the hold reads as deliberate. Taps never get that far. */
-.exercise-card[data-holding] > .exercise-heading {
-  transform: scale(0.97);
-  transition: transform 320ms cubic-bezier(0.23, 1, 0.32, 1) 80ms;
-}
-.exercise-card[data-dropped] {
-  animation: dropped-card 900ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-@keyframes dropped-card {
-  from {
-    background: hsl(var(--primary-tint));
-  }
-}
-/* The compact list shown while an exercise is held. */
-.reorder-list {
-  /* The rows' offsetTop is measured from the list. */
-  position: relative;
-  list-style: none;
-  margin: 0;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.reorder-row {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto 18px;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  padding: 0 12px 0 8px;
-  background: var(--row-bg, hsl(var(--background)));
-  border: 1px solid hsl(var(--border));
-  color: hsl(var(--muted-foreground));
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    transform 220ms cubic-bezier(0.23, 1, 0.32, 1),
-    opacity 160ms ease-out;
-}
-/* The other rows fade in around the held one, which is there from the first frame. */
-@starting-style {
-  .reorder-row:not([data-held]) {
-    opacity: 0;
-  }
-  .reorder-row[data-held] {
-    scale: 1;
-  }
-}
-.reorder-row .exercise-thumb {
-  width: 40px;
-  height: 40px;
-}
-.reorder-name {
-  color: hsl(var(--foreground));
-  font-size: 16px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.reorder-count {
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.reorder-row[data-held] {
-  position: relative;
-  z-index: 2;
-  background: hsl(var(--card));
-  border-color: hsl(var(--primary));
-  color: hsl(var(--primary));
-  /* Inset ring doubles the accent border without changing the row's size. */
-  box-shadow:
-    inset 0 0 0 1px hsl(var(--primary)),
-    0 2px 6px #17161b1f,
-    var(--shadow);
-  scale: 1.03;
-  transition: scale 160ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-/* Night: elevation reads as a lighter surface, not a darker one. */
-:root[data-theme='dark'] .reorder-row[data-held] {
-  background: color-mix(in srgb, hsl(var(--accent)), hsl(var(--foreground)) 7%);
-}
-.reorder-row[data-held] .reorder-count {
-  color: hsl(var(--muted-foreground));
-}
-.reorder-row[data-dropping] {
-  scale: 1;
-  box-shadow: none;
-}
-.exercise-heading h2 {
-  font-size: 16px;
-  line-height: 1.35;
-}
-.exercise-title,
-.exercise-title-button {
-  display: grid;
-  grid-column: 1 / 3;
-  grid-row: 1 / 3;
-  grid-template-columns: subgrid;
-  grid-template-rows: subgrid;
-  align-self: stretch;
-  min-width: 0;
-}
-.exercise-title-button {
-  align-items: center;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-align: left;
-}
-.exercise-title-button > .exercise-thumb {
-  grid-column: 1;
-  grid-row: 1 / 3;
-}
-.exercise-title-button > span:last-child {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: end;
-  overflow-wrap: anywhere;
-}
-button.exercise-title-button:focus-visible {
-  outline-offset: 2px;
-}
-@media (hover: hover) {
-  button.exercise-title-button:hover > span:last-child {
-    text-decoration: underline;
-    text-decoration-color: hsl(var(--border));
-    text-underline-offset: 3px;
-  }
-}
-.exercise-meta {
-  grid-column: 2;
-  grid-row: 2;
-  align-self: start;
-  min-width: 0;
-  /* Sits over the name button: taps on the status fall through to it. */
-  pointer-events: none;
-}
-.exercise-heading > .exercise-menu {
-  grid-column: 3;
-  grid-row: 1 / 3;
-  /* Pull the 44px target into the card padding so the ⋯ glyph sits flush with the set column's right edge. */
-  margin-right: -13px;
 }
 .settings-panel.exercise-detail-panel {
   /* Matches the sticky tab strip, which is painted in the page background. */
@@ -526,167 +154,6 @@ button.exercise-title-button:focus-visible {
   .exercise-detail-panel .tabs {
     top: -18px;
   }
-}
-.exercise-count,
-.exercise-done {
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.exercise-done {
-  color: hsl(var(--primary));
-  font-weight: 600;
-}
-.exercise-heading p {
-  font-size: 12px;
-  margin-top: 3px;
-}
-.previous {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 4px;
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-}
-.previous button {
-  border: 0;
-  background: transparent;
-  color: hsl(var(--primary));
-  min-height: 44px;
-  text-align: left;
-  font-size: 12px;
-}
-.previous button span {
-  font-size: 11px;
-  color: hsl(var(--muted-foreground));
-}
-.set-row,
-.set-swipe-content {
-  display: grid;
-  grid-template-columns: 44px minmax(66px, 1fr) minmax(52px, 0.86fr) minmax(48px, 0.78fr) 48px;
-  gap: 6px;
-  align-items: center;
-  min-height: 56px;
-  position: relative;
-  font-variant-numeric: tabular-nums;
-}
-.set-row:not(.set-head) {
-  touch-action: pan-y;
-}
-/* Swipe rows: the ledger slides over a Delete layer that is always there underneath. */
-.set-row.set-swipe {
-  display: block;
-  overflow: hidden;
-  min-height: 0;
-}
-.set-swipe-content {
-  position: relative;
-  z-index: 1;
-  background: var(--row-bg, hsl(var(--background)));
-  transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-.set-swipe-content {
-  /* A permanent layer: promoting it only while dragging re-rasterizes the row at the start and
-     end of every swipe, which reads as a flicker on Android. */
-  will-change: transform;
-}
-.template-editor {
-  --row-bg: hsl(var(--card));
-}
-.set-swipe :focus-visible {
-  outline-offset: -2px;
-}
-.set-swipe-actions {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: flex-end;
-  background: hsl(var(--destructive-foreground));
-  transition: background 150ms ease;
-}
-.set-swipe-delete {
-  width: 88px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border: 0;
-  background: transparent;
-  color: hsl(var(--destructive));
-  font-size: 12px;
-  font-weight: 600;
-}
-.set-swipe-delete svg {
-  transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-/* Past the commit point the layer turns solid, so releasing reads as delete before it happens. */
-.set-swipe[data-commit] .set-swipe-actions {
-  background: hsl(var(--destructive));
-}
-.set-swipe[data-commit] .set-swipe-delete {
-  color: hsl(var(--background));
-}
-.set-swipe[data-commit] .set-swipe-delete svg {
-  transform: scale(1.15);
-}
-.set-head {
-  font-size: 11px;
-  color: hsl(var(--muted-foreground));
-  min-height: 30px;
-  text-align: center;
-}
-.set-row .input {
-  text-align: center;
-  padding: 6px 2px;
-  font-size: 18px;
-  font-weight: 600;
-  min-width: 0;
-}
-.set-index {
-  width: 44px;
-  font-size: 14px;
-  gap: 2px;
-}
-.desktop-remove {
-  display: none;
-}
-.set-check {
-  width: 48px;
-  height: 48px;
-}
-.unchecked-marker {
-  width: 30px;
-  height: 30px;
-  border: 1.5px solid hsl(var(--muted-foreground));
-  background: hsl(var(--card));
-}
-.set-complete,
-.set-complete .set-swipe-content {
-  background: hsl(var(--primary-tint));
-}
-.set-complete .input {
-  background: transparent;
-  border-color: transparent;
-}
-.set-complete .set-index {
-  color: hsl(var(--primary));
-  font-weight: 600;
-}
-.add-set {
-  width: 100%;
-  margin-top: 4px;
-}
-.add-exercise-button {
-  width: 100%;
-}
-.duration-unit {
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  text-align: center;
 }
 .workout-name {
   display: flex;
@@ -820,12 +287,6 @@ button.exercise-title-button:focus-visible {
   font-weight: 500;
   margin: 18px 0 8px;
 }
-.template-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-.template-card,
 .history-card,
 .analytics-card,
 .template-editor,
@@ -835,16 +296,12 @@ button.exercise-title-button:focus-visible {
   padding: 20px;
   min-width: 0;
 }
-.template-card {
-  align-self: start;
-}
 .eyebrow {
   display: block;
   font-size: 12px;
   color: hsl(var(--muted-foreground));
   font-variant-numeric: tabular-nums;
 }
-.template-card footer,
 .history-card footer {
   display: flex;
   flex-wrap: wrap;
@@ -908,9 +365,6 @@ button.exercise-title-button:focus-visible {
   display: grid;
   gap: 8px;
   min-width: 0;
-}
-.history-editor > .content-fieldset > .add-exercise-button {
-  margin-block: 16px;
 }
 .history-editor-problem {
   margin-top: 16px;
@@ -1126,14 +580,6 @@ th {
 .import-preview .button {
   margin-top: 15px;
 }
-@media (min-width: 1000px) {
-  .workout-sheet .exercise-card {
-    padding: 22px 24px;
-  }
-  .workspace:has(.workout-sheet:not([hidden])) .template-grid {
-    grid-template-columns: 1fr;
-  }
-}
 @media (max-width: 999px) {
   .app-bar {
     order: 1;
@@ -1148,21 +594,8 @@ th {
     width: 100%;
     padding: 4px 8px max(8px, env(safe-area-inset-bottom));
   }
-  .workout-sheet {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    border: 0;
-    z-index: 5;
-  }
-  .sheet-open .library {
-    visibility: hidden;
-  }
   .library-scroll {
     padding: 24px 18px 30px;
-  }
-  .template-grid {
-    grid-template-columns: 1fr;
   }
   .analytics-header {
     flex-wrap: wrap;
@@ -1231,27 +664,6 @@ th {
   .app-bar-actions {
     margin-left: auto;
   }
-  .workout-sheet .reorder-list {
-    padding: 14px 24px;
-  }
-}
-@media (max-width: 350px) {
-  .exercise-card {
-    padding-inline: 12px;
-  }
-  .reorder-list {
-    padding-inline: 12px;
-  }
-  .set-row,
-  .set-swipe-content {
-    gap: 4px;
-  }
-  .workout-title {
-    font-size: 16px;
-  }
-  .workout-top {
-    padding-inline: 8px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1261,47 +673,6 @@ th {
     animation: none !important;
     scroll-behavior: auto !important;
   }
-}
-
-.set-previous {
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  border: 0;
-  background: transparent;
-  min-height: 44px;
-  line-height: 1.3;
-  padding: 0 2px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-.set-previous span {
-  display: block;
-  font-size: 11px;
-  margin-top: 3px;
-}
-.source-evidence {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid hsl(var(--border));
-}
-.nearest-list {
-  display: grid;
-  gap: 14px;
-  margin-top: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.nearest-list li {
-  display: grid;
-  gap: 0;
-}
-.nearest-list li > .button {
-  justify-self: start;
-}
-.source-set-list {
-  padding-left: 20px;
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-  color: hsl(var(--muted-foreground));
 }
 
 /* Body weight: chart card over newest-first entries, existing card and row tokens. */
@@ -1330,8 +701,9 @@ th {
   gap: 8px;
   margin-top: 14px;
 }
-.body-weight-actions .button-danger {
+.body-weight-actions .delete-entry {
   margin-left: auto;
+  color: hsl(var(--destructive));
 }
 .body-weight > .notice {
   margin: 16px 0 0;
@@ -1437,111 +809,9 @@ th {
   color: hsl(var(--muted-foreground));
   margin: 22px 0 10px;
 }
-.quick-start .list-label {
-  margin-top: 0;
-}
-.wide-action {
-  width: 100%;
-  min-height: 48px;
-}
-.cancel-workout {
-  color: hsl(var(--destructive));
-}
-.templates-heading {
-  margin-top: 28px;
-}
-.template-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-  border: 1px solid hsl(var(--border));
-  background: hsl(var(--card));
-}
-@media (min-width: 1000px) {
-  .template-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .template-grid .template-card:nth-child(even) {
-    border-left: 1px solid hsl(var(--border));
-  }
-  .template-grid .template-card:nth-child(2) {
-    border-top: 0;
-  }
-  .template-grid .template-card:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-  .workspace:has(.workout-sheet:not([hidden])) .template-grid {
-    grid-template-columns: 1fr;
-  }
-  .workspace:has(.workout-sheet:not([hidden])) .template-grid .template-card:nth-child(even) {
-    border-left: 0;
-  }
-  .workspace:has(.workout-sheet:not([hidden])) .template-grid .template-card:nth-child(2) {
-    border-top: 1px solid hsl(var(--border));
-  }
-  .workspace:has(.workout-sheet:not([hidden]))
-    .template-grid
-    .template-card:last-child:nth-child(odd) {
-    grid-column: auto;
-  }
-}
-.template-card {
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  border: 0;
-  border-top: 1px solid hsl(var(--border));
-  background: transparent;
-}
-.template-card:first-child {
-  border-top: 0;
-}
-.template-card > header {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 6px 0 16px;
-}
-.template-card > header h3 {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 600;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.template-open {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  padding: 4px 16px 14px;
-  min-height: 44px;
-  font: inherit;
-}
-.template-open ul {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 8px;
-  font-size: 14px;
-  color: hsl(var(--muted-foreground));
-  line-height: 1.6;
-}
-.template-open li {
-  overflow-wrap: anywhere;
-}
-.template-open small,
 .chart-note {
   font-size: 12px;
   color: hsl(var(--muted-foreground));
-}
-.template-card .inline-confirm {
-  padding: 0 16px 14px;
-}
-.template-preview .exercise-rows {
-  margin: 14px 0 18px;
 }
 .search-input {
   position: relative;
@@ -1905,107 +1175,12 @@ th {
   margin-left: auto;
   color: hsl(var(--muted-foreground));
 }
-.exercise-picker {
-  inset: 0;
-  width: 100%;
-  height: 100dvh;
-  border: 0;
-  box-shadow: none;
-  padding: 24px max(18px, calc((100vw - 900px) / 2));
-}
-.exercise-picker > .section-heading {
-  position: sticky;
-  top: -24px;
-  z-index: 1;
-  background: hsl(var(--card));
-  padding-block: 12px;
-}
-.type-choice {
-  flex-wrap: wrap;
-}
-.custom-exercise {
-  margin-top: 12px;
-}
-.template-editor > .add-exercise-button {
-  margin-block: 16px;
-}
-.elapsed {
-  font-variant-numeric: tabular-nums;
-  color: hsl(var(--muted-foreground));
-  font-size: 14px;
-}
-.title-row .elapsed {
-  flex: 1;
-  text-align: center;
-}
-.finish-button {
-  min-width: 88px;
-}
-.exercise-menu {
-  position: relative;
-  flex-shrink: 0;
-}
-.exercise-menu > [aria-expanded='true'] {
-  background: hsl(var(--accent));
-  color: hsl(var(--foreground));
-}
-.exercise-menu-backdrop {
-  /* Transparent: it only catches the tap that closes the menu. */
-  position: fixed;
-  inset: 0;
-  z-index: 19;
-  -webkit-tap-highlight-color: transparent;
-}
-.exercise-menu-list {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% + 4px);
-  right: 0;
-  min-width: 208px;
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  box-shadow: var(--shadow);
-}
-.exercise-menu-list[data-side='top'] {
-  top: auto;
-  bottom: calc(100% + 4px);
-}
-.exercise-menu-list [role='menuitem'] {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: left;
-  transition: background 120ms;
-}
-.exercise-menu-list [role='menuitem']:focus-visible {
-  outline-offset: -2px;
-}
-.exercise-menu-list .exercise-menu-danger {
-  color: hsl(var(--destructive));
-}
-@media (hover: hover) {
-  .exercise-menu-list [role='menuitem']:hover {
-    background: hsl(var(--accent));
-  }
-}
-.exercise-heading .exercise-thumb {
+/* Kept unlayered on purpose: it must beat the unlayered shared .exercise-thumb size. Moves to
+   utilities when .exercise-thumb ports (PR 4/5). */
+.exercise-heading .exercise-thumb,
+.reorder-row .exercise-thumb {
   width: 40px;
   height: 40px;
-}
-.logger-tools {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 .locked-status {
   display: flex;
@@ -2025,13 +1200,6 @@ th {
     flex-direction: row;
     gap: 8px;
   }
-}
-.exclude-set {
-  min-width: 44px;
-  padding: 0 8px;
-  gap: 5px;
-  font-size: 12px;
-  justify-self: end;
 }
 .session-sets {
   align-items: center;

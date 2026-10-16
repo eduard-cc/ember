@@ -7,7 +7,8 @@ import type {Dataset, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {WorkoutView} from '../views/WorkoutView';
 import {AddExercise} from './AddExercise';
-import {Button, Input} from './ui';
+import {Button} from './ui/button';
+import {Input} from './ui/input';
 
 /**
  * Edit a finished or imported workout, Strong-style: name, start time, duration, exercises

@@ -9,11 +9,14 @@ import {ExerciseMenu} from '../components/ExerciseMenu';
 import {ReorderList, type ReorderStart, scrollParent, useHold} from '../components/ExerciseReorder';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
-import {SetRow} from '../components/SetRow';
-import {Button, Input, plural} from '../components/ui';
+import {SET_GRID, SetRow} from '../components/SetRow';
+import {Button} from '../components/ui/button';
+import {Input} from '../components/ui/input';
 import {moveItem} from '../domain/reorder';
 import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
+import {cn} from '../utils/cn';
+import {plural} from '../utils/plural';
 import {ExerciseDetail} from './ExerciseDetail';
 
 export function dateLabel(date: string) {
@@ -34,6 +37,13 @@ export function validSet(set: SetRecord, type: ExerciseType) {
     (type === 'bodyweight' || bounded(set.weight, 0, 2000))
   );
 }
+/** Set-row fields: centred 18/600 values; a completed row drops the field chrome. */
+const setInput = (completed?: boolean) =>
+  cn(
+    'min-w-0 px-0.5 py-1.5 text-center set-value',
+    completed && 'border-transparent bg-transparent disabled:bg-transparent',
+  );
+
 /** Only load conventions worth a reminder; plain weighted work needs no caption. */
 function loadCaption(ex: ExerciseLog): string | null {
   switch (ex.type) {
@@ -260,7 +270,7 @@ export function WorkoutView({
   // While an exercise is held the compact list stands in for the cards. They stay mounted but
   // hidden, so dropping doesn't rebuild every set row (and its history lookup) mid-animation.
   return (
-    <div className='exercise-list' ref={list}>
+    <div className='flex flex-col' ref={list}>
       {/* Portaled to <body>: modal dialogs keep live regions and their ancestors exposed to
           screen readers, so one inside the logger would expose the whole logger behind them. */}
       {createPortal(
@@ -309,7 +319,7 @@ export function WorkoutView({
         const done = ex.sets.length > 0 && checked === ex.sets.length;
         return (
           <section
-            className='exercise-card'
+            className='exercise-card border-b border-border px-4 pt-5 pb-[18px] narrow:px-3 [.workout-sheet_&]:desk:px-6 [.workout-sheet_&]:desk:py-[22px]'
             key={identity(ex)}
             hidden={!!reordering}
             ref={(node) => {
@@ -318,7 +328,7 @@ export function WorkoutView({
             }}
           >
             <header
-              className='exercise-heading'
+              className='exercise-heading mb-1 grid grid-cols-[40px_minmax(0,1fr)_auto] grid-rows-[minmax(22px,auto)_minmax(22px,auto)] items-center gap-x-2 select-none [-webkit-touch-callout:none]'
               onPointerDown={(event) => {
                 // ⋯ keeps its own press; only the name, drawing and status lift the card.
                 if ((event.target as HTMLElement).closest('.exercise-menu')) return;
@@ -327,10 +337,13 @@ export function WorkoutView({
               }}
             >
               {/* The heading keeps the plain name; the button inside says what it does. */}
-              <h2 className='exercise-title' aria-labelledby={`${identity(ex)}-name`}>
+              <h2
+                className='exercise-title col-[1/3] row-[1/3] grid min-w-0 grid-cols-subgrid grid-rows-subgrid self-stretch text-[16px] leading-[1.35]'
+                aria-labelledby={`${identity(ex)}-name`}
+              >
                 {showDetails ? (
                   <button
-                    className='exercise-title-button'
+                    className='exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.exercise-thumb]:col-1 [&>.exercise-thumb]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere] hover:[&>span:last-child]:underline hover:[&>span:last-child]:decoration-border hover:[&>span:last-child]:underline-offset-[3px]'
                     aria-label={`Show details for ${ex.name}`}
                     ref={(node) => {
                       if (node) detailButtons.current.set(identity(ex), node);
@@ -345,18 +358,22 @@ export function WorkoutView({
                     <span id={`${identity(ex)}-name`}>{ex.name}</span>
                   </button>
                 ) : (
-                  <span className='exercise-title-button'>
+                  <span className='exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.exercise-thumb]:col-1 [&>.exercise-thumb]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere]'>
                     <ExerciseThumb name={ex.name} />
                     <span id={`${identity(ex)}-name`}>{ex.name}</span>
                   </span>
                 )}
               </h2>
-              <div className='exercise-meta'>
+              <div className='exercise-meta pointer-events-none col-2 row-2 min-w-0 self-start'>
                 {!targetsOnly && (
                   <span
                     role='status'
                     aria-label='Exercise completion'
-                    className={done ? 'exercise-done' : 'exercise-count'}
+                    className={
+                      done
+                        ? 'exercise-done inline-flex items-center gap-1 text-[12px] font-semibold text-primary'
+                        : 'exercise-count inline-flex items-center gap-1 text-[12px] text-muted-foreground'
+                    }
                   >
                     {done ? (
                       <>
@@ -368,9 +385,10 @@ export function WorkoutView({
                     )}
                   </span>
                 )}
-                {loadCaption(ex) && <p>{loadCaption(ex)}</p>}
+                {loadCaption(ex) && <p className='mt-[3px] text-[12px]'>{loadCaption(ex)}</p>}
               </div>
               <ExerciseMenu
+                className='col-3 row-[1/3] -mr-[13px]'
                 name={ex.name}
                 ref={(node) => {
                   if (node) menuButtons.current.set(identity(ex), node);
@@ -390,13 +408,18 @@ export function WorkoutView({
               />
             </header>
             <div className='set-table'>
-              <div className='set-row set-head'>
+              <div
+                className={cn(
+                  SET_GRID,
+                  'set-row set-head min-h-[30px] text-center text-[11px] text-muted-foreground',
+                )}
+              >
                 <span>Set</span>
                 <span>Previous</span>
                 <span>{timed ? 'Seconds' : ex.type === 'assisted' ? 'Assist. kg' : 'kg'}</span>
                 <span>{ex.type === 'duration' ? '' : timed ? 'km' : 'Reps'}</span>
                 <span />
-                <span className='desktop-remove' />
+                <span className='desktop-remove hidden' />
               </div>
               {ex.sets.map((set, si) => (
                 <SetRow
@@ -420,6 +443,7 @@ export function WorkoutView({
                   )}
                   <Input
                     type='number'
+                    className={setInput(set.completed)}
                     onFocus={(event) => event.currentTarget.select()}
                     onKeyDown={(event) => {
                       if (event.key !== 'Enter' || targetsOnly) return;
@@ -448,10 +472,11 @@ export function WorkoutView({
                     }
                   />
                   {ex.type === 'duration' ? (
-                    <span className='duration-unit'>seconds</span>
+                    <span className='text-center text-[12px] text-muted-foreground'>seconds</span>
                   ) : (
                     <Input
                       type='number'
+                      className={setInput(set.completed)}
                       onFocus={(event) => event.currentTarget.select()}
                       onKeyDown={(event) => {
                         if (event.key !== 'Enter' || targetsOnly) return;
@@ -479,7 +504,7 @@ export function WorkoutView({
                   ) : (
                     <Button
                       size='icon'
-                      className='set-check'
+                      className='set-check h-12 w-12'
                       variant={set.completed ? 'primary' : 'secondary'}
                       aria-pressed={!!set.completed}
                       aria-label={`${set.completed ? 'Uncomplete' : 'Complete'} ${ex.name} set ${si + 1}`}
@@ -489,7 +514,10 @@ export function WorkoutView({
                       {set.completed ? (
                         <Check size={19} />
                       ) : (
-                        <span className='unchecked-marker' aria-hidden='true' />
+                        <span
+                          className='unchecked-marker h-[30px] w-[30px] border-[1.5px] border-muted-foreground bg-card'
+                          aria-hidden='true'
+                        />
                       )}
                     </Button>
                   )}
@@ -498,7 +526,7 @@ export function WorkoutView({
             </div>
             <Button
               variant='ghost'
-              className='add-set'
+              className='mt-1 w-full'
               onClick={() =>
                 onChange({
                   ...workout,

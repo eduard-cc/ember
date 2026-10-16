@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 
-import {Button} from './ui';
+import {Button} from './ui/button';
 
 export type Theme = 'system' | 'light' | 'dark';
 interface Appearance {

@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {navigate, openSettings} from '../navigation';
 import {resolve} from './colour-helpers';
 
 const PINE = 'hsl(155.6 47.8% 26.3%)';
@@ -322,6 +322,18 @@ test('with the logger open the odd last template stays in the single column', as
   await open(page, false);
   const grid = page.locator('.template-grid');
   await expect(grid).toBeVisible();
+  // One track while the logger is open.
+  const tracks = await grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' '));
+  expect(tracks).toHaveLength(1);
+  // The second card keeps its top rule and has no left rule.
+  const second = await page
+    .locator('.template-card')
+    .nth(1)
+    .evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return {left: cs.borderLeftWidth, top: cs.borderTopWidth};
+    });
+  expect(second).toEqual({left: '0px', top: '1px'});
   const gridBox = await grid.boundingBox();
   const lastBox = await page.locator('.template-card').last().boundingBox();
   expect(Math.abs(lastBox!.width - (gridBox!.width - 2))).toBeLessThanOrEqual(1);
@@ -357,3 +369,97 @@ test('the tab bar hides while a library input is focused', async ({page}, info) 
   await search.blur();
   await expect(bar).toHaveCSS('visibility', 'visible');
 });
+
+const DESTRUCTIVE = {
+  light: {fill: 'hsl(6 62% 42%)', label: 'hsl(8 60% 96%)'},
+  dark: {fill: 'hsl(4 70% 66%)', label: 'hsl(4 40% 12%)'},
+} as const;
+
+for (const scheme of ['light', 'dark'] as const) {
+  test(`destructive confirmation is a solid fill (${scheme})`, async ({page}) => {
+    await page.emulateMedia({colorScheme: scheme});
+    await open(page, false);
+    await page.getByRole('button', {name: 'Cancel workout'}).click();
+    const discard = page.getByRole('button', {name: 'Discard workout'});
+    await expect(discard).toBeVisible();
+    const style = await discard.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return {background: cs.backgroundColor, color: cs.color};
+    });
+    expect(style.background).toBe(await resolve(page, DESTRUCTIVE[scheme].fill));
+    expect(style.color).toBe(await resolve(page, DESTRUCTIVE[scheme].label));
+  });
+}
+
+test('Delete entry is an outline action with destructive text', async ({page}) => {
+  await page.emulateMedia({colorScheme: 'light'});
+  await page.goto('/');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await openSettings(page);
+  const section = page.getByRole('region', {name: 'Body weight', exact: true});
+  await section.getByRole('button', {name: 'Add weight', exact: true}).click();
+  await section.getByLabel('Weight in kg', {exact: true}).fill('70');
+  await section.getByRole('button', {name: 'Save entry', exact: true}).click();
+  await section.getByRole('button', {name: /Edit entry/}).click();
+  const del = section.getByRole('button', {name: 'Delete entry', exact: true});
+  await expect(del).toBeVisible();
+  const style = await del.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return {color: cs.color, background: cs.backgroundColor};
+  });
+  expect(style.color).toBe(await resolve(page, 'hsl(6 62% 42%)'));
+  expect(style.background).not.toBe(await resolve(page, 'hsl(6 62% 42%)'));
+});
+
+test('secondary buttons wash on hover', async ({page}, info) => {
+  test.skip(info.project.name !== 'desktop');
+  await page.emulateMedia({colorScheme: 'light'});
+  await open(page, false);
+  const add = page.getByRole('button', {name: 'Add exercise'}).first();
+  await add.scrollIntoViewIfNeeded();
+  await page.mouse.move(0, 0);
+  await expect(add).toHaveCSS('background-color', await resolve(page, 'hsl(42 55.6% 96.5%)'));
+  await add.hover();
+  await expect(add).toHaveCSS('background-color', await resolve(page, 'hsl(37.1 36.8% 88.8%)'));
+  await page.mouse.move(0, 0);
+  await expect(add).toHaveCSS('background-color', await resolve(page, 'hsl(42 55.6% 96.5%)'));
+});
+
+test('primary buttons dim on hover', async ({page}, info) => {
+  test.skip(info.project.name !== 'desktop');
+  await open(page, false);
+  await page.getByRole('button', {name: 'Cancel workout'}).click();
+  await page.getByRole('button', {name: 'Discard workout'}).click();
+  const start = page.getByRole('button', {name: 'Start empty workout'});
+  await expect(start).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(start).toHaveCSS('filter', 'none');
+  await start.hover();
+  await expect(start).toHaveCSS('filter', 'brightness(0.94)');
+});
+
+for (const [scheme, wash] of [
+  ['light', 'hsl(37.1 36.8% 88.8%)'],
+  ['dark', 'hsl(262.5 9.1% 17.3%)'],
+] as const) {
+  test(`resume bar hovers to the accent wash with foreground meta (${scheme})`, async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== 'desktop');
+    await page.emulateMedia({colorScheme: scheme});
+    await open(page, true);
+    const bar = page.getByRole('button', {name: 'Resume Upper body A'});
+    await expect(bar).toBeVisible();
+    const meta = bar.locator('span.block');
+    const time = bar.locator('.elapsed');
+    const accent = await resolve(page, wash);
+    const foreground = await bar.evaluate((el) => getComputedStyle(el).color);
+    await page.mouse.move(0, 0);
+    await expect(bar).not.toHaveCSS('background-color', accent);
+    await expect(meta).not.toHaveCSS('color', foreground);
+    await bar.hover();
+    await expect(bar).toHaveCSS('background-color', accent);
+    await expect(meta).toHaveCSS('color', foreground);
+    await expect(time).toHaveCSS('color', foreground);
+  });
+}

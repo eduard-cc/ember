@@ -3,7 +3,7 @@ import {Ban, Undo2} from 'lucide-react';
 import type {ExerciseType, SetRecord} from '../domain/types';
 import {setLabel} from '../views/ExerciseDetail';
 import {dateLabel} from '../views/WorkoutView';
-import {Button} from './ui';
+import {Button} from './ui/button';
 
 export type ExcludeSetHandler = (workoutId: string, setId: string, excluded: boolean) => void;
 
@@ -29,7 +29,7 @@ export function ExcludeSet({
   return (
     <Button
       variant='ghost'
-      className='exclude-set'
+      className='exclude-set min-w-11 gap-[5px] justify-self-end px-2 text-[12px] leading-normal'
       aria-label={
         set.excluded ? `Include ${label} in analytics again` : `Exclude ${label} from analytics`
       }

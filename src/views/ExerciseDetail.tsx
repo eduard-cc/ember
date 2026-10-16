@@ -4,9 +4,10 @@ import {type ReactElement, type ReactNode, useId, useState} from 'react';
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
-import {Button, plural} from '../components/ui';
+import {Button} from '../components/ui/button';
 import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
 import type {Dataset, ExerciseType, SetRecord} from '../domain/types';
+import {plural} from '../utils/plural';
 import {ExerciseCharts} from './ExerciseCharts';
 import {dateLabel} from './WorkoutView';
 

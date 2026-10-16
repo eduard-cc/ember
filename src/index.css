@@ -2,6 +2,10 @@
 @source './**/*.{ts,tsx}';
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+@custom-variant narrow (@media (max-width: 350px));
+@custom-variant short (@media (orientation: landscape) and (max-height: 500px));
+/* The logger is open: an ancestor-level state, so it needs :has() and cannot be a class on the element. */
+@custom-variant logger-open (.workspace:has(.workout-sheet:not([hidden])) &);
 
 :root {
   --radius: 0;
@@ -98,6 +102,7 @@
 }
 
 @theme {
+  --breakpoint-desk: 1000px;
   --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
   --text-page-title: 1.5rem;
   --text-page-title--line-height: calc(2 / 1.5);
@@ -116,6 +121,52 @@
   --text-caption--line-height: 1;
 }
 
+/* Bare element defaults. In the base layer (after preflight) so utilities can override them;
+   unlayered class rules in styles.css still beat both. */
+@layer base {
+  button {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  a {
+    color: inherit;
+    text-underline-offset: 3px;
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: calc(2 / 1.5);
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+  }
+}
+
 @utility numeric {
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
@@ -124,7 +175,125 @@
 @utility set-value {
   font-size: 18px;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.5;
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
+}
+
+/* State CSS for swipe rows, the reorder gesture and card state (held, dragging, settling). It
+   sits in one layer with the base declarations it overrides (transition, background, colour),
+   because a utility on the same element would beat any rule here. */
+@layer components {
+  /* Swipe rows: the ledger slides over a Delete layer that is always there underneath. */
+  .set-row.set-swipe {
+    display: block;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .set-swipe-content {
+    z-index: 1;
+    background: var(--row-bg, hsl(var(--background)));
+    transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
+    /* A permanent layer: promoting it only while dragging re-rasterizes the row at the start and
+       end of every swipe, which reads as a flicker on Android. */
+    will-change: transform;
+  }
+  .template-editor {
+    --row-bg: hsl(var(--card));
+  }
+  .set-swipe :focus-visible {
+    outline-offset: -2px;
+  }
+  .set-swipe-actions {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: flex-end;
+    background: hsl(var(--destructive-foreground));
+    transition: background 150ms ease;
+  }
+  .set-swipe-delete {
+    width: 88px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 0;
+    background: transparent;
+    color: hsl(var(--destructive));
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .set-swipe-delete svg {
+    transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  /* Past the commit point the layer turns solid, so releasing reads as delete before it happens. */
+  .set-swipe[data-commit] .set-swipe-actions {
+    background: hsl(var(--destructive));
+  }
+  .set-swipe[data-commit] .set-swipe-delete {
+    color: hsl(var(--background));
+  }
+  .set-swipe[data-commit] .set-swipe-delete svg {
+    transform: scale(1.15);
+  }
+  .exercise-heading {
+    transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  /* Held: the heading sinks slowly, so the hold reads as deliberate. Taps never get that far. */
+  .exercise-card[data-holding] > .exercise-heading {
+    transform: scale(0.97);
+    transition: transform 320ms cubic-bezier(0.23, 1, 0.32, 1) 80ms;
+  }
+  .exercise-card[data-dropped] {
+    animation: dropped-card 900ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @keyframes dropped-card {
+    from {
+      background: hsl(var(--primary-tint));
+    }
+  }
+  .reorder-row {
+    background: var(--row-bg, hsl(var(--background)));
+    border-color: hsl(var(--border));
+    color: hsl(var(--muted-foreground));
+    transition:
+      transform 220ms cubic-bezier(0.23, 1, 0.32, 1),
+      opacity 160ms ease-out;
+  }
+  /* The other rows fade in around the held one, which is there from the first frame. */
+  @starting-style {
+    .reorder-row:not([data-held]) {
+      opacity: 0;
+    }
+    .reorder-row[data-held] {
+      scale: 1;
+    }
+  }
+  .reorder-row[data-held] {
+    position: relative;
+    z-index: 2;
+    background: hsl(var(--card));
+    border-color: hsl(var(--primary));
+    color: hsl(var(--primary));
+    /* Inset ring doubles the accent border without changing the row's size. */
+    box-shadow:
+      inset 0 0 0 1px hsl(var(--primary)),
+      0 2px 6px #17161b1f,
+      var(--shadow);
+    scale: 1.03;
+    transition: scale 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  /* Night: elevation reads as a lighter surface, not a darker one. */
+  :root[data-theme='dark'] .reorder-row[data-held] {
+    background: color-mix(in srgb, hsl(var(--accent)), hsl(var(--foreground)) 7%);
+  }
+  .reorder-row[data-held] .reorder-count {
+    color: hsl(var(--muted-foreground));
+  }
+  .reorder-row[data-dropping] {
+    scale: 1;
+    box-shadow: none;
+  }
 }

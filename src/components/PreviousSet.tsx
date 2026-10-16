@@ -6,7 +6,7 @@ import {bestComparable, getHistory, nearestRecorded} from '../domain/model';
 import type {Dataset, ExerciseLog, SetRecord} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {dateLabel} from '../views/WorkoutView';
-import {Button} from './ui';
+import {Button} from './ui/button';
 
 function recorded(set: SetRecord, type: ExerciseLog['type']) {
   if (type === 'duration' || type === 'cardio')
@@ -66,13 +66,15 @@ export function PreviousSet({
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <button
-          className='set-previous'
+          className='set-previous min-h-11 border-0 bg-transparent px-0.5 text-center text-[12px] leading-[1.3] text-muted-foreground tabular-nums'
           aria-label={`Previous for ${exercise.name} set ${index + 1}`}
         >
           {previousSet ? recorded(previousSet, exercise.type) : '—'}
           {previousSet?.suspicious ? ' · flagged' : ''}
           {previousSet?.excluded ? ' · excluded' : ''}
-          {previousSet && <span>{dateLabel(previous.date)}</span>}
+          {previousSet && (
+            <span className='mt-[3px] block text-[11px]'>{dateLabel(previous.date)}</span>
+          )}
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -85,7 +87,7 @@ export function PreviousSet({
             Recorded evidence for this set. No equivalent performance is inferred.
           </Dialog.Description>
           {!timed && (
-            <section className='source-evidence'>
+            <section className='source-evidence mt-[22px] border-t border-border pt-[18px]'>
               <h3>
                 {exercise.type === 'bodyweight'
                   ? 'Best at bodyweight'
@@ -118,13 +120,16 @@ export function PreviousSet({
             </section>
           )}
           {nearest && (nearest.below || nearest.above) && (
-            <section className='source-evidence' aria-labelledby={`${nearestId}-title`}>
+            <section
+              className='source-evidence mt-[22px] border-t border-border pt-[18px]'
+              aria-labelledby={`${nearestId}-title`}
+            >
               <h3 id={`${nearestId}-title`}>Nearest recorded</h3>
               <p>
                 These are actual sets at other weights, not an equivalent for {set.weight} kg
                 {exercise.type === 'assisted' ? ' assistance' : ''}.
               </p>
-              <ul className='nearest-list'>
+              <ul className='nearest-list mt-3 grid gap-3.5 tabular-nums'>
                 {(
                   [
                     [exercise.type === 'assisted' ? 'Less assistance' : 'Lighter', nearest.below],
@@ -132,13 +137,14 @@ export function PreviousSet({
                   ] as const
                 ).map(([label, entry]) =>
                   entry ? (
-                    <li key={label}>
+                    <li key={label} className='grid gap-0'>
                       <span>
                         <strong>{label}</strong> {recorded(entry.set, exercise.type)}
                         {entry.set.suspicious ? ' · flagged' : ''} · {dateLabel(entry.date)}
                       </span>
                       <Button
                         variant='ghost'
+                        className='justify-self-start'
                         aria-label={`View source workout ${entry.workoutName} (${label.toLowerCase()})`}
                         onClick={() => source(entry.workoutId)}
                       >
@@ -151,14 +157,14 @@ export function PreviousSet({
               </ul>
             </section>
           )}
-          <section className='source-evidence'>
+          <section className='source-evidence mt-[22px] border-t border-border pt-[18px]'>
             <h3>Previous session</h3>
             {previous ? (
               <>
                 <p>
                   {dateLabel(previous.date)} · {previous.workoutName}
                 </p>
-                <ol className='source-set-list'>
+                <ol className='source-set-list pl-5 text-[14px] text-muted-foreground tabular-nums'>
                   {previous.sets.map((record, i) => (
                     <li key={record.id}>
                       Set {i + 1}: {recorded(record, exercise.type)}

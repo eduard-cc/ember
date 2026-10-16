@@ -4,7 +4,7 @@ import {useRef, useState} from 'react';
 import {getExercises} from '../domain/model';
 import type {Dataset} from '../domain/types';
 import {type PreparedImport, prepareStrongImport} from '../storage/import';
-import {Button} from './ui';
+import {Button} from './ui/button';
 
 export function ImportPanel({
   onReplace,

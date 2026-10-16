@@ -14,7 +14,8 @@ import {
 import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {dateLabel} from '../views/WorkoutView';
-import {Button, Input} from './ui';
+import {Button} from './ui/button';
+import {Input} from './ui/input';
 
 const time = (date: string) => date.slice(11, 16);
 const describe = (m: BodyWeight) => `${dateLabel(m.date)} ${time(m.date)}, ${formatKg(m.kg)} kg`;
@@ -257,7 +258,7 @@ export function BodyWeightSettings({
                 Cancel
               </Button>
               {editing.base && (
-                <Button type='button' variant='danger' onClick={() => void remove()}>
+                <Button type='button' className='delete-entry' onClick={() => void remove()}>
                   Delete entry
                 </Button>
               )}

@@ -6,7 +6,7 @@ import {exerciseTypeFor} from '../catalog/catalog';
 import type {Dataset, ExerciseLog, ExerciseType} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {ExerciseList} from './ExerciseList';
-import {Button} from './ui';
+import {Button} from './ui/button';
 import {historyTargets} from './workout-targets';
 
 const types: [ExerciseType, string][] = [
@@ -56,10 +56,12 @@ export function ExercisePicker({
       <Dialog.Portal>
         <Dialog.Overlay className='dialog-overlay' />
         <Dialog.Content
-          className='dialog-content settings-panel exercise-picker'
+          /* Every `!` here beats the unlayered shared .settings-panel (styles.css); drop them when
+             .settings-panel ports with Settings (PR 4/5). */
+          className='dialog-content settings-panel exercise-picker inset-0! h-dvh w-full! border-0! px-[max(18px,calc((100vw-900px)/2))]! py-6! shadow-none!'
           onCloseAutoFocus={onCloseAutoFocus}
         >
-          <div className='section-heading'>
+          <div className='section-heading sticky -top-6 z-1 bg-card py-3'>
             <Dialog.Title>{title}</Dialog.Title>
             <Dialog.Close asChild>
               <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
@@ -75,9 +77,13 @@ export function ExercisePicker({
               const exact = names.some((name) => name.toLowerCase() === query.toLowerCase());
               if (!query || exact) return null;
               return custom === query ? (
-                <section className='custom-exercise' aria-label='New exercise'>
+                <section className='custom-exercise mt-3' aria-label='New exercise'>
                   <h2 className='list-label'>Type for {query}</h2>
-                  <div className='chip-row type-choice' role='group' aria-label='Exercise type'>
+                  <div
+                    className='chip-row type-choice flex-wrap'
+                    role='group'
+                    aria-label='Exercise type'
+                  >
                     {types.map(([type, label]) => (
                       <button key={type} className='chip' onClick={() => pick(query, type)}>
                         {label}
@@ -86,7 +92,9 @@ export function ExercisePicker({
                   </div>
                 </section>
               ) : (
-                <ul className='exercise-rows custom-exercise'>
+                // `mt-3!` beats the unlayered shared .exercise-rows margin:0 (styles.css); drop it when
+                // .exercise-rows ports (PR 4/5).
+                <ul className='exercise-rows custom-exercise mt-3!'>
                   <li>
                     <button
                       className='exercise-row'
@@ -130,7 +138,7 @@ export function AddExercise({
       title='Add exercise'
       description='Search or filter the exercise library and choose one to add to this workout.'
       trigger={
-        <Button className='add-exercise-button'>
+        <Button className='add-exercise-button w-full [.history-editor>.content-fieldset>&]:my-4 [.template-editor>&]:my-4'>
           <Plus size={16} /> Add exercise
         </Button>
       }

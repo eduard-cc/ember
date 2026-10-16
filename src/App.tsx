@@ -20,7 +20,8 @@ import {ElapsedTimer} from './components/ElapsedTimer';
 import {ImportPanel} from './components/ImportPanel';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
-import {Button, Input, plural} from './components/ui';
+import {Button} from './components/ui/button';
+import {Input} from './components/ui/input';
 import {routineTargets} from './components/workout-targets';
 import {parseStrongCsv} from './domain/model';
 import type {Workout} from './domain/types';
@@ -28,6 +29,7 @@ import {useBackLayer} from './state/back';
 import {newWorkout, useWorkoutState} from './state/workout';
 import {commitStrongImport} from './storage/import';
 import {useSync} from './sync/use-sync';
+import {plural} from './utils/plural';
 import {ExerciseDetail} from './views/ExerciseDetail';
 import {ExercisesView} from './views/ExercisesView';
 import {HistoryView} from './views/HistoryView';
@@ -282,7 +284,11 @@ export default function App() {
         <div className='error-banner' role='alert'>
           {persistenceError}
           {recoveryError && (
-            <Button variant='danger' onClick={resetUnreadableStorage}>
+            <Button
+              variant='secondary'
+              className='text-destructive'
+              onClick={resetUnreadableStorage}
+            >
               Reset unreadable saved data
             </Button>
           )}
@@ -339,7 +345,7 @@ export default function App() {
       )}
       <main hidden={sync.locked} className='workspace'>
         <div
-          className='library'
+          className='library [.sheet-open_&]:max-desk:invisible'
           inert={showSheet && mobile}
           aria-hidden={showSheet && mobile ? true : undefined}
         >
@@ -368,12 +374,14 @@ export default function App() {
               {view === 'Workout' && !sync.locked && (
                 <>
                   <section className='quick-start' aria-labelledby='quick-start'>
-                    <h2 className='list-label' id='quick-start'>
+                    {/* `mt-0!` beats the unlayered shared .list-label margin (styles.css); drop it when
+                        .list-label ports (PR 4/5). */}
+                    <h2 className='list-label mt-0!' id='quick-start'>
                       Quick start
                     </h2>
                     <Button
                       variant='primary'
-                      className='wide-action'
+                      className='min-h-12 w-full'
                       onClick={() => start(newWorkout())}
                     >
                       Start empty workout
@@ -434,16 +442,20 @@ export default function App() {
           </div>
           {state.active && !showSheet && (
             <Button
-              className='resume-bar'
+              className='resume-bar group min-h-16 w-full shrink-0 justify-start gap-3 border-0 border-t bg-card px-[18px] py-2.5 text-left text-foreground shadow-[inset_3px_0_0_var(--color-primary)]'
               variant='secondary'
               aria-label={`Resume ${state.active.name}`}
               onClick={() => setExpanded(true)}
             >
-              <ChevronUp size={20} />
-              <div>
-                <strong>{state.active.name}</strong>
-                <span>
-                  <ElapsedTimer start={state.active.date} /> · {completed} / {sets.length} sets
+              <ChevronUp size={20} className='text-primary' />
+              <div className='min-w-0'>
+                <strong className='block truncate font-semibold'>{state.active.name}</strong>
+                <span className='block text-[12px] text-muted-foreground group-[:hover:not(:disabled)]:text-foreground'>
+                  <ElapsedTimer
+                    className='text-[12px] group-[:hover:not(:disabled)]:text-foreground'
+                    start={state.active.date}
+                  />{' '}
+                  · {completed} / {sets.length} sets
                 </span>
               </div>
             </Button>
@@ -451,10 +463,14 @@ export default function App() {
         </div>
         {/* Unmounted while locked: portaled dialogs (Previous evidence) escape <main hidden>. */}
         {state.active && !sync.locked && (
-          <section className='workout-sheet' aria-label='Active workout' hidden={!showSheet}>
-            <div className='workout-fieldset'>
-              <header className='workout-top'>
-                <div className='title-row'>
+          <section
+            className='workout-sheet flex h-full w-[500px] shrink-0 flex-col border-l border-border bg-background max-desk:absolute max-desk:inset-0 max-desk:z-5 max-desk:w-full max-desk:border-0'
+            aria-label='Active workout'
+            hidden={!showSheet}
+          >
+            <div className='flex h-full flex-col'>
+              <header className='workout-top shrink-0 border-b border-border bg-card px-3 pt-2 pb-3 narrow:px-2'>
+                <div className='flex items-center gap-1.5'>
                   <Button
                     variant='ghost'
                     size='icon'
@@ -464,10 +480,12 @@ export default function App() {
                     <ChevronDown size={22} />
                   </Button>
                   {settingsButton}
-                  {showSheet && <ElapsedTimer start={state.active.date} />}
+                  {showSheet && (
+                    <ElapsedTimer start={state.active.date} className='flex-1 text-center' />
+                  )}
                   <Button
                     variant='primary'
-                    className='finish-button'
+                    className='min-w-[88px]'
                     aria-label='Finish workout'
                     disabled={disabled || deletingSets || !completed}
                     onClick={() => setConfirmFinish(true)}
@@ -481,7 +499,7 @@ export default function App() {
                 <Input
                   disabled={disabled}
                   id='workout-name'
-                  className='workout-title'
+                  className='workout-title flex-1 border-0 bg-transparent px-1 py-0 text-[18px] font-semibold narrow:text-[16px]'
                   value={state.active.name}
                   onChange={(event) =>
                     setState((s) =>
@@ -490,9 +508,9 @@ export default function App() {
                   }
                 />
                 {showSheet && (
-                  <div className='workout-meta'>
+                  <div className='workout-meta mx-1 mt-1 flex items-center justify-between gap-2 text-[12px] text-muted-foreground tabular-nums'>
                     <span>
-                      <strong>
+                      <strong className='font-medium text-foreground'>
                         {completed} / {sets.length}
                       </strong>{' '}
                       {sets.length === 1 ? 'set' : 'sets'} completed
@@ -500,7 +518,7 @@ export default function App() {
                   </div>
                 )}
               </header>
-              <div className='workout-scroll'>
+              <div className='workout-scroll min-h-0 flex-1 [scroll-padding:14px_0_30px] overflow-y-auto overscroll-contain'>
                 <h2 className='sr-only'>Your workout</h2>
                 {showSheet && !settingsOpen && (
                   <>
@@ -525,7 +543,7 @@ export default function App() {
                     onExclude={setSetExcluded}
                     disabled={disabled}
                   />
-                  <div className='logger-tools'>
+                  <div className='flex flex-col gap-3 px-4 pt-[18px] pb-[30px]'>
                     <AddExercise
                       dataset={allDataset}
                       onAdd={(exercise) =>
@@ -541,7 +559,7 @@ export default function App() {
                     />
                     <Button
                       variant='secondary'
-                      className='wide-action cancel-workout'
+                      className='min-h-12 w-full text-destructive'
                       onClick={() => setConfirmCancel(true)}
                     >
                       Cancel workout

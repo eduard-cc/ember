@@ -1,9 +1,9 @@
 import {useMemo} from 'react';
 
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
-import {plural} from '../components/ui';
 import {workoutsPerWeek} from '../domain/model';
 import type {Workout} from '../domain/types';
+import {plural} from '../utils/plural';
 import {setLabel} from './ExerciseDetail';
 import {dateLabel} from './WorkoutView';
 

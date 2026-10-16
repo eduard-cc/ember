@@ -1,7 +1,12 @@
 import {Ellipsis, Trash2} from 'lucide-react';
 import {type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
-import {Button} from './ui';
+import {cn} from '../utils/cn';
+import {Button} from './ui/button';
+
+/** The five-column set grid, shared by the header row and each row's sliding content. */
+export const SET_GRID =
+  'relative grid min-h-14 grid-cols-[44px_minmax(66px,1fr)_minmax(52px,.86fr)_minmax(48px,.78fr)_48px] items-center gap-1.5 tabular-nums narrow:gap-1';
 
 /** Width of the revealed Delete action. */
 const OPEN = 88;
@@ -156,7 +161,10 @@ export function SetRow({
   return (
     <div
       ref={row}
-      className={`set-row set-swipe ${completed ? 'set-complete' : ''}`}
+      className={cn(
+        'set-row set-swipe relative touch-pan-y tabular-nums',
+        completed && 'set-complete bg-primary-tint',
+      )}
       data-open={open || undefined}
       onPointerDown={(event) => {
         if (!event.currentTarget.contains(event.target as Node)) return;
@@ -272,11 +280,14 @@ export function SetRow({
         if (event.key === 'Escape' && open) settle(false, false);
       }}
     >
-      <div ref={content} className='set-swipe-content'>
+      <div
+        ref={content}
+        className={cn('set-swipe-content', SET_GRID, completed && 'bg-primary-tint')}
+      >
         <Button
           size='icon'
           variant='ghost'
-          className='set-index'
+          className={cn('set-index gap-0.5', completed && 'font-semibold text-primary')}
           ref={action}
           aria-label={`Actions for ${label}`}
           aria-expanded={open}
@@ -292,7 +303,7 @@ export function SetRow({
         <Button
           size='icon'
           variant='ghost'
-          className='desktop-remove'
+          className='desktop-remove hidden'
           aria-label={`Remove ${label}`}
           onClick={onDelete}
         >

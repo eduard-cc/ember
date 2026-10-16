@@ -1,6 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import {addExercise, navigate} from '../navigation';
+import {resolve} from './colour-helpers';
 
 test('workout sheet minimizes to a named resume bar preserving the draft and ledger scroll', async ({
   page,
@@ -324,6 +325,10 @@ test('a read-only writer follower can still minimize and reach settings and reco
   await follower.goto('/');
   await expect(follower.getByRole('alert')).toContainText('Another tab is editing');
   await expect(follower.getByLabel('WORKOUT NAME')).toBeDisabled();
+  await expect(follower.getByLabel('WORKOUT NAME')).toHaveCSS(
+    'background-color',
+    await resolve(follower, 'hsl(37.1 36.8% 88.8%)'),
+  );
   await follower.getByRole('button', {name: 'Settings', exact: true}).last().click();
   await expect(follower.getByRole('dialog', {name: 'Settings'})).toBeVisible();
   await expect(follower.getByRole('button', {name: 'Import CSV'})).toBeDisabled();

@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {plural} from '../src/components/ui';
+import {plural} from '../src/utils/plural';
 
 describe('count labels', () => {
   it('uses the singular only for exactly one', () => {
