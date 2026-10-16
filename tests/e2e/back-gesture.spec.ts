@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {navigate, openSettings} from '../navigation';
 
 // Android's back gesture is the browser's Back: it closes the newest open layer and stays in the
 // app; only a main tab with nothing open leaves. Synthetic demo data only.
@@ -45,11 +45,13 @@ test('back closes exercise details in the library, then a main tab has nothing l
 test('back closes Settings and the template preview', async ({page}) => {
   await start(page);
   await navigate(page, 'Workouts');
-  await page.getByRole('button', {name: 'Settings', exact: true}).last().click();
+  await openSettings(page);
   const settings = page.getByRole('dialog', {name: 'Settings', exact: true});
   await expect(settings).toBeVisible();
   await back(page);
   await expect(settings).toBeHidden();
+  // Phones reach Settings through Profile, so return to the Workout tab for the templates.
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Open template Upper body A', exact: true}).click();
   const preview = page.getByRole('dialog', {name: 'Upper body A'});
   await expect(preview).toBeVisible();

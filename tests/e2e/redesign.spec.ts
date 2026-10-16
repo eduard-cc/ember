@@ -346,6 +346,7 @@ test('settings keeps synchronization feedback accessible without duplicate hidde
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   await page.getByRole('button', {name: 'Settings', exact: true}).last().click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await expect(page.getByRole('button', {name: 'Sync now', exact: true})).toHaveCount(0);

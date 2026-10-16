@@ -127,76 +127,82 @@ export function TemplatesView({
           </div>
         </section>
       ) : (
-        <div className='template-grid'>
-          {templates.map((template) => {
-            const last = lastPerformed(dataset, template.name);
-            return (
-              <article className='template-card' key={template.id}>
-                <header>
-                  <h3>{template.name}</h3>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    aria-label={`Edit template ${template.name}`}
-                    onClick={() => {
-                      setEditingBase(structuredClone(template));
-                      setEditing(structuredClone(template));
-                    }}
-                  >
-                    <Pencil size={16} />
-                  </Button>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    aria-label={`Delete template ${template.name}`}
-                    onClick={() => setDeleteId(template.id)}
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </header>
-                <button
-                  className='template-open'
-                  aria-label={`Open template ${template.name}`}
-                  onClick={() => setPreview(template)}
-                >
-                  <ul>
-                    {template.exercises.slice(0, 6).map((ex, i) => (
-                      <li key={`${ex.name}-${i}`}>
-                        {ex.sets.length} × {ex.name}
-                      </li>
-                    ))}
-                    {template.exercises.length > 6 && (
-                      <li>+ {plural(template.exercises.length - 6, 'more exercise')}</li>
-                    )}
-                  </ul>
-                  <small>{last ? `Last performed ${dateLabel(last)}` : 'Not performed yet'}</small>
-                </button>
-                {deleteId === template.id && (
-                  <div className='inline-confirm'>
-                    <p>Delete this template? Your workout history is kept.</p>
-                    <Button onClick={() => setDeleteId(null)}>Cancel</Button>
-                    <Button
-                      variant='danger'
-                      aria-label='Confirm delete template'
-                      onClick={() => {
-                        void onChange(templates.filter((t) => t.id !== template.id));
-                        setDeleteId(null);
-                      }}
+        <>
+          {!!templates.length && (
+            <div className='template-grid'>
+              {templates.map((template) => {
+                const last = lastPerformed(dataset, template.name);
+                return (
+                  <article className='template-card' key={template.id}>
+                    <header>
+                      <h3>{template.name}</h3>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        aria-label={`Edit template ${template.name}`}
+                        onClick={() => {
+                          setEditingBase(structuredClone(template));
+                          setEditing(structuredClone(template));
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        aria-label={`Delete template ${template.name}`}
+                        onClick={() => setDeleteId(template.id)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </header>
+                    <button
+                      className='template-open'
+                      aria-label={`Open template ${template.name}`}
+                      onClick={() => setPreview(template)}
                     >
-                      Delete template
-                    </Button>
-                  </div>
-                )}
-              </article>
-            );
-          })}
+                      <ul>
+                        {template.exercises.slice(0, 6).map((ex, i) => (
+                          <li key={`${ex.name}-${i}`}>
+                            {ex.sets.length} × {ex.name}
+                          </li>
+                        ))}
+                        {template.exercises.length > 6 && (
+                          <li>+ {plural(template.exercises.length - 6, 'more exercise')}</li>
+                        )}
+                      </ul>
+                      <small>
+                        {last ? `Last performed ${dateLabel(last)}` : 'Not performed yet'}
+                      </small>
+                    </button>
+                    {deleteId === template.id && (
+                      <div className='inline-confirm'>
+                        <p>Delete this template? Your workout history is kept.</p>
+                        <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+                        <Button
+                          variant='danger'
+                          aria-label='Confirm delete template'
+                          onClick={() => {
+                            void onChange(templates.filter((t) => t.id !== template.id));
+                            setDeleteId(null);
+                          }}
+                        >
+                          Delete template
+                        </Button>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
           {!templates.length && (
             <div className='empty-state'>
               <h2>No templates yet</h2>
               <p>Create one, or save any finished workout as a template from History.</p>
             </div>
           )}
-        </div>
+        </>
       )}
       <Dialog.Root open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
         <Dialog.Portal>

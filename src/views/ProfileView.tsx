@@ -1,8 +1,7 @@
-import {ChevronRight, Settings} from 'lucide-react';
 import {useMemo} from 'react';
 
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
-import {Button, plural} from '../components/ui';
+import {plural} from '../components/ui';
 import {workoutsPerWeek} from '../domain/model';
 import type {Workout} from '../domain/types';
 import {setLabel} from './ExerciseDetail';
@@ -13,11 +12,9 @@ const WEEKS = 12;
 /** Strong-style dashboard: totals and workouts per week, nothing estimated. */
 export function ProfileView({
   workouts,
-  onSettings,
   onExclude,
 }: {
   workouts: Workout[];
-  onSettings: () => void;
   onExclude: ExcludeSetHandler;
 }) {
   const weeks = useMemo(() => workoutsPerWeek(workouts, WEEKS), [workouts]);
@@ -32,25 +29,17 @@ export function ProfileView({
   const barWidth = 640 / WEEKS;
   return (
     <div className='profile-view'>
-      <section className='profile-stats' aria-label='Training totals'>
-        <div>
-          <strong>{workouts.length}</strong>
-          <span>workouts</span>
-        </div>
-        <div>
-          <strong>{sets}</strong>
-          <span>sets</span>
-        </div>
-        <div>
-          <strong>{thisWeek}</strong>
-          <span>this week</span>
-        </div>
-      </section>
       <section className='analytics-card'>
         <div className='section-heading'>
           <h2>Workouts per week</h2>
           <span>Last {WEEKS} weeks</span>
         </div>
+        <p className='profile-totals'>
+          <span className='numeric'>{workouts.length}</span>
+          {workouts.length === 1 ? ' workout' : ' workouts'} ·{' '}
+          <span className='numeric'>{sets}</span>
+          {sets === 1 ? ' set' : ' sets'} · <span className='numeric'>{thisWeek}</span> this week
+        </p>
         <svg
           className='week-chart'
           viewBox='0 0 700 190'
@@ -97,11 +86,6 @@ export function ProfileView({
         </p>
       </section>
       <FlaggedSets workouts={workouts} onExclude={onExclude} />
-      <nav className='profile-links' aria-label='Profile'>
-        <Button variant='ghost' className='profile-link' onClick={onSettings}>
-          <Settings size={18} /> Settings <ChevronRight size={16} />
-        </Button>
-      </nav>
     </div>
   );
 }

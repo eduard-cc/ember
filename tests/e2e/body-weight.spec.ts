@@ -350,7 +350,7 @@ test('a locked installation hides body-weight history and refuses writes', async
     repository.close();
   });
   await expect(page.locator('main')).toBeHidden();
-  await page.getByRole('button', {name: 'Settings', exact: true}).last().click();
+  await openSettings(page);
   const settings = page.getByRole('dialog', {name: 'Settings'});
   await expect(settings).toBeVisible();
   await expect(settings.getByRole('region', {name: 'Body weight', exact: true})).toHaveCount(0);

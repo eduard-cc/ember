@@ -1,21 +1,12 @@
 import {type Page, expect, test} from '@playwright/test';
 
+import {resolve} from './colour-helpers';
+
 type Scheme = 'light' | 'dark';
 
 const PINE = {light: 'hsl(155.6 47.8% 26.3%)', dark: 'hsl(145.4 33% 64.9%)'};
 const PAPER = 'hsl(38.6 43.8% 93.7%)';
 const NIGHT = 'hsl(252 10.2% 9.6%)';
-
-async function resolve(page: Page, css: string): Promise<string> {
-  return page.evaluate((value) => {
-    const el = document.createElement('div');
-    el.style.color = value;
-    document.body.appendChild(el);
-    const resolved = getComputedStyle(el).color;
-    el.remove();
-    return resolved;
-  }, css);
-}
 
 async function open(page: Page, scheme: Scheme) {
   await page.emulateMedia({colorScheme: scheme});
@@ -61,7 +52,7 @@ for (const scheme of ['light', 'dark'] as const) {
         .getByRole('navigation', {name: 'Main navigation'})
         .getByRole('button', {name: 'Workout', exact: true})
         .click();
-      const card = page.locator('.template-card').first();
+      const card = page.locator('.template-grid');
       await expect(card).toBeVisible();
       const cardBackground = await card.evaluate((el) => getComputedStyle(el).backgroundColor);
       expect(cardBackground).toBe(
@@ -74,7 +65,13 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
       await expect(async () => {
         await page.keyboard.press('Tab');
-        expect(await page.evaluate(() => document.activeElement === document.body)).toBe(false);
+        // Nav items fill the app bar and use an inset (-2px) ring, so test a free-standing control.
+        expect(
+          await page.evaluate(
+            () =>
+              document.activeElement !== document.body && !document.activeElement!.closest('nav'),
+          ),
+        ).toBe(true);
       }).toPass();
       const style = await page.evaluate(() => {
         const cs = getComputedStyle(document.activeElement!);
@@ -135,14 +132,13 @@ test('type follows the type scale', async ({page}) => {
   await expect(page.locator('.library .template-open ul').first()).toHaveCSS('font-size', '14px');
   await expect(page.locator('.library .button').first()).toHaveCSS('font-weight', '500');
 
-  // Chart text, the tab bar, profile stats, list labels and session-set headers stay out of PR 1.
+  // Chart text, the tab bar, list labels and session-set headers stay out of PR 1.
   const offenders = await page.evaluate(() => {
     const badWeights = new Set(['550', '650']);
     const badSizes = new Set(['10px', '13px', '15px', '17px', '20px', '28px']);
-    const exempt = '.tab, .profile-stats, .list-label, .session-sets-head';
     const found: string[] = [];
     for (const el of document.querySelectorAll('.library, .library *')) {
-      if (el.closest('svg') || el.closest(exempt)) continue;
+      if (el.closest('svg')) continue;
       const cs = getComputedStyle(el);
       if (badWeights.has(cs.fontWeight) || badSizes.has(cs.fontSize))
         found.push(`${el.tagName.toLowerCase()}.${el.className} ${cs.fontSize}/${cs.fontWeight}`);

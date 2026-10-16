@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ChevronDown,
+  ChevronRight,
   ChevronUp,
   Dumbbell,
   FileUp,
@@ -342,11 +343,25 @@ export default function App() {
           inert={showSheet && mobile}
           aria-hidden={showSheet && mobile ? true : undefined}
         >
-          <header className='topbar'>
-            <h1>{title}</h1>
-            <div className='topbar-actions'>{settingsButton}</div>
+          <header className='app-bar'>
+            <span className='app-brand'>Gym Log</span>
+            <nav aria-label='Main navigation'>
+              {navigation.map(({name, icon: Icon}) => (
+                <button
+                  key={name}
+                  className={`nav-item ${view === name ? 'active' : ''}`}
+                  aria-current={view === name ? 'page' : undefined}
+                  onClick={() => go(name)}
+                >
+                  <Icon size={22} />
+                  <span>{name}</span>
+                </button>
+              ))}
+            </nav>
+            <div className='app-bar-actions'>{settingsButton}</div>
           </header>
           <div className='library-scroll'>
+            <h1 className='page-title'>{title}</h1>
             {!showSheet && !sync.locked && !settingsOpen && errors}
             <fieldset disabled={disabled} className='content-fieldset'>
               {!showSheet && !settingsOpen && feedback}
@@ -398,18 +413,29 @@ export default function App() {
                   <ExercisesView dataset={allDataset} onOpen={setExercise} />
                 ))}
               {view === 'Profile' && (
-                <ProfileView
-                  workouts={allDataset.workouts}
-                  onSettings={() => setSettingsOpen(true)}
-                  onExclude={setSetExcluded}
-                />
+                <ProfileView workouts={allDataset.workouts} onExclude={setSetExcluded} />
               )}
             </fieldset>
+            {/* Outside the fieldset: phones reach Settings only here, also while edits are disabled. */}
+            {view === 'Profile' && !sync.locked && (
+              <nav className='profile-links' aria-label='Profile'>
+                <Button
+                  variant='ghost'
+                  className='profile-link'
+                  onClick={(event) => {
+                    settingsTrigger.current = event.currentTarget;
+                    setSettingsOpen(true);
+                  }}
+                >
+                  <Settings size={18} /> Settings <ChevronRight size={16} />
+                </Button>
+              </nav>
+            )}
           </div>
           {state.active && !showSheet && (
             <Button
               className='resume-bar'
-              variant='primary'
+              variant='secondary'
               aria-label={`Resume ${state.active.name}`}
               onClick={() => setExpanded(true)}
             >
@@ -422,19 +448,6 @@ export default function App() {
               </div>
             </Button>
           )}
-          <nav aria-label='Main navigation'>
-            {navigation.map(({name, icon: Icon}) => (
-              <button
-                key={name}
-                className={`nav-item ${view === name ? 'active' : ''}`}
-                aria-current={view === name ? 'page' : undefined}
-                onClick={() => go(name)}
-              >
-                <Icon size={22} />
-                <span>{name}</span>
-              </button>
-            ))}
-          </nav>
         </div>
         {/* Unmounted while locked: portaled dialogs (Previous evidence) escape <main hidden>. */}
         {state.active && !sync.locked && (
@@ -527,8 +540,8 @@ export default function App() {
                       }
                     />
                     <Button
-                      variant='danger'
-                      className='wide-action'
+                      variant='secondary'
+                      className='wide-action cancel-workout'
                       onClick={() => setConfirmCancel(true)}
                     >
                       Cancel workout
