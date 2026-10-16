@@ -1,14 +1,17 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import {Check, Plus} from 'lucide-react';
-import {useCallback, useRef, useState} from 'react';
+import {useCallback, useLayoutEffect, useRef, useState} from 'react';
+import {createPortal} from 'react-dom';
 
 import {ExercisePicker} from '../components/AddExercise';
 import type {ExcludeSetHandler} from '../components/ExcludeSet';
 import {ExerciseMenu} from '../components/ExerciseMenu';
+import {ReorderList, type ReorderStart, scrollParent, useHold} from '../components/ExerciseReorder';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
 import {SetRow} from '../components/SetRow';
 import {Button, Input, plural} from '../components/ui';
+import {moveItem} from '../domain/reorder';
 import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {ExerciseDetail} from './ExerciseDetail';
@@ -132,6 +135,85 @@ export function WorkoutView({
         ?.focus({preventScroll: true});
     });
   };
+  // Press and hold a card's header: every card shrinks to a compact row and the held one follows
+  // the finger. Dropping moves the whole exercise (sets, values and checks) by identity.
+  const [reordering, setReordering] = useState<ReorderStart | null>(null);
+  const cards = useRef(new Map<string, HTMLElement>());
+  // Set on drop/cancel: the card to keep under the finger once full cards are back, and where.
+  const landing = useRef<{id: string; top: number; moved: boolean} | null>(null);
+  // Focus inside the held card when it lifted (a field, ⋯); hiding the cards drops it.
+  const focusBefore = useRef<HTMLElement | null>(null);
+  // Screen-reader confirmation of where a moved exercise now is.
+  const [announcement, setAnnouncement] = useState('');
+  const announce = (exerciseId: string, to: number) => {
+    const ex = workout.exercises.find((item) => identity(item) === exerciseId);
+    if (ex)
+      setAnnouncement(`Moved ${ex.name} to position ${to + 1} of ${workout.exercises.length}`);
+  };
+  const hold = useHold((start) => {
+    // A set still sliding out would be cut short by the cards hiding; let it finish first.
+    if (deletingSets.current.size) return false;
+    const active = document.activeElement;
+    focusBefore.current =
+      active instanceof HTMLElement && cards.current.get(start.id)?.contains(active)
+        ? active
+        : null;
+    setReordering(start);
+  });
+  const endReorder = (id: string, top: number, moved: boolean) => {
+    landing.current = {id, top, moved};
+    hold.release();
+    setReordering(null);
+  };
+  const moveExercise = (exerciseId: string, to: number) =>
+    onChange((current) => {
+      const from = current.exercises.findIndex((ex) => identity(ex) === exerciseId);
+      if (from < 0 || from === to) return current;
+      return {...current, exercises: moveItem(current.exercises, from, to)};
+    });
+  // A brief tint marks where a moved exercise landed.
+  const flash = (card: HTMLElement) => {
+    delete card.dataset.dropped;
+    void card.offsetWidth;
+    card.dataset.dropped = '';
+    card.addEventListener('animationend', () => delete card.dataset.dropped, {once: true});
+  };
+  // Before paint: put the dropped card's heading where its compact row was, then mark it.
+  useLayoutEffect(() => {
+    const land = landing.current;
+    if (reordering || !land) return;
+    landing.current = null;
+    const card = cards.current.get(land.id);
+    const heading = card?.querySelector('.exercise-heading');
+    const scroller = scrollParent(card ?? null);
+    if (!card || !heading) return;
+    // Hiding the cards dropped focus; give it back only if it was in the held card. A touch
+    // hold never focuses anything, so phone drags don't move focus (or make TalkBack speak).
+    const before = focusBefore.current;
+    focusBefore.current = null;
+    if (
+      before?.isConnected &&
+      (!document.activeElement || document.activeElement === document.body)
+    )
+      before.focus({preventScroll: true});
+    if (scroller) scroller.scrollTop += heading.getBoundingClientRect().top - land.top - 6;
+    if (land.moved) flash(card);
+  }, [reordering]);
+  // The ⋯ menu's Move up/down: the keyboard and screen-reader path to the same result.
+  const stepExercise = (exerciseId: string, by: number) => {
+    const at = workout.exercises.findIndex((ex) => identity(ex) === exerciseId);
+    moveExercise(exerciseId, at + by);
+    announce(exerciseId, at + by);
+    requestAnimationFrame(() => {
+      // Moving a node in the DOM drops its focus; return it to the same ⋯ and keep that button
+      // in view (a whole tall card aligned by its bottom edge would push ⋯ off screen).
+      const button = menuButtons.current.get(exerciseId);
+      button?.focus({preventScroll: true});
+      button?.scrollIntoView({block: 'nearest'});
+      const card = cards.current.get(exerciseId);
+      if (card) flash(card);
+    });
+  };
   const changeExercise = (exercise: ExerciseLog, sets: SetRecord[]) => {
     const next = {...exercise, sets};
     identities.current.set(next, identity(exercise));
@@ -175,8 +257,18 @@ export function WorkoutView({
             ),
       ),
     });
+  // While an exercise is held the compact list stands in for the cards. They stay mounted but
+  // hidden, so dropping doesn't rebuild every set row (and its history lookup) mid-animation.
   return (
     <div className='exercise-list' ref={list}>
+      {/* Portaled to <body>: modal dialogs keep live regions and their ancestors exposed to
+          screen readers, so one inside the logger would expose the whole logger behind them. */}
+      {createPortal(
+        <div className='sr-only' aria-live='polite' data-reorder-announcement=''>
+          {announcement}
+        </div>,
+        document.body,
+      )}
       {nameField && (
         <div className='workout-name'>
           <label htmlFor='workout-name'>WORKOUT NAME</label>
@@ -187,14 +279,53 @@ export function WorkoutView({
           />
         </div>
       )}
+      {reordering && (
+        <ReorderList
+          key={reordering.id}
+          exercises={workout.exercises}
+          identity={identity}
+          start={reordering}
+          onDrop={(to, top) => {
+            const from = workout.exercises.findIndex((ex) => identity(ex) === reordering.id);
+            moveExercise(reordering.id, to);
+            if (from !== to) announce(reordering.id, to);
+            endReorder(reordering.id, top, from !== to);
+          }}
+          onCancel={(top) => endReorder(reordering.id, top, false)}
+          progress={
+            targetsOnly
+              ? undefined
+              : (ex) => {
+                  const done = ex.sets.filter((set) => set.completed && validSet(set, ex.type));
+                  return `${done.length} / ${plural(ex.sets.length, 'set')}`;
+                }
+          }
+        />
+      )}
       {/* eslint-disable-next-line react-hooks/refs -- identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use. */}
       {workout.exercises.map((ex, ei) => {
         const timed = ex.type === 'cardio' || ex.type === 'duration';
         const checked = ex.sets.filter((set) => set.completed && validSet(set, ex.type)).length;
         const done = ex.sets.length > 0 && checked === ex.sets.length;
         return (
-          <section className='exercise-card' key={identity(ex)}>
-            <header className='exercise-heading'>
+          <section
+            className='exercise-card'
+            key={identity(ex)}
+            hidden={!!reordering}
+            ref={(node) => {
+              if (node) cards.current.set(identity(ex), node);
+              else cards.current.delete(identity(ex));
+            }}
+          >
+            <header
+              className='exercise-heading'
+              onPointerDown={(event) => {
+                // ⋯ keeps its own press; only the name, drawing and status lift the card.
+                if ((event.target as HTMLElement).closest('.exercise-menu')) return;
+                if (workout.exercises.length < 2) return;
+                hold.begin(event, identity(ex), event.currentTarget.parentElement!);
+              }}
+            >
               {/* The heading keeps the plain name; the button inside says what it does. */}
               <h2 className='exercise-title' aria-labelledby={`${identity(ex)}-name`}>
                 {showDetails ? (
@@ -250,6 +381,12 @@ export function WorkoutView({
                   setReplacing(identity(ex));
                 }}
                 onRemove={() => removeExercise(identity(ex))}
+                onMoveUp={ei > 0 ? () => stepExercise(identity(ex), -1) : undefined}
+                onMoveDown={
+                  ei < workout.exercises.length - 1
+                    ? () => stepExercise(identity(ex), 1)
+                    : undefined
+                }
               />
             </header>
             <div className='set-table'>

@@ -1,4 +1,4 @@
-import {Ellipsis, type LucideIcon, Replace, Trash2} from 'lucide-react';
+import {ArrowDown, ArrowUp, Ellipsis, type LucideIcon, Replace, Trash2} from 'lucide-react';
 import {
   type KeyboardEvent,
   forwardRef,
@@ -188,16 +188,24 @@ export const OptionsMenu = forwardRef<
 });
 OptionsMenu.displayName = 'OptionsMenu';
 
-/** Per-exercise ⋯ menu in the logger and the template editor. */
+/** Per-exercise ⋯ menu in the logger and the editors. Move items appear only where possible. */
 export const ExerciseMenu = forwardRef<
   HTMLButtonElement,
-  {name: string; onReplace: () => void; onRemove: () => void}
->(({name, onReplace, onRemove}, ref) => (
+  {
+    name: string;
+    onReplace: () => void;
+    onRemove: () => void;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
+  }
+>(({name, onReplace, onRemove, onMoveUp, onMoveDown}, ref) => (
   <OptionsMenu
     ref={ref}
     label={`Exercise options for ${name}`}
     items={[
       {label: 'Replace exercise', icon: Replace, onSelect: onReplace},
+      ...(onMoveUp ? [{label: 'Move up', icon: ArrowUp, onSelect: onMoveUp}] : []),
+      ...(onMoveDown ? [{label: 'Move down', icon: ArrowDown, onSelect: onMoveDown}] : []),
       {label: 'Remove exercise', icon: Trash2, onSelect: onRemove, danger: true},
     ]}
   />

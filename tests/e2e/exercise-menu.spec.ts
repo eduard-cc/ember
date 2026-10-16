@@ -38,7 +38,11 @@ test('the exercise options menu opens from the ⋯ button and closes with Escape
   const menu = page.getByRole('menu', {name: 'Exercise options for Bench Press (Barbell)'});
   await expect(menu).toBeVisible();
   await expect(trigger).toHaveAttribute('aria-expanded', 'true');
-  await expect(menu.getByRole('menuitem')).toHaveText(['Replace exercise', 'Remove exercise']);
+  await expect(menu.getByRole('menuitem')).toHaveText([
+    'Replace exercise',
+    'Move down',
+    'Remove exercise',
+  ]);
   for (const item of await menu.getByRole('menuitem').all()) {
     expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   }
@@ -58,7 +62,7 @@ test('the exercise options menu opens from the ⋯ button and closes with Escape
   await trigger.focus();
   await page.keyboard.press('Enter');
   await expect(menu.getByRole('menuitem', {name: 'Replace exercise'})).toBeFocused();
-  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('End');
   const remove = menu.getByRole('menuitem', {name: 'Remove exercise'});
   await expect(remove).toBeFocused();
   expect(await remove.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
