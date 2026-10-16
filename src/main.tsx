@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import {registerProductionShell} from './pwa/register';
 
+import './index.css';
 import './styles.css';
 
 void registerProductionShell().catch((error) =>

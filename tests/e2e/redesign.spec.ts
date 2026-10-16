@@ -287,7 +287,7 @@ test('added exercises reuse matching history unchecked and custom exercises have
   await expect(page.getByRole('button', {name: /Uncomplete /})).toHaveCount(0);
 });
 
-test('appearance is separate from workout saving, follows System, and persists theme and accent', async ({
+test('appearance is separate from workout saving, follows System, and persists theme', async ({
   page,
 }) => {
   await page.emulateMedia({colorScheme: 'dark'});
@@ -303,16 +303,15 @@ test('appearance is separate from workout saving, follows System, and persists t
   await page.emulateMedia({colorScheme: 'light'});
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await settings.getByRole('button', {name: 'Dark', exact: true}).click();
-  await settings.getByRole('button', {name: 'Ocean', exact: true}).click();
   await settings.getByRole('button', {name: 'Close settings'}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await expect(page.locator('html')).toHaveAttribute('data-accent', 'ocean');
+  expect(await page.locator('html').getAttribute('data-accent')).toBeNull();
   await expect(page.getByLabel('WORKOUT NAME')).toHaveValue('Upper body A');
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem('gym-log:appearance:v1')!)),
-  ).toEqual({version: 1, theme: 'dark', accent: 'ocean'});
+  ).toEqual({version: 1, theme: 'dark'});
 });
 
 test('a read-only writer follower can still minimize and reach settings and recovery guidance', async ({
@@ -374,11 +373,11 @@ test('denied appearance storage leaves workout durability independent and the ch
   await page.goto('/?demo=1');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Settings', exact: true}).last().click();
-  await page.getByRole('button', {name: 'Copper', exact: true}).click();
+  await page.getByRole('button', {name: 'Dark', exact: true}).click();
   await expect(
     page.getByRole('status').filter({hasText: 'Appearance could not be saved.'}),
   ).toContainText('Workout saving is separate');
-  await expect(page.locator('html')).toHaveAttribute('data-accent', 'copper');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.getByRole('button', {name: 'Close settings'}).click();
   await page
     .getByLabel(/Weight for .* set 1/)
@@ -386,8 +385,9 @@ test('denied appearance storage leaves workout durability independent and the ch
     .fill('47.5');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await expect(page.getByText('Not saved', {exact: true})).toHaveCount(0);
+  await page.emulateMedia({colorScheme: 'light'});
   await page.reload();
-  await expect(page.locator('html')).toHaveAttribute('data-accent', 'pine');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await expect(page.getByLabel(/Weight for .* set 1/).first()).toHaveValue('47.5');
 });
 
@@ -405,7 +405,7 @@ test('a saved dark theme applies before the app script runs, so dark phones do n
   await page.goto('/');
   const html = page.locator('html');
   await expect(html).toHaveAttribute('data-theme', 'dark');
-  await expect(html).toHaveAttribute('data-accent', 'copper');
+  expect(await html.getAttribute('data-accent')).toBeNull();
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#17161b');
 });
 

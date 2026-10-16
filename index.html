@@ -14,8 +14,6 @@
         var dark =
           t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-        if (a && ['pine', 'ocean', 'copper'].indexOf(a.accent) >= 0)
-          document.documentElement.dataset.accent = a.accent;
         if (dark)
           document.querySelector('meta[name="theme-color"]').setAttribute('content', '#17161b');
       } catch (e) {}

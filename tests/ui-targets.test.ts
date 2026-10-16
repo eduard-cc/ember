@@ -97,17 +97,16 @@ describe('validated optional appearance settings', () => {
     'null',
     '{"version":2,"theme":"dark","accent":"ocean"}',
     '{"version":1,"theme":"invalid","accent":"pine"}',
-    '{"version":1,"theme":"dark","accent":"invalid"}',
   ])('falls back safely for %s', (raw) => {
-    expect(parseAppearance(raw)).toEqual({version: 1, theme: 'system', accent: 'pine'});
+    expect(parseAppearance(raw)).toEqual({version: 1, theme: 'system'});
   });
-  it('accepts only supported theme and accent choices without retaining extra data', () => {
+  it('ignores the retired accent and keeps the theme', () => {
     for (const theme of ['system', 'light', 'dark'])
-      for (const accent of ['pine', 'ocean', 'copper'])
+      for (const accent of ['pine', 'ocean', 'copper', 'invalid', undefined])
         expect(
           parseAppearance(
             JSON.stringify({version: 1, theme, accent, extra: 'not a workout setting'}),
           ),
-        ).toEqual({version: 1, theme, accent});
+        ).toEqual({version: 1, theme});
   });
 });

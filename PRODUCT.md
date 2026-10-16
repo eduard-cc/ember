@@ -57,4 +57,4 @@ A private Strong CSV is available outside the repository. Its historical set row
 
 ## Open Decisions
 
-Permanent product name; conflict-resolution UX; future watch or health integration. Pine is the approved default accent, with Ocean and Copper options.
+Permanent product name; conflict-resolution UX; future watch or health integration. Pine is the only accent.

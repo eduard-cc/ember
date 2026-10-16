@@ -201,7 +201,7 @@ test('keyboard actions expose Delete immediately and Escape returns focus to the
   await page.keyboard.press('Escape');
   await expect(action).toBeFocused();
   await expect(action).toHaveAttribute('aria-expanded', 'false');
-  expect(await action.evaluate((el) => getComputedStyle(el).outlineOffset)).toBe('-3px');
+  expect(await action.evaluate((el) => getComputedStyle(el).outlineOffset)).toBe('-2px');
 });
 
 test('template-editor swipe rows use the containing surface background', async ({page}) => {
