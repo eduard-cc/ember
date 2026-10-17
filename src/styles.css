@@ -328,7 +328,7 @@ input {
   }
   .app-bar nav {
     width: 100%;
-    padding: 4px 8px max(8px, env(safe-area-inset-bottom));
+    padding: 0 8px env(safe-area-inset-bottom);
   }
   .library-scroll {
     padding: 24px 18px 30px;

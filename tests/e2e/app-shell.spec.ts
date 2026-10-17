@@ -38,6 +38,25 @@ test('phone tab bar marks the active tab with a Pine top rule', async ({page}, i
   expect(Math.abs(box!.y + box!.height - 844)).toBeLessThanOrEqual(1);
 });
 
+for (const width of [320, 390, 412]) {
+  test(`phone tab bar is a 56px row at ${width}px`, async ({page}, info) => {
+    test.skip(info.project.name !== 'mobile');
+    await page.setViewportSize({width, height: 915});
+    await open(page, true);
+    const bar = page.locator('.app-bar');
+    const nav = bar.getByRole('navigation', {name: 'Main navigation'});
+    // A 56px row, a 1px top border, and only the device's safe-area inset.
+    await expect(bar).toHaveCSS('height', '57px');
+    await expect(nav).toHaveCSS('height', '56px');
+    for (const tab of await nav.getByRole('button').all()) {
+      await expect(tab).toHaveCSS('height', '56px');
+    }
+    const bounds = await bar.boundingBox();
+    expect(bounds!.y + bounds!.height).toBe(page.viewportSize()!.height);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  });
+}
+
 test('desktop header carries brand, text links and Settings', async ({page}, info) => {
   test.skip(info.project.name !== 'desktop');
   await open(page, false);
