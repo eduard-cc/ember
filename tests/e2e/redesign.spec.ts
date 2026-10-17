@@ -50,7 +50,66 @@ test('workout sheet minimizes to a named resume bar preserving the draft and led
   await expect(page.getByLabel(/Weight for .* set 1/).first()).toHaveValue('42.5');
 });
 
-test('numeric entry selects the target and Enter moves weight to reps then explicitly completes', async ({
+test('a set value is replaced by the first digit without selecting text', async ({page}) => {
+  await page.goto('/?demo=1');
+  const weight = page.getByLabel(/Weight for .* set 1/).first();
+  const reps = page.getByLabel(/Reps for .* set 1/).first();
+  await expect(weight).toBeEditable();
+  const before = await weight.inputValue();
+  expect(before).not.toBe('');
+  await weight.click();
+  await expect(weight).toBeFocused();
+  // A selection would open the phone's native Cut/Copy/Select all menu.
+  expect(await weight.evaluate((el: HTMLInputElement) => el.matches('[data-replacing]'))).toBe(
+    true,
+  );
+  await page.waitForTimeout(100);
+  expect(
+    await weight.evaluate((el: HTMLInputElement) => {
+      el.type = 'text';
+      const collapsed = el.selectionStart === el.selectionEnd;
+      el.type = 'number';
+      return collapsed;
+    }),
+  ).toBe(true);
+  await expect(weight).toHaveValue(before);
+  // Leaving untouched keeps the value.
+  await reps.click();
+  await expect(weight).toHaveValue(before);
+  await page.keyboard.type('7');
+  await expect(reps).toHaveValue('7');
+  await page.keyboard.type('5');
+  await expect(reps).toHaveValue('75');
+  // Backspace edits the value instead of replacing it.
+  await weight.click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Backspace');
+  await expect(weight).toHaveValue(before.slice(0, -1));
+  // A keyboard that appends a digit without a plain insertText beforeinput still replaces.
+  await reps.click();
+  await reps.evaluate((el: HTMLInputElement) => {
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+    set.call(el, el.value + '8');
+    el.dispatchEvent(new Event('input', {bubbles: true}));
+  });
+  await expect(reps).toHaveValue('8');
+  // A decimal typed key by key replaces on the first digit, then appends.
+  await weight.click();
+  await page.keyboard.type('62.5');
+  await expect(weight).toHaveValue('62.5');
+  // The fallback compares against the field's text, not the stored number.
+  await reps.fill('080');
+  await weight.click();
+  await reps.click();
+  await reps.evaluate((el: HTMLInputElement) => {
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+    set.call(el, el.value + '5');
+    el.dispatchEvent(new Event('input', {bubbles: true}));
+  });
+  await expect(reps).toHaveValue('5');
+});
+
+test('numeric entry replaces the target and Enter moves weight to reps then explicitly completes', async ({
   page,
 }) => {
   await page.goto('/?demo=1');

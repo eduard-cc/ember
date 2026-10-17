@@ -9,6 +9,7 @@ import {ExerciseMenu} from '../components/ExerciseMenu';
 import {ReorderList, type ReorderStart, scrollParent, useHold} from '../components/ExerciseReorder';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
+import {ReplaceInput} from '../components/ReplaceInput';
 import {SET_GRID, SetRow} from '../components/SetRow';
 import {Button} from '../components/ui/button';
 import {Input} from '../components/ui/input';
@@ -440,10 +441,9 @@ export function WorkoutView({
                       onSource={onSource}
                     />
                   )}
-                  <Input
+                  <ReplaceInput
                     type='number'
                     className={setInput(set.completed)}
-                    onFocus={(event) => event.currentTarget.select()}
                     onKeyDown={(event) => {
                       if (event.key !== 'Enter' || targetsOnly) return;
                       event.preventDefault();
@@ -463,20 +463,18 @@ export function WorkoutView({
                     disabled={ex.type === 'bodyweight'}
                     aria-label={`${timed ? 'Seconds' : 'Weight'} for ${ex.name} set ${si + 1}`}
                     value={(timed ? set.seconds : set.weight) ?? ''}
-                    onChange={(e) =>
+                    onValueChange={(value) =>
                       edit(ei, si, {
-                        [timed ? 'seconds' : 'weight']:
-                          e.target.value === '' ? null : Number(e.target.value),
+                        [timed ? 'seconds' : 'weight']: value === '' ? null : Number(value),
                       })
                     }
                   />
                   {ex.type === 'duration' ? (
                     <span className='text-center text-[12px] text-muted-foreground'>seconds</span>
                   ) : (
-                    <Input
+                    <ReplaceInput
                       type='number'
                       className={setInput(set.completed)}
-                      onFocus={(event) => event.currentTarget.select()}
                       onKeyDown={(event) => {
                         if (event.key !== 'Enter' || targetsOnly) return;
                         event.preventDefault();
@@ -490,10 +488,9 @@ export function WorkoutView({
                       step={timed ? '0.01' : '1'}
                       aria-label={`${timed ? 'Distance in km' : 'Reps'} for ${ex.name} set ${si + 1}`}
                       value={(timed ? set.distance : set.reps) ?? ''}
-                      onChange={(e) =>
+                      onValueChange={(value) =>
                         edit(ei, si, {
-                          [timed ? 'distance' : 'reps']:
-                            e.target.value === '' ? null : Number(e.target.value),
+                          [timed ? 'distance' : 'reps']: value === '' ? null : Number(value),
                         })
                       }
                     />
