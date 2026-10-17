@@ -70,16 +70,15 @@ test('numeric entry selects the target and Enter moves weight to reps then expli
     'aria-pressed',
     'true',
   );
+  // An invalid value on a ticked set drops the tick; Enter cannot re-tick it.
   await reps.fill('3.5');
   await reps.press('Enter');
-  await expect(page.getByRole('button', {name: /Uncomplete .* set 1/}).first()).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
-  await page
-    .getByRole('button', {name: /Uncomplete .* set 1/})
-    .first()
-    .click();
+  await expect(
+    page
+      .locator('.exercise-card')
+      .first()
+      .getByRole('button', {name: /Uncomplete .* set 1$/}),
+  ).toHaveCount(0);
   await expect(page.getByRole('button', {name: /Complete .* set 1/}).first()).toBeDisabled();
   await reps.fill('1001');
   await reps.press('Enter');
@@ -181,11 +180,18 @@ test('exercise Done survives value edits and reload but a new set needs its own 
   await reps.fill('10');
   await expect(tick).toHaveAttribute('aria-pressed', 'true');
   await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
-  // Clearing a field while replacing it must not lose the explicit completion choice.
+  // A blank or invalid value unticks the set; a valid value afterwards needs a fresh tick.
   await reps.fill('');
-  await expect(tick).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('button', {name: 'Finish workout'})).toBeEnabled();
+  await expect(tick).toHaveCount(0);
+  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText(
+    '2 / 3 sets',
+  );
   await reps.fill('10');
+  await expect(exercise.getByRole('button', {name: /^Complete .* set 1$/})).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await exercise.getByRole('button', {name: /^Complete .* set 1$/}).click();
   await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();

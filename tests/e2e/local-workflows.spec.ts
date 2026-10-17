@@ -105,16 +105,19 @@ test('IndexedDB quota-error injection retains memory and never reports saved', a
   await page.reload();
   await expect(page.getByLabel('WORKOUT NAME', {exact: true})).toHaveValue('Upper body A');
 });
-test('invalid numbers cannot be completed or counted after editing a completed set', async ({
-  page,
-}) => {
+test('invalid numbers cannot be completed and untick a completed set', async ({page}) => {
   await page.goto('/?demo=1');
-  const reps = page.getByLabel(/Reps for .* set 1/).first();
-  const complete = page.getByRole('button', {name: /Complete .* set 1/}).first();
+  const card = page.locator('.exercise-card').first();
+  const reps = card.getByLabel(/Reps for .* set 1$/);
+  // Named "Complete …" or "Uncomplete …" depending on state.
+  const complete = card.getByRole('button', {name: /complete .* set 1$/i});
   await reps.fill('3.5');
   await expect(complete).toBeDisabled();
   await reps.fill('8');
   await complete.click();
+  await expect(complete).toHaveAttribute('aria-pressed', 'true');
   await reps.fill('1001');
+  await expect(complete).toHaveAttribute('aria-pressed', 'false');
+  await expect(complete).toBeDisabled();
   await expect(page.getByRole('button', {name: 'Finish workout'})).toBeDisabled();
 });

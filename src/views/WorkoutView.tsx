@@ -253,7 +253,14 @@ export function WorkoutView({
           ? ex
           : changeExercise(
               ex,
-              ex.sets.map((set, j) => (j === si ? {...set, ...patch} : set)),
+              ex.sets.map((set, j) => {
+                if (j !== si) return set;
+                const next = {...set, ...patch};
+                // A ticked set edited to an invalid value loses its tick; valid edits keep it.
+                return next.completed && !validSet(next, ex.type)
+                  ? {...next, completed: false}
+                  : next;
+              }),
             ),
       ),
     });
