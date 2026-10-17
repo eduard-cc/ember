@@ -51,7 +51,7 @@ jobs:
     timeout-minutes: 8
     services:
       postgres:
-        image: postgres:17.6-bookworm
+        image: postgres:17.11-bookworm
         env:
           POSTGRES_USER: gym_log_ci
           POSTGRES_PASSWORD: synthetic-ci-only

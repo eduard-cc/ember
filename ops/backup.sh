@@ -12,7 +12,7 @@ parent=$(dirname -- "$output")
 source "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/docker-host.sh"
 container=gym-log-local-postgres
 actual=$(docker inspect --format '{{.Config.Image}} {{.State.Health.Status}} {{range (index .NetworkSettings.Ports "5432/tcp")}}{{.HostIp}}:{{.HostPort}}{{end}}' "$container")
-[[ "$actual" == 'postgres:17.6-bookworm healthy 127.0.0.1:55439' ]] || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
+[[ "$actual" == 'postgres:17.11-bookworm healthy 127.0.0.1:55439' ]] || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
 temporary=$(mktemp "$parent/.gym-log-dump.XXXXXX")
 trap 'rm -f -- "$temporary"' EXIT
 docker exec "$container" sh -c 'exec pg_dump -U "$POSTGRES_USER" -d "$1" --format=custom --no-owner --no-acl --exclude-table-data=public.sessions' sh "$db" > "$temporary"

@@ -113,7 +113,7 @@ Integration checks create migrated disposable databases and generate synthetic c
 
 ### GitHub Actions CI
 
-`.github/workflows/ci.yml` runs format and lint checks, web/server typechecks and builds, unit tests, server E2E against a disposable PostgreSQL 17.6 service on `127.0.0.1:55439`, and Playwright desktop/mobile E2E. The service starts with a throwaway `gym_log_dev` database; tests create and remove their own migrated databases. All inputs are synthetic, with no host credentials or private exports.
+`.github/workflows/ci.yml` runs format and lint checks, web/server typechecks and builds, unit tests, server E2E against a disposable PostgreSQL 17.11 service on `127.0.0.1:55439`, and Playwright desktop/mobile E2E. The service starts with a throwaway `gym_log_dev` database; tests create and remove their own migrated databases. All inputs are synthetic, with no host credentials or private exports.
 
 CI uses Linux runners, the Node.js major in `.nvmrc` (matching the live service), SHA-pinned actions, npm and Playwright Chromium caches, and a timeout on every job. Cheap checks share one job because GitHub bills each job per started minute. New commits cancel superseded runs for the same branch/PR, so a cancelled `main` run is not a green one. Pushes run only on `main`; PRs run separately. Markdown-only changes and agent plans skip CI, so run `npm run format:check` locally before pushing docs. Browser reports, screenshots and traces upload only on failure and expire after three days; no build artifacts or container images are published. Local browser tests still use installed Google Chrome; `CI=true` selects Playwright's bundled Chromium and two workers without retries.
 
@@ -143,6 +143,8 @@ If the service crash-loops (five starts in five minutes), systemd stops it and `
 Gym Log runs its PostgreSQL container in its own rootless Docker daemon, `gym-log-docker.service`, with the socket at `$XDG_RUNTIME_DIR/gym-log/docker.sock` and data under `~/.local/share/gym-log-docker`. Nothing using that socket can see other daemons' containers. Use `ops/docker.sh` (the Docker CLI pointed at that socket, ignoring any exported `DOCKER_HOST`) for every gym container command; `ops/backup.sh`, `ops/restore-check.sh`, `ops/deploy.sh` and the backup test use it too. CI points `GYM_LOG_DOCKER_HOST` at its runner's daemon instead.
 
 The nightly off-device backup dumps `gym_log` through that socket and skips the daemon's raw data directory, which carries a `CACHEDIR.TAG`. Keep the container, database and socket names stable.
+
+The PostgreSQL image is pinned to an exact minor (`postgres:17.N-bookworm`) in `ops/compose.local.yml`, `ops/backup.sh`, `ops/restore-check.sh` and CI; `tests/postgres-image.test.ts` keeps them equal. A monthly Hermes cron job runs `ops/postgres-update-check.sh` from this checkout and queues a "Gym Log: bump PostgreSQL" card when a newer 17.x minor ships. Minor updates keep the data directory. Back up and restore-check with the old scripts, push the new pin, then recreate the container at once with `ops/docker.sh compose -f ops/compose.local.yml up -d --wait`. Until then `ops/backup.sh` and deploys that add migrations refuse, because the pin no longer matches the container. To go back, pin the previous minor and recreate again.
 
 Resource limits (installed by `ops/install.sh`, units in `ops/systemd/`):
 

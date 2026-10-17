@@ -24,7 +24,7 @@ Development API binds **127.0.0.1:5190 only** and uses the `gym_log_dev` databas
 app (`gym-log.service`) uses port 5191 and the `gym_log` database from external config. Origin is `http://127.0.0.1:5188`;
 frontend must proxy `/api/v1` to the API or access it same-origin. No CORS is enabled.
 Compose project `gym-log-local`; container `gym-log-local-postgres`;
-image `postgres:17.6-bookworm`; port `127.0.0.1:55439`; named volume
+image `postgres:17.11-bookworm`; port `127.0.0.1:55439`; named volume
 `gym-log-local-data`; independent project network `gym-log-local_default`; all inside Gym Log's own
 rootless Docker daemon (`gym-log-docker.service`, reached through `ops/docker.sh`).
 

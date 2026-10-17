@@ -2,7 +2,7 @@
 name: gym-log-local
 services:
   postgres:
-    image: postgres:17.6-bookworm
+    image: postgres:17.11-bookworm
     container_name: gym-log-local-postgres
     # The live app depends on it: start with gym-log-docker.service after a reboot.
     restart: unless-stopped
