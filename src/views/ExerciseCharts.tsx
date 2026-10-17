@@ -2,7 +2,7 @@ import {ArrowUpRight, LineChart} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 
 import {Button} from '../components/ui/button';
-import {MetricExplanation, trendChartClass} from '../components/ui/chart';
+import {EmptyChart, MetricExplanation, trendChartClass} from '../components/ui/chart';
 import {TextAction, dataTableClass} from '../components/ui/data-table';
 import {EmptyState} from '../components/ui/empty-state';
 import {getHistory, getTrend} from '../domain/model';
@@ -167,9 +167,9 @@ export function ExerciseCharts({
           </text>
         </svg>
       ) : (
-        <div className='empty-chart'>
+        <EmptyChart>
           <p>No eligible sets in this time range.</p>
-        </div>
+        </EmptyChart>
       )}
       <MetricExplanation>
         {activeMetric === 'e1rm'

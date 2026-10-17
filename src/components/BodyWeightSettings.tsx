@@ -1,5 +1,5 @@
 import {liveQuery} from 'dexie';
-import {ChevronRight, Plus} from 'lucide-react';
+import {ChartLine, ChevronRight, Plus, Scale} from 'lucide-react';
 import {type FormEvent, useEffect, useRef, useState} from 'react';
 
 import type {BodyWeight} from '../../shared/contracts';
@@ -13,9 +13,16 @@ import {
 } from '../domain/body-weight';
 import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
+import {cn} from '../utils/cn';
 import {dateLabel} from '../views/WorkoutView';
+import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
 import {Button} from './ui/button';
+import {Card} from './ui/card';
 import {trendChartClass} from './ui/chart';
+import {ContentFieldset} from './ui/content-fieldset';
+import {EmptyState} from './ui/empty-state';
+import {fieldLabelClass} from './ui/field-label';
+import {InlineError} from './ui/inline-error';
 import {Input} from './ui/input';
 
 const time = (date: string) => date.slice(11, 16);
@@ -199,132 +206,156 @@ export function BodyWeightSettings({
       setUndo(null);
     }
   };
-  return (
-    <section aria-label='Body weight' className='body-weight'>
-      <div className='section-heading'>
-        <h3>Body weight</h3>
-        <Button
-          ref={addRef}
-          disabled={disabled || !!editing || stored === null}
-          onClick={() => {
-            setUndo(null);
-            setError('');
-            setEditing({base: null, kg: '', when: toLocalInput(localNow())});
-          }}
-        >
-          <Plus size={17} />
-          Add weight
-        </Button>
-      </div>
-      <p>Separate from workouts, lifted weights and Strong imports.</p>
-      {editing && (
-        <form
-          className='body-weight-form'
-          onSubmit={submit}
-          aria-label={editing.base ? 'Edit entry' : 'New entry'}
-        >
-          <fieldset disabled={disabled || saving} className='content-fieldset'>
-            <div className='body-weight-fields'>
-              <label>
-                <span className='field-label'>Weight in kg</span>
-                <Input
-                  ref={kgRef}
-                  aria-label='Weight in kg'
-                  inputMode='decimal'
-                  autoComplete='off'
-                  value={editing.kg}
-                  onChange={(e) => setEditing({...editing, kg: e.target.value})}
-                />
-              </label>
-              <label>
-                <span className='field-label'>Date and time</span>
-                <Input
-                  aria-label='Date and time'
-                  type='datetime-local'
-                  value={editing.when}
-                  onChange={(e) => setEditing({...editing, when: e.target.value})}
-                />
-              </label>
-            </div>
-            {error && (
-              <p className='inline-error' role='alert'>
-                {error}
-              </p>
-            )}
-            <div className='body-weight-actions'>
-              <Button type='submit' variant='primary'>
-                Save entry
-              </Button>
-              <Button type='button' onClick={close}>
-                Cancel
-              </Button>
-              {editing.base && (
-                <Button type='button' className='delete-entry' onClick={() => void remove()}>
-                  Delete entry
-                </Button>
-              )}
-            </div>
-          </fieldset>
-        </form>
-      )}
-      {!editing && error && (
-        <p className='inline-error' role='alert'>
-          {error}
-        </p>
-      )}
-      {undo && (
-        <div className='notice' role='status'>
-          Entry from {dateLabel(undo.date)} deleted.
-          <Button disabled={disabled || saving} onClick={() => void restore()}>
-            Undo
-          </Button>
+  const add = (
+    <Button
+      ref={addRef}
+      disabled={disabled || !!editing || stored === null}
+      onClick={() => {
+        setUndo(null);
+        setError('');
+        setEditing({base: null, kg: '', when: toLocalInput(localNow())});
+      }}
+    >
+      <Plus size={17} />
+      Add weight
+    </Button>
+  );
+  const form = editing && (
+    <form onSubmit={submit} aria-label={editing.base ? 'Edit entry' : 'New entry'}>
+      <ContentFieldset disabled={disabled || saving}>
+        {/* Phones give the native date and time picker a full-width row under kg. */}
+        <div className='grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2.5 max-[480px]:grid-cols-1'>
+          <label>
+            <span className={cn(fieldLabelClass, 'mt-0')}>Weight in kg</span>
+            <Input
+              ref={kgRef}
+              aria-label='Weight in kg'
+              inputMode='decimal'
+              autoComplete='off'
+              value={editing.kg}
+              onChange={(e) => setEditing({...editing, kg: e.target.value})}
+            />
+          </label>
+          <label>
+            <span className={cn(fieldLabelClass, 'mt-0')}>Date and time</span>
+            <Input
+              aria-label='Date and time'
+              type='datetime-local'
+              value={editing.when}
+              onChange={(e) => setEditing({...editing, when: e.target.value})}
+            />
+          </label>
         </div>
-      )}
-      {stored !== null && (
-        <>
-          <div className='analytics-card body-weight-chart'>
-            <h4>Weight (kg)</h4>
-            {entries.length >= 2 ? (
-              <WeightChart entries={entries} />
-            ) : (
-              <div className='empty-chart'>
-                <p>
-                  {entries.length
-                    ? 'One entry so far. Add another entry to see a trend.'
-                    : 'No entries yet. Add your weight to start a chart.'}
-                </p>
+        {error && (
+          <InlineError role='alert' className='mt-3.5'>
+            {error}
+          </InlineError>
+        )}
+        <div className='mt-3.5 flex flex-wrap gap-2'>
+          <Button type='submit' variant='primary'>
+            Save entry
+          </Button>
+          <Button type='button' onClick={close}>
+            Cancel
+          </Button>
+          {editing.base && (
+            <Button
+              type='button'
+              className='ml-auto text-destructive'
+              onClick={() => void remove()}
+            >
+              Delete entry
+            </Button>
+          )}
+        </div>
+      </ContentFieldset>
+    </form>
+  );
+  return (
+    <SettingsGroup
+      id='body-weight-heading'
+      title='Body weight'
+      description='Separate from workouts, lifted weights and Strong imports.'
+      action={add}
+    >
+      <div className='flex flex-col gap-3'>
+        {!editing && error && <InlineError role='alert'>{error}</InlineError>}
+        {undo && (
+          // `.notice` carries a 20px bottom margin for the banners; the column gap spaces it here.
+          // Remove `mb-0!` when PR 6 ports `.notice`.
+          <div className='notice mb-0!' role='status'>
+            Entry from {dateLabel(undo.date)} deleted.
+            <Button disabled={disabled || saving} onClick={() => void restore()}>
+              Undo
+            </Button>
+          </div>
+        )}
+        {/* The form and the chart share one card; with no entries the empty state stands alone. */}
+        {stored !== null && (editing || entries.length > 0) && (
+          <Card className='body-weight-chart'>
+            {form}
+            {entries.length > 0 && (
+              <div className={cn(editing && 'mt-5 border-t border-border pt-5')}>
+                <h3>Weight (kg)</h3>
+                {entries.length >= 2 ? (
+                  <WeightChart entries={entries} />
+                ) : (
+                  <EmptyState
+                    framed={false}
+                    titleAs='h3'
+                    icon={ChartLine}
+                    title='One entry so far'
+                    description='Add another entry to see a trend.'
+                  />
+                )}
               </div>
             )}
-          </div>
-          {entries.length > 0 && (
-            <ul className='body-weight-list' aria-label='Body weight history'>
-              {entries.map((m) => (
-                <li key={m.id}>
-                  <button
-                    className='body-weight-row'
-                    aria-label={`Edit entry ${describe(m)}`}
-                    disabled={disabled || !!editing}
-                    onClick={() => {
-                      setUndo(null);
-                      setError('');
-                      setEditing({base: m, kg: formatKg(m.kg), when: toLocalInput(m.date)});
-                    }}
-                  >
-                    <span>
-                      <strong>{dateLabel(m.date)}</strong>
-                      <small>{time(m.date)}</small>
-                    </span>
-                    <span className='body-weight-value'>
-                      {formatKg(m.kg)} <small>kg</small>
-                    </span>
-                    <ChevronRight size={16} aria-hidden='true' />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
-    </section>
+          </Card>
+        )}
+        {stored !== null && entries.length === 0 && (
+          <EmptyState
+            titleAs='h3'
+            icon={Scale}
+            title='No entries yet'
+            description='Add your weight to start a chart.'
+          />
+        )}
+        {entries.length > 0 && (
+          <SettingsList as='ul' aria-label='Body weight history'>
+            {entries.map((m) => (
+              <li key={m.id}>
+                <button
+                  className={cn(
+                    settingsRowClass,
+                    'w-full text-left tabular-nums hover:not-disabled:bg-accent focus-visible:-outline-offset-2',
+                  )}
+                  aria-label={`Edit entry ${describe(m)}`}
+                  disabled={disabled || !!editing}
+                  onClick={() => {
+                    setUndo(null);
+                    setError('');
+                    setEditing({base: m, kg: formatKg(m.kg), when: toLocalInput(m.date)});
+                  }}
+                >
+                  <span className='flex min-w-0 flex-col'>
+                    <span className='text-sm font-medium'>{dateLabel(m.date)}</span>
+                    <span className='mt-0.5 text-sm text-muted-foreground'>{time(m.date)}</span>
+                  </span>
+                  <span className='ml-auto text-base font-semibold'>
+                    {formatKg(m.kg)}{' '}
+                    <small className='text-[12px] font-normal text-muted-foreground'>kg</small>
+                  </span>
+                  <ChevronRight
+                    size={16}
+                    aria-hidden='true'
+                    className='shrink-0 text-muted-foreground'
+                  />
+                </button>
+              </li>
+            ))}
+          </SettingsList>
+        )}
+      </div>
+    </SettingsGroup>
   );
 }

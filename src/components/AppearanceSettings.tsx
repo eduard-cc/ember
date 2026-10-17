@@ -1,6 +1,9 @@
 import {useEffect, useState} from 'react';
 
+import {cn} from '../utils/cn';
+import {SettingsGroup} from './settings-group';
 import {Button} from './ui/button';
+import {InlineError} from './ui/inline-error';
 
 export type Theme = 'system' | 'light' | 'dark';
 interface Appearance {
@@ -60,25 +63,36 @@ export function useAppearance() {
 }
 export function AppearanceSettings({settings}: {settings: ReturnType<typeof useAppearance>}) {
   return (
-    <section aria-label='Appearance' className='appearance-settings'>
-      <h3>Appearance</h3>
-      <p>System follows your device. Workout saving is separate.</p>
-      <div role='group' aria-label='Theme' className='appearance-options'>
-        {(['system', 'light', 'dark'] as const).map((theme) => (
-          <Button
-            key={theme}
-            aria-pressed={settings.appearance.theme === theme}
-            onClick={() => settings.choose({theme})}
-          >
-            {theme[0].toUpperCase() + theme.slice(1)}
-          </Button>
-        ))}
+    <SettingsGroup
+      id='appearance-heading'
+      title='Appearance'
+      description='System follows your device. Workout saving is separate.'
+    >
+      <div role='group' aria-label='Theme' className='flex gap-2'>
+        {(['system', 'light', 'dark'] as const).map((theme) => {
+          const pressed = settings.appearance.theme === theme;
+          return (
+            <Button
+              key={theme}
+              aria-pressed={pressed}
+              // 48px with 8px padding; the chosen value keeps the card ground under a primary ring.
+              className={cn(
+                'min-h-12 flex-1 p-2',
+                pressed &&
+                  'border-border bg-card text-foreground [box-shadow:0_0_0_2px_hsl(var(--primary))] hover:not-disabled:bg-card',
+              )}
+              onClick={() => settings.choose({theme})}
+            >
+              {theme[0].toUpperCase() + theme.slice(1)}
+            </Button>
+          );
+        })}
       </div>
       {settings.error && (
-        <p role='status' className='inline-error'>
+        <InlineError role='status' className='mt-3'>
           {settings.error}
-        </p>
+        </InlineError>
       )}
-    </section>
+    </SettingsGroup>
   );
 }

@@ -37,6 +37,7 @@
   --chart-secondary: 37 16% 74%;
   --chart-secondary-edge: 37 12% 48%;
   --scrim: 252 10.2% 9.6%;
+  --shadow: 0 12px 48px #17161b26;
 }
 
 :root[data-theme='dark'] {
@@ -68,6 +69,7 @@
   --chart-secondary: 36 6% 48%;
   --chart-secondary-edge: 36 6% 48%;
   --scrim: 252 12% 3%;
+  --shadow: 0 12px 48px #0006;
 }
 
 @theme inline {
@@ -122,7 +124,7 @@
 }
 
 /* Bare element defaults. In the base layer (after preflight) so utilities can override them;
-   unlayered class rules in styles.css still beat both. */
+   the unlayered shell, banner and global rules in styles.css (until PR 6 ports them) still beat both. */
 @layer base {
   * {
     scrollbar-width: thin;

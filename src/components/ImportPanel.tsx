@@ -1,10 +1,12 @@
-import {FileUp, X} from 'lucide-react';
+import {FileUp} from 'lucide-react';
 import {useRef, useState} from 'react';
 
 import {getExercises} from '../domain/model';
 import type {Dataset} from '../domain/types';
 import {type PreparedImport, prepareStrongImport} from '../storage/import';
 import {Button} from './ui/button';
+import {Card} from './ui/card';
+import {InlineError} from './ui/inline-error';
 
 export function ImportPanel({
   onReplace,
@@ -25,27 +27,16 @@ export function ImportPanel({
     ) ?? 0;
   const exercises = preview ? getExercises(preview).length : 0;
   return (
-    <section className='import-panel'>
-      <div className='section-heading'>
-        <div>
-          <h2>Import your Strong history</h2>
-          <p>
-            Parsed in this browser. Confirmed history synchronizes to your own server when signed
-            in.
-          </p>
-        </div>
-        <Button variant='ghost' size='icon' aria-label='Close import' onClick={onClose}>
-          <X size={18} />
-        </Button>
-      </div>
-      <label className='file-input'>
-        <FileUp size={20} />
-        <span>
+    <Card className='import-panel'>
+      <label className='flex items-center gap-[15px] border border-dashed border-border bg-accent p-5 text-sm text-primary'>
+        <FileUp size={20} className='shrink-0' />
+        <span className='min-w-0 flex-1'>
           Choose CSV file
           <input
             aria-label='Choose CSV file'
             type='file'
             accept='.csv,text/csv'
+            className='mt-2.5 block w-full text-[12px] file:mr-2.5 file:min-h-11 file:border file:border-border file:bg-card file:px-3 file:py-2 file:text-foreground file:[font:inherit]'
             onChange={async (e) => {
               const file = e.target.files?.[0];
               const token = ++revision.current;
@@ -74,30 +65,35 @@ export function ImportPanel({
           />
         </span>
       </label>
-      {loading && <p role='status'>Reading your history…</p>}
-      {error && (
-        <p className='inline-error' role='alert'>
-          {error}
+      {loading && (
+        <p className='mt-3.5' role='status'>
+          Reading your history…
         </p>
       )}
+      {error && (
+        <InlineError role='alert' className='mt-3.5'>
+          {error}
+        </InlineError>
+      )}
       {preview && (
-        <div className='import-preview'>
+        <div className='mt-5'>
           <h3>Ready to review</h3>
-          <p>
+          <p className='mt-2'>
             {preview.workouts.length} workout{preview.workouts.length !== 1 ? 's' : ''} · {sets} set
             {sets !== 1 ? 's' : ''} · {exercises} exercise{exercises !== 1 ? 's' : ''}
           </p>
-          <p>
+          <p className='mt-2'>
             {preview.warnings.duplicateRows} repeated rows · {preview.warnings.duplicateKeys} key
             collisions · {preview.warnings.suspiciousRows} flagged sets. Repeated rows are
             preserved, not silently merged.
           </p>
-          <p>
+          <p className='mt-2'>
             Replace the imported/demo history, not append to it. Finished workouts, templates and
             your active draft stay intact. Browser storage is not a backup.
           </p>
           <Button
             variant='primary'
+            className='mt-4'
             disabled={loading}
             onClick={async () => {
               if (!prepared) return;
@@ -116,6 +112,6 @@ export function ImportPanel({
           </Button>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

@@ -53,6 +53,9 @@ test('CSV previews require explicit replacement and malformed files preserve his
       .getByRole('dialog', {name: 'Settings'})
       .getByText('History replaced. Your draft and finished workouts were kept.', {exact: true}),
   ).toBeVisible();
+  // Replacing closes the panel and leaves focus on the toggle, not on the dialog.
+  await expect(page.locator('.import-panel')).toHaveCount(0);
+  await expect(page.getByRole('button', {name: 'Import CSV', exact: true})).toBeFocused();
   await openImport(page);
   await page.getByLabel('Choose CSV file').setInputFiles({
     name: 'broken.csv',
@@ -61,6 +64,12 @@ test('CSV previews require explicit replacement and malformed files preserve his
   });
   await expect(page.getByRole('alert')).toContainText('not a supported Strong export');
   await page.getByRole('button', {name: 'Close import'}).click();
+  // Close import removes the panel, flips the toggle back and keeps focus on it.
+  await expect(page.locator('.import-panel')).toHaveCount(0);
+  const toggle = page.getByRole('button', {name: 'Import CSV', exact: true});
+  await expect(toggle).toBeVisible();
+  await expect(page.getByRole('button', {name: 'Close import'})).toHaveCount(0);
+  await expect(toggle).toBeFocused();
   await page.getByRole('button', {name: 'Close settings'}).click();
   await navigate(page, 'History');
   await expect(page.getByRole('heading', {name: 'Synthetic import'})).toBeVisible();

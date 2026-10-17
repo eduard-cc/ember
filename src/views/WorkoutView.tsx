@@ -1,4 +1,3 @@
-import * as Dialog from '@radix-ui/react-dialog';
 import {Check, Plus} from 'lucide-react';
 import {useCallback, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
@@ -12,7 +11,8 @@ import {PreviousSet} from '../components/PreviousSet';
 import {ReplaceInput} from '../components/ReplaceInput';
 import {SET_GRID, SetRow} from '../components/SetRow';
 import {Button} from '../components/ui/button';
-import {Input} from '../components/ui/input';
+import {ContentFieldset} from '../components/ui/content-fieldset';
+import {Dialog, DialogContent, DialogDescription, DialogTitle} from '../components/ui/dialog';
 import {moveItem} from '../domain/reorder';
 import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
@@ -70,7 +70,6 @@ export function WorkoutView({
   onExclude,
   disabled = false,
   targetsOnly = false,
-  nameField = targetsOnly,
 }: {
   workout: Workout;
   dataset: Dataset;
@@ -82,8 +81,6 @@ export function WorkoutView({
   /** Mirrors the logger's disabled fieldset, which the portaled details sit outside of. */
   disabled?: boolean;
   targetsOnly?: boolean;
-  /** The targets-only editors' own name field; History editing renders its own fields. */
-  nameField?: boolean;
 }) {
   // Save/Finish must wait for every exit, not just the first animated deletion.
   const deletingSets = useRef(new Set<string>());
@@ -276,16 +273,6 @@ export function WorkoutView({
           {announcement}
         </div>,
         document.body,
-      )}
-      {nameField && (
-        <div className='workout-name'>
-          <label htmlFor='workout-name'>WORKOUT NAME</label>
-          <Input
-            id='workout-name'
-            value={workout.name}
-            onChange={(e) => onChange({...workout, name: e.target.value})}
-          />
-        </div>
       )}
       {reordering && (
         <ReorderList
@@ -574,51 +561,52 @@ export function WorkoutView({
         }}
       />
       {showDetails && (
-        <Dialog.Root
+        <Dialog
           open={details !== null}
           onOpenChange={(open) => {
             if (!open) setDetails(null);
           }}
         >
-          <Dialog.Portal>
-            <Dialog.Overlay className='dialog-overlay' />
-            <Dialog.Content
-              className='settings-panel exercise-detail-panel'
-              onCloseAutoFocus={(event) => {
-                // Return focus to the name button without scrolling the logger.
-                event.preventDefault();
-                const target = detailsReturn.current;
-                detailsReturn.current = null;
-                if (target) detailButtons.current.get(target)?.focus({preventScroll: true});
-              }}
-            >
-              <Dialog.Description className='sr-only'>
-                About, history, charts and records from finished workouts. Your workout stays as you
-                left it.
-              </Dialog.Description>
-              {/* Only finished history is passed in, so the draft never counts as history. */}
-              {details && (
-                <fieldset disabled={disabled} className='content-fieldset'>
-                  <ExerciseDetail
-                    key={details.name}
-                    dataset={dataset}
-                    name={details.name}
-                    backLabel='Back to workout'
-                    onBack={() => setDetails(null)}
-                    onSource={(id) => {
-                      // Like Previous evidence: minimizes the logger and opens History; draft kept.
-                      setDetails(null);
-                      onSource(id);
-                    }}
-                    onExclude={onExclude}
-                    emptyFramed={false}
-                    renderTitle={(heading) => <Dialog.Title asChild>{heading}</Dialog.Title>}
-                  />
-                </fieldset>
-              )}
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
+          <DialogContent
+            variant='workout'
+            onCloseAutoFocus={(event) => {
+              // Return focus to the name button without scrolling the logger.
+              event.preventDefault();
+              const target = detailsReturn.current;
+              detailsReturn.current = null;
+              if (target) detailButtons.current.get(target)?.focus({preventScroll: true});
+            }}
+          >
+            <DialogDescription className='sr-only'>
+              About, history, charts and records from finished workouts. Your workout stays as you
+              left it.
+            </DialogDescription>
+            {/* Only finished history is passed in, so the draft never counts as history. */}
+            {details && (
+              <ContentFieldset disabled={disabled}>
+                <ExerciseDetail
+                  key={details.name}
+                  dataset={dataset}
+                  name={details.name}
+                  backLabel='Back to workout'
+                  onBack={() => setDetails(null)}
+                  onSource={(id) => {
+                    // Like Previous evidence: minimizes the logger and opens History; draft kept.
+                    setDetails(null);
+                    onSource(id);
+                  }}
+                  onExclude={onExclude}
+                  emptyFramed={false}
+                  renderTitle={(heading) => (
+                    <DialogTitle asChild className='pr-0'>
+                      {heading}
+                    </DialogTitle>
+                  )}
+                />
+              </ContentFieldset>
+            )}
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

@@ -1,4 +1,3 @@
-import * as Dialog from '@radix-ui/react-dialog';
 import {ClipboardList, Pencil, Plus, Trash2, X} from 'lucide-react';
 import {useState} from 'react';
 
@@ -7,8 +6,18 @@ import {AddExercise} from '../components/AddExercise';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {ExerciseRowText, exerciseRowClass} from '../components/exercise-row';
 import {Button} from '../components/ui/button';
+import {Card} from '../components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogCornerClose,
+  DialogDescription,
+  DialogTitle,
+} from '../components/ui/dialog';
 import {EmptyState} from '../components/ui/empty-state';
+import {fieldLabelClass} from '../components/ui/field-label';
 import {Input} from '../components/ui/input';
+import {SectionHeading} from '../components/ui/section-heading';
 import type {Dataset, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {newWorkout} from '../state/workout';
@@ -40,7 +49,7 @@ export function TemplatesView({
   useBackLayer(!!preview, () => setPreview(null));
   return (
     <div className='templates-view'>
-      <div className='section-heading templates-heading mt-7'>
+      <SectionHeading className='templates-heading mt-7'>
         <h2>My templates</h2>
         <Button
           variant='ghost'
@@ -53,10 +62,10 @@ export function TemplatesView({
         >
           <Plus size={20} />
         </Button>
-      </div>
+      </SectionHeading>
       {editing ? (
-        <section className='template-editor'>
-          <div className='section-heading'>
+        <Card as='section' className='template-editor'>
+          <SectionHeading>
             <h2>
               {templates.some((t) => t.id === editing.id) ? 'Edit template' : 'Create a template'}
             </h2>
@@ -68,8 +77,8 @@ export function TemplatesView({
             >
               <X size={18} />
             </Button>
-          </div>
-          <label className='field-label' htmlFor='template-name'>
+          </SectionHeading>
+          <label className={fieldLabelClass} htmlFor='template-name'>
             Template name
           </label>
           <Input
@@ -130,7 +139,7 @@ export function TemplatesView({
               Save template
             </Button>
           </div>
-        </section>
+        </Card>
       ) : (
         <>
           {!!templates.length && (
@@ -222,46 +231,39 @@ export function TemplatesView({
           )}
         </>
       )}
-      <Dialog.Root open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
-        <Dialog.Portal>
-          <Dialog.Overlay className='dialog-overlay' />
-          <Dialog.Content className='dialog-content template-preview'>
-            <Dialog.Title>{preview?.name}</Dialog.Title>
-            <Dialog.Description>
-              {preview && lastPerformed(dataset, preview.name)
-                ? `Last performed ${dateLabel(lastPerformed(dataset, preview.name)!)}`
-                : 'Not performed yet'}
-            </Dialog.Description>
-            <ul className='mt-3.5 mb-4.5'>
-              {preview?.exercises.map((ex, i) => (
-                <li key={`${ex.name}-${i}`} className={exerciseRowClass}>
-                  <ExerciseThumb name={ex.name} />
-                  <ExerciseRowText
-                    title={`${ex.sets.length} × ${ex.name}`}
-                    subtitle={bodyPartOf(ex.name)}
-                  />
-                </li>
-              ))}
-            </ul>
-            <Button
-              variant='primary'
-              className='min-h-12 w-full'
-              aria-label={`Start template ${preview?.name ?? ''}`}
-              onClick={() => {
-                if (preview) onStart(preview);
-                setPreview(null);
-              }}
-            >
-              Start workout
-            </Button>
-            <Dialog.Close asChild>
-              <Button variant='ghost' size='icon' className='dialog-close' aria-label='Close'>
-                <X size={18} />
-              </Button>
-            </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
+        <DialogContent className='template-preview'>
+          <DialogTitle>{preview?.name}</DialogTitle>
+          <DialogDescription>
+            {preview && lastPerformed(dataset, preview.name)
+              ? `Last performed ${dateLabel(lastPerformed(dataset, preview.name)!)}`
+              : 'Not performed yet'}
+          </DialogDescription>
+          <ul className='mt-3.5 mb-4.5'>
+            {preview?.exercises.map((ex, i) => (
+              <li key={`${ex.name}-${i}`} className={exerciseRowClass}>
+                <ExerciseThumb name={ex.name} />
+                <ExerciseRowText
+                  title={`${ex.sets.length} × ${ex.name}`}
+                  subtitle={bodyPartOf(ex.name)}
+                />
+              </li>
+            ))}
+          </ul>
+          <Button
+            variant='primary'
+            className='min-h-12 w-full'
+            aria-label={`Start template ${preview?.name ?? ''}`}
+            onClick={() => {
+              if (preview) onStart(preview);
+              setPreview(null);
+            }}
+          >
+            Start workout
+          </Button>
+          <DialogCornerClose label='Close' />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

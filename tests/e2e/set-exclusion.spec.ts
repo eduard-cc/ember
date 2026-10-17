@@ -112,12 +112,19 @@ test('the source workout and Profile offer the same reversible exclusion', async
   const flagged = page.getByRole('region', {name: 'Flagged sets'});
   await expect(flagged).toContainText('1 flagged set');
   await expect(flagged).toContainText('Synthetic Curl');
-  await flagged
-    .getByRole('button', {
-      name: 'Exclude Synthetic Curl set 2 (20 kg × 60) on 1 Feb 2026 from analytics',
-    })
-    .click();
+  const exclude = flagged.getByRole('button', {
+    name: 'Exclude Synthetic Curl set 2 (20 kg × 60) on 1 Feb 2026 from analytics',
+  });
+  // The grouped flagged row keeps a 44×44 target.
+  const box = await exclude.boundingBox();
+  expect(box!.height).toBeGreaterThanOrEqual(44);
+  expect(box!.width).toBeGreaterThanOrEqual(44);
+  await exclude.click();
   await expect(flagged).toContainText('excluded');
+  const include = flagged.getByRole('button', {name: /^Include Synthetic Curl set 2/});
+  const includeBox = await include.boundingBox();
+  expect(includeBox!.height).toBeGreaterThanOrEqual(44);
+  expect(includeBox!.width).toBeGreaterThanOrEqual(44);
 
   await navigate(page, 'History');
   await page

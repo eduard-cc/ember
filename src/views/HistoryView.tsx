@@ -1,4 +1,3 @@
-import * as Dialog from '@radix-ui/react-dialog';
 import {
   ArrowUpRight,
   ChevronDown,
@@ -14,6 +13,14 @@ import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {OptionsMenu} from '../components/ExerciseMenu';
 import {HistoryEditor} from '../components/HistoryEditor';
 import {Button} from '../components/ui/button';
+import {
+  Dialog,
+  DialogActions,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '../components/ui/dialog';
 import {EmptyState} from '../components/ui/empty-state';
 import {Input} from '../components/ui/input';
 import type {Dataset, Workout} from '../domain/types';
@@ -239,46 +246,47 @@ export function HistoryView({
           }}
         />
       )}
-      <Dialog.Root
+      <Dialog
         open={!!deleting && !locked}
         onOpenChange={(open) => {
           if (!open) setDeleting(null);
         }}
       >
-        <Dialog.Portal>
-          <Dialog.Overlay className='dialog-overlay' />
-          <Dialog.Content className='dialog-content' onCloseAutoFocus={restoreFocus}>
-            <Dialog.Title>Delete this workout?</Dialog.Title>
-            <Dialog.Description>
-              {deleting &&
-                `${deleting.name} on ${dateLabel(deleting.date)} and its ${plural(
-                  deleting.exercises.reduce((n, ex) => n + ex.sets.length, 0),
-                  'set',
-                )} will be removed from history, records and charts on every device.`}
-            </Dialog.Description>
-            {deleteError && <p role='alert'>{deleteError}</p>}
-            <div className='dialog-actions'>
-              <Dialog.Close asChild>
-                <Button>Keep workout</Button>
-              </Dialog.Close>
-              <Button
-                variant='danger'
-                disabled={disabled}
-                onClick={async () => {
-                  if (!deleting) return;
-                  if (await onChange(deleting, null)) setDeleting(null);
-                  else
-                    setDeleteError(
-                      'Not deleted. The workout may have changed on another device; close and retry.',
-                    );
-                }}
-              >
-                Delete workout
-              </Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+        <DialogContent onCloseAutoFocus={restoreFocus}>
+          <DialogTitle>Delete this workout?</DialogTitle>
+          <DialogDescription>
+            {deleting &&
+              `${deleting.name} on ${dateLabel(deleting.date)} and its ${plural(
+                deleting.exercises.reduce((n, ex) => n + ex.sets.length, 0),
+                'set',
+              )} will be removed from history, records and charts on every device.`}
+          </DialogDescription>
+          {deleteError && (
+            <p className='mt-3.5' role='alert'>
+              {deleteError}
+            </p>
+          )}
+          <DialogActions>
+            <DialogClose asChild>
+              <Button>Keep workout</Button>
+            </DialogClose>
+            <Button
+              variant='danger'
+              disabled={disabled}
+              onClick={async () => {
+                if (!deleting) return;
+                if (await onChange(deleting, null)) setDeleting(null);
+                else
+                  setDeleteError(
+                    'Not deleted. The workout may have changed on another device; close and retry.',
+                  );
+              }}
+            >
+              Delete workout
+            </Button>
+          </DialogActions>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,5 +1,4 @@
-import * as Dialog from '@radix-ui/react-dialog';
-import {ArrowUpRight, X} from 'lucide-react';
+import {ArrowUpRight} from 'lucide-react';
 import {useId, useMemo, useState} from 'react';
 
 import {bestComparable, getHistory, nearestRecorded} from '../domain/model';
@@ -7,6 +6,14 @@ import type {Dataset, ExerciseLog, SetRecord} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {dateLabel} from '../views/WorkoutView';
 import {Button} from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogCornerClose,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
 
 function recorded(set: SetRecord, type: ExerciseLog['type']) {
   if (type === 'duration' || type === 'cardio')
@@ -63,8 +70,8 @@ export function PreviousSet({
     onSource(id);
   };
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <button
           className='set-previous min-h-11 border-0 bg-transparent px-0.5 text-center text-[12px] leading-[1.3] text-muted-foreground tabular-nums'
           aria-label={`Previous for ${exercise.name} set ${index + 1}`}
@@ -76,127 +83,117 @@ export function PreviousSet({
             <span className='mt-[3px] block text-[11px]'>{dateLabel(previous.date)}</span>
           )}
         </button>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className='dialog-overlay' />
-        <Dialog.Content className='dialog-content source-dialog'>
-          <Dialog.Title>
-            {exercise.name} · set {index + 1}
-          </Dialog.Title>
-          <Dialog.Description>
-            Recorded evidence for this set. No equivalent performance is inferred.
-          </Dialog.Description>
-          {!timed && (
-            <section className='source-evidence mt-[22px] border-t border-border pt-[18px]'>
-              <h3>
-                {exercise.type === 'bodyweight'
-                  ? 'Best at bodyweight'
-                  : `Best at ${set.weight ?? '—'} kg${exercise.type === 'assisted' ? ' assistance' : ''}`}
-              </h3>
-              {comparable ? (
-                <>
-                  <p>
-                    {recorded(comparable.set, exercise.type)}
-                    {comparable.set.suspicious ? ' · flagged' : ''} · {dateLabel(comparable.date)}
-                  </p>
-                  <Button
-                    variant='ghost'
-                    aria-label={`View source workout ${comparable.workoutName}`}
-                    onClick={() => source(comparable.workoutId)}
-                  >
-                    {comparable.workoutName}
-                    <ArrowUpRight size={16} />
-                  </Button>
-                </>
-              ) : (
-                <p>
-                  {exercise.type === 'bodyweight'
-                    ? 'No exact-weight history'
-                    : set.weight === null || !Number.isFinite(set.weight)
-                      ? 'Enter a weight to compare'
-                      : `No counted sets at ${set.weight} kg${exercise.type === 'assisted' ? ' assistance' : ''}`}
-                </p>
-              )}
-            </section>
-          )}
-          {nearest && (nearest.below || nearest.above) && (
-            <section
-              className='source-evidence mt-[22px] border-t border-border pt-[18px]'
-              aria-labelledby={`${nearestId}-title`}
-            >
-              <h3 id={`${nearestId}-title`}>Nearest recorded</h3>
-              <p>
-                These are actual sets at other weights, not an equivalent for {set.weight} kg
-                {exercise.type === 'assisted' ? ' assistance' : ''}.
-              </p>
-              <ul className='nearest-list mt-3 grid gap-3.5 tabular-nums'>
-                {(
-                  [
-                    [exercise.type === 'assisted' ? 'Less assistance' : 'Lighter', nearest.below],
-                    [exercise.type === 'assisted' ? 'More assistance' : 'Heavier', nearest.above],
-                  ] as const
-                ).map(([label, entry]) =>
-                  entry ? (
-                    <li key={label} className='grid gap-0'>
-                      <span>
-                        <strong>{label}</strong> {recorded(entry.set, exercise.type)}
-                        {entry.set.suspicious ? ' · flagged' : ''} · {dateLabel(entry.date)}
-                      </span>
-                      <Button
-                        variant='ghost'
-                        className='justify-self-start'
-                        aria-label={`View source workout ${entry.workoutName} (${label.toLowerCase()})`}
-                        onClick={() => source(entry.workoutId)}
-                      >
-                        {entry.workoutName}
-                        <ArrowUpRight size={16} />
-                      </Button>
-                    </li>
-                  ) : null,
-                )}
-              </ul>
-            </section>
-          )}
+      </DialogTrigger>
+      <DialogContent className='source-dialog'>
+        <DialogTitle>
+          {exercise.name} · set {index + 1}
+        </DialogTitle>
+        <DialogDescription>
+          Recorded evidence for this set. No equivalent performance is inferred.
+        </DialogDescription>
+        {!timed && (
           <section className='source-evidence mt-[22px] border-t border-border pt-[18px]'>
-            <h3>Previous session</h3>
-            {previous ? (
+            <h3>
+              {exercise.type === 'bodyweight'
+                ? 'Best at bodyweight'
+                : `Best at ${set.weight ?? '—'} kg${exercise.type === 'assisted' ? ' assistance' : ''}`}
+            </h3>
+            {comparable ? (
               <>
-                <p>
-                  {dateLabel(previous.date)} · {previous.workoutName}
+                <p className='mt-3.5'>
+                  {recorded(comparable.set, exercise.type)}
+                  {comparable.set.suspicious ? ' · flagged' : ''} · {dateLabel(comparable.date)}
                 </p>
-                <ol className='source-set-list pl-5 text-[14px] text-muted-foreground tabular-nums'>
-                  {previous.sets.map((record, i) => (
-                    <li key={record.id}>
-                      Set {i + 1}: {recorded(record, exercise.type)}
-                      {record.suspicious ? ' · flagged' : ''}
-                      {record.excluded ? ' · excluded' : ''}
-                    </li>
-                  ))}
-                </ol>
                 <Button
                   variant='ghost'
-                  aria-label={`View source workout ${previous.workoutName}`}
-                  onClick={() => source(previous.workoutId)}
+                  aria-label={`View source workout ${comparable.workoutName}`}
+                  onClick={() => source(comparable.workoutId)}
                 >
-                  View source workout <ArrowUpRight size={16} />
+                  {comparable.workoutName}
+                  <ArrowUpRight size={16} />
                 </Button>
               </>
             ) : (
-              <p>No matching history yet. Your targets are not historical records.</p>
+              <p className='mt-3.5'>
+                {exercise.type === 'bodyweight'
+                  ? 'No exact-weight history'
+                  : set.weight === null || !Number.isFinite(set.weight)
+                    ? 'Enter a weight to compare'
+                    : `No counted sets at ${set.weight} kg${exercise.type === 'assisted' ? ' assistance' : ''}`}
+              </p>
             )}
           </section>
-          <Dialog.Close asChild>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='dialog-close'
-              aria-label='Close previous sets'
-            >
-              <X size={20} />
-            </Button>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        )}
+        {nearest && (nearest.below || nearest.above) && (
+          <section
+            className='source-evidence mt-[22px] border-t border-border pt-[18px]'
+            aria-labelledby={`${nearestId}-title`}
+          >
+            <h3 id={`${nearestId}-title`}>Nearest recorded</h3>
+            <p className='mt-3.5'>
+              These are actual sets at other weights, not an equivalent for {set.weight} kg
+              {exercise.type === 'assisted' ? ' assistance' : ''}.
+            </p>
+            <ul className='nearest-list mt-3 grid gap-3.5 tabular-nums'>
+              {(
+                [
+                  [exercise.type === 'assisted' ? 'Less assistance' : 'Lighter', nearest.below],
+                  [exercise.type === 'assisted' ? 'More assistance' : 'Heavier', nearest.above],
+                ] as const
+              ).map(([label, entry]) =>
+                entry ? (
+                  <li key={label} className='grid gap-0'>
+                    <span>
+                      <strong>{label}</strong> {recorded(entry.set, exercise.type)}
+                      {entry.set.suspicious ? ' · flagged' : ''} · {dateLabel(entry.date)}
+                    </span>
+                    <Button
+                      variant='ghost'
+                      className='justify-self-start'
+                      aria-label={`View source workout ${entry.workoutName} (${label.toLowerCase()})`}
+                      onClick={() => source(entry.workoutId)}
+                    >
+                      {entry.workoutName}
+                      <ArrowUpRight size={16} />
+                    </Button>
+                  </li>
+                ) : null,
+              )}
+            </ul>
+          </section>
+        )}
+        <section className='source-evidence mt-[22px] border-t border-border pt-[18px]'>
+          <h3>Previous session</h3>
+          {previous ? (
+            <>
+              <p className='mt-3.5'>
+                {dateLabel(previous.date)} · {previous.workoutName}
+              </p>
+              <ol className='source-set-list pl-5 text-[14px] text-muted-foreground tabular-nums'>
+                {previous.sets.map((record, i) => (
+                  <li key={record.id}>
+                    Set {i + 1}: {recorded(record, exercise.type)}
+                    {record.suspicious ? ' · flagged' : ''}
+                    {record.excluded ? ' · excluded' : ''}
+                  </li>
+                ))}
+              </ol>
+              <Button
+                variant='ghost'
+                aria-label={`View source workout ${previous.workoutName}`}
+                onClick={() => source(previous.workoutId)}
+              >
+                View source workout <ArrowUpRight size={16} />
+              </Button>
+            </>
+          ) : (
+            <p className='mt-3.5'>
+              No matching history yet. Your targets are not historical records.
+            </p>
+          )}
+        </section>
+        <DialogCornerClose label='Close previous sets' iconSize={20} />
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -10,6 +10,7 @@ export function EmptyState({
   icon: Icon,
   tone = 'empty',
   framed = true,
+  titleAs: Title = 'h2',
   children,
 }: {
   title: string;
@@ -19,6 +20,8 @@ export function EmptyState({
   tone?: 'empty' | 'error';
   /** Drop the card frame where the state already sits on a surface, such as a dialog. */
   framed?: boolean;
+  /** The title's heading level; `h3` under a section that has its own `h2`. */
+  titleAs?: 'h2' | 'h3';
   /** Action row. */
   children?: ReactNode;
 }) {
@@ -40,7 +43,7 @@ export function EmptyState({
           )}
         />
       )}
-      <h2 className='text-section-title'>{title}</h2>
+      <Title className='text-section-title'>{title}</Title>
       <p className='mt-2 max-w-md text-sm text-muted-foreground'>{description}</p>
       {children && <div className='mt-6 flex flex-wrap justify-center gap-3'>{children}</div>}
     </div>

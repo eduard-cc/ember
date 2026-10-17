@@ -1,4 +1,3 @@
-import * as Dialog from '@radix-ui/react-dialog';
 import {Plus, X} from 'lucide-react';
 import {type ReactNode, useState} from 'react';
 
@@ -7,7 +6,19 @@ import type {Dataset, ExerciseLog} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {ExerciseList} from './ExerciseList';
 import {Button} from './ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
+import {SectionHeading} from './ui/section-heading';
 import {historyTargets} from './workout-targets';
+
+/** The picker's list labels are dialog-title size, with room for the close button. */
+const pickerLabelClass = 'pr-7 text-[18px]';
 
 /**
  * The full-screen exercise library as a picker. Picking a row hands over the exercise with
@@ -49,35 +60,31 @@ export function ExercisePicker({
     toggle(false);
   };
   return (
-    <Dialog.Root open={open} onOpenChange={toggle}>
-      {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
-      <Dialog.Portal>
-        <Dialog.Overlay className='dialog-overlay' />
-        <Dialog.Content
-          /* Every `!` here beats the unlayered shared .dialog-content (styles.css); drop them when
-             .dialog-content ports (PR 5). That includes the scoped EmptyState overrides, which beat
-             `.dialog-content h2 { padding-right }` and `.dialog-content p { margin-top }`. */
-          className='dialog-content exercise-picker inset-0! h-dvh max-h-none! w-full! transform-none! border-0! px-[max(18px,calc((100vw-900px)/2))]! py-6! shadow-none! [&_.empty-state_h2]:pr-0! [&_.empty-state_p]:mt-2!'
-          onCloseAutoFocus={onCloseAutoFocus}
-        >
-          <div className='section-heading sticky -top-6 z-1 mb-6 flex-wrap bg-card py-3'>
-            <Dialog.Title>{title}</Dialog.Title>
-            <Dialog.Close asChild>
-              <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
-                <X size={20} />
-              </Button>
-            </Dialog.Close>
-            {error && (
-              <p role='alert' className='w-full text-[14px] text-destructive'>
-                {error}
-              </p>
-            )}
-          </div>
-          <Dialog.Description className='sr-only'>{description}</Dialog.Description>
-          <ExerciseList dataset={dataset} onSelect={pick} />
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Dialog open={open} onOpenChange={toggle}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogContent
+        variant='fullscreen'
+        className='exercise-picker'
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
+        <SectionHeading className='sticky -top-6 z-1 mb-6 flex-wrap bg-card py-3'>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogClose asChild>
+            <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
+              <X size={20} />
+            </Button>
+          </DialogClose>
+          {error && (
+            /* mt-3.5 restates the old `.dialog-content p` margin. */
+            <p role='alert' className='mt-3.5 w-full text-[14px] text-destructive'>
+              {error}
+            </p>
+          )}
+        </SectionHeading>
+        <DialogDescription srOnly>{description}</DialogDescription>
+        <ExerciseList labelClassName={pickerLabelClass} dataset={dataset} onSelect={pick} />
+      </DialogContent>
+    </Dialog>
   );
 }
 

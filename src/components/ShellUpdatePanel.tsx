@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react';
 
 import {requestShellUpdate} from '../pwa/register';
 import type {WorkoutRepository} from '../storage/repository';
+import {SettingsGroup, SettingsList, SettingsRow} from './settings-group';
 import {Button} from './ui/button';
 
 interface Props {
@@ -72,20 +73,25 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
   }
   if (!import.meta.env.PROD || (!waiting && !message)) return null;
   return (
-    <section className='card' aria-label='App shell update'>
-      <h2>App update</h2>
+    <SettingsGroup id='app-update-heading' title='App update'>
       {waiting && (
-        <>
-          <p>
-            A new app shell is ready. Finish active workouts first, including in other tabs.
-            Applying never refreshes this page.
-          </p>
-          <Button disabled={!available || busy} onClick={() => void apply()}>
-            Apply shell update
-          </Button>
-        </>
+        <SettingsList>
+          <SettingsRow
+            label='A new app shell is ready'
+            value='Finish active workouts first, including in other tabs. Applying never refreshes this page.'
+            action={
+              <Button disabled={!available || busy} onClick={() => void apply()}>
+                Apply shell update
+              </Button>
+            }
+          />
+        </SettingsList>
       )}
-      {message && <p role='status'>{message}</p>}
-    </section>
+      {message && (
+        <p className={waiting ? 'mt-3' : undefined} role='status'>
+          {message}
+        </p>
+      )}
+    </SettingsGroup>
   );
 }

@@ -523,7 +523,7 @@ test("the picker's no-match state is unframed", async ({page}) => {
   const empty = picker.locator('.empty-state');
   await expect(empty.locator('h2')).toHaveText('No matching exercise');
   await expect(empty).toHaveCSS('border-top-width', '0px');
-  // The unlayered .dialog-content h2/p rules must not leak into the state (removed with PR 5).
+  // The state keeps its own spacing inside the picker: no title padding or dialog paragraph margin.
   await expect(empty.locator('h2')).toHaveCSS('padding-right', '0px');
   await expect(empty.locator('p')).toHaveCSS('margin-top', '8px');
 });
@@ -559,4 +559,42 @@ test('emptyFramed: the library details state is framed, the logger dialog one is
   const framed = page.locator('.empty-state', {hasText: 'No history yet'}).first();
   await expect(framed).toBeVisible();
   await expect(framed).toHaveCSS('border-top-width', '1px');
+});
+
+test('Settings sections are titled groups; Body weight empties use EmptyState', async ({page}) => {
+  await page.emulateMedia({colorScheme: 'light'});
+  await page.goto('/');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await openSettings(page);
+  const dialog = page.getByRole('dialog', {name: 'Settings', exact: true});
+  for (const name of ['Appearance', 'Body weight', 'Import your Strong history']) {
+    const group = dialog.getByRole('region', {name, exact: true});
+    await expect(group).toBeVisible();
+    const id = await group.getAttribute('aria-labelledby');
+    expect(await group.evaluate((el) => el.tagName)).toBe('SECTION');
+    const title = group.locator(`h2[id="${id}"]`);
+    await expect(title).toHaveText(name);
+    await expect(title).toHaveCSS('font-size', '16px');
+  }
+  // No entries: a framed EmptyState, no chart card.
+  const section = dialog.getByRole('region', {name: 'Body weight', exact: true});
+  const empty = section.locator('.empty-state', {hasText: 'No entries yet'});
+  await expect(empty).toBeVisible();
+  await expect(empty).toHaveCSS('border-top-width', '1px');
+  await expect(section.locator('.body-weight-chart')).toHaveCount(0);
+  // One entry: the chart card holds an unframed EmptyState.
+  await section.getByRole('button', {name: 'Add weight', exact: true}).click();
+  await section.getByLabel('Weight in kg', {exact: true}).fill('70');
+  await section.getByRole('button', {name: 'Save entry', exact: true}).click();
+  const one = section.locator('.body-weight-chart .empty-state', {hasText: 'One entry so far'});
+  await expect(one).toBeVisible();
+  await expect(one).toHaveCSS('border-top-width', '0px');
+  await expect(section.locator('.empty-state', {hasText: 'No entries yet'})).toHaveCount(0);
+  // Entries are one bordered list of rows, each at least 44px.
+  const list = section.getByRole('list', {name: 'Body weight history'});
+  await expect(list).toHaveCSS('border-top-width', '1px');
+  // No global border-colour default exists, so the list must name the token.
+  await expect(list).toHaveCSS('border-top-color', await resolve(page, 'hsl(var(--border))'));
+  const row = (await list.getByRole('button').first().boundingBox())!;
+  expect(row.height).toBeGreaterThanOrEqual(44);
 });

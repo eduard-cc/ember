@@ -1,4 +1,3 @@
-import * as Dialog from '@radix-ui/react-dialog';
 import {
   ChevronDown,
   ChevronRight,
@@ -20,9 +19,21 @@ import {ElapsedTimer} from './components/ElapsedTimer';
 import {ImportPanel} from './components/ImportPanel';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
+import {SettingsGroup} from './components/settings-group';
 import {Button} from './components/ui/button';
+import {ContentFieldset} from './components/ui/content-fieldset';
+import {
+  Dialog,
+  DialogActions,
+  DialogClose,
+  DialogContent,
+  DialogCornerClose,
+  DialogDescription,
+  DialogTitle,
+} from './components/ui/dialog';
 import {Input} from './components/ui/input';
 import {ListLabel} from './components/ui/list-label';
+import {SectionHeading} from './components/ui/section-heading';
 import {routineTargets} from './components/workout-targets';
 import {parseStrongCsv} from './domain/model';
 import type {Workout} from './domain/types';
@@ -30,6 +41,7 @@ import {useBackLayer} from './state/back';
 import {newWorkout, useWorkoutState} from './state/workout';
 import {commitStrongImport} from './storage/import';
 import {useSync} from './sync/use-sync';
+import {cn} from './utils/cn';
 import {plural} from './utils/plural';
 import {ExerciseDetail} from './views/ExerciseDetail';
 import {ExercisesView} from './views/ExercisesView';
@@ -124,6 +136,7 @@ export default function App() {
     }
   };
   const [importOpen, setImportOpen] = useState(false);
+  const importToggle = useRef<HTMLButtonElement>(null);
   const [notice, setNotice] = useState('');
   useEffect(() => {
     let frame = 0;
@@ -264,16 +277,24 @@ export default function App() {
   useBackLayer(!!pendingWorkout && !sync.locked, () => setPendingWorkout(null));
   useBackLayer(confirmCancel && !sync.locked, () => setConfirmCancel(false));
   useBackLayer(confirmFinish && !sync.locked, () => setConfirmFinish(false));
-  const feedback = notice && (
-    <div className='notice' role='status'>
-      {notice}
-      <Button variant='ghost' size='icon' aria-label='Dismiss notice' onClick={() => setNotice('')}>
-        <X size={15} />
-      </Button>
-    </div>
-  );
+  // In Settings the banners keep the 20px (and the issue text the 14px) top margin of the panel's
+  // old `> .notice`, `> section` and `.dialog-content p` rules.
+  const feedback = (className?: string) =>
+    notice && (
+      <div className={cn('notice', className)} role='status'>
+        {notice}
+        <Button
+          variant='ghost'
+          size='icon'
+          aria-label='Dismiss notice'
+          onClick={() => setNotice('')}
+        >
+          <X size={15} />
+        </Button>
+      </div>
+    );
   // Sync is silent. Only states that need the owner surface here.
-  const errors = (
+  const errors = (inSettings = false) => (
     <>
       {ownershipError && (
         <div className='error-banner' role='alert'>
@@ -296,8 +317,8 @@ export default function App() {
         </div>
       )}
       {!sync.locked && sync.issues.length > 0 && (
-        <section aria-label='Sync problems' className='error-banner'>
-          <p>
+        <section aria-label='Sync problems' className={cn('error-banner', inSettings && 'mt-5')}>
+          <p className={inSettings ? 'mt-3.5' : undefined}>
             {plural(sync.issues.length, 'change')} could not sync. Later edits to the same item wait
             until this is resolved.
           </p>
@@ -338,7 +359,7 @@ export default function App() {
           {!settingsOpen && (
             <>
               <SyncStatus sync={sync} />
-              {errors}
+              {errors()}
             </>
           )}
           {settingsButton}
@@ -369,9 +390,9 @@ export default function App() {
           </header>
           <div className='library-scroll'>
             <h1 className='page-title'>{title}</h1>
-            {!showSheet && !sync.locked && !settingsOpen && errors}
-            <fieldset disabled={disabled} className='content-fieldset'>
-              {!showSheet && !settingsOpen && feedback}
+            {!showSheet && !sync.locked && !settingsOpen && errors()}
+            <ContentFieldset disabled={disabled}>
+              {!showSheet && !settingsOpen && feedback()}
               {view === 'Workout' && !sync.locked && (
                 <>
                   <section className='quick-start' aria-labelledby='quick-start'>
@@ -422,13 +443,16 @@ export default function App() {
               {view === 'Profile' && (
                 <ProfileView workouts={allDataset.workouts} onExclude={setSetExcluded} />
               )}
-            </fieldset>
+            </ContentFieldset>
             {/* Outside the fieldset: phones reach Settings only here, also while edits are disabled. */}
             {view === 'Profile' && !sync.locked && (
-              <nav className='profile-links' aria-label='Profile'>
+              <nav
+                className='profile-links mt-3.5 flex flex-col border border-border bg-card desk:hidden'
+                aria-label='Profile'
+              >
                 <Button
                   variant='ghost'
-                  className='profile-link'
+                  className='profile-link min-h-[52px] justify-start gap-3 focus-visible:-outline-offset-2 [&>svg:last-child]:ml-auto [&>svg:last-child]:text-muted-foreground'
                   onClick={(event) => {
                     settingsTrigger.current = event.currentTarget;
                     setSettingsOpen(true);
@@ -521,11 +545,11 @@ export default function App() {
                 <h2 className='sr-only'>Your workout</h2>
                 {showSheet && !settingsOpen && (
                   <>
-                    {errors}
-                    {feedback}
+                    {errors()}
+                    {feedback()}
                   </>
                 )}
-                <fieldset disabled={disabled} className='content-fieldset'>
+                <ContentFieldset disabled={disabled}>
                   <WorkoutView
                     key={state.active.id}
                     workout={state.active}
@@ -565,78 +589,99 @@ export default function App() {
                       Cancel workout
                     </Button>
                   </div>
-                </fieldset>
+                </ContentFieldset>
               </div>
             </div>
           </section>
         )}
       </main>
-      <Dialog.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className='dialog-overlay' />
-          <Dialog.Content
-            className='dialog-content settings-panel'
-            onCloseAutoFocus={(event) => {
-              event.preventDefault();
-              settingsTrigger.current?.focus();
-            }}
-          >
-            <div className='section-heading'>
-              <Dialog.Title>Settings</Dialog.Title>
-              <Dialog.Close asChild>
-                <Button aria-label='Close settings' variant='ghost' size='icon'>
-                  <X size={20} />
-                </Button>
-              </Dialog.Close>
-            </div>
-            <Dialog.Description className='sr-only'>
-              Appearance, body weight, Strong import and app updates.
-            </Dialog.Description>
-            {errors}
-            {feedback}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent
+          variant='panel'
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            settingsTrigger.current?.focus();
+          }}
+        >
+          <SectionHeading className='mb-6'>
+            <DialogTitle>Settings</DialogTitle>
+            <DialogClose asChild>
+              <Button aria-label='Close settings' variant='ghost' size='icon'>
+                <X size={20} />
+              </Button>
+            </DialogClose>
+          </SectionHeading>
+          <DialogDescription srOnly>
+            Appearance, body weight, Strong import and app updates.
+          </DialogDescription>
+          {errors(true)}
+          {feedback('mt-5')}
+          <div className='mt-5 space-y-10'>
             <AppearanceSettings settings={appearance} />
             {/* Personal history: unmounted while sync is locked, like other owned data. */}
             {hydrated && !sync.locked && !recoveryError && (
               <BodyWeightSettings repository={repository} disabled={disabled} />
             )}
-            <Button
-              aria-label='Import CSV'
-              disabled={disabled}
-              onClick={() => setImportOpen((value) => !value)}
+            <SettingsGroup
+              id='import-heading'
+              title='Import your Strong history'
+              description='Parsed in this browser. Confirmed history synchronizes to your own server when signed in.'
+              action={
+                // One toggle that turns into the close control, so focus stays on it either way.
+                <Button
+                  ref={importToggle}
+                  aria-label={importOpen ? 'Close import' : 'Import CSV'}
+                  variant={importOpen ? 'ghost' : 'secondary'}
+                  size={importOpen ? 'icon' : 'normal'}
+                  disabled={disabled}
+                  onClick={() => setImportOpen((value) => !value)}
+                >
+                  {importOpen ? (
+                    <X size={18} />
+                  ) : (
+                    <>
+                      <FileUp size={17} />
+                      Import CSV
+                    </>
+                  )}
+                </Button>
+              }
             >
-              <FileUp size={17} />
-              Import CSV
-            </Button>
-            {importOpen && (
-              <fieldset disabled={disabled} className='content-fieldset'>
-                <ImportPanel
-                  onClose={() => setImportOpen(false)}
-                  onReplace={async (prepared) => {
-                    if (transitioning.current) throw new Error('Update in progress');
-                    const job = (async () => {
-                      importedManually.current = true;
-                      const result = await commitStrongImport(repository, prepared, true);
-                      await refresh();
-                      setNotice(
-                        (result.status === 'identical'
-                          ? 'Identical file already imported. No history changed.'
-                          : 'History replaced. Your draft and finished workouts were kept.') +
-                          (result.unmatchedExclusions
-                            ? ` ${plural(result.unmatchedExclusions, 'excluded set')} no longer in this export, so ${result.unmatchedExclusions === 1 ? 'its' : 'their'} exclusion was dropped.`
-                            : ''),
-                      );
-                      void sync.sync();
-                    })();
-                    pendingImport.current = job;
-                    try {
-                      await job;
-                    } finally {
-                      if (pendingImport.current === job) pendingImport.current = null;
-                    }
-                  }}
-                />
-              </fieldset>
-            )}
+              {importOpen && (
+                <ContentFieldset disabled={disabled}>
+                  <ImportPanel
+                    onClose={() => {
+                      setImportOpen(false);
+                      // The panel (and the Replace button holding focus) unmounts: keep focus on the toggle.
+                      importToggle.current?.focus();
+                    }}
+                    onReplace={async (prepared) => {
+                      if (transitioning.current) throw new Error('Update in progress');
+                      const job = (async () => {
+                        importedManually.current = true;
+                        const result = await commitStrongImport(repository, prepared, true);
+                        await refresh();
+                        setNotice(
+                          (result.status === 'identical'
+                            ? 'Identical file already imported. No history changed.'
+                            : 'History replaced. Your draft and finished workouts were kept.') +
+                            (result.unmatchedExclusions
+                              ? ` ${plural(result.unmatchedExclusions, 'excluded set')} no longer in this export, so ${result.unmatchedExclusions === 1 ? 'its' : 'their'} exclusion was dropped.`
+                              : ''),
+                        );
+                        void sync.sync();
+                      })();
+                      pendingImport.current = job;
+                      try {
+                        await job;
+                      } finally {
+                        if (pendingImport.current === job) pendingImport.current = null;
+                      }
+                    }}
+                  />
+                </ContentFieldset>
+              )}
+            </SettingsGroup>
             {!demo && (
               <ShellUpdatePanel
                 repository={repository}
@@ -654,112 +699,94 @@ export default function App() {
                 end={endTransition}
               />
             )}
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-      <Dialog.Root
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
         open={!!pendingWorkout && !sync.locked}
         onOpenChange={(open) => {
           if (!open) setPendingWorkout(null);
         }}
       >
-        <Dialog.Portal>
-          <Dialog.Overlay className='dialog-overlay' />
-          <Dialog.Content className='dialog-content'>
-            <Dialog.Title>Replace your active workout?</Dialog.Title>
-            <Dialog.Description>
-              Your current workout will be discarded. All repeated sets start uncompleted.
-            </Dialog.Description>
-            <div className='dialog-actions'>
-              <Button
-                onClick={() => {
-                  setPendingWorkout(null);
-                  setExpanded(true);
-                }}
-              >
-                Resume current workout
-              </Button>
-              <Button
-                variant='primary'
-                disabled={disabled}
-                onClick={() => {
-                  if (!pendingWorkout) return;
-                  void setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
-                  setPendingWorkout(null);
-                  setExpanded(true);
-                }}
-              >
-                Replace active draft
-              </Button>
-            </div>
-            <Dialog.Close asChild>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='dialog-close'
-                aria-label='Cancel replacement'
-              >
-                <X size={18} />
-              </Button>
-            </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-      <Dialog.Root open={confirmCancel && !sync.locked} onOpenChange={setConfirmCancel}>
-        <Dialog.Portal>
-          <Dialog.Overlay className='dialog-overlay' />
-          <Dialog.Content className='dialog-content'>
-            <Dialog.Title>Cancel this workout?</Dialog.Title>
-            <Dialog.Description>
-              {plural(sets.length, 'set')} will be discarded. Finished workouts are not affected.
-            </Dialog.Description>
-            <div className='dialog-actions'>
-              <Dialog.Close asChild>
-                <Button>Keep logging</Button>
-              </Dialog.Close>
-              <Button
-                variant='danger'
-                disabled={disabled || deletingSets}
-                onClick={async () => {
-                  if (await setState((s) => ({...s, active: null}))) setConfirmCancel(false);
-                }}
-              >
-                Discard workout
-              </Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-      <Dialog.Root open={confirmFinish && !sync.locked} onOpenChange={setConfirmFinish}>
-        <Dialog.Portal>
-          <Dialog.Overlay className='dialog-overlay' />
-          <Dialog.Content className='dialog-content'>
-            <Dialog.Title>Finish this workout?</Dialog.Title>
-            {persistenceError && <p role='alert'>{persistenceError}</p>}
-            <Dialog.Description>
-              {completed} completed set{completed !== 1 ? 's' : ''} will be saved.{' '}
-              {sets.length - completed} uncompleted sets will be excluded.
-            </Dialog.Description>
-            <div className='dialog-actions'>
-              <Dialog.Close asChild>
-                <Button>Keep logging</Button>
-              </Dialog.Close>
-              <Button
-                variant='primary'
-                disabled={disabled || deletingSets || !completed}
-                onClick={finish}
-              >
-                Save finished workout
-              </Button>
-            </div>
-            <Dialog.Close asChild>
-              <Button variant='ghost' size='icon' className='dialog-close' aria-label='Close'>
-                <X size={18} />
-              </Button>
-            </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+        <DialogContent>
+          <DialogTitle>Replace your active workout?</DialogTitle>
+          <DialogDescription>
+            Your current workout will be discarded. All repeated sets start uncompleted.
+          </DialogDescription>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setPendingWorkout(null);
+                setExpanded(true);
+              }}
+            >
+              Resume current workout
+            </Button>
+            <Button
+              variant='primary'
+              disabled={disabled}
+              onClick={() => {
+                if (!pendingWorkout) return;
+                void setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
+                setPendingWorkout(null);
+                setExpanded(true);
+              }}
+            >
+              Replace active draft
+            </Button>
+          </DialogActions>
+          <DialogCornerClose label='Cancel replacement' />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={confirmCancel && !sync.locked} onOpenChange={setConfirmCancel}>
+        <DialogContent>
+          <DialogTitle>Cancel this workout?</DialogTitle>
+          <DialogDescription>
+            {plural(sets.length, 'set')} will be discarded. Finished workouts are not affected.
+          </DialogDescription>
+          <DialogActions>
+            <DialogClose asChild>
+              <Button>Keep logging</Button>
+            </DialogClose>
+            <Button
+              variant='danger'
+              disabled={disabled || deletingSets}
+              onClick={async () => {
+                if (await setState((s) => ({...s, active: null}))) setConfirmCancel(false);
+              }}
+            >
+              Discard workout
+            </Button>
+          </DialogActions>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={confirmFinish && !sync.locked} onOpenChange={setConfirmFinish}>
+        <DialogContent>
+          <DialogTitle>Finish this workout?</DialogTitle>
+          {persistenceError && (
+            <p className='mt-3.5' role='alert'>
+              {persistenceError}
+            </p>
+          )}
+          <DialogDescription>
+            {completed} completed set{completed !== 1 ? 's' : ''} will be saved.{' '}
+            {sets.length - completed} uncompleted sets will be excluded.
+          </DialogDescription>
+          <DialogActions>
+            <DialogClose asChild>
+              <Button>Keep logging</Button>
+            </DialogClose>
+            <Button
+              variant='primary'
+              disabled={disabled || deletingSets || !completed}
+              onClick={finish}
+            >
+              Save finished workout
+            </Button>
+          </DialogActions>
+          <DialogCornerClose label='Close' />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

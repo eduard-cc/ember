@@ -1,8 +1,12 @@
 import {useMemo} from 'react';
 
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
+import {SettingsList} from '../components/settings-group';
+import {Card} from '../components/ui/card';
+import {SectionHeading} from '../components/ui/section-heading';
 import {workoutsPerWeek} from '../domain/model';
 import type {Workout} from '../domain/types';
+import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
 import {setLabel} from './ExerciseDetail';
 import {dateLabel} from './WorkoutView';
@@ -29,19 +33,19 @@ export function ProfileView({
   const barWidth = 640 / WEEKS;
   return (
     <div className='profile-view'>
-      <section className='analytics-card'>
-        <div className='section-heading'>
+      <Card as='section'>
+        <SectionHeading>
           <h2>Workouts per week</h2>
           <span>Last {WEEKS} weeks</span>
-        </div>
-        <p className='profile-totals'>
+        </SectionHeading>
+        <p className='profile-totals mt-1'>
           <span className='numeric'>{workouts.length}</span>
           {workouts.length === 1 ? ' workout' : ' workouts'} ·{' '}
           <span className='numeric'>{sets}</span>
           {sets === 1 ? ' set' : ' sets'} · <span className='numeric'>{thisWeek}</span> this week
         </p>
         <svg
-          className='week-chart'
+          className='week-chart my-2 h-auto w-full'
           viewBox='0 0 700 190'
           role='img'
           aria-label={`Workouts per week for the last ${WEEKS} weeks. ${weeks
@@ -50,8 +54,19 @@ export function ProfileView({
         >
           {[0, max / 2, max].map((v) => (
             <g key={v}>
-              <line x1='40' x2='690' y1={160 - (v / max) * 140} y2={160 - (v / max) * 140} />
-              <text x='30' y={164 - (v / max) * 140} textAnchor='end'>
+              <line
+                className='stroke-border'
+                x1='40'
+                x2='690'
+                y1={160 - (v / max) * 140}
+                y2={160 - (v / max) * 140}
+              />
+              <text
+                className='fill-muted-foreground text-[13px]'
+                x='30'
+                y={164 - (v / max) * 140}
+                textAnchor='end'
+              >
                 {Number(v.toFixed(1))}
               </text>
             </g>
@@ -65,14 +80,23 @@ export function ProfileView({
                   y={160 - height}
                   width={barWidth * 0.64}
                   height={height}
-                  className={i === weeks.length - 1 ? 'current-week' : undefined}
+                  className={
+                    i === weeks.length - 1
+                      ? 'current-week fill-primary stroke-none [rx:0]'
+                      : 'fill-[hsl(var(--chart-secondary))] stroke-[hsl(var(--chart-secondary-edge))] stroke-1 [rx:0]'
+                  }
                 >
                   <title>
                     Week of {week.start}: {plural(week.count, 'workout')}
                   </title>
                 </rect>
                 {i % 3 === WEEKS % 3 && (
-                  <text x={48 + i * barWidth + barWidth / 2} y='182' textAnchor='middle'>
+                  <text
+                    className='fill-muted-foreground text-[13px]'
+                    x={48 + i * barWidth + barWidth / 2}
+                    y='182'
+                    textAnchor='middle'
+                  >
                     {week.start.slice(5).replace('-', '/')}
                   </text>
                 )}
@@ -80,11 +104,11 @@ export function ProfileView({
             );
           })}
         </svg>
-        <p className='chart-note'>
+        <p className='text-[12px] text-muted-foreground'>
           {Number(average.toFixed(1))} per week on average before this week
           {first ? ` · logging since ${first}` : ''}.
         </p>
-      </section>
+      </Card>
       <FlaggedSets workouts={workouts} onExclude={onExclude} />
     </div>
   );
@@ -106,23 +130,23 @@ function FlaggedSets({workouts, onExclude}: {workouts: Workout[]; onExclude: Exc
   if (!flagged.length) return null;
   const excluded = flagged.filter(({set}) => set.excluded).length;
   return (
-    <section className='analytics-card flagged-sets' aria-labelledby='flagged-sets'>
-      <div className='section-heading'>
+    <section className='mt-3.5' aria-labelledby='flagged-sets'>
+      <SectionHeading>
         <h2 id='flagged-sets'>Flagged sets</h2>
         <span>
           {plural(flagged.length, 'flagged set')} · {excluded} excluded
         </span>
-      </div>
-      <p className='chart-note'>
+      </SectionHeading>
+      <p className='mt-2 text-[12px] text-muted-foreground'>
         The import flagged these values as unlikely. Excluded sets stay in your history but no
         longer count toward records, charts or suggestions.
       </p>
-      <ul>
+      <SettingsList as='ul' className='mt-3'>
         {flagged.map(({workout, exercise, set, number}) => (
-          <li key={set.id} className={set.excluded ? 'excluded-set' : ''}>
-            <div>
+          <li key={set.id} className='flex min-h-14 items-center gap-2.5 px-4 py-2'>
+            <div className={cn('flex min-w-0 flex-1 flex-col', set.excluded && 'opacity-60')}>
               <strong>{exercise.name}</strong>
-              <small>
+              <small className='text-[12px] text-muted-foreground'>
                 Set {number}: {setLabel(set, exercise.type)}
                 {set.excluded ? ' · excluded' : ''} · {workout.name} · {dateLabel(workout.date)}
               </small>
@@ -138,7 +162,7 @@ function FlaggedSets({workouts, onExclude}: {workouts: Workout[]; onExclude: Exc
             />
           </li>
         ))}
-      </ul>
+      </SettingsList>
     </section>
   );
 }

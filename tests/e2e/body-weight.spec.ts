@@ -35,8 +35,9 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
 }) => {
   await page.goto('/');
   let section = await open(page);
-  await expect(section.getByRole('heading', {name: 'Weight (kg)', exact: true})).toBeVisible();
-  await expect(section.getByText('No entries yet', {exact: false})).toBeVisible();
+  // No entries: one EmptyState stands in for both the chart and the list.
+  await expect(section.locator('.empty-state', {hasText: 'No entries yet'})).toBeVisible();
+  await expect(section.getByRole('heading', {name: 'Weight (kg)', exact: true})).toHaveCount(0);
   await expect(section.getByRole('img')).toHaveCount(0);
 
   // A new entry defaults to now.
@@ -56,6 +57,8 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   await section.getByRole('button', {name: 'Save entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(1);
   // One point: honest single-entry state, no line.
+  await expect(section.getByRole('heading', {name: 'Weight (kg)', exact: true})).toBeVisible();
+  await expect(section.locator('.empty-state', {hasText: 'One entry so far'})).toBeVisible();
   await expect(section.getByText('Add another entry', {exact: false})).toBeVisible();
   await expect(section.getByRole('img')).toHaveCount(0);
 
