@@ -1,4 +1,4 @@
-import {Search} from 'lucide-react';
+import {Search, SearchX} from 'lucide-react';
 import {type ReactNode, useId, useMemo, useState} from 'react';
 
 import {type BodyPart, allExerciseNames, bodyPartOf, bodyParts} from '../catalog/catalog';
@@ -11,7 +11,11 @@ import {
 import type {Dataset} from '../domain/types';
 import {plural} from '../utils/plural';
 import {ExerciseThumb} from './ExerciseThumb';
+import {ExerciseRowText, exerciseRowClass} from './exercise-row';
+import {Chip, ChipRow} from './ui/chip';
+import {EmptyState} from './ui/empty-state';
 import {Input} from './ui/input';
+import {ListLabel} from './ui/list-label';
 
 const sortKey = 'gym-log:exercise-sort:v1';
 const sortOptions = [
@@ -51,19 +55,19 @@ function ExerciseRow({
   return (
     <li>
       <button
-        className='exercise-row'
+        className={exerciseRowClass}
         aria-label={name}
         aria-describedby={sessions ? id : undefined}
         onClick={() => onSelect(name)}
       >
         <ExerciseThumb name={name} />
-        <span className='exercise-row-text'>
-          <strong>{name}</strong>
-          <small>{bodyPartOf(name)}</small>
-        </span>
+        <ExerciseRowText title={name} subtitle={bodyPartOf(name)} />
         {sessions > 0 && (
           <>
-            <span className='exercise-row-count' aria-hidden='true'>
+            <span
+              className='exercise-row-count ml-auto shrink-0 pr-2 pl-3 text-[16px] font-semibold text-primary tabular-nums'
+              aria-hidden='true'
+            >
               {sessions}
             </span>
             <span id={id} className='sr-only'>
@@ -108,31 +112,39 @@ export function ExerciseList({
   const all = ordered.filter(matches);
   return (
     <div className='exercises-view'>
-      <div className='search-input'>
-        <Search size={16} />
+      <div className='relative flex items-center'>
+        <Search
+          size={16}
+          className='pointer-events-none absolute left-[13px] text-muted-foreground'
+        />
         <Input
+          className='pl-[38px]'
           aria-label='Search exercises'
           placeholder='Search exercises'
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <div className='chip-row' role='group' aria-label='Body part'>
+      <ChipRow role='group' aria-label='Body part'>
         {(['All', ...bodyParts] as const).map((value) => (
-          <button
-            key={value}
-            className='chip'
-            aria-pressed={part === value}
-            onClick={() => setPart(value)}
-          >
+          <Chip key={value} aria-pressed={part === value} onClick={() => setPart(value)}>
             {value}
-          </button>
+          </Chip>
         ))}
-      </div>
+      </ChipRow>
       {sortable && (
-        <div className='sort-toggle' role='group' aria-label='Sort exercises'>
+        <div
+          className='mt-3 inline-flex border border-border bg-card'
+          role='group'
+          aria-label='Sort exercises'
+        >
           {sortOptions.map(([value, label]) => (
-            <button key={value} aria-pressed={sort === value} onClick={() => setSort(value)}>
+            <button
+              key={value}
+              className='min-h-11 min-w-16 border-0 bg-transparent px-4 text-[14px] font-medium text-muted-foreground not-first:border-l not-first:border-l-border aria-pressed:bg-primary-tint aria-pressed:font-semibold aria-pressed:text-primary aria-pressed:shadow-[inset_0_0_0_1px_hsl(var(--primary))]'
+              aria-pressed={sort === value}
+              onClick={() => setSort(value)}
+            >
               {label}
             </button>
           ))}
@@ -141,8 +153,8 @@ export function ExerciseList({
       {extra?.(search.trim(), names)}
       {!query && part === 'All' && recent.length > 0 && (
         <section aria-label='Recent exercises'>
-          <h2 className='list-label'>Recent</h2>
-          <ul className='exercise-rows'>
+          <ListLabel>Recent</ListLabel>
+          <ul>
             {recent.map((name) => (
               <ExerciseRow
                 key={name}
@@ -155,8 +167,8 @@ export function ExerciseList({
         </section>
       )}
       <section aria-label='All exercises'>
-        <h2 className='list-label'>{plural(all.length, 'exercise')}</h2>
-        <ul className='exercise-rows'>
+        <ListLabel>{plural(all.length, 'exercise')}</ListLabel>
+        <ul>
           {all.map((name) => (
             <ExerciseRow
               key={name}
@@ -166,7 +178,15 @@ export function ExerciseList({
             />
           ))}
         </ul>
-        {!all.length && <p className='empty-state'>No matching exercise.</p>}
+        {/* Always unframed: the list sits in the picker dialog and on the Exercises tab alike. */}
+        {!all.length && (
+          <EmptyState
+            icon={SearchX}
+            title='No matching exercise'
+            description='Try another name or clear the filters.'
+            framed={false}
+          />
+        )}
       </section>
     </div>
   );

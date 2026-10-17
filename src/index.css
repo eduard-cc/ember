@@ -124,6 +124,10 @@
 /* Bare element defaults. In the base layer (after preflight) so utilities can override them;
    unlayered class rules in styles.css still beat both. */
 @layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
   button {
     cursor: pointer;
     touch-action: manipulation;

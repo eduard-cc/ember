@@ -15,6 +15,7 @@ import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {dateLabel} from '../views/WorkoutView';
 import {Button} from './ui/button';
+import {trendChartClass} from './ui/chart';
 import {Input} from './ui/input';
 
 const time = (date: string) => date.slice(11, 16);
@@ -55,7 +56,7 @@ function WeightChart({entries}: {entries: BodyWeight[]}) {
   return (
     <div ref={containerRef}>
       <svg
-        className='trend-chart'
+        className={trendChartClass}
         viewBox={`0 0 ${width} 235`}
         role='img'
         aria-label={`Body weight over time. ${points.length} entries from ${dateLabel(points[0].date)} to ${dateLabel(points.at(-1)!.date)}. Exact values in the list below.`}

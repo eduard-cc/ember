@@ -1,11 +1,13 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import {Pencil, Plus, Trash2, X} from 'lucide-react';
+import {ClipboardList, Pencil, Plus, Trash2, X} from 'lucide-react';
 import {useState} from 'react';
 
 import {bodyPartOf} from '../catalog/catalog';
 import {AddExercise} from '../components/AddExercise';
 import {ExerciseThumb} from '../components/ExerciseThumb';
+import {ExerciseRowText, exerciseRowClass} from '../components/exercise-row';
 import {Button} from '../components/ui/button';
+import {EmptyState} from '../components/ui/empty-state';
 import {Input} from '../components/ui/input';
 import type {Dataset, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
@@ -96,7 +98,7 @@ export function TemplatesView({
             onDeletingChange={setDeletingSets}
             onSource={() => {}}
           />
-          <div className='editor-footer'>
+          <div className='mt-[18px] flex flex-wrap justify-end gap-2.5 border-t border-border pt-5'>
             <Button onClick={() => setEditing(null)}>Cancel</Button>
             <Button
               variant='primary'
@@ -185,13 +187,16 @@ export function TemplatesView({
                       </small>
                     </button>
                     {deleteId === template.id && (
-                      /* `pt-0!` beats the unlayered shared .inline-confirm padding-top (styles.css); drop it
-                         when .inline-confirm ports with History (PR 4/5). */
-                      <div className='inline-confirm px-4 pt-0! pb-3.5'>
-                        <p>Delete this template? Your workout history is kept.</p>
-                        <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+                      <div className='inline-confirm mt-4 border-t border-border px-4 pb-3.5'>
+                        <p className='mb-2.5'>
+                          Delete this template? Your workout history is kept.
+                        </p>
+                        <Button className='mr-2' onClick={() => setDeleteId(null)}>
+                          Cancel
+                        </Button>
                         <Button
                           variant='danger'
+                          className='mr-2'
                           aria-label='Confirm delete template'
                           onClick={() => {
                             void onChange(templates.filter((t) => t.id !== template.id));
@@ -208,10 +213,11 @@ export function TemplatesView({
             </div>
           )}
           {!templates.length && (
-            <div className='empty-state'>
-              <h2>No templates yet</h2>
-              <p>Create one, or save any finished workout as a template from History.</p>
-            </div>
+            <EmptyState
+              icon={ClipboardList}
+              title='No templates yet'
+              description='Create one, or save any finished workout as a template from History.'
+            />
           )}
         </>
       )}
@@ -225,18 +231,14 @@ export function TemplatesView({
                 ? `Last performed ${dateLabel(lastPerformed(dataset, preview.name)!)}`
                 : 'Not performed yet'}
             </Dialog.Description>
-            {/* `!` beats the unlayered shared .exercise-rows margin:0 (styles.css); drop it when
-                .exercise-rows ports (PR 4/5). */}
-            <ul className='exercise-rows mt-3.5! mb-4.5!'>
+            <ul className='mt-3.5 mb-4.5'>
               {preview?.exercises.map((ex, i) => (
-                <li key={`${ex.name}-${i}`} className='exercise-row static'>
+                <li key={`${ex.name}-${i}`} className={exerciseRowClass}>
                   <ExerciseThumb name={ex.name} />
-                  <span className='exercise-row-text'>
-                    <strong>
-                      {ex.sets.length} × {ex.name}
-                    </strong>
-                    <small>{bodyPartOf(ex.name)}</small>
-                  </span>
+                  <ExerciseRowText
+                    title={`${ex.sets.length} × ${ex.name}`}
+                    subtitle={bodyPartOf(ex.name)}
+                  />
                 </li>
               ))}
             </ul>

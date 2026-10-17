@@ -1,12 +1,17 @@
-import {ArrowLeft, ArrowUpRight} from 'lucide-react';
+import {ArrowLeft, ArrowUpRight, History, Info, Trophy} from 'lucide-react';
 import {type ReactElement, type ReactNode, useId, useState} from 'react';
 
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
 import {Button} from '../components/ui/button';
+import {MetricExplanation} from '../components/ui/chart';
+import {TextAction, dataTableClass} from '../components/ui/data-table';
+import {EmptyState} from '../components/ui/empty-state';
+import {ListLabel} from '../components/ui/list-label';
 import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
 import type {Dataset, ExerciseType, SetRecord} from '../domain/types';
+import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
 import {ExerciseCharts} from './ExerciseCharts';
 import {dateLabel} from './WorkoutView';
@@ -14,6 +19,7 @@ import {dateLabel} from './WorkoutView';
 const tabs = ['About', 'History', 'Charts', 'Records'] as const;
 type Tab = (typeof tabs)[number];
 const kg = (n: number) => `${Number(n.toFixed(1))} kg`;
+const sessionHeadClass = 'text-[12px] font-medium text-muted-foreground';
 
 export function setLabel(set: SetRecord, type: ExerciseType) {
   if (type === 'duration' || type === 'cardio')
@@ -22,44 +28,51 @@ export function setLabel(set: SetRecord, type: ExerciseType) {
   return `${set.weight} kg${type === 'assisted' ? ' assist.' : ''} × ${set.reps ?? '—'}`;
 }
 
-function About({name}: {name: string}) {
+function Fact({label, value}: {label: string; value: string}) {
+  return (
+    <div>
+      <dt className='text-[12px] text-muted-foreground'>{label}</dt>
+      <dd className='mt-0.5 font-medium'>{value}</dd>
+    </div>
+  );
+}
+
+function About({name, framed}: {name: string; framed: boolean}) {
   const entry = catalogEntry(name);
   if (!entry)
     return (
-      <div className='empty-state'>
-        <h2>Custom exercise</h2>
-        <p>Not in the exercise catalog. Its history, charts and records are still here.</p>
-      </div>
+      <EmptyState
+        icon={Info}
+        title='Custom exercise'
+        description='Not in the exercise catalog. Its history, charts and records are still here.'
+        framed={framed}
+      />
     );
   return (
     <div className='about'>
       {entry.images.length > 0 && (
-        <div className='about-drawings'>
+        <div className='about-drawings mb-4 grid grid-cols-2 gap-2.5'>
           {entry.images.map((image) => (
-            <Drawing key={image.file} file={image.file} className='drawing large-drawing' />
+            <Drawing
+              key={image.file}
+              file={image.file}
+              className={cn(
+                'aspect-square h-auto w-full rounded-none outline outline-border',
+                // A single drawing keeps the size of one drawing in a start/finish pair.
+                entry.images.length === 1 && 'col-span-full w-[calc(50%-5px)] justify-self-center',
+              )}
+            />
           ))}
         </div>
       )}
-      <dl className='about-facts'>
-        <div>
-          <dt>Body part</dt>
-          <dd>{entry.bodyPart}</dd>
-        </div>
-        <div>
-          <dt>Equipment</dt>
-          <dd>{entry.equipment}</dd>
-        </div>
+      <dl className='mb-1.5 grid grid-cols-[1fr_1fr] gap-x-4 gap-y-3'>
+        <Fact label='Body part' value={entry.bodyPart} />
+        <Fact label='Equipment' value={entry.equipment} />
         {entry.primaryMuscles.length > 0 && (
-          <div>
-            <dt>Primary</dt>
-            <dd>{entry.primaryMuscles.join(', ')}</dd>
-          </div>
+          <Fact label='Primary' value={entry.primaryMuscles.join(', ')} />
         )}
         {entry.secondaryMuscles.length > 0 && (
-          <div>
-            <dt>Secondary</dt>
-            <dd>{entry.secondaryMuscles.join(', ')}</dd>
-          </div>
+          <Fact label='Secondary' value={entry.secondaryMuscles.join(', ')} />
         )}
       </dl>
     </div>
@@ -71,29 +84,36 @@ function HistoryTab({
   name,
   onSource,
   onExclude,
+  framed,
 }: {
   dataset: Dataset;
   name: string;
   onSource: (id: string) => void;
   onExclude: ExcludeSetHandler;
+  framed: boolean;
 }) {
   const [limit, setLimit] = useState(10);
   const history = getHistory(dataset, name);
   if (!history.length)
     return (
-      <div className='empty-state'>
-        <h2>No history yet</h2>
-        <p>Sessions appear here after you finish a workout with this exercise.</p>
-      </div>
+      <EmptyState
+        icon={History}
+        title='No history yet'
+        description='Sessions appear here after you finish a workout with this exercise.'
+        framed={framed}
+      />
     );
   return (
-    <div className='session-cards'>
+    <div className='flex flex-col gap-3'>
       {history.slice(0, limit).map((session, i) => (
-        <article className='session-card' key={`${session.workoutId}-${i}`}>
-          <header>
+        <article
+          className='session-card border border-border bg-card pt-1 pr-1.5 pb-3 pl-4'
+          key={`${session.workoutId}-${i}`}
+        >
+          <header className='flex items-center justify-between gap-2'>
             <div>
-              <h3>{session.workoutName}</h3>
-              <p>{dateLabel(session.date)}</p>
+              <h3 className='mt-2 text-[16px] font-semibold'>{session.workoutName}</h3>
+              <p className='text-[12px] text-muted-foreground'>{dateLabel(session.date)}</p>
             </div>
             <Button
               size='icon'
@@ -104,18 +124,25 @@ function HistoryTab({
               <ArrowUpRight size={16} />
             </Button>
           </header>
-          <div className='session-sets'>
-            <span className='session-sets-head'>Sets performed</span>
-            {session.type === 'weighted' && <span className='session-sets-head'>Est. 1RM</span>}
-            <span className='session-sets-head'>
+          <div
+            className={cn(
+              'mt-1.5 grid items-center gap-x-3 gap-y-1 pr-2.5 text-[14px] tabular-nums',
+              session.type === 'weighted' ? 'grid-cols-[1fr_auto_auto]' : 'grid-cols-[1fr_auto]',
+            )}
+          >
+            <span className={sessionHeadClass}>Sets performed</span>
+            {session.type === 'weighted' && <span className={sessionHeadClass}>Est. 1RM</span>}
+            <span className={sessionHeadClass}>
               <span className='sr-only'>Analytics</span>
             </span>
             {session.sets.map((set, j) => {
               const e1rm = estimate1RM(set, session.type);
               return (
-                <div key={set.id} className={`session-set ${set.excluded ? 'excluded-set' : ''}`}>
-                  <span>
-                    <b>{j + 1}</b>
+                <div key={set.id} className='session-set contents'>
+                  <span className={cn(set.excluded && 'opacity-60')}>
+                    <b className='inline-block min-w-[22px] font-semibold text-muted-foreground'>
+                      {j + 1}
+                    </b>
                     {setLabel(set, session.type)}
                     {set.suspicious ? ' · flagged' : ''}
                     {set.excluded ? ' · excluded' : ''}
@@ -147,10 +174,12 @@ function RecordsTab({
   dataset,
   name,
   onSource,
+  framed,
 }: {
   dataset: Dataset;
   name: string;
   onSource: (id: string) => void;
+  framed: boolean;
 }) {
   const records = getRecords(dataset, name);
   const type = getHistory(dataset, name)[0]?.type;
@@ -176,21 +205,26 @@ function RecordsTab({
   add('Most reps in a set', records.mostReps, (n) => `${n} reps`);
   if (!rows.length)
     return (
-      <div className='empty-state'>
-        <h2>No records yet</h2>
-        <p>Records come from your completed sets.</p>
-      </div>
+      <EmptyState
+        icon={Trophy}
+        title='No records yet'
+        description='Records come from your completed sets.'
+        framed={framed}
+      />
     );
   return (
     <div className='records'>
-      <ul className='record-list'>
+      <ul className='m-0 list-none p-0'>
         {rows.map((row) => (
-          <li key={row.label}>
-            <div>
+          <li
+            key={row.label}
+            className='flex min-h-[60px] items-center gap-2.5 border-b border-border'
+          >
+            <div className='flex min-w-0 flex-1 flex-col'>
               <span>{row.label}</span>
-              <small>{row.detail}</small>
+              <small className='text-[12px] text-muted-foreground'>{row.detail}</small>
             </div>
-            <strong>{row.value}</strong>
+            <strong className='tabular-nums'>{row.value}</strong>
             <Button
               size='icon'
               variant='ghost'
@@ -203,15 +237,15 @@ function RecordsTab({
         ))}
       </ul>
       {records.estimated && (
-        <p className='metric-explanation'>
+        <MetricExplanation>
           Estimated 1RM uses Epley, weight × (1 + reps / 30), on weighted sets of 1–10 reps. It is
           an estimate, not a tested maximum. Assisted and bodyweight work get no estimate.
-        </p>
+        </MetricExplanation>
       )}
       {records.repBests.length > 0 && (
         <>
-          <h2 className='list-label'>Heaviest weight by reps</h2>
-          <table aria-label='Heaviest weight by reps'>
+          <ListLabel>Heaviest weight by reps</ListLabel>
+          <table className={dataTableClass} aria-label='Heaviest weight by reps'>
             <thead>
               <tr>
                 <th>Reps</th>
@@ -225,13 +259,12 @@ function RecordsTab({
                   <td>{best.reps}</td>
                   <td>{kg(best.value)}</td>
                   <td>
-                    <button
-                      className='text-action'
+                    <TextAction
                       aria-label={`View source workout ${best.reps} reps ${dateLabel(best.date)}`}
                       onClick={() => onSource(best.workoutId)}
                     >
                       {dateLabel(best.date)} <ArrowUpRight size={13} />
-                    </button>
+                    </TextAction>
                   </td>
                 </tr>
               ))}
@@ -252,6 +285,7 @@ export function ExerciseDetail({
   onExclude,
   backLabel = 'Back to exercises',
   renderTitle = (heading) => heading,
+  emptyFramed = true,
 }: {
   dataset: Dataset;
   name: string;
@@ -261,6 +295,8 @@ export function ExerciseDetail({
   backLabel?: string;
   /** Lets a dialog host wrap the name heading as its accessible title. */
   renderTitle?: (heading: ReactElement) => ReactNode;
+  /** False when a dialog hosts the details: empty states then sit on its surface unframed. */
+  emptyFramed?: boolean;
 }) {
   // Unique workouts, matching the Exercises list; History/Charts/Records stay per exercise block.
   const workouts = exerciseWorkoutCount(dataset, name);
@@ -269,19 +305,23 @@ export function ExerciseDetail({
   const id = useId();
   return (
     <div className='exercise-detail'>
-      <header className='detail-header'>
+      <header className='detail-header mb-3.5 flex items-center gap-3'>
         <Button variant='ghost' size='icon' aria-label={backLabel} onClick={onBack}>
           <ArrowLeft size={20} />
         </Button>
         <ExerciseThumb name={name} />
-        <div>
-          {renderTitle(<h2>{name}</h2>)}
-          <p>
+        <div className='min-w-0'>
+          {renderTitle(<h2 className='text-[18px]'>{name}</h2>)}
+          <p className='mt-0.5 text-[12px] text-muted-foreground'>
             {bodyPartOf(name)} · {plural(workouts, 'workout')}
           </p>
         </div>
       </header>
-      <div className='tabs' role='tablist' aria-label='Exercise sections'>
+      <div
+        className='sticky -top-6 z-1 -mx-1 mb-[18px] flex border-b border-border bg-background [.exercise-detail-panel_&]:max-desk:-top-[18px]'
+        role='tablist'
+        aria-label='Exercise sections'
+      >
         {tabs.map((value) => (
           <button
             key={value}
@@ -289,7 +329,7 @@ export function ExerciseDetail({
             id={`${id}-tab-${value}`}
             aria-selected={tab === value}
             aria-controls={`${id}-panel`}
-            className='tab'
+            className='min-h-[46px] flex-1 border-0 border-b-2 border-b-transparent bg-transparent text-[14px] font-medium text-muted-foreground focus-visible:-outline-offset-2 aria-selected:border-b-primary aria-selected:text-foreground'
             onClick={() => setTab(value)}
           >
             {value}
@@ -297,14 +337,28 @@ export function ExerciseDetail({
         ))}
       </div>
       <div role='tabpanel' id={`${id}-panel`} aria-labelledby={`${id}-tab-${tab}`}>
-        {tab === 'About' && <About name={name} />}
+        {tab === 'About' && <About name={name} framed={emptyFramed} />}
         {tab === 'History' && (
-          <HistoryTab dataset={dataset} name={name} onSource={onSource} onExclude={onExclude} />
+          <HistoryTab
+            dataset={dataset}
+            name={name}
+            onSource={onSource}
+            onExclude={onExclude}
+            framed={emptyFramed}
+          />
         )}
         {tab === 'Charts' && (
-          <ExerciseCharts key={name} dataset={dataset} name={name} onSource={onSource} />
+          <ExerciseCharts
+            key={name}
+            dataset={dataset}
+            name={name}
+            onSource={onSource}
+            framed={emptyFramed}
+          />
         )}
-        {tab === 'Records' && <RecordsTab dataset={dataset} name={name} onSource={onSource} />}
+        {tab === 'Records' && (
+          <RecordsTab dataset={dataset} name={name} onSource={onSource} framed={emptyFramed} />
+        )}
       </div>
     </div>
   );

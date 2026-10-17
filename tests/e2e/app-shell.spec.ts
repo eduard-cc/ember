@@ -463,3 +463,81 @@ for (const [scheme, wash] of [
     await expect(time).toHaveCSS('color', foreground);
   });
 }
+
+test('empty states use the shared EmptyState', async ({page}) => {
+  await page.goto('/');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  const muted = await resolve(page, 'hsl(var(--muted-foreground))');
+  const check = async (title: string) => {
+    const root = page.locator('.empty-state', {hasText: title});
+    await expect(root).toBeVisible();
+    await expect(root).toHaveCSS('border-top-width', '1px');
+    // Gym Log has no global border-color default, so the frame must name the token itself.
+    await expect(root).toHaveCSS('border-top-color', await resolve(page, 'hsl(var(--border))'));
+    const card = await resolve(page, 'hsl(var(--card))');
+    await expect(root).toHaveCSS('background-color', card);
+    const icon = root.locator('svg');
+    await expect(icon).toHaveCount(1);
+    const box = await icon.boundingBox();
+    expect([box!.width, box!.height]).toEqual([48, 48]);
+    await expect(icon).toHaveCSS('color', muted);
+    const h2 = root.locator('h2');
+    await expect(h2).toHaveCSS('font-size', '18px');
+    await expect(h2).toHaveCSS('font-weight', '600');
+    const p = root.locator('p');
+    await expect(p).toHaveCSS('font-size', '14px');
+    await expect(p).toHaveCSS('color', muted);
+  };
+  await minimizeIfPossible(page);
+  await check('No templates yet');
+  await navigate(page, 'History');
+  await page.getByLabel('Search workout history').fill('zzzz');
+  await check('No matching workouts');
+});
+
+test("the picker's no-match state is unframed", async ({page}) => {
+  await page.goto('/?demo=1');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
+  const picker = page.getByRole('dialog', {name: 'Add exercise', exact: true});
+  await picker.getByLabel('Search exercises').fill('zzzz');
+  const empty = picker.locator('.empty-state');
+  await expect(empty.locator('h2')).toHaveText('No matching exercise');
+  await expect(empty).toHaveCSS('border-top-width', '0px');
+  // The unlayered .dialog-content h2/p rules must not leak into the state (removed with PR 5).
+  await expect(empty.locator('h2')).toHaveCSS('padding-right', '0px');
+  await expect(empty.locator('p')).toHaveCSS('margin-top', '8px');
+});
+
+test('emptyFramed: the library details state is framed, the logger dialog one is not', async ({
+  page,
+}) => {
+  await page.goto('/?demo=1');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  // Logger dialog: add an exercise that has no finished history, then open its details.
+  await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
+  const picker = page.getByRole('dialog', {name: 'Add exercise', exact: true});
+  await picker.getByLabel('Search exercises').fill('Deadlift (Barbell)');
+  await picker.getByRole('button', {name: 'Deadlift (Barbell)', exact: true}).click();
+  await page
+    .getByRole('button', {name: 'Show details for Deadlift (Barbell)', exact: true})
+    .click();
+  const dialog = page.getByRole('dialog', {name: 'Deadlift (Barbell)', exact: true});
+  await dialog.getByRole('tab', {name: 'History', exact: true}).click();
+  const inDialog = dialog.locator('.empty-state', {hasText: 'No history yet'});
+  await expect(inDialog).toBeVisible();
+  await expect(inDialog).toHaveCSS('border-top-width', '0px');
+  await expect(inDialog.locator('h2')).toHaveCSS('padding-right', '0px');
+  await expect(inDialog.locator('p')).toHaveCSS('margin-top', '8px');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await minimizeIfPossible(page);
+  // Library: the same state on the Exercises tab is framed.
+  await navigate(page, 'Exercises');
+  await page.getByLabel('Search exercises').fill('Deadlift (Barbell)');
+  await page.getByRole('button', {name: 'Deadlift (Barbell)', exact: true}).click();
+  await page.getByRole('tab', {name: 'History', exact: true}).click();
+  const framed = page.locator('.empty-state', {hasText: 'No history yet'}).first();
+  await expect(framed).toBeVisible();
+  await expect(framed).toHaveCSS('border-top-width', '1px');
+});

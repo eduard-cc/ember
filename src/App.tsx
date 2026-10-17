@@ -22,6 +22,7 @@ import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
 import {Button} from './components/ui/button';
 import {Input} from './components/ui/input';
+import {ListLabel} from './components/ui/list-label';
 import {routineTargets} from './components/workout-targets';
 import {parseStrongCsv} from './domain/model';
 import type {Workout} from './domain/types';
@@ -374,11 +375,9 @@ export default function App() {
               {view === 'Workout' && !sync.locked && (
                 <>
                   <section className='quick-start' aria-labelledby='quick-start'>
-                    {/* `mt-0!` beats the unlayered shared .list-label margin (styles.css); drop it when
-                        .list-label ports (PR 4/5). */}
-                    <h2 className='list-label mt-0!' id='quick-start'>
+                    <ListLabel className='mt-0' id='quick-start'>
                       Quick start
-                    </h2>
+                    </ListLabel>
                     <Button
                       variant='primary'
                       className='min-h-12 w-full'

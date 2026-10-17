@@ -413,7 +413,7 @@ export function ReorderList({
           data-held={i === from || undefined}
           aria-current={i === from || undefined}
         >
-          <ExerciseThumb name={ex.name} />
+          <ExerciseThumb name={ex.name} className='size-10' />
           <span className='reorder-name truncate text-[16px] font-semibold text-foreground'>
             {ex.name}
           </span>

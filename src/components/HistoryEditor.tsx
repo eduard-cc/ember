@@ -52,7 +52,7 @@ export function HistoryEditor({
       <Dialog.Portal>
         <Dialog.Overlay className='dialog-overlay' />
         <Dialog.Content
-          className='settings-panel history-editor'
+          className='settings-panel history-editor [--row-bg:hsl(var(--card))]'
           onInteractOutside={(event) => event.preventDefault()}
         >
           <div className='section-heading'>
@@ -65,7 +65,7 @@ export function HistoryEditor({
             Change the name, start time, duration, exercises and sets of this finished workout.
           </Dialog.Description>
           <fieldset disabled={disabled || saving} className='content-fieldset'>
-            <div className='history-editor-fields'>
+            <div className='mb-5 grid gap-2'>
               <label className='field-label' htmlFor='history-workout-name'>
                 Workout name
               </label>
@@ -74,8 +74,8 @@ export function HistoryEditor({
                 value={draft.name}
                 onChange={(e) => setDraft({...draft, name: e.target.value})}
               />
-              <div className='history-editor-row'>
-                <div>
+              <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,8rem)] gap-3'>
+                <div className='grid min-w-0 gap-2'>
                   <label className='field-label' htmlFor='history-workout-start'>
                     Start
                   </label>
@@ -94,7 +94,7 @@ export function HistoryEditor({
                     }
                   />
                 </div>
-                <div>
+                <div className='grid min-w-0 gap-2'>
                   <label className='field-label' htmlFor='history-workout-duration'>
                     Duration (min)
                   </label>
@@ -133,7 +133,7 @@ export function HistoryEditor({
               }
             />
             {(error || (dirty && problem)) && (
-              <p className='history-editor-problem' role='alert'>
+              <p className='mt-4 text-[14px] text-destructive' role='alert'>
                 {error || problem}
               </p>
             )}
@@ -141,18 +141,20 @@ export function HistoryEditor({
               <div
                 ref={discardPrompt}
                 tabIndex={-1}
-                className='inline-confirm'
+                className='inline-confirm mt-4 border-t border-border pt-4'
                 role='group'
                 aria-label='Discard changes?'
               >
-                <p>Discard your changes to this workout?</p>
-                <Button onClick={() => setDiscardRequest(0)}>Keep editing</Button>
-                <Button variant='danger' onClick={onClose}>
+                <p className='mb-2.5'>Discard your changes to this workout?</p>
+                <Button className='mr-2' onClick={() => setDiscardRequest(0)}>
+                  Keep editing
+                </Button>
+                <Button variant='danger' className='mr-2' onClick={onClose}>
                   Discard changes
                 </Button>
               </div>
             ) : (
-              <div className='editor-footer'>
+              <div className='mt-[18px] flex flex-wrap justify-end gap-2.5 border-t border-border pt-5'>
                 <Button onClick={close}>Cancel</Button>
                 <Button
                   variant='primary'

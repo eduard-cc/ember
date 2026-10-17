@@ -1,15 +1,25 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import {ArrowUpRight, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2} from 'lucide-react';
+import {
+  ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  History,
+  Pencil,
+  RotateCcw,
+  Trash2,
+} from 'lucide-react';
 import {useRef, useState} from 'react';
 
 import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {OptionsMenu} from '../components/ExerciseMenu';
 import {HistoryEditor} from '../components/HistoryEditor';
 import {Button} from '../components/ui/button';
+import {EmptyState} from '../components/ui/empty-state';
 import {Input} from '../components/ui/input';
 import type {Dataset, Workout} from '../domain/types';
 import {durationLabel} from '../domain/workout-duration';
 import {useBackLayer} from '../state/back';
+import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
 import {dateLabel} from './WorkoutView';
 
@@ -21,14 +31,20 @@ export function WorkoutDetails({
   onExclude: ExcludeSetHandler;
 }) {
   return (
-    <div className='workout-details'>
+    <div className='workout-details mt-[18px] grid grid-cols-2 gap-5 border-t border-border pt-[18px] max-desk:grid-cols-1'>
       {workout.exercises.map((ex, i) => (
         <section key={`${ex.name}-${i}`}>
           <h3>{ex.name}</h3>
-          <div className='recorded-sets'>
+          <div className='recorded-sets mt-[9px] flex flex-col gap-[7px] text-[12px] text-muted-foreground tabular-nums'>
             {ex.sets.map((set, j) => (
-              <div key={set.id} className={`recorded-set ${set.excluded ? 'excluded-set' : ''}`}>
-                <span className={set.suspicious ? 'suspicious-set' : ''}>
+              <div
+                key={set.id}
+                className={cn(
+                  'flex items-center justify-between gap-2',
+                  set.excluded && '[&>span:first-child]:opacity-60',
+                )}
+              >
+                <span className={cn(set.suspicious && 'text-destructive')}>
                   Set {j + 1}:{' '}
                   {ex.type === 'duration' || ex.type === 'cardio'
                     ? `${set.seconds ?? '—'} seconds${set.distance !== null ? ` · ${set.distance} km` : ''}`
@@ -105,8 +121,8 @@ export function HistoryView({
       )
     : filtered;
   return (
-    <div className='history-list'>
-      <div className='list-toolbar'>
+    <div className='history-list flex flex-col gap-4'>
+      <div>
         <Input
           aria-label='Search workout history'
           placeholder='Search workouts, exercises or dates…'
@@ -123,24 +139,26 @@ export function HistoryView({
         const count = workout.exercises.reduce((n, ex) => n + ex.sets.length, 0);
         return (
           <article
-            className={`history-card ${focusedId === workout.id ? 'focused-history' : ''}`}
+            className={cn(
+              'history-card min-w-0 border bg-card p-5',
+              focusedId === workout.id ? 'focused-history border-primary' : 'border-border',
+            )}
             key={workout.id}
           >
-            <div className='history-card-top'>
-              <div>
-                <span className='eyebrow'>
+            <div className='flex justify-between gap-4'>
+              <div className='min-w-0'>
+                <span className='eyebrow block text-[12px] text-muted-foreground tabular-nums'>
                   {dateLabel(workout.date)}
                   {workout.duration ? ` · ${durationLabel(workout.duration)}` : ''}
                 </span>
-                <h2>{workout.name}</h2>
-                <p>
+                <h2 className='my-2'>{workout.name}</h2>
+                <p className='mt-[7px]'>
                   {count} completed set{count !== 1 ? 's' : ''}
                 </p>
-                <p className='exercise-preview'>
-                  {workout.exercises.map((ex) => ex.name).join(' · ')}
-                </p>
+                <p className='mt-[7px]'>{workout.exercises.map((ex) => ex.name).join(' · ')}</p>
               </div>
-              <div className='history-card-actions'>
+              {/* The negative margin pulls the 44px ⋯ target into the card padding so its glyph sits at the content edge. */}
+              <div className='-mr-[13px] flex min-w-0 shrink-0 items-start'>
                 <Button
                   size='icon'
                   variant='ghost'
@@ -180,7 +198,7 @@ export function HistoryView({
               </div>
             </div>
             {open && <WorkoutDetails workout={workout} onExclude={onExclude} />}
-            <footer>
+            <footer className='mt-[18px] flex flex-wrap gap-2 border-t border-border pt-4'>
               <Button
                 aria-label={`Repeat workout ${workout.name} ${dateLabel(workout.date)}`}
                 onClick={() => onRepeat(workout)}
@@ -198,10 +216,11 @@ export function HistoryView({
         <Button onClick={() => setLimit((n) => n + 20)}>Show more sessions</Button>
       )}
       {!filtered.length && (
-        <div className='empty-state'>
-          <h2>No matching workouts</h2>
-          <p>Try another search or finish your first workout.</p>
-        </div>
+        <EmptyState
+          icon={History}
+          title='No matching workouts'
+          description='Try another search or finish your first workout.'
+        />
       )}
       {editing && !locked && (
         <HistoryEditor

@@ -354,12 +354,12 @@ export function WorkoutView({
                       setDetails({id: identity(ex), name: ex.name});
                     }}
                   >
-                    <ExerciseThumb name={ex.name} />
+                    <ExerciseThumb name={ex.name} className='size-10' />
                     <span id={`${identity(ex)}-name`}>{ex.name}</span>
                   </button>
                 ) : (
                   <span className='exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.exercise-thumb]:col-1 [&>.exercise-thumb]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere]'>
-                    <ExerciseThumb name={ex.name} />
+                    <ExerciseThumb name={ex.name} className='size-10' />
                     <span id={`${identity(ex)}-name`}>{ex.name}</span>
                   </span>
                 )}
@@ -611,6 +611,7 @@ export function WorkoutView({
                       onSource(id);
                     }}
                     onExclude={onExclude}
+                    emptyFramed={false}
                     renderTitle={(heading) => <Dialog.Title asChild>{heading}</Dialog.Title>}
                   />
                 </fieldset>

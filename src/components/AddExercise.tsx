@@ -6,7 +6,11 @@ import {exerciseTypeFor} from '../catalog/catalog';
 import type {Dataset, ExerciseLog, ExerciseType} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {ExerciseList} from './ExerciseList';
+import {ThumbFrame} from './ExerciseThumb';
+import {ExerciseRowText, exerciseRowClass} from './exercise-row';
 import {Button} from './ui/button';
+import {Chip, ChipRow} from './ui/chip';
+import {ListLabel} from './ui/list-label';
 import {historyTargets} from './workout-targets';
 
 const types: [ExerciseType, string][] = [
@@ -56,12 +60,13 @@ export function ExercisePicker({
       <Dialog.Portal>
         <Dialog.Overlay className='dialog-overlay' />
         <Dialog.Content
-          /* Every `!` here beats the unlayered shared .settings-panel (styles.css); drop them when
-             .settings-panel ports with Settings (PR 4/5). */
-          className='dialog-content settings-panel exercise-picker inset-0! h-dvh w-full! border-0! px-[max(18px,calc((100vw-900px)/2))]! py-6! shadow-none!'
+          /* Every `!` here beats the unlayered shared .dialog-content (styles.css); drop them when
+             .dialog-content ports (PR 5). That includes the scoped EmptyState overrides, which beat
+             `.dialog-content h2 { padding-right }` and `.dialog-content p { margin-top }`. */
+          className='dialog-content exercise-picker inset-0! h-dvh max-h-none! w-full! transform-none! border-0! px-[max(18px,calc((100vw-900px)/2))]! py-6! shadow-none! [&_.empty-state_h2]:pr-0! [&_.empty-state_p]:mt-2!'
           onCloseAutoFocus={onCloseAutoFocus}
         >
-          <div className='section-heading sticky -top-6 z-1 bg-card py-3'>
+          <div className='section-heading sticky -top-6 z-1 mb-6 bg-card py-3'>
             <Dialog.Title>{title}</Dialog.Title>
             <Dialog.Close asChild>
               <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
@@ -78,36 +83,27 @@ export function ExercisePicker({
               if (!query || exact) return null;
               return custom === query ? (
                 <section className='custom-exercise mt-3' aria-label='New exercise'>
-                  <h2 className='list-label'>Type for {query}</h2>
-                  <div
-                    className='chip-row type-choice flex-wrap'
-                    role='group'
-                    aria-label='Exercise type'
-                  >
+                  <ListLabel>Type for {query}</ListLabel>
+                  <ChipRow className='flex-wrap' role='group' aria-label='Exercise type'>
                     {types.map(([type, label]) => (
-                      <button key={type} className='chip' onClick={() => pick(query, type)}>
+                      <Chip key={type} onClick={() => pick(query, type)}>
                         {label}
-                      </button>
+                      </Chip>
                     ))}
-                  </div>
+                  </ChipRow>
                 </section>
               ) : (
-                // `mt-3!` beats the unlayered shared .exercise-rows margin:0 (styles.css); drop it when
-                // .exercise-rows ports (PR 4/5).
-                <ul className='exercise-rows custom-exercise mt-3!'>
+                <ul className='custom-exercise mt-3'>
                   <li>
                     <button
-                      className='exercise-row'
+                      className={exerciseRowClass}
                       aria-label={`Create "${query}"`}
                       onClick={() => setCustom(query)}
                     >
-                      <span className='exercise-thumb' aria-hidden='true'>
+                      <ThumbFrame>
                         <Plus size={18} />
-                      </span>
-                      <span className='exercise-row-text'>
-                        <strong>{`Create "${query}"`}</strong>
-                        <small>Custom exercise</small>
-                      </span>
+                      </ThumbFrame>
+                      <ExerciseRowText title={`Create "${query}"`} subtitle='Custom exercise' />
                     </button>
                   </li>
                 </ul>

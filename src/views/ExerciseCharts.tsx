@@ -1,7 +1,10 @@
-import {ArrowUpRight} from 'lucide-react';
+import {ArrowUpRight, LineChart} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 
 import {Button} from '../components/ui/button';
+import {MetricExplanation, trendChartClass} from '../components/ui/chart';
+import {TextAction, dataTableClass} from '../components/ui/data-table';
+import {EmptyState} from '../components/ui/empty-state';
 import {getHistory, getTrend} from '../domain/model';
 import type {Dataset, Metric} from '../domain/types';
 import {plural} from '../utils/plural';
@@ -13,15 +16,19 @@ const labels: Record<Metric, string> = {
   e1rm: 'Estimated 1RM',
   volume: 'Session volume',
 };
+
 /** Per-session trend for one exercise. Every point is listed with its source workout. */
 export function ExerciseCharts({
   dataset,
   name,
   onSource,
+  framed = true,
 }: {
   dataset: Dataset;
   name: string;
   onSource: (id: string) => void;
+  /** False inside a dialog, which already is a surface. */
+  framed?: boolean;
 }) {
   const containerRef = useRef<HTMLElement>(null);
   const [chartWidth, setChartWidth] = useState(750);
@@ -69,19 +76,26 @@ export function ExerciseCharts({
   const y = (value: number) => 195 - ((value - min) / spread) * 135;
   if (!history.length)
     return (
-      <div className='empty-state'>
-        <h2>No history yet</h2>
-        <p>Charts appear after you log this exercise.</p>
-      </div>
+      <EmptyState
+        icon={LineChart}
+        title='No history yet'
+        description='Charts appear after you log this exercise.'
+        framed={framed}
+      />
     );
   return (
-    <section className='analytics-card' ref={containerRef}>
-      <div className='analytics-header'>
-        <div className='metric-tabs' aria-label='Chart metric'>
+    <section className='min-w-0 border border-border bg-card p-5' ref={containerRef}>
+      {/* `[align-items:start]` matches main's computed `start`; `items-start` computes `flex-start`. */}
+      <div className='flex [align-items:start] justify-between gap-4 max-desk:flex-wrap'>
+        <div
+          className='mt-5 flex flex-wrap gap-[5px] border-b border-border pb-4'
+          aria-label='Chart metric'
+        >
           {applicable.map((m) => (
             <Button
               key={m}
               variant={m === activeMetric ? 'primary' : 'ghost'}
+              className='px-2.5 text-[12px] leading-normal'
               aria-pressed={m === activeMetric}
               onClick={() => setMetric(m)}
             >
@@ -89,22 +103,27 @@ export function ExerciseCharts({
             </Button>
           ))}
         </div>
-        <select aria-label='Time range' value={range} onChange={(e) => setRange(e.target.value)}>
+        <select
+          className='min-h-11 w-[130px] min-w-0 shrink-0 rounded-none border border-border bg-card px-3 py-[9px] text-[16px]'
+          aria-label='Time range'
+          value={range}
+          onChange={(e) => setRange(e.target.value)}
+        >
           <option value='30'>Last 30 days</option>
           <option value='90'>Last 90 days</option>
           <option value='365'>Last year</option>
           <option value='all'>All time</option>
         </select>
       </div>
-      <div className='chart-caption'>
-        <strong>{metricLabel}</strong>
-        <span>
+      <div className='mt-3 mb-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1'>
+        <strong className='text-[14px]'>{metricLabel}</strong>
+        <span className='text-[12px] text-muted-foreground'>
           {unit} per session{activeMetric !== 'volume' ? ' · best eligible set' : ''}
         </span>
       </div>
       {points.length ? (
         <svg
-          className='trend-chart'
+          className={trendChartClass}
           viewBox={`0 0 ${chartWidth} 235`}
           role='img'
           aria-label={`${metricLabel} for ${name}. ${plural(points.length, 'session')}. Exact values in the table below.`}
@@ -152,7 +171,7 @@ export function ExerciseCharts({
           <p>No eligible sets in this time range.</p>
         </div>
       )}
-      <p className='metric-explanation'>
+      <MetricExplanation>
         {activeMetric === 'e1rm'
           ? 'Epley estimate = weight × (1 + reps / 30), for 2–10 reps. One rep uses recorded weight. This is an estimate, not a tested maximum.'
           : activeMetric === 'volume'
@@ -162,9 +181,9 @@ export function ExerciseCharts({
               : activeMetric === 'load'
                 ? 'Highest recorded load per session; reps may differ. Machine loads are not comparable across different machines or gyms.'
                 : 'Highest recorded reps in a set per session. Weights may differ: compare the exact source sets.'}
-      </p>
-      <div className='table-scroll'>
-        <table aria-label='Exact trend values'>
+      </MetricExplanation>
+      <div className='mt-5 max-h-[340px] w-full overflow-auto'>
+        <table className={dataTableClass} aria-label='Exact trend values'>
           <thead>
             <tr>
               <th>Date</th>
@@ -180,13 +199,12 @@ export function ExerciseCharts({
                   {Number(point.value.toFixed(2))} {unit}
                 </td>
                 <td>
-                  <button
-                    className='text-action'
+                  <TextAction
                     aria-label={`View source workout ${dateLabel(point.date)}`}
                     onClick={() => onSource(point.workoutId)}
                   >
                     View sets <ArrowUpRight size={13} />
-                  </button>
+                  </TextAction>
                 </td>
               </tr>
             ))}
