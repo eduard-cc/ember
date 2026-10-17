@@ -7,11 +7,14 @@ import 'reflect-metadata';
 import {AuthService} from './auth/service';
 import {config} from './config';
 import {database} from './db/database';
+import {securityHeaders} from './security-headers';
 import {currentEpoch} from './sync/reset';
 import {SyncService} from './sync/service';
 
-export async function createApp() {
+/** `indexHtml` is the served shell page, so its inline scripts can be allowed by hash. */
+export async function createApp({indexHtml}: {indexHtml?: string} = {}) {
 	const cfg = config();
+	const headers = securityHeaders(indexHtml);
 	const db = await database(cfg.url).initialize();
 	try {
 		await db.runMigrations();
@@ -68,6 +71,7 @@ export async function createApp() {
 	app.getHttpAdapter().getInstance().disable('x-powered-by');
 	app.use((req: Request, res: Response, next: () => void) => {
 		res.setHeader('Cache-Control', 'no-store');
+		for (const [name, value] of Object.entries(headers)) res.setHeader(name, value);
 		if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin !== cfg.origin) {
 			res.status(403).json({errorCode: 'INVALID_ORIGIN'});
 			return;

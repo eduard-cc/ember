@@ -1,5 +1,5 @@
 import type {NextFunction, Request, Response} from 'express';
-import {realpath, stat} from 'node:fs/promises';
+import {readFile, realpath, stat} from 'node:fs/promises';
 import {isAbsolute, join, resolve, sep} from 'node:path';
 
 import {createApp} from './app';
@@ -17,7 +17,7 @@ async function main() {
 			throw new Error('Incomplete production web root');
 	}
 	const cfg = config();
-	const app = await createApp();
+	const app = await createApp({indexHtml: await readFile(join(root, 'index.html'), 'utf8')});
 	// Only built shell files are public. Never serve a repository directory or
 	// fall back to index.html for API, private, or unknown client paths.
 	app.use(async (req: Request, res: Response, next: NextFunction) => {

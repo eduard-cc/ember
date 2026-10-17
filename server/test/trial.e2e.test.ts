@@ -1,7 +1,7 @@
 import * as argon2 from 'argon2';
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {randomBytes} from 'node:crypto';
+import {createHash, randomBytes} from 'node:crypto';
 import {once} from 'node:events';
 import {mkdir, mkdtemp, rm, symlink, writeFile} from 'node:fs/promises';
 import {createServer} from 'node:net';
@@ -21,13 +21,15 @@ async function freePort() {
 	await new Promise<void>((done, reject) => server.close((error) => (error ? reject(error) : done())));
 	return port;
 }
+const inlineTheme = "\n  document.documentElement.dataset.theme = 'dark';\n";
+const inlineHash = `'sha256-${createHash('sha256').update(inlineTheme).digest('base64')}'`;
 async function fixture() {
 	const root = await mkdtemp(join(tmpdir(), 'gym-log-trial-'));
 	await mkdir(join(root, 'assets'));
 	await mkdir(join(root, 'icons'));
 	await writeFile(
 		join(root, 'index.html'),
-		'<!doctype html><title>Synthetic trial shell</title><script src="/assets/index-synthetic.js"></script>',
+		`<!doctype html><title>Synthetic trial shell</title><script>${inlineTheme}</script><script src="/assets/index-synthetic.js"></script>`,
 	);
 	await writeFile(join(root, 'manifest.webmanifest'), JSON.stringify({name: 'Synthetic trial', start_url: '/'}));
 	await writeFile(join(root, 'sw.js'), '// Synthetic service worker');
@@ -122,6 +124,27 @@ test('compiled trial serves the production shell and API on one loopback listene
 		assert.match(cookie, /; Secure/);
 		assert.match(cookie, /HttpOnly/);
 		assert.equal(((await login.json()) as any).ownerId, 'owner');
+		// Every response, shell file, API answer or 404, carries the enforced browser policy.
+		for (const path of ['/', '/sw.js', '/assets/drawing-synthetic-0-Ab_12-cd.webp', '/api/v1/health', '/private']) {
+			const response = await fetch(url + path);
+			const csp = response.headers.get('content-security-policy');
+			assert.ok(csp, path);
+			assert.match(csp, /default-src 'self'/, path);
+			assert.match(csp, /frame-ancestors 'none'/, path);
+			assert.match(csp, /object-src 'none'/, path);
+			assert.ok(
+				csp.includes(`script-src 'self' ${inlineHash};`),
+				`${path} allows only the shell's inline script`,
+			);
+			assert.doesNotMatch(csp, /unsafe-eval|script-src[^;]*unsafe-inline/, path);
+			assert.match(csp, /img-src 'self' data:/, path);
+			assert.equal(response.headers.get('content-security-policy-report-only'), null, path);
+			assert.equal(response.headers.get('x-content-type-options'), 'nosniff', path);
+			assert.equal(response.headers.get('x-frame-options'), 'DENY', path);
+			assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin', path);
+			assert.equal(response.headers.get('permissions-policy'), 'camera=(), microphone=(), geolocation=()', path);
+			assert.equal(response.headers.get('x-powered-by'), null, path);
+		}
 		const session = await fetch(url + '/api/v1/session', {headers: {Cookie: cookie.split(';')[0]}});
 		assert.equal(session.status, 200);
 		assert.equal(((await session.json()) as any).ownerId, 'owner');
