@@ -25,7 +25,7 @@ test('lost real API acknowledgement retries identical operation once and offline
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Offline template');
-  await addExercise(page, 'Synthetic press');
+  await addExercise(page, 'Bench Press (Barbell)');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Edit template Offline template', exact: true}).click();
@@ -91,7 +91,7 @@ test('stale offline template edit preserves both local edits and peer winner ins
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Original');
-  await addExercise(page, 'Press');
+  await addExercise(page, 'Bench Press (Barbell)');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await syncNow(page);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
@@ -139,7 +139,7 @@ test('API refresh never erases an unsaved in-memory template after IndexedDB rej
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Kept in memory');
-  await addExercise(page, 'Press');
+  await addExercise(page, 'Bench Press (Barbell)');
   await page.evaluate(() => {
     const add = IDBObjectStore.prototype.add;
     IDBObjectStore.prototype.add = function (...args) {
@@ -175,7 +175,7 @@ test('rename from retained UI rejects a hidden actual API peer set-value revisio
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Displayed base');
-  await addExercise(page, 'Press');
+  await addExercise(page, 'Bench Press (Barbell)');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await syncNow(page);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
@@ -255,8 +255,8 @@ test('retained editor rejects peer changes after ordinary Sync now UI refresh', 
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Displayed base');
-  await addExercise(page, 'Press');
-  await page.getByLabel('Weight for Press set 1', {exact: true}).fill('20');
+  await addExercise(page, 'Bench Press (Barbell)');
+  await page.getByLabel('Weight for Bench Press (Barbell) set 1', {exact: true}).fill('20');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await syncNow(page);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
@@ -298,7 +298,9 @@ test('retained editor rejects peer changes after ordinary Sync now UI refresh', 
   await syncNow(page);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await expect(page.getByLabel('Template name')).toHaveValue('Retained rename');
-  await expect(page.getByLabel('Weight for Press set 1', {exact: true})).toHaveValue('20');
+  await expect(
+    page.getByLabel('Weight for Bench Press (Barbell) set 1', {exact: true}),
+  ).toHaveValue('20');
   expect((await templates(page)).templates).toEqual([winner]);
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');

@@ -286,7 +286,7 @@ test('routine starts use actual latest matching history unchecked, else the rout
   await expect(page.getByRole('button', {name: 'Finish workout'})).toBeDisabled();
 });
 
-test('added exercises reuse matching history unchecked and custom exercises have blank targets', async ({
+test('added exercises reuse matching history unchecked and unlogged catalog exercises have blank targets', async ({
   page,
 }) => {
   await page.addInitScript(
@@ -299,11 +299,11 @@ test('added exercises reuse matching history unchecked and custom exercises have
   await expect(page.getByLabel('Weight for Synthetic Press set 1')).toHaveValue('55');
   await expect(page.getByLabel('Weight for Synthetic Press set 2')).toHaveValue('50');
   await expect(page.getByRole('button', {name: /Uncomplete /})).toHaveCount(0);
-  await addExercise(page, 'New custom lift');
-  await expect(page.getByLabel(/Weight for New custom lift/)).toHaveCount(3);
+  await addExercise(page, 'Bench Press (Barbell)');
+  await expect(page.getByLabel(/Weight for Bench Press \(Barbell\)/)).toHaveCount(3);
   for (let i = 1; i <= 3; i++) {
-    await expect(page.getByLabel(`Weight for New custom lift set ${i}`)).toHaveValue('');
-    await expect(page.getByLabel(`Reps for New custom lift set ${i}`)).toHaveValue('');
+    await expect(page.getByLabel(`Weight for Bench Press (Barbell) set ${i}`)).toHaveValue('');
+    await expect(page.getByLabel(`Reps for Bench Press (Barbell) set ${i}`)).toHaveValue('');
   }
   await page.getByRole('button', {name: 'Minimize workout'}).click();
   await page.getByRole('button', {name: 'History', exact: true}).click();

@@ -7,7 +7,7 @@ test('empty workouts accept an exercise with duration units and completed sets',
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout', exact: true}).click();
   await page.getByRole('button', {name: 'Replace active draft'}).click();
-  await addExercise(page, 'Plank', 'Duration');
+  await addExercise(page, 'Plank');
   await expect(page.getByLabel('Seconds for Plank set 1')).toBeVisible();
   await expect(page.getByLabel('Distance in km for Plank set 1')).toHaveCount(0);
   await page.getByLabel('Seconds for Plank set 1').fill('90');

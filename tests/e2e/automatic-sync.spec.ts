@@ -108,7 +108,7 @@ test('unavailable server keeps trusted local drafts and pending edits across reo
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Offline retained template');
-  await addExercise(page, 'Press');
+  await addExercise(page, 'Bench Press (Barbell)');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
@@ -187,7 +187,7 @@ for (const status of ['conflict', 'rejected'] as const) {
     await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
     await page.getByRole('button', {name: 'Create template', exact: true}).click();
     await page.getByLabel('Template name').fill('Retained template');
-    await addExercise(page, 'Custom Press');
+    await addExercise(page, 'Bench Press (Barbell)');
     await page.getByRole('button', {name: 'Save template', exact: true}).click();
     await expect(page.locator('.app-shell')).toHaveAttribute(
       'data-sync',
@@ -249,7 +249,7 @@ test('a new template syncs immediately in the background without a wake or manua
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Immediate sync template');
-  await addExercise(page, 'Custom Press');
+  await addExercise(page, 'Bench Press (Barbell)');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect.poll(() => uploaded, {timeout: 1200}).toBe(1);
 });

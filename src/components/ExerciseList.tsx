@@ -1,5 +1,5 @@
 import {Search, SearchX} from 'lucide-react';
-import {type ReactNode, useId, useMemo, useState} from 'react';
+import {useId, useMemo, useState} from 'react';
 
 import {type BodyPart, allExerciseNames, bodyPartOf, bodyParts} from '../catalog/catalog';
 import {
@@ -84,15 +84,12 @@ function ExerciseRow({
 export function ExerciseList({
   dataset,
   onSelect,
-  extra,
   sortable = false,
 }: {
   dataset: Dataset;
   onSelect: (name: string) => void;
   /** Offer the persisted A–Z / Most done order (Exercises tab). The picker stays A–Z. */
   sortable?: boolean;
-  /** Rendered above the results for the current query, e.g. a custom-exercise row. */
-  extra?: (query: string, names: string[]) => ReactNode;
 }) {
   const [search, setSearch] = useState('');
   const [part, setPart] = useState<BodyPart | 'All'>('All');
@@ -150,7 +147,6 @@ export function ExerciseList({
           ))}
         </div>
       )}
-      {extra?.(search.trim(), names)}
       {!query && part === 'All' && recent.length > 0 && (
         <section aria-label='Recent exercises'>
           <ListLabel>Recent</ListLabel>

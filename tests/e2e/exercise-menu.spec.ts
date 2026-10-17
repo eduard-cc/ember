@@ -178,7 +178,7 @@ test('the template editor offers the same Replace and Remove menu', async ({page
   await expect(card.locator('.template-open li')).toHaveText([/× Bench Press \(Barbell\)$/]);
 });
 
-test('replacing with an exercise already in the workout adds a separate card in place', async ({
+test('replacing with another exercise already in the workout keeps both cards unchanged', async ({
   page,
 }) => {
   const cards = await start(page);
@@ -187,33 +187,22 @@ test('replacing with an exercise already in the workout adds a separate card in 
   await page.getByRole('menuitem', {name: 'Replace exercise'}).click();
   const picker = page.getByRole('dialog', {name: 'Replace exercise', exact: true});
   await picker.getByLabel('Search exercises').fill('Bench Press (Barbell)');
-  await picker
-    .getByRole('region', {name: 'All exercises'})
-    .getByRole('button', {name: 'Bench Press (Barbell)', exact: true})
-    .click();
+  await picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).click();
+  await expect(picker.getByRole('alert')).toHaveText(
+    'Bench Press (Barbell) is already in this workout.',
+  );
+  await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+  await expect(cards.locator('h2')).toHaveText(demo);
+  await expect(page.getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
+  await options(page, 'Seated Row (Cable)').click();
+  await page.getByRole('menuitem', {name: 'Replace exercise'}).click();
+  await expect(picker.getByRole('alert')).toHaveCount(0);
+  // Choosing the card's own exercise is still valid, not a second copy.
+  await picker.getByLabel('Search exercises').fill('Seated Row (Cable)');
+  await picker.getByRole('button', {name: 'Seated Row (Cable)', exact: true}).click();
   await expect(picker).toBeHidden();
-  const expected = demo.map((name) =>
-    name === 'Seated Row (Cable)' ? 'Bench Press (Barbell)' : name,
-  );
-  await expect(cards.locator('h2')).toHaveText(expected);
-  // The original card keeps its edits; the new one is fresh and has focus.
-  await expect(cards.nth(0).getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
-  await expect(cards.nth(1).getByLabel('Weight for Bench Press (Barbell) set 1')).not.toHaveValue(
-    '61',
-  );
-  await expect(options(page, 'Bench Press (Barbell)').nth(1)).toBeFocused();
-  // Each copy keeps its own menu: removing the second leaves the first intact.
-  await options(page, 'Bench Press (Barbell)').nth(1).click();
-  await page.getByRole('menuitem', {name: 'Remove exercise'}).click();
-  await expect(cards.locator('h2')).toHaveText(
-    demo.filter((name) => name !== 'Seated Row (Cable)'),
-  );
-  await expect(cards.nth(0).getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
-  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  await page.reload();
-  await expect(cards.locator('h2')).toHaveText(
-    demo.filter((name) => name !== 'Seated Row (Cable)'),
-  );
+  await expect(cards.locator('h2')).toHaveText(demo);
+  await expect(options(page, 'Seated Row (Cable)')).toBeFocused();
 });
 
 /** Open the menu, then tap set 3's Complete button: the tap only closes the menu. */

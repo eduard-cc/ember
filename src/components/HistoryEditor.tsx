@@ -128,6 +128,7 @@ export function HistoryEditor({
             />
             <AddExercise
               dataset={dataset}
+              existingNames={draft.exercises.map((exercise) => exercise.name)}
               onAdd={(exercise) =>
                 setDraft((current) => ({...current, exercises: [...current.exercises, exercise]}))
               }

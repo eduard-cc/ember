@@ -9,11 +9,11 @@ test('templates can be created edited started and deleted', async ({page}) => {
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template'}).click();
   await page.getByLabel('Template name').fill('My test session');
-  await addExercise(page, 'Custom Press');
+  await addExercise(page, 'Bench Press (Barbell)');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.getByRole('heading', {name: 'My test session'})).toBeVisible();
   const card = page.locator('.template-card', {hasText: 'My test session'});
-  await expect(card.locator('.template-open li')).toHaveText(['3 × Custom Press']);
+  await expect(card.locator('.template-open li')).toHaveText(['3 × Bench Press (Barbell)']);
   await page.getByRole('button', {name: 'Edit template My test session', exact: true}).click();
   await page.getByLabel('Template name').fill('Edited session');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();

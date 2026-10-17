@@ -11,7 +11,7 @@ Gym Log is a temporary product name. Build a personal-use-first, self-hosted wor
 - Start from an editable template, an empty workout, or repeat any historical workout.
 - Repeating prefills editable targets; every set remains uncompleted until explicitly confirmed.
 - Alongside logging, prefer best comparable historical sets: most reps at the chosen weight, date and source workout visible. No exact match means show actual nearby evidence, not an invented equivalent.
-- Searchable, extensive exercise catalog and custom exercises. Keep exercise variants distinct.
+- Searchable, extensive exercise catalog. Workouts use existing catalog or recorded exercises only; no custom-exercise creation. Reject adding or replacing with an exercise already in that workout, with a clear message. Keep exercise variants distinct and preserve imported repeated blocks.
 - Dumbbell weight is per dumbbell; barbell weight includes the bar; assisted pull-up/dip load means assistance. These conventions are consistent in the owner's history.
 - Ordinary set metadata can be added later. Basic cardio (duration/distance) and optional bodyweight are in product scope.
 - No rest timers, audible alerts, nutrition, body-fat/body-part measurements, social features, or watch integration initially.

@@ -80,6 +80,7 @@ export function TemplatesView({
           />
           <AddExercise
             dataset={dataset}
+            existingNames={editing.exercises.map((exercise) => exercise.name)}
             onAdd={(exercise) =>
               setEditing(
                 (current) => current && {...current, exercises: [...current.exercises, exercise]},

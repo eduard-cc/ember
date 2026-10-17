@@ -3,23 +3,11 @@ import {Plus, X} from 'lucide-react';
 import {type ReactNode, useState} from 'react';
 
 import {exerciseTypeFor} from '../catalog/catalog';
-import type {Dataset, ExerciseLog, ExerciseType} from '../domain/types';
+import type {Dataset, ExerciseLog} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {ExerciseList} from './ExerciseList';
-import {ThumbFrame} from './ExerciseThumb';
-import {ExerciseRowText, exerciseRowClass} from './exercise-row';
 import {Button} from './ui/button';
-import {Chip, ChipRow} from './ui/chip';
-import {ListLabel} from './ui/list-label';
 import {historyTargets} from './workout-targets';
-
-const types: [ExerciseType, string][] = [
-  ['weighted', 'Weighted'],
-  ['assisted', 'Assisted'],
-  ['bodyweight', 'Bodyweight'],
-  ['duration', 'Duration'],
-  ['cardio', 'Cardio'],
-];
 
 /**
  * The full-screen exercise library as a picker. Picking a row hands over the exercise with
@@ -34,6 +22,7 @@ export function ExercisePicker({
   description,
   trigger,
   onCloseAutoFocus,
+  existingNames = [],
 }: {
   dataset: Dataset;
   open: boolean;
@@ -43,15 +32,20 @@ export function ExercisePicker({
   description: string;
   trigger?: ReactNode;
   onCloseAutoFocus?: (event: Event) => void;
+  existingNames?: string[];
 }) {
-  const [custom, setCustom] = useState<string | null>(null);
+  const [error, setError] = useState('');
   const toggle = (next: boolean) => {
     onOpenChange(next);
-    setCustom(null);
+    setError('');
   };
   useBackLayer(open, () => toggle(false));
-  const pick = (name: string, type = exerciseTypeFor(name, dataset) ?? 'weighted') => {
-    onPick(historyTargets(dataset, name, type));
+  const pick = (name: string) => {
+    if (existingNames.includes(name)) {
+      setError(`${name} is already in this workout.`);
+      return;
+    }
+    onPick(historyTargets(dataset, name, exerciseTypeFor(name, dataset) ?? 'weighted'));
     toggle(false);
   };
   return (
@@ -66,50 +60,21 @@ export function ExercisePicker({
           className='dialog-content exercise-picker inset-0! h-dvh max-h-none! w-full! transform-none! border-0! px-[max(18px,calc((100vw-900px)/2))]! py-6! shadow-none! [&_.empty-state_h2]:pr-0! [&_.empty-state_p]:mt-2!'
           onCloseAutoFocus={onCloseAutoFocus}
         >
-          <div className='section-heading sticky -top-6 z-1 mb-6 bg-card py-3'>
+          <div className='section-heading sticky -top-6 z-1 mb-6 flex-wrap bg-card py-3'>
             <Dialog.Title>{title}</Dialog.Title>
             <Dialog.Close asChild>
               <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
                 <X size={20} />
               </Button>
             </Dialog.Close>
+            {error && (
+              <p role='alert' className='w-full text-[14px] text-destructive'>
+                {error}
+              </p>
+            )}
           </div>
           <Dialog.Description className='sr-only'>{description}</Dialog.Description>
-          <ExerciseList
-            dataset={dataset}
-            onSelect={(name) => pick(name)}
-            extra={(query, names) => {
-              const exact = names.some((name) => name.toLowerCase() === query.toLowerCase());
-              if (!query || exact) return null;
-              return custom === query ? (
-                <section className='custom-exercise mt-3' aria-label='New exercise'>
-                  <ListLabel>Type for {query}</ListLabel>
-                  <ChipRow className='flex-wrap' role='group' aria-label='Exercise type'>
-                    {types.map(([type, label]) => (
-                      <Chip key={type} onClick={() => pick(query, type)}>
-                        {label}
-                      </Chip>
-                    ))}
-                  </ChipRow>
-                </section>
-              ) : (
-                <ul className='custom-exercise mt-3'>
-                  <li>
-                    <button
-                      className={exerciseRowClass}
-                      aria-label={`Create "${query}"`}
-                      onClick={() => setCustom(query)}
-                    >
-                      <ThumbFrame>
-                        <Plus size={18} />
-                      </ThumbFrame>
-                      <ExerciseRowText title={`Create "${query}"`} subtitle='Custom exercise' />
-                    </button>
-                  </li>
-                </ul>
-              );
-            }}
-          />
+          <ExerciseList dataset={dataset} onSelect={pick} />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
@@ -119,10 +84,12 @@ export function ExercisePicker({
 /** Add exercise opens the same library as the Exercises tab; picking a row adds it. */
 export function AddExercise({
   dataset,
+  existingNames,
   onAdd,
 }: {
   dataset: Dataset;
   onAdd: (exercise: ExerciseLog) => void;
+  existingNames: string[];
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -131,6 +98,7 @@ export function AddExercise({
       open={open}
       onOpenChange={setOpen}
       onPick={onAdd}
+      existingNames={existingNames}
       title='Add exercise'
       description='Search or filter the exercise library and choose one to add to this workout.'
       trigger={

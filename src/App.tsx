@@ -545,6 +545,7 @@ export default function App() {
                   <div className='flex flex-col gap-3 px-4 pt-[18px] pb-[30px]'>
                     <AddExercise
                       dataset={allDataset}
+                      existingNames={state.active.exercises.map((exercise) => exercise.name)}
                       onAdd={(exercise) =>
                         setState((s) =>
                           s.active

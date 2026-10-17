@@ -72,26 +72,47 @@ test('closing the exercise picker keeps the active workout unchanged', async ({p
   await expect(picker).toBeHidden();
   await expect(cards).toHaveCount(before);
 });
-test('a search without an exact match offers to create a custom exercise with a chosen type', async ({
+test('adding an exercise already in the workout explains why and keeps the draft unchanged', async ({
   page,
-}) => {
+}, info) => {
+  if (info.project.name === 'mobile') await page.setViewportSize({width: 412, height: 915});
   await page.goto('/?demo=1');
-  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  const cards = page.locator('.workout-sheet .exercise-card');
+  await expect(cards).toHaveCount(5);
+  await page.getByLabel('Weight for Bench Press (Barbell) set 1').fill('61');
   const picker = await openPicker(page);
+  await picker.getByLabel('Search exercises').fill('Bench Press (Barbell)');
+  await picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).click();
+  await expect(picker.getByRole('alert')).toHaveText(
+    'Bench Press (Barbell) is already in this workout.',
+  );
+  await expect(picker).toBeVisible();
+  await picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).click();
+  await expect(picker.getByRole('alert')).toBeVisible();
   await picker.getByLabel('Search exercises').fill('Plank');
-  // An exact catalog name never offers a duplicate custom exercise.
-  await expect(picker.getByRole('button', {name: /^Create /})).toHaveCount(0);
-  await picker.getByLabel('Search exercises').fill('Sled Push Synthetic');
-  await picker.getByRole('button', {name: 'Create "Sled Push Synthetic"', exact: true}).click();
-  const types = picker.getByRole('group', {name: 'Exercise type'});
-  for (const type of ['Weighted', 'Assisted', 'Bodyweight', 'Duration', 'Cardio']) {
-    const box = (await types.getByRole('button', {name: type, exact: true}).boundingBox())!;
-    expect(box.height).toBeGreaterThanOrEqual(44);
-  }
-  await types.getByRole('button', {name: 'Cardio', exact: true}).click();
+  await picker.getByRole('button', {name: 'Plank', exact: true}).click();
   await expect(picker).toBeHidden();
-  await expect(page.getByLabel('Seconds for Sled Push Synthetic set 1')).toHaveValue('');
-  await expect(page.getByLabel('Distance in km for Sled Push Synthetic set 1')).toBeVisible();
+  await expect(cards).toHaveCount(6);
+  await expect(page.getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
+  await page.reload();
+  await expect(cards).toHaveCount(6);
+  await expect(page.getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
+});
+
+test('unknown exercise searches only offer existing library exercises', async ({page}) => {
+  await page.goto('/?demo=1');
+  const cards = page.locator('.workout-sheet .exercise-card');
+  await expect(cards).toHaveCount(5);
+  const picker = await openPicker(page);
+  await picker.getByLabel('Search exercises').fill('Sled Push Synthetic');
+  await expect(picker.getByRole('heading', {name: 'No matching exercise'})).toBeVisible();
+  await expect(picker.getByRole('button', {name: /^Create /})).toHaveCount(0);
+  await expect(picker.getByRole('group', {name: 'Exercise type'})).toHaveCount(0);
+  await picker.getByLabel('Search exercises').fill('Plank');
+  await picker.getByRole('button', {name: 'Plank', exact: true}).click();
+  await expect(picker).toBeHidden();
+  await expect(cards).toHaveCount(6);
+  await expect(page.getByLabel('Seconds for Plank set 1')).toHaveValue('60');
 });
 test('the template editor adds exercises through the same picker', async ({page}) => {
   await page.goto('/?demo=1');
@@ -103,6 +124,12 @@ test('the template editor adds exercises through the same picker', async ({page}
   await picker.getByRole('button', {name: 'Squat (Barbell)', exact: true}).click();
   await expect(picker).toBeHidden();
   await expect(page.getByLabel('Weight for Squat (Barbell) set 1')).toHaveValue('85');
+  await openPicker(page);
+  await picker.getByLabel('Search exercises').fill('Squat (Barbell)');
+  await picker.getByRole('button', {name: 'Squat (Barbell)', exact: true}).click();
+  await expect(picker.getByRole('alert')).toHaveText('Squat (Barbell) is already in this workout.');
+  await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+  await expect(page.locator('.template-editor .exercise-card')).toHaveCount(1);
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   const card = page.locator('.template-card', {hasText: 'Picker template'});
   await expect(card.locator('.template-open li')).toHaveText(['3 × Squat (Barbell)']);

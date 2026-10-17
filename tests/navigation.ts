@@ -14,23 +14,16 @@ export async function navigate(page: Page, name: 'Workouts' | 'History' | 'Exerc
     .click();
 }
 
-/** Add an exercise through the picker; unknown names are created with the given type. */
-export async function addExercise(page: Page, name: string, type = 'Weighted') {
+/** Select an existing catalog or recorded exercise through the library picker. */
+export async function addExercise(page: Page, name: string) {
   await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
   const picker = page.getByRole('dialog', {name: 'Add exercise', exact: true});
   await picker.getByLabel('Search exercises').fill(name);
-  const create = picker.getByRole('button', {name: `Create "${name}"`, exact: true});
   const existing = picker
     .getByRole('region', {name: 'All exercises'})
     .getByRole('button', {name, exact: true});
-  await expect(create.or(existing)).toBeVisible();
-  if (await create.isVisible()) {
-    await create.click();
-    await picker
-      .getByRole('group', {name: 'Exercise type'})
-      .getByRole('button', {name: type, exact: true})
-      .click();
-  } else await existing.click();
+  await expect(existing).toBeVisible();
+  await existing.click();
   await expect(picker).toBeHidden();
 }
 

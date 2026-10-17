@@ -556,6 +556,10 @@ export function WorkoutView({
         onPick={(exercise) => {
           if (replacing) replaceExercise(replacing, exercise);
         }}
+        existingNames={workout.exercises
+          // eslint-disable-next-line react-hooks/refs -- identity() reads the same render-stable React key cache as the cards above.
+          .filter((exercise) => identity(exercise) !== replacing)
+          .map((exercise) => exercise.name)}
         title='Replace exercise'
         description='Search or filter the exercise library and choose the exercise to put in its place.'
         onCloseAutoFocus={(event) => {
