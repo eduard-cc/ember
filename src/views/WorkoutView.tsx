@@ -253,17 +253,7 @@ export function WorkoutView({
           ? ex
           : changeExercise(
               ex,
-              ex.sets.map((set, j) =>
-                j === si
-                  ? {
-                      ...set,
-                      ...(Object.keys(patch).some((key) => key !== 'completed')
-                        ? {completed: false}
-                        : {}),
-                      ...patch,
-                    }
-                  : set,
-              ),
+              ex.sets.map((set, j) => (j === si ? {...set, ...patch} : set)),
             ),
       ),
     });
@@ -385,7 +375,9 @@ export function WorkoutView({
                     )}
                   </span>
                 )}
-                {loadCaption(ex) && <p className='mt-[3px] text-[12px]'>{loadCaption(ex)}</p>}
+                {targetsOnly && loadCaption(ex) && (
+                  <p className='mt-[3px] text-[12px]'>{loadCaption(ex)}</p>
+                )}
               </div>
               <ExerciseMenu
                 className='col-3 row-[1/3] -mr-[13px]'

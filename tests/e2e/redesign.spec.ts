@@ -72,6 +72,14 @@ test('numeric entry selects the target and Enter moves weight to reps then expli
   );
   await reps.fill('3.5');
   await reps.press('Enter');
+  await expect(page.getByRole('button', {name: /Uncomplete .* set 1/}).first()).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page
+    .getByRole('button', {name: /Uncomplete .* set 1/})
+    .first()
+    .click();
   await expect(page.getByRole('button', {name: /Complete .* set 1/}).first()).toBeDisabled();
   await reps.fill('1001');
   await reps.press('Enter');
@@ -153,7 +161,7 @@ test('an unrecorded weight shows the nearest actual lighter and heavier sets wit
   );
 });
 
-test('exercise Done requires every valid set checked and returns to targets on edit or add', async ({
+test('exercise Done survives value edits and reload but a new set needs its own tick', async ({
   page,
 }) => {
   await page.goto('/?demo=1');
@@ -165,7 +173,26 @@ test('exercise Done requires every valid set checked and returns to targets on e
     await exercise.getByRole('button', {name: new RegExp(`^Complete .* set ${set}$`)}).click();
   await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
   await expect(exercise.locator('.set-complete')).toHaveCount(3);
-  await exercise.getByLabel(/Reps/).first().fill('10');
+  const weight = exercise.getByLabel(/Weight/).first();
+  const reps = exercise.getByLabel(/Reps/).first();
+  const tick = exercise.getByRole('button', {name: /Uncomplete .* set 1/});
+  await weight.fill('67.5');
+  await expect(tick).toHaveAttribute('aria-pressed', 'true');
+  await reps.fill('10');
+  await expect(tick).toHaveAttribute('aria-pressed', 'true');
+  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
+  // Clearing a field while replacing it must not lose the explicit completion choice.
+  await reps.fill('');
+  await expect(tick).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', {name: 'Finish workout'})).toBeEnabled();
+  await reps.fill('10');
+  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await page.reload();
+  await expect(weight).toHaveValue('67.5');
+  await expect(reps).toHaveValue('10');
+  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
+  await tick.click();
   await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText(
     '2 / 3 sets',
   );
@@ -447,18 +474,24 @@ test('swiping left from the Previous column reveals Delete without opening evide
   await context.close();
 });
 
-test('plain weighted exercises carry no redundant unit caption; meaningful load hints stay', async ({
-  page,
-}) => {
+test('active exercise headers show completion without load or unit subtitles', async ({page}) => {
   await page.goto('/?demo=1');
   const sheet = page.getByRole('region', {name: 'Active workout'});
-  const card = (name: string) =>
-    sheet.locator('.exercise-card').filter({has: page.getByRole('heading', {name, exact: true})});
-  await expect(card('Bench Press (Barbell)')).toBeVisible();
-  await expect(sheet.getByText('Recorded weight', {exact: false})).toHaveCount(0);
-  await expect(card('Bench Press (Barbell)').locator('.exercise-heading p')).toHaveCount(0);
-  await expect(card('Incline Bench Press (Dumbbell)')).toContainText('Weight per dumbbell · kg');
-  await expect(card('Pull Up (Assisted)')).toContainText('Assistance in kg · less is better');
+  await expect(
+    sheet.getByRole('heading', {name: 'Bench Press (Barbell)', exact: true}),
+  ).toBeVisible();
+  await addExercise(page, 'Pull Up');
+  await addExercise(page, 'Plank');
+  await addExercise(page, 'Rowing (Machine)');
+  const headings = sheet.locator('.exercise-heading');
+  await expect(headings).toHaveCount(8);
+  for (const heading of await headings.all()) {
+    await expect(heading.getByRole('heading')).toHaveText(/\S/);
+    await expect(heading.getByRole('status', {name: 'Exercise completion'})).toHaveText(
+      /^0 \/ \d+ sets?$/,
+    );
+    await expect(heading.locator('p')).toHaveCount(0);
+  }
 });
 
 test('active workout set table has no Done column heading; completion stays labelled per set', async ({

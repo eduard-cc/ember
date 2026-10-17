@@ -105,7 +105,9 @@ test('IndexedDB quota-error injection retains memory and never reports saved', a
   await page.reload();
   await expect(page.getByLabel('WORKOUT NAME', {exact: true})).toHaveValue('Upper body A');
 });
-test('invalid numbers cannot be completed and edits clear previous completion', async ({page}) => {
+test('invalid numbers cannot be completed or counted after editing a completed set', async ({
+  page,
+}) => {
   await page.goto('/?demo=1');
   const reps = page.getByLabel(/Reps for .* set 1/).first();
   const complete = page.getByRole('button', {name: /Complete .* set 1/}).first();
