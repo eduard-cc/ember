@@ -1,9 +1,9 @@
 import {expect, test} from '@playwright/test';
 import {readFile, writeFile} from 'node:fs/promises';
 
-import {openSettings} from '../navigation';
+import {navigate, openSettings} from '../navigation';
 
-test('real recovery control confirms activation without reload and defers updates during local or cross-tab drafts', async ({
+test('real app-update control confirms activation without reload and defers updates during local or cross-tab drafts', async ({
   page,
   context,
 }) => {
@@ -59,7 +59,7 @@ test('real recovery control confirms activation without reload and defers update
         page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.waiting),
       )
       .toBe(true);
-    await page.getByRole('button', {name: 'Close settings'}).click();
+    await navigate(page, 'Workouts');
     await page.getByRole('button', {name: 'Start empty workout'}).click();
     await openSettings(page);
     await expect(page.getByRole('button', {name: 'Apply shell update'})).toBeDisabled();

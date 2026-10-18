@@ -100,7 +100,7 @@ npm run typecheck
 npm run build
 npm run test:e2e
 npm run test:integration
-NODE_ENV=test npx playwright test --config playwright.pwa.config.ts
+npm run test:pwa
 npm --prefix server run lint:check
 npm --prefix server run typecheck
 npm --prefix server run build
@@ -113,11 +113,11 @@ Integration checks create migrated disposable databases and generate synthetic c
 
 ### GitHub Actions CI
 
-`.github/workflows/ci.yml` runs format and lint checks, web/server typechecks and builds, unit tests, server E2E against a disposable PostgreSQL 17.11 service on `127.0.0.1:55439`, and Playwright desktop/mobile E2E. The service starts with a throwaway `gym_log_dev` database; tests create and remove their own migrated databases. All inputs are synthetic, with no host credentials or private exports.
+`.github/workflows/ci.yml` runs format and lint checks, web/server typechecks and builds, unit tests, server E2E against a disposable PostgreSQL 17.11 service on `127.0.0.1:55439`, and Playwright desktop/mobile E2E followed by production PWA browser checks. The PWA suite builds with `NODE_ENV=production` and uses a real service worker on strict loopback port 5193 at a Pixel 6 viewport: offline reload/reopening, finite private-request-free caching, explicit update activation without reload, and local/cross-tab draft protection. It runs serially because its lifecycle tests temporarily replace `dist/sw.js`. The service starts with a throwaway `gym_log_dev` database; tests create and remove their own migrated databases. All inputs are synthetic, with no host credentials or private exports.
 
-CI uses Linux runners, the Node.js major in `.nvmrc` (matching the live service), SHA-pinned actions, npm and Playwright Chromium caches, and a timeout on every job. Cheap checks share one job because GitHub bills each job per started minute. New commits cancel superseded runs for the same branch/PR, so a cancelled `main` run is not a green one. Pushes run only on `main`; PRs run separately. Markdown-only changes and agent plans skip CI, so run `npm run format:check` locally before pushing docs. Browser reports, screenshots and traces upload only on failure and expire after three days; no build artifacts or container images are published. Local browser tests still use installed Google Chrome; `CI=true` selects Playwright's bundled Chromium and two workers without retries.
+CI uses Linux runners, the Node.js major in `.nvmrc` (matching the live service), SHA-pinned actions, npm and Playwright Chromium caches, and a timeout on every job. Cheap checks share one job because GitHub bills each job per started minute. New commits cancel superseded runs for the same branch/PR, so a cancelled `main` run is not a green one. Pushes run only on `main`; PRs run separately. Markdown-only changes and agent plans skip CI, so run `npm run format:check` locally before pushing docs. Separate E2E and PWA reports, screenshots and traces upload only on failure and expire after three days; no build artifacts or container images are published. Local browser tests use installed Google Chrome; `CI=true` selects Playwright's bundled Chromium. Desktop/mobile E2E uses four CI workers, PWA one; both retry a failure once for tracing and still fail if it only passes on retry.
 
-The integration (including dataset-reset recovery) and PWA suites stay **local-only** to save Actions minutes. Run them, along with the checks above and independent review, **before every code push**. Run fixed-port suites sequentially. CI does not replace real phone testing or authorize deployment by itself.
+The integration suite (including dataset-reset recovery) stays **local-only** to save Actions minutes. Run it, the checks above and independent review **before every code push**. Production PWA checks are a required step in the existing browser CI job and reuse its dependencies and Chromium installation. Their report (`playwright-pwa-report/`) and test output (`test-results/pwa/`) are separate from normal E2E diagnostics. Run fixed-port suites sequentially and never share a PWA build with another running suite. CI does not replace physical Android/iPhone testing or authorize deployment by itself.
 
 The budget is at most 1,600 Gym Log Linux runner-minutes/month, shared within the account's 2,000-minute free allowance, leaving about 400 for the other private repositories. Before pushing, query the account's billing usage API and total month-to-date Actions minutes by repository. At 1,600 minutes account-wide, stop triggering CI, verify locally instead, and mention the budget pause in the Discord report. The target is under 15 aggregate runner-minutes per code push, not just elapsed wall time; use the real job start/completion timestamps to measure it.
 

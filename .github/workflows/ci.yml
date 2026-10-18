@@ -108,7 +108,8 @@ jobs:
   playwright:
     name: Playwright (desktop and mobile)
     runs-on: ubuntu-24.04
-    # The 370-test suite takes about 14.5 minutes on four CI workers; leave headroom for setup and cache steps.
+    # Desktop/mobile E2E takes about 14.5 minutes; the serial production PWA suite reuses setup.
+    # Leave headroom for both suites and cache steps.
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -135,13 +136,17 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
       - run: npm run test:e2e
-      # The HTML report embeds failure screenshots and retry traces. Timeouts count as
+      - name: Production offline shell and safe updates (Pixel 6)
+        run: npm run test:pwa
+      # Separate HTML reports embed failure screenshots and retry traces. Timeouts count as
       # cancelled, not failed, so they upload nothing.
       - name: Retain synthetic browser diagnostics only on failure
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: playwright-failure-${{ github.run_id }}-${{ github.run_attempt }}
-          path: playwright-report/
+          path: |
+            playwright-report/
+            playwright-pwa-report/
           retention-days: 3
           if-no-files-found: ignore
