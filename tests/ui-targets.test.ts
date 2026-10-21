@@ -100,7 +100,7 @@ describe('validated optional appearance settings', () => {
   ])('falls back safely for %s', (raw) => {
     expect(parseAppearance(raw)).toEqual({version: 1, theme: 'system'});
   });
-  it('ignores the retired accent and keeps the theme', () => {
+  it('ignores a stored accent and keeps the theme', () => {
     for (const theme of ['system', 'light', 'dark'])
       for (const accent of ['pine', 'ocean', 'copper', 'invalid', undefined])
         expect(

@@ -50,7 +50,7 @@ test('deleting the only set of a duplicate-named exercise removes exactly that s
     .fill('80');
   await expect(exercises).toHaveCount(2);
   await expect(exercises.nth(1).getByLabel(/Weight/)).toHaveCount(0);
-  // The owner asked for deletion without a Removed/Undo banner.
+  // Deleting an exercise shows no Removed/Undo banner.
   await expect(page.getByText(/^Removed /)).toHaveCount(0);
   await expect(page.getByRole('button', {name: 'Undo', exact: true})).toHaveCount(0);
   await expect(exercises.first().getByLabel(/Weight/)).toHaveValue('80');

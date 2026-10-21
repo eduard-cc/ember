@@ -201,7 +201,7 @@ it('recovery export round-trips measurements and tombstones as create-only opera
   restored.close();
 });
 
-it('an old version 1 archive without measurements still restores, and malformed archives change nothing', async () => {
+it('a version 1 archive without measurements restores, and malformed archives change nothing', async () => {
   const source = repo();
   await source.commitState({...(await source.readState()), templates: []});
   const v2 = JSON.parse(await exportBackup(source));
@@ -474,7 +474,7 @@ it('does not re-upload measurements purged by a reset adopted while the legacy a
   repository.close();
 });
 
-it('a new-frontend reset after a legacy reset still drops measurements purged by the legacy one', async () => {
+it('a new-frontend reset after a legacy reset drops measurements purged by the legacy one', async () => {
   const repository = repo();
   const db = repository.db;
   const offline = {...measurement, id: 'offline'};

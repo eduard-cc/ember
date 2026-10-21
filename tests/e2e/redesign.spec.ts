@@ -400,14 +400,13 @@ test('appearance is separate from workout saving, follows System, and persists t
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  expect(await page.locator('html').getAttribute('data-accent')).toBeNull();
   await expect(page.getByLabel('WORKOUT NAME')).toHaveValue('Upper body A');
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem('gym-log:appearance:v1')!)),
   ).toEqual({version: 1, theme: 'dark'});
 });
 
-test('a read-only writer follower can still minimize and reach settings and recovery guidance', async ({
+test('a read-only writer follower can minimize and reach settings and recovery guidance', async ({
   page,
   context,
 }) => {
@@ -503,7 +502,6 @@ test('a saved dark theme applies before the app script runs, so dark phones do n
   await page.goto('/');
   const html = page.locator('html');
   await expect(html).toHaveAttribute('data-theme', 'dark');
-  expect(await html.getAttribute('data-accent')).toBeNull();
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#17161b');
 });
 
@@ -539,7 +537,9 @@ test('swiping left from the Previous column reveals Delete without opening evide
   await context.close();
 });
 
-test('active exercise headers show completion without load or unit subtitles', async ({page}) => {
+test('active exercise headers show the name and set completion for every exercise type', async ({
+  page,
+}) => {
   await page.goto('/?demo=1');
   const sheet = page.getByRole('region', {name: 'Active workout'});
   await expect(
@@ -555,18 +555,16 @@ test('active exercise headers show completion without load or unit subtitles', a
     await expect(heading.getByRole('status', {name: 'Exercise completion'})).toHaveText(
       /^0 \/ \d+ sets?$/,
     );
-    await expect(heading.locator('p')).toHaveCount(0);
   }
 });
 
-test('active workout set table has no Done column heading; completion stays labelled per set', async ({
+test('each set has a labelled completion button centred in the last set-table column', async ({
   page,
 }) => {
   await page.goto('/?demo=1');
   const sheet = page.getByRole('region', {name: 'Active workout'});
   const heads = sheet.locator('.set-head');
   await expect(heads.first()).toContainText('Reps');
-  for (const head of await heads.all()) await expect(head).not.toContainText('Done');
   const check = sheet.getByRole('button', {name: /^Complete .* set 1$/}).first();
   await expect(check).toBeVisible();
   const column = (await heads.first().locator('span').nth(4).boundingBox())!;

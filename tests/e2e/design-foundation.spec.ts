@@ -100,14 +100,15 @@ for (const scheme of ['light', 'dark'] as const) {
   });
 }
 
-test('Settings offers no accent choice', async ({page}) => {
+test('Settings appearance offers System, Light and Dark', async ({page}) => {
   await open(page, 'light');
   await page.getByRole('button', {name: 'Settings', exact: true}).last().click();
   const settings = page.getByRole('dialog', {name: 'Settings'});
-  await expect(settings.getByRole('group', {name: 'Theme'})).toBeVisible();
-  await expect(settings.getByRole('group', {name: 'Accent'})).toHaveCount(0);
-  for (const name of ['Pine', 'Ocean', 'Copper'])
-    await expect(settings.getByRole('button', {name, exact: true})).toHaveCount(0);
+  await expect(settings.getByRole('group', {name: 'Theme'}).getByRole('button')).toHaveText([
+    'System',
+    'Light',
+    'Dark',
+  ]);
 });
 
 async function openWorkoutTab(page: Page) {

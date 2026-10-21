@@ -36,7 +36,6 @@ test('Saving stays visible until the real IndexedDB transaction can commit', asy
   });
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Commit boundary');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saving');
-  await expect(page.getByText('Saved on this device', {exact: true})).toHaveCount(0);
   await page.evaluate(() =>
     (window as unknown as {releaseStorageTest: () => void}).releaseStorageTest(),
   );

@@ -26,8 +26,6 @@ test('the exercise options menu opens from the ⋯ button and closes with Escape
   page,
 }) => {
   const cards = await start(page);
-  // The bin button is gone; actions live behind the options menu.
-  await expect(page.getByRole('button', {name: 'Remove Bench Press (Barbell)'})).toHaveCount(0);
   const trigger = options(page, 'Bench Press (Barbell)');
   const box = (await trigger.boundingBox())!;
   expect(box.width).toBeGreaterThanOrEqual(44);
@@ -247,7 +245,9 @@ for (const viewport of [
   test.describe(`at ${viewport.width}x${viewport.height}`, () => {
     test.use({viewport});
 
-    test('the menu flips upward instead of being clipped near the bottom', async ({page}) => {
+    test('near the bottom the menu opens upward with every item visible and tappable', async ({
+      page,
+    }) => {
       const cards = await start(page);
       const last = 'Pull Up (Assisted)';
       const trigger = options(page, last);

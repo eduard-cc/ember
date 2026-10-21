@@ -62,6 +62,13 @@ The owner is the client, not a code reviewer. Hermes owns this repository end to
 - Production PWA caches only a finite shell allowlist. Updates require explicit confirmation and a saved, draft-free transition; never reload an active logger silently.
 - Production runs as the `gym-log.service` user unit from `~/.local/share/gym-log/current` (a release folder per commit), with config in `~/.config/gym-log/runtime.env` (0600), port 5191 and the `gym_log` database, behind its own tailnet device `gym-log` (`gym-log-tailscale.service`, Serve on HTTPS 443). Deploy only with `ops/deploy.sh <commit>` (main + green CI, clean `git archive` build, backup and restore check before new migrations, automatic rollback and Discord alert on failed health); undo with `ops/rollback.sh`. Never build in or serve from a checkout. Real phone validation, interactive owner provisioning, and off-device encrypted backups remain release gates.
 
+## Writing tests
+
+- Test current behavior. Name and assert what the software does now ("saving shows a pending state, then the saved value"), never the change that led to it ("…instead of X", "no longer…", "still…"). Change history belongs in commits and PRs.
+- Don't assert that removed behavior stays removed. Assert that something doesn't happen only when that is a requirement in its own right: a cancelled action writes nothing, a failed check leaves data unchanged, an unauthorized request is refused.
+- One test per flow. A flow is a user journey in the UI, a request through an API endpoint, or a module's public contract. When a change adds or alters a step in an existing flow, extend that flow's test (action → pending state → result) instead of adding a test for the step. Add a separate test only for a distinct flow or outcome: a failure, a cancellation, another entry point, a different kind of input.
+- Regression tests follow the same rules. Strengthen the test for the flow where the bug happened so it fails on the old code, and name it for the behavior, not the bug.
+
 ## Development
 
 See package.json and README.md for verified commands: npm ci --include=dev, npm run dev, npm run typecheck, npm run test:run, npm run test:e2e, npm run test:integration, npm run test:pwa, npm run build. Server checks use npm --prefix server run typecheck/build/test:e2e. Do not run fixed-port integration suites concurrently. Fixtures are synthetic and databases disposable. Do not invent successful check output; state production gaps explicitly.

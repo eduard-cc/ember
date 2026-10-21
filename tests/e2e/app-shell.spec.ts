@@ -171,7 +171,7 @@ test('templates form one bordered list', async ({page}) => {
   expect(style.shadow).toBe('none');
 });
 
-test('long template lines wrap instead of truncating', async ({page}, info) => {
+test('long template lines wrap to fit their row', async ({page}, info) => {
   test.skip(info.project.name !== 'desktop');
   await open(page, false);
   await minimizeIfPossible(page);

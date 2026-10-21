@@ -130,7 +130,7 @@ test('dragging upward to the top, and Escape puts a held exercise back', async (
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('a short press still opens details, and the ⋯ menu offers Move up and Move down', async ({
+test('a short press on a header opens details, and the ⋯ menu offers Move up and Move down', async ({
   page,
 }) => {
   const sheet = await start(page);
@@ -195,7 +195,7 @@ test('a single exercise has nothing to reorder', async ({page}) => {
   await expect(page.getByRole('menuitem')).toHaveText(['Replace exercise', 'Remove exercise']);
 });
 
-test('real touch: hold and drag reorders without scrolling away, and a swipe still scrolls', async ({
+test('real touch: hold and drag reorders without scrolling away, and a quick swipe scrolls', async ({
   browser,
   baseURL,
 }, info) => {
@@ -306,9 +306,7 @@ test('real touch: hold and drag reorders without scrolling away, and a swipe sti
   await context.close();
 });
 
-test('a release just as the hold completes puts the exercise back instead of sticking', async ({
-  page,
-}) => {
+test('a release just as the hold completes ends the lift and keeps the order', async ({page}) => {
   // The finger lifts between the hold timer and the list attaching its own listeners.
   await page.addInitScript(() => {
     let pointerId = 0;

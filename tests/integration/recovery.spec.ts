@@ -21,7 +21,6 @@ const old = completed('reset-old-history', 'Old synced session');
 const seed = completed('reset-new-history', 'New imported session');
 const draft = {...demoTemplates[0], id: 'reset-active', name: 'Active draft kept'};
 
-/** The Backup/Recovery UI was intentionally removed; this checks recovery after a server reset. */
 test('dataset reset clears stale installed history and outbox without losing the active draft', async ({
   page,
   browser,
