@@ -83,11 +83,7 @@ export function DialogTitle({
   return <DialogPrimitive.Title className={cn('pr-7', className)} {...props} />;
 }
 
-/**
- * A `p` 14px under the title. `srOnly` hides it and keeps that margin: the `!` beats the margin of
- * the unlayered global `.sr-only` (styles.css); drop it when the globals port in PR 6. A plain
- * `className='sr-only'` takes the global's -1px instead (the History editor, the details panel).
- */
+/** A `p` 14px under the title. `srOnly` hides it for a dialog whose title says enough on screen. */
 export function DialogDescription({
   srOnly = false,
   className,
@@ -95,7 +91,7 @@ export function DialogDescription({
 }: ComponentPropsWithoutRef<typeof DialogPrimitive.Description> & {srOnly?: boolean}) {
   return (
     <DialogPrimitive.Description
-      className={cn(srOnly ? 'sr-only mt-3.5!' : 'mt-3.5', className)}
+      className={cn(srOnly ? 'sr-only' : 'mt-3.5', className)}
       {...props}
     />
   );

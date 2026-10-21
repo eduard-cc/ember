@@ -63,7 +63,7 @@ export function HistoryEditor({
             <X size={20} />
           </Button>
         </SectionHeading>
-        <DialogDescription className='sr-only'>
+        <DialogDescription srOnly>
           Change the name, start time, duration, exercises and sets of this finished workout.
         </DialogDescription>
         <ContentFieldset disabled={disabled || saving}>

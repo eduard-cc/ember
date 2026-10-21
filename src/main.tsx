@@ -7,7 +7,6 @@ import App from './App';
 import {registerProductionShell} from './pwa/register';
 
 import './index.css';
-import './styles.css';
 
 void registerProductionShell().catch((error) =>
   console.warn('Offline shell registration failed', error),

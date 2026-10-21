@@ -123,9 +123,48 @@
   --text-caption--line-height: 1;
 }
 
-/* Bare element defaults. In the base layer (after preflight) so utilities can override them;
-   the unlayered shell, banner and global rules in styles.css (until PR 6 ports them) still beat both. */
+/* Bare element defaults. In the base layer (after preflight) so utilities can override them. */
 @layer base {
+  :root {
+    font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+    font-feature-settings: 'cv11';
+    font-synthesis: none;
+    color: hsl(var(--foreground));
+    background: hsl(var(--background));
+    color-scheme: light;
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+  }
+  body {
+    margin: 0;
+    color: hsl(var(--foreground));
+    background: hsl(var(--background));
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+  /* After preflight in this layer, so it beats preflight's placeholder colour and keeps AA contrast. */
+  ::placeholder {
+    color: hsl(var(--muted-foreground));
+    opacity: 1;
+  }
+  input {
+    caret-color: hsl(var(--primary));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
   * {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;

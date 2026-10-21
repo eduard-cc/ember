@@ -577,7 +577,7 @@ export function WorkoutView({
               if (target) detailButtons.current.get(target)?.focus({preventScroll: true});
             }}
           >
-            <DialogDescription className='sr-only'>
+            <DialogDescription srOnly>
               About, history, charts and records from finished workouts. Your workout stays as you
               left it.
             </DialogDescription>

@@ -23,7 +23,7 @@ test('fresh installation connects automatically without an app password or perma
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await expect(page.getByLabel('Server password')).toHaveCount(0);
   await expect(page.getByRole('button', {name: 'Sign out', exact: true})).toHaveCount(0);
-  await expect(page.locator('section.notice[aria-label="Server synchronization"]')).toHaveCount(0);
+  await expect(page.getByRole('status', {name: 'Server synchronization'})).toHaveCount(0);
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect.poll(() => bootstraps).toBe(1);
 });

@@ -15,6 +15,7 @@ import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../views/WorkoutView';
+import {noticeClass} from './banner';
 import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
 import {Button} from './ui/button';
 import {Card} from './ui/card';
@@ -281,9 +282,7 @@ export function BodyWeightSettings({
       <div className='flex flex-col gap-3'>
         {!editing && error && <InlineError role='alert'>{error}</InlineError>}
         {undo && (
-          // `.notice` carries a 20px bottom margin for the banners; the column gap spaces it here.
-          // Remove `mb-0!` when PR 6 ports `.notice`.
-          <div className='notice mb-0!' role='status'>
+          <div className={noticeClass} role='status'>
             Entry from {dateLabel(undo.date)} deleted.
             <Button disabled={disabled || saving} onClick={() => void restore()}>
               Undo

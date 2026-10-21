@@ -19,6 +19,7 @@ import {ElapsedTimer} from './components/ElapsedTimer';
 import {ImportPanel} from './components/ImportPanel';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
+import {errorBannerClass, noticeClass} from './components/banner';
 import {SettingsGroup} from './components/settings-group';
 import {Button} from './components/ui/button';
 import {ContentFieldset} from './components/ui/content-fieldset';
@@ -50,6 +51,28 @@ import {ProfileView} from './views/ProfileView';
 import {TemplatesView} from './views/TemplatesView';
 import {WorkoutView, validSet} from './views/WorkoutView';
 
+const stickyClass = 'sticky top-0 z-3';
+// The bar is a bottom tab strip below the `desk` breakpoint and a 48px header from it up. It is
+// hidden while an input is focused on a phone, because the keyboard covers it.
+const appBarClass = [
+  'app-bar shrink-0',
+  'max-desk:order-1 max-desk:border-t max-desk:border-t-border max-desk:bg-card',
+  'max-desk:[.app-shell:has(input:focus)_&]:invisible',
+  'desk:-order-1 desk:flex desk:h-12 desk:items-center desk:gap-6 desk:border-b desk:border-b-border desk:bg-background desk:px-7',
+].join(' ');
+// Tab: icon over label on a phone (2px top rule when active), text link with a 2px underline from
+// `desk` up. Landscape phones switch to a row with a smaller min-height at any width.
+const navItemClass = [
+  'nav-item flex min-h-14 min-w-19 flex-1 flex-col items-center justify-center gap-1 bg-transparent px-3 py-1 text-[11px]',
+  'focus-visible:-outline-offset-2',
+  'max-desk:border-t-2',
+  'desk:min-h-12 desk:min-w-auto desk:flex-none desk:flex-row desk:border-b-2 desk:py-0 desk:text-[14px] desk:font-medium desk:[&_svg]:hidden',
+  'short:min-h-12 short:flex-row short:gap-2',
+].join(' ');
+const idleNavItemClass =
+  'font-medium text-muted-foreground max-desk:border-t-transparent desk:border-b-transparent';
+const activeNavItemClass =
+  'active font-medium text-primary max-desk:border-t-primary max-desk:font-semibold desk:border-b-primary desk:text-foreground';
 const navigation = [
   {name: 'Profile', icon: User},
   {name: 'History', icon: History},
@@ -281,7 +304,7 @@ export default function App() {
   // old `> .notice`, `> section` and `.dialog-content p` rules.
   const feedback = (className?: string) =>
     notice && (
-      <div className={cn('notice', className)} role='status'>
+      <div className={cn(noticeClass, 'mb-5', className)} role='status'>
         {notice}
         <Button
           variant='ghost'
@@ -293,17 +316,18 @@ export default function App() {
         </Button>
       </div>
     );
-  // Sync is silent. Only states that need the owner surface here.
-  const errors = (inSettings = false) => (
+  // Sync is silent. Only states that need the owner surface here. In the logger the banners stay
+  // on screen while a long workout scrolls.
+  const errors = (where: 'page' | 'logger' | 'settings' = 'page') => (
     <>
       {ownershipError && (
-        <div className='error-banner' role='alert'>
+        <div className={cn(errorBannerClass, where === 'logger' && stickyClass)} role='alert'>
           {ownershipError}
           <Button onClick={() => location.reload()}>Reload to enable editing</Button>
         </div>
       )}
       {persistenceError && (
-        <div className='error-banner' role='alert'>
+        <div className={cn(errorBannerClass, where === 'logger' && stickyClass)} role='alert'>
           {persistenceError}
           {recoveryError && (
             <Button
@@ -317,12 +341,19 @@ export default function App() {
         </div>
       )}
       {!sync.locked && sync.issues.length > 0 && (
-        <section aria-label='Sync problems' className={cn('error-banner', inSettings && 'mt-5')}>
-          <p className={inSettings ? 'mt-3.5' : undefined}>
+        <section
+          aria-label='Sync problems'
+          className={cn(
+            errorBannerClass,
+            where === 'logger' && stickyClass,
+            where === 'settings' && 'mt-5',
+          )}
+        >
+          <p className={cn('text-inherit', where === 'settings' && 'mt-3.5')}>
             {plural(sync.issues.length, 'change')} could not sync. Later edits to the same item wait
             until this is resolved.
           </p>
-          <ul>
+          <ul className='w-full [overflow-wrap:anywhere]'>
             {sync.issues.map((issue) => (
               <li key={issue.operationId}>
                 <strong>{issue.errorCode ?? 'SYNC_REJECTED'}</strong>
@@ -350,12 +381,12 @@ export default function App() {
   const title = view === 'Exercises' && exercise ? 'Exercise' : view;
   return (
     <div
-      className={`app-shell ${showSheet ? 'sheet-open' : ''}`}
+      className={`app-shell h-dvh ${showSheet ? 'sheet-open' : ''}`}
       data-save={saveStatus}
       data-sync={sync.status}
     >
       {sync.locked && (
-        <div className='locked-status'>
+        <div className='flex items-center justify-between gap-3 px-[18px] py-3.5'>
           {!settingsOpen && (
             <>
               <SyncStatus sync={sync} />
@@ -365,19 +396,27 @@ export default function App() {
           {settingsButton}
         </div>
       )}
-      <main hidden={sync.locked} className='workspace'>
+      <main hidden={sync.locked} className='workspace relative m-auto flex h-full max-w-[1480px]'>
         <div
-          className='library [.sheet-open_&]:max-desk:invisible'
+          className='library relative flex min-w-0 flex-1 flex-col [.sheet-open_&]:max-desk:invisible'
           inert={showSheet && mobile}
           aria-hidden={showSheet && mobile ? true : undefined}
         >
-          <header className='app-bar'>
-            <span className='app-brand'>Gym Log</span>
-            <nav aria-label='Main navigation'>
+          <header className={appBarClass}>
+            <span className='app-brand whitespace-nowrap max-desk:hidden desk:shrink-0 desk:text-base desk:font-semibold'>
+              Gym Log
+            </span>
+            <nav
+              aria-label='Main navigation'
+              className='flex justify-around max-desk:w-full max-desk:px-2 max-desk:pb-[env(safe-area-inset-bottom)] desk:flex-1 desk:justify-start desk:gap-1'
+            >
               {navigation.map(({name, icon: Icon}) => (
                 <button
                   key={name}
-                  className={`nav-item ${view === name ? 'active' : ''}`}
+                  className={cn(
+                    navItemClass,
+                    view === name ? activeNavItemClass : idleNavItemClass,
+                  )}
                   aria-current={view === name ? 'page' : undefined}
                   onClick={() => go(name)}
                 >
@@ -386,10 +425,10 @@ export default function App() {
                 </button>
               ))}
             </nav>
-            <div className='app-bar-actions'>{settingsButton}</div>
+            <div className='max-desk:hidden desk:ml-auto'>{settingsButton}</div>
           </header>
-          <div className='library-scroll'>
-            <h1 className='page-title'>{title}</h1>
+          <div className='library-scroll min-h-0 flex-1 overflow-auto px-8 pt-6.5 pb-10 max-desk:px-4.5 max-desk:pt-6 max-desk:pb-7.5'>
+            <h1 className='mb-5'>{title}</h1>
             {!showSheet && !sync.locked && !settingsOpen && errors()}
             <ContentFieldset disabled={disabled}>
               {!showSheet && !settingsOpen && feedback()}
@@ -545,7 +584,7 @@ export default function App() {
                 <h2 className='sr-only'>Your workout</h2>
                 {showSheet && !settingsOpen && (
                   <>
-                    {errors()}
+                    {errors('logger')}
                     {feedback()}
                   </>
                 )}
@@ -614,7 +653,7 @@ export default function App() {
           <DialogDescription srOnly>
             Appearance, body weight, Strong import and app updates.
           </DialogDescription>
-          {errors(true)}
+          {errors('settings')}
           {feedback('mt-5')}
           <div className='mt-5 space-y-10'>
             <AppearanceSettings settings={appearance} />
