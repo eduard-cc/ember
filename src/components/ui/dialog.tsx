@@ -71,16 +71,11 @@ export function DialogContent({
 }
 
 /**
- * An `h2` (18px from the base layer). `pr-7` restates the padding the old `.dialog-content h2` rule
- * gave every title inside a centred or full-screen dialog; the two panel titles that never had it
- * (the History editor, the logger details heading) pass `pr-0`. A later visible change can drop it
- * wherever no corner X shares the row.
+ * An `h2` (18px from the base layer). It has no padding of its own: a title that shares its row
+ * with a `DialogCornerClose` passes `pr-7` so the X never covers it.
  */
-export function DialogTitle({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title className={cn('pr-7', className)} {...props} />;
+export function DialogTitle(props: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+  return <DialogPrimitive.Title {...props} />;
 }
 
 /** A `p` 14px under the title. `srOnly` hides it for a dialog whose title says enough on screen. */

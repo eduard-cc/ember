@@ -77,7 +77,7 @@ export function ImportPanel({
       )}
       {preview && (
         <div className='mt-5'>
-          <h3>Ready to review</h3>
+          <h4>Ready to review</h4>
           <p className='mt-2'>
             {preview.workouts.length} workout{preview.workouts.length !== 1 ? 's' : ''} · {sets} set
             {sets !== 1 ? 's' : ''} · {exercises} exercise{exercises !== 1 ? 's' : ''}

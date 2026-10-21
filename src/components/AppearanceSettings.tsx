@@ -65,6 +65,7 @@ export function AppearanceSettings({settings}: {settings: ReturnType<typeof useA
   return (
     <SettingsGroup
       id='appearance-heading'
+      titleAs='h3'
       title='Appearance'
       description='System follows your device. Workout saving is separate.'
     >

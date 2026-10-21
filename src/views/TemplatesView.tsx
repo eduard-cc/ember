@@ -233,7 +233,7 @@ export function TemplatesView({
       )}
       <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
         <DialogContent className='template-preview'>
-          <DialogTitle>{preview?.name}</DialogTitle>
+          <DialogTitle className='pr-7'>{preview?.name}</DialogTitle>
           <DialogDescription>
             {preview && lastPerformed(dataset, preview.name)
               ? `Last performed ${dateLabel(lastPerformed(dataset, preview.name)!)}`

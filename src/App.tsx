@@ -51,6 +51,9 @@ import {ProfileView} from './views/ProfileView';
 import {TemplatesView} from './views/TemplatesView';
 import {WorkoutView, validSet} from './views/WorkoutView';
 
+/** Below the CSS `desk` breakpoint (`--breakpoint-desk: 1000px` in index.css). */
+const MOBILE_QUERY = '(width < 1000px)';
+
 const stickyClass = 'sticky top-0 z-3';
 // The bar is a bottom tab strip below the `desk` breakpoint and a 48px header from it up. It is
 // hidden while an input is focused on a phone, because the keyboard covers it.
@@ -114,9 +117,9 @@ export default function App() {
   const [view, setView] = useState<View>('Workout');
   const [exercise, setExercise] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(true);
-  const [mobile, setMobile] = useState(() => matchMedia('(max-width: 999px)').matches);
+  const [mobile, setMobile] = useState(() => matchMedia(MOBILE_QUERY).matches);
   useEffect(() => {
-    const media = matchMedia('(max-width: 999px)');
+    const media = matchMedia(MOBILE_QUERY);
     const update = () => setMobile(media.matches);
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
@@ -167,7 +170,7 @@ export default function App() {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const field = document.activeElement;
-        if (!(field instanceof HTMLInputElement) || !window.matchMedia('(max-width:999px)').matches)
+        if (!(field instanceof HTMLInputElement) || !window.matchMedia(MOBILE_QUERY).matches)
           return;
         const viewport = window.visualViewport;
         const top = viewport?.offsetTop ?? 0,
@@ -663,6 +666,7 @@ export default function App() {
             )}
             <SettingsGroup
               id='import-heading'
+              titleAs='h3'
               title='Import your Strong history'
               description='Parsed in this browser. Confirmed history synchronizes to your own server when signed in.'
               action={
@@ -748,7 +752,7 @@ export default function App() {
         }}
       >
         <DialogContent>
-          <DialogTitle>Replace your active workout?</DialogTitle>
+          <DialogTitle className='pr-7'>Replace your active workout?</DialogTitle>
           <DialogDescription>
             Your current workout will be discarded. All repeated sets start uncompleted.
           </DialogDescription>
@@ -801,7 +805,7 @@ export default function App() {
       </Dialog>
       <Dialog open={confirmFinish && !sync.locked} onOpenChange={setConfirmFinish}>
         <DialogContent>
-          <DialogTitle>Finish this workout?</DialogTitle>
+          <DialogTitle className='pr-7'>Finish this workout?</DialogTitle>
           {persistenceError && (
             <p className='mt-3.5' role='alert'>
               {persistenceError}

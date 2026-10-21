@@ -561,7 +561,9 @@ test('emptyFramed: the library details state is framed, the logger dialog one is
   await expect(framed).toHaveCSS('border-top-width', '1px');
 });
 
-test('Settings sections are titled groups; Body weight empties use EmptyState', async ({page}) => {
+test('Settings sections are h3 groups under the h2 dialog title; Body weight empties use EmptyState', async ({
+  page,
+}) => {
   await page.emulateMedia({colorScheme: 'light'});
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
@@ -572,7 +574,7 @@ test('Settings sections are titled groups; Body weight empties use EmptyState', 
     await expect(group).toBeVisible();
     const id = await group.getAttribute('aria-labelledby');
     expect(await group.evaluate((el) => el.tagName)).toBe('SECTION');
-    const title = group.locator(`h2[id="${id}"]`);
+    const title = group.locator(`h3[id="${id}"]`);
     await expect(title).toHaveText(name);
     await expect(title).toHaveCSS('font-size', '16px');
   }
@@ -580,6 +582,7 @@ test('Settings sections are titled groups; Body weight empties use EmptyState', 
   const section = dialog.getByRole('region', {name: 'Body weight', exact: true});
   const empty = section.locator('.empty-state', {hasText: 'No entries yet'});
   await expect(empty).toBeVisible();
+  await expect(empty.locator('h4')).toHaveText('No entries yet');
   await expect(empty).toHaveCSS('border-top-width', '1px');
   await expect(section.locator('.body-weight-chart')).toHaveCount(0);
   // One entry: the chart card holds an unframed EmptyState.
@@ -588,6 +591,7 @@ test('Settings sections are titled groups; Body weight empties use EmptyState', 
   await section.getByRole('button', {name: 'Save entry', exact: true}).click();
   const one = section.locator('.body-weight-chart .empty-state', {hasText: 'One entry so far'});
   await expect(one).toBeVisible();
+  await expect(one.locator('h4')).toHaveText('One entry so far');
   await expect(one).toHaveCSS('border-top-width', '0px');
   await expect(section.locator('.empty-state', {hasText: 'No entries yet'})).toHaveCount(0);
   // Entries are one bordered list of rows, each at least 44px.

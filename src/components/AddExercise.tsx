@@ -17,9 +17,6 @@ import {
 import {SectionHeading} from './ui/section-heading';
 import {historyTargets} from './workout-targets';
 
-/** The picker's list labels are dialog-title size, with room for the close button. */
-const pickerLabelClass = 'pr-7 text-[18px]';
-
 /**
  * The full-screen exercise library as a picker. Picking a row hands over the exercise with
  * targets prefilled from its latest history; Close or Escape picks nothing.
@@ -82,7 +79,7 @@ export function ExercisePicker({
           )}
         </SectionHeading>
         <DialogDescription srOnly>{description}</DialogDescription>
-        <ExerciseList labelClassName={pickerLabelClass} dataset={dataset} onSelect={pick} />
+        <ExerciseList dataset={dataset} onSelect={pick} />
       </DialogContent>
     </Dialog>
   );

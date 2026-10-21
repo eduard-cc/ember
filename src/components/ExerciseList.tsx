@@ -85,14 +85,11 @@ export function ExerciseList({
   dataset,
   onSelect,
   sortable = false,
-  labelClassName,
 }: {
   dataset: Dataset;
   onSelect: (name: string) => void;
   /** Offer the persisted A–Z / Most done order (Exercises tab). The picker stays A–Z. */
   sortable?: boolean;
-  /** Extra classes for the "Recent" and count labels. */
-  labelClassName?: string;
 }) {
   const [search, setSearch] = useState('');
   const [part, setPart] = useState<BodyPart | 'All'>('All');
@@ -152,7 +149,7 @@ export function ExerciseList({
       )}
       {!query && part === 'All' && recent.length > 0 && (
         <section aria-label='Recent exercises'>
-          <ListLabel className={labelClassName}>Recent</ListLabel>
+          <ListLabel>Recent</ListLabel>
           <ul>
             {recent.map((name) => (
               <ExerciseRow
@@ -166,7 +163,7 @@ export function ExerciseList({
         </section>
       )}
       <section aria-label='All exercises'>
-        <ListLabel className={labelClassName}>{plural(all.length, 'exercise')}</ListLabel>
+        <ListLabel>{plural(all.length, 'exercise')}</ListLabel>
         <ul>
           {all.map((name) => (
             <ExerciseRow

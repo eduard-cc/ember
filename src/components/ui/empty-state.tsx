@@ -20,8 +20,8 @@ export function EmptyState({
   tone?: 'empty' | 'error';
   /** Drop the card frame where the state already sits on a surface, such as a dialog. */
   framed?: boolean;
-  /** The title's heading level; `h3` under a section that has its own `h2`. */
-  titleAs?: 'h2' | 'h3';
+  /** The title's heading level: `h3` under a section that has its own `h2`, `h4` under an `h3`. */
+  titleAs?: 'h2' | 'h3' | 'h4';
   /** Action row. */
   children?: ReactNode;
 }) {

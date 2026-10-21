@@ -597,11 +597,7 @@ export function WorkoutView({
                   }}
                   onExclude={onExclude}
                   emptyFramed={false}
-                  renderTitle={(heading) => (
-                    <DialogTitle asChild className='pr-0'>
-                      {heading}
-                    </DialogTitle>
-                  )}
+                  renderTitle={(heading) => <DialogTitle asChild>{heading}</DialogTitle>}
                 />
               </ContentFieldset>
             )}

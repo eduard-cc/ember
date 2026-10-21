@@ -85,7 +85,7 @@ export function PreviousSet({
         </button>
       </DialogTrigger>
       <DialogContent className='source-dialog'>
-        <DialogTitle>
+        <DialogTitle className='pr-7'>
           {exercise.name} · set {index + 1}
         </DialogTitle>
         <DialogDescription>

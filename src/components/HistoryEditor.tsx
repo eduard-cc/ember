@@ -58,7 +58,7 @@ export function HistoryEditor({
         onInteractOutside={(event) => event.preventDefault()}
       >
         <SectionHeading className='mb-6'>
-          <DialogTitle className='pr-0'>Edit workout</DialogTitle>
+          <DialogTitle>Edit workout</DialogTitle>
           <Button aria-label='Close workout editor' variant='ghost' size='icon' onClick={close}>
             <X size={20} />
           </Button>

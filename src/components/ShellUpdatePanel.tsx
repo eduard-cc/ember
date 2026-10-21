@@ -73,7 +73,7 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
   }
   if (!import.meta.env.PROD || (!waiting && !message)) return null;
   return (
-    <SettingsGroup id='app-update-heading' title='App update'>
+    <SettingsGroup id='app-update-heading' titleAs='h3' title='App update'>
       {waiting && (
         <SettingsList>
           <SettingsRow

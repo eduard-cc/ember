@@ -275,6 +275,7 @@ export function BodyWeightSettings({
   return (
     <SettingsGroup
       id='body-weight-heading'
+      titleAs='h3'
       title='Body weight'
       description='Separate from workouts, lifted weights and Strong imports.'
       action={add}
@@ -295,13 +296,13 @@ export function BodyWeightSettings({
             {form}
             {entries.length > 0 && (
               <div className={cn(editing && 'mt-5 border-t border-border pt-5')}>
-                <h3>Weight (kg)</h3>
+                <h4>Weight (kg)</h4>
                 {entries.length >= 2 ? (
                   <WeightChart entries={entries} />
                 ) : (
                   <EmptyState
                     framed={false}
-                    titleAs='h3'
+                    titleAs='h4'
                     icon={ChartLine}
                     title='One entry so far'
                     description='Add another entry to see a trend.'
@@ -313,7 +314,7 @@ export function BodyWeightSettings({
         )}
         {stored !== null && entries.length === 0 && (
           <EmptyState
-            titleAs='h3'
+            titleAs='h4'
             icon={Scale}
             title='No entries yet'
             description='Add your weight to start a chart.'
