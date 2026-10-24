@@ -1,21 +1,24 @@
 # Gym Log agent context
 
-## Purpose and scope
+Rules and non-obvious traps only. Product scope is in PRODUCT.md, the visual system in DESIGN.md, commands and operations in README.md; derive everything else from the code.
 
-Gym Log is a temporary product name. Build a personal-use-first, self-hosted workout tracker inspired by Strong's fast logging workflow, with unlimited templates and inspectable per-exercise analytics. It is not a branded Strong clone or an AI coach. The initial deliverable is a local interactive frontend prototype, not a production replacement.
+## Read before touching
 
-## Confirmed workflow
+- CI, local test runs, ports, Playwright: `docs/ci-and-tests.md`
+- Squash, deploy, rollback, live checks, static assets and the precache: `docs/deploy.md`
+- Sync feed, outbox, local storage, import, recovery, history editing and aggregates: `docs/sync-and-history.md`
+- UI, layout, accessibility, phone gestures, installed PWA: `docs/phone-and-pwa.md`
+- Catalog drawings (licensed and AI-assisted): `docs/catalog-drawings.md`
 
-- Primary device: a phone. Mobile-first PWA eventually, desktop useful for history and analysis.
+## Product rules
+
+Gym Log is a temporary name. It is a personal-use-first, self-hosted workout tracker inspired by Strong's logging workflow; not a branded Strong clone or an AI coach. Strong informs generic workflows, not exact branded UI or assets.
+
 - Training splits change: never encode a fixed program.
-- Start from an editable template, an empty workout, or repeat any historical workout.
-- Repeating prefills editable targets; every set remains uncompleted until explicitly confirmed.
-- Alongside logging, prefer best comparable historical sets: most reps at the chosen weight, date and source workout visible. No exact match means show actual nearby evidence, not an invented equivalent.
-- Searchable, extensive exercise catalog. Workouts use existing catalog or recorded exercises only; no custom-exercise creation. Reject adding or replacing with an exercise already in that workout, with a clear message. Keep exercise variants distinct and preserve imported repeated blocks.
-- Dumbbell weight is per dumbbell; barbell weight includes the bar; assisted pull-up/dip load means assistance. These conventions are consistent in the owner's history.
-- Ordinary set metadata can be added later. Basic cardio (duration/distance) and optional bodyweight are in product scope.
-- No rest timers, audible alerts, nutrition, body-fat/body-part measurements, social features, or watch integration initially.
-- A silent active-workout Android notification is an optional feasibility experiment, not a core requirement. Do not promise native ongoing-service behavior from web notifications.
+- Repeating a workout prefills editable targets; every set stays uncompleted until explicitly confirmed.
+- Workouts use existing catalog or recorded exercises only; no custom-exercise creation. Reject adding or replacing with an exercise already in that workout, with a clear message. Keep exercise variants distinct and preserve imported repeated blocks.
+- Dumbbell weight is per dumbbell; barbell weight includes the bar; assisted pull-up/dip load means assistance.
+- PRODUCT.md's exclusions (rest timers, alerts, nutrition, social, watch, etc.) hold unless the owner changes them. Do not promise native ongoing-service behavior from web notifications.
 
 ## Analytics invariants
 
@@ -27,15 +30,18 @@ Personal exports stay outside tracked source, public assets, build output, CI, s
 The supplied CSV is semicolon-delimited UTF-8 with Date, Workout Name, Exercise Name, Set Order, Weight, Weight Unit, Reps, RPE, Distance, Distance Unit, Seconds, Notes, Workout Notes, Workout Duration. Parse quoted/multiline CSV properly; blanks and zero differ. Local timestamps have no timezone. The export has historical workouts/sets, not separate template or bodyweight records. Create templates from historical workouts rather than claiming missing records were restored.
 Keep source occurrence identity separate from cross-export reconciliation. Duplicate candidates require review; reimport must not accidentally multiply history. Malformed imports must leave existing data intact.
 
-## Stack and architecture
+## Architecture rules
 
-Prototype: React + TypeScript + Vite, application-owned shadcn-style primitives, Tailwind CSS, Lucide icons. Keep parsing and metrics in pure domain functions, UI/state separate. Browser-local persistence is prototype storage, not backed-up production storage.
-Target architecture: a React frontend (TanStack Router/Query when needed), lean NestJS API with PostgreSQL, local-first active-workout persistence and explicit synchronization. Do not copy Redis, queues, banking, or email infrastructure without an actual need.
-Hosting: separate app/database/config/containers on this machine, private Tailscale HTTPS only. Hermes builds and maintains tested releases and host-side deployment.
+- Keep parsing and metrics in pure domain functions, separate from UI/state. Do not add Redis, queues or email infrastructure without an actual need.
+- Development and tests use only the dedicated `gym-log-local` resources: PostgreSQL on 127.0.0.1:55439 (`gym_log_dev`), API on 127.0.0.1:5190. The live app alone uses `gym_log` and port 5191; never point development at it.
+- The API stays loopback-only behind Tailscale Serve, which strips spoofed identity headers. Production auth is the exact owner's Tailscale identity; never enable Funnel or accept arbitrary tailnet users.
+- Active workouts never enter server sync. Revision conflicts stay visible and retained; never silently overwrite peer data.
+- Never reload an active logger silently: shell updates need explicit confirmation and a saved, draft-free transition.
+- Never build in or serve from a checkout; `~/src/gym-log` stays a clean `main` for `ops/deploy.sh`. Work in a worktree.
 
 ## Design and delivery
 
-Use PRODUCT.md for durable product facts and DESIGN.md for the built visual system. Strong informs generic workflows, not exact branded UI/assets. Requested frontend design process: claude-design. Preserve a restrained shadcn style with an independent color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support, desktop/mobile browser verification.
+DESIGN.md is the visual contract. Preserve a restrained shadcn style with an independent color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support, desktop/mobile browser verification.
 Preserve unrelated work. Prefer tests before domain behavior; verify observable Playwright flows and typecheck/build before handoff.
 
 ## Autonomous ownership
@@ -51,17 +57,6 @@ The owner is the client, not a code reviewer. Hermes owns this repository end to
 - Isolation: the host is shared with other apps. Gym containers run only in Gym Log's own rootless Docker daemon (`gym-log-docker.service`); use `ops/docker.sh` for every gym Docker command, never the root daemon or another account's. Still name gym-log containers/projects explicitly; never run `docker system/volume/image prune` or unscoped `compose down -v`. Change Tailscale Serve only on Gym Log's own device, `tailscale --socket="$XDG_RUNTIME_DIR/gym-log-tailscale/tailscaled.sock" serve …`; never change the host's Serve config or run `tailscale serve reset`. Never write Hermes memory or edit skills other than gym-log-operator and mobile-workout-ledger. Keep the `gym-log-local-postgres` container, the `gym_log` database and the daemon socket `/run/user/$UID/gym-log/docker.sock`: the nightly off-device backup depends on them, so changing any of them means changing the backup job in the same change. The live app, its daemon and database run in the capped `gym-log-live.slice`; npm test scripts run through `ops/limited.sh` in `gym-log-jobs.slice`.
 - Hard limits: the repository stays private and the app is reachable only on the owner's Tailscale network: never Funnel, never other tailnet users. No spending, no new third-party services or telemetry, and no outside contact except the owner's Discord. Never publish personal workout history, credentials or recovery archives.
 
-## Current local foundation
-
-- IndexedDB/Dexie owns durable local state. Legacy migration retains original bytes; invalid storage blocks writes. Report saved only after transaction commit.
-- One writer tab holds a Web Lock. Active workouts stay on their starting installation and never enter server sync. Finish atomically saves completed history, queues its operation, and removes the draft.
-- NestJS/PostgreSQL API lives in server/. Only dedicated gym-log-local resources on 127.0.0.1:55439 are allowed. API binds 127.0.0.1:5190; Vite proxies same-origin requests.
-- Sessions use HttpOnly cookies and memory-only CSRF. Production opts into Tailscale identity authentication, with the exact allowed owner in external config; there is no app password or permanent sync card. API stays loopback-only behind Serve, which strips spoofed identity headers. Never enable Funnel or accept arbitrary tailnet users. Password mode remains for existing local development/test paths. Outbox retries preserve immutable operation identity. Revision conflicts remain visible and retained; do not silently overwrite peer data.
-- Reviewed Strong replacement touches imported history only. Compare complete current imported membership/content before an identical-file no-op; retained source hashes are provenance, not proof of current identity.
-- Recovery exports validated versioned JSON including source evidence, owner/revision provenance and deliberately local drafts, without session secrets. Restore pauses edits/sync, requires confirmation, and rebuilds create-only operations rather than replaying acknowledgements.
-- Production PWA caches only a finite shell allowlist. Updates require explicit confirmation and a saved, draft-free transition; never reload an active logger silently.
-- Production runs as the `gym-log.service` user unit from `~/.local/share/gym-log/current` (a release folder per commit), with config in `~/.config/gym-log/runtime.env` (0600), port 5191 and the `gym_log` database, behind its own tailnet device `gym-log` (`gym-log-tailscale.service`, Serve on HTTPS 443). Deploy only with `ops/deploy.sh <commit>` (main + green CI, clean `git archive` build, backup and restore check before new migrations, automatic rollback and Discord alert on failed health); undo with `ops/rollback.sh`. Never build in or serve from a checkout. Real phone validation, interactive owner provisioning, and off-device encrypted backups remain release gates.
-
 ## Writing tests
 
 - Test current behavior. Name and assert what the software does now ("saving shows a pending state, then the saved value"), never the change that led to it ("…instead of X", "no longer…", "still…"). Change history belongs in commits and PRs.
@@ -69,6 +64,6 @@ The owner is the client, not a code reviewer. Hermes owns this repository end to
 - One test per flow. A flow is a user journey in the UI, a request through an API endpoint, or a module's public contract. When a change adds or alters a step in an existing flow, extend that flow's test (action → pending state → result) instead of adding a test for the step. Add a separate test only for a distinct flow or outcome: a failure, a cancellation, another entry point, a different kind of input.
 - Regression tests follow the same rules. Strengthen the test for the flow where the bug happened so it fails on the old code, and name it for the behavior, not the bug.
 
-## Development
+## Checks
 
-See package.json and README.md for verified commands: npm ci --include=dev, npm run dev, npm run typecheck, npm run test:run, npm run test:e2e, npm run test:integration, npm run test:pwa, npm run build. Server checks use npm --prefix server run typecheck/build/test:e2e. Do not run fixed-port integration suites concurrently. Fixtures are synthetic and databases disposable. Do not invent successful check output; state production gaps explicitly.
+Commands are in package.json and README.md. Before handoff: `format:check`, `lint:check` (CI runs both, also for server/), typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched, and `npm --prefix server run typecheck/build/test:e2e` when server/ changed. `test:integration` is not in CI. Do not run fixed-port suites concurrently. Fixtures are synthetic and databases disposable. Do not invent successful check output; state production gaps explicitly. Remaining release gates are listed in README.md.
