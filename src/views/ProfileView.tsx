@@ -1,26 +1,15 @@
 import {useMemo} from 'react';
 
-import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
-import {SettingsList} from '../components/settings-group';
 import {Card} from '../components/ui/card';
 import {SectionHeading} from '../components/ui/section-heading';
 import {workoutsPerWeek} from '../domain/model';
 import type {Workout} from '../domain/types';
-import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
-import {setLabel} from './ExerciseDetail';
-import {dateLabel} from './WorkoutView';
 
 const WEEKS = 12;
 
 /** Strong-style dashboard: totals and workouts per week, nothing estimated. */
-export function ProfileView({
-  workouts,
-  onExclude,
-}: {
-  workouts: Workout[];
-  onExclude: ExcludeSetHandler;
-}) {
+export function ProfileView({workouts}: {workouts: Workout[]}) {
   const weeks = useMemo(() => workoutsPerWeek(workouts, WEEKS), [workouts]);
   const max = Math.max(3, ...weeks.map((w) => w.count));
   const sets = useMemo(
@@ -109,60 +98,6 @@ export function ProfileView({
           {first ? ` · logging since ${first}` : ''}.
         </p>
       </Card>
-      <FlaggedSets workouts={workouts} onExclude={onExclude} />
     </div>
-  );
-}
-
-/** Sets the import flagged as implausible, with their source, for owner review. */
-function FlaggedSets({workouts, onExclude}: {workouts: Workout[]; onExclude: ExcludeSetHandler}) {
-  const flagged = useMemo(
-    () =>
-      workouts.flatMap((workout) =>
-        workout.exercises.flatMap((exercise) =>
-          exercise.sets
-            .map((set, index) => ({workout, exercise, set, number: index + 1}))
-            .filter(({set}) => set.suspicious),
-        ),
-      ),
-    [workouts],
-  );
-  if (!flagged.length) return null;
-  const excluded = flagged.filter(({set}) => set.excluded).length;
-  return (
-    <section className='mt-3.5' aria-labelledby='flagged-sets'>
-      <SectionHeading>
-        <h2 id='flagged-sets'>Flagged sets</h2>
-        <span>
-          {plural(flagged.length, 'flagged set')} · {excluded} excluded
-        </span>
-      </SectionHeading>
-      <p className='mt-2 text-[12px] text-muted-foreground'>
-        The import flagged these values as unlikely. Excluded sets stay in your history but no
-        longer count toward records, charts or suggestions.
-      </p>
-      <SettingsList as='ul' className='mt-3'>
-        {flagged.map(({workout, exercise, set, number}) => (
-          <li key={set.id} className='flex min-h-14 items-center gap-2.5 px-4 py-2'>
-            <div className={cn('flex min-w-0 flex-1 flex-col', set.excluded && 'opacity-60')}>
-              <strong>{exercise.name}</strong>
-              <small className='text-[12px] text-muted-foreground'>
-                Set {number}: {setLabel(set, exercise.type)}
-                {set.excluded ? ' · excluded' : ''} · {workout.name} · {dateLabel(workout.date)}
-              </small>
-            </div>
-            <ExcludeSet
-              workoutId={workout.id}
-              date={workout.date}
-              exercise={exercise.name}
-              set={set}
-              number={number}
-              type={exercise.type}
-              onExclude={onExclude}
-            />
-          </li>
-        ))}
-      </SettingsList>
-    </section>
   );
 }

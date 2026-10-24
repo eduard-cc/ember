@@ -482,9 +482,7 @@ export default function App() {
                 ) : (
                   <ExercisesView dataset={allDataset} onOpen={setExercise} />
                 ))}
-              {view === 'Profile' && (
-                <ProfileView workouts={allDataset.workouts} onExclude={setSetExcluded} />
-              )}
+              {view === 'Profile' && <ProfileView workouts={allDataset.workouts} />}
             </ContentFieldset>
             {/* Outside the fieldset: phones reach Settings only here, also while edits are disabled. */}
             {view === 'Profile' && !sync.locked && (

@@ -137,6 +137,39 @@ describe('durable repository', () => {
     expect(edited.templates[0].name).toBe('Retained UI rename');
     repository.close();
   });
+  it('saves a template edit when the stored copy has the same content in another key order', async () => {
+    const repository = new WorkoutRepository(`test-${crypto.randomUUID()}`);
+    const displayed = {
+      version: 1 as const,
+      dataset: null,
+      active: null,
+      finished: [],
+      templates: [fixture],
+    };
+    await repository.commitState(displayed);
+    const reversed = (value: unknown): unknown =>
+      Array.isArray(value)
+        ? value.map(reversed)
+        : value && typeof value === 'object'
+          ? Object.fromEntries(
+              Object.entries(value)
+                .reverse()
+                .map(([key, entry]) => [key, reversed(entry)]),
+            )
+          : value;
+    await repository.db.templates.put(reversed(fixture) as Workout);
+    const renamed = {...fixture, name: 'Renamed routine'};
+    await repository.commitState({...displayed, templates: [renamed]}, displayed, [fixture]);
+    expect(await repository.db.templates.get(fixture.id)).toEqual(renamed);
+    expect(
+      (await repository.db.outbox.toArray()).map(({kind, entityId, payload}) => ({
+        kind,
+        entityId,
+        name: (payload as Workout).name,
+      })),
+    ).toContainEqual({kind: 'putTemplate', entityId: fixture.id, name: 'Renamed routine'});
+    repository.close();
+  });
   it('rolls back inserted workout when outbox insert violates its real unique index', async () => {
     const repository = new WorkoutRepository(`test-${crypto.randomUUID()}`);
     const active = {

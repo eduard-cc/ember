@@ -98,33 +98,13 @@ test('a flagged set can be excluded from records and included again', async ({pa
   await expect(mostReps(page)).toHaveText('60 reps');
 });
 
-test('the source workout and Profile offer the same reversible exclusion', async ({page}) => {
+test('the source workout excludes and includes any set reversibly', async ({page}) => {
   await page.addInitScript(
     (value) => localStorage.setItem('gym-log:v1', JSON.stringify(value)),
     seeded,
   );
   await page.goto('/?demo=1');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  await page
-    .getByRole('navigation', {name: 'Main navigation'})
-    .getByRole('button', {name: 'Profile', exact: true})
-    .click();
-  const flagged = page.getByRole('region', {name: 'Flagged sets'});
-  await expect(flagged).toContainText('1 flagged set');
-  await expect(flagged).toContainText('Synthetic Curl');
-  const exclude = flagged.getByRole('button', {
-    name: 'Exclude Synthetic Curl set 2 (20 kg × 60) on 1 Feb 2026 from analytics',
-  });
-  // The grouped flagged row keeps a 44×44 target.
-  const box = await exclude.boundingBox();
-  expect(box!.height).toBeGreaterThanOrEqual(44);
-  expect(box!.width).toBeGreaterThanOrEqual(44);
-  await exclude.click();
-  await expect(flagged).toContainText('excluded');
-  const include = flagged.getByRole('button', {name: /^Include Synthetic Curl set 2/});
-  const includeBox = await include.boundingBox();
-  expect(includeBox!.height).toBeGreaterThanOrEqual(44);
-  expect(includeBox!.width).toBeGreaterThanOrEqual(44);
 
   await navigate(page, 'History');
   await page
@@ -132,6 +112,13 @@ test('the source workout and Profile offer the same reversible exclusion', async
     .first()
     .click();
   const details = page.locator('.workout-details').first();
+  const exclude = details.getByRole('button', {
+    name: 'Exclude Synthetic Curl set 2 (20 kg × 60) on 1 Feb 2026 from analytics',
+  });
+  const box = await exclude.boundingBox();
+  expect(box!.height).toBeGreaterThanOrEqual(44);
+  expect(box!.width).toBeGreaterThanOrEqual(44);
+  await exclude.click();
   await expect(details).toContainText('excluded');
   // Every recorded set in the source workout can be excluded, not only flagged ones.
   await details

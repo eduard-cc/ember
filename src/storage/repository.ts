@@ -327,10 +327,7 @@ export class WorkoutRepository {
           // is never written by this generic path; finish owns its atomic transaction.
           const persistedTemplates = await this.db.templates.toArray();
           for (const base of templateBases) {
-            if (
-              JSON.stringify(persistedTemplates.find((t) => t.id === base.id)) !==
-              JSON.stringify(base)
-            )
+            if (canonical(persistedTemplates.find((t) => t.id === base.id)) !== canonical(base))
               throw new Error('Template changed since displayed; local edits kept');
           }
           const oldTemplates = previous ? (previous.templates ?? []) : persistedTemplates;
@@ -342,8 +339,7 @@ export class WorkoutRepository {
               ...oldTemplates
                 .filter(
                   (old) =>
-                    JSON.stringify(snapshot.templates?.find((t) => t.id === old.id)) !==
-                    JSON.stringify(old),
+                    canonical(snapshot.templates?.find((t) => t.id === old.id)) !== canonical(old),
                 )
                 .map((t) => t.id),
               ...(snapshot.templates ?? [])
@@ -352,8 +348,8 @@ export class WorkoutRepository {
             ]);
             for (const id of changedIds) {
               if (
-                JSON.stringify(persistedTemplates.find((t) => t.id === id)) !==
-                JSON.stringify(oldTemplates.find((t) => t.id === id))
+                canonical(persistedTemplates.find((t) => t.id === id)) !==
+                canonical(oldTemplates.find((t) => t.id === id))
               )
                 throw new Error('Template changed since displayed; local edits kept');
             }
@@ -365,7 +361,7 @@ export class WorkoutRepository {
             }
           for (const template of snapshot.templates ?? []) {
             const old = oldTemplates.find((t) => t.id === template.id);
-            if (JSON.stringify(template) !== JSON.stringify(old)) {
+            if (canonical(template) !== canonical(old)) {
               if (old) await this.db.templates.put(template);
               else await this.db.templates.add(template);
               await this.queueOperation('putTemplate', template.id, template);
