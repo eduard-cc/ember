@@ -59,6 +59,16 @@ test('creates completed workout and returns it in ordered feed', async () => {
 		const change = feed.body.changes.find((c: any) => c.entityId === operation.entityId);
 		assert.deepEqual(change.payload, operation.payload);
 		assert.equal(change.changeSeq, r.body.results[0].changeSeq);
+		// Phones download the whole feed on a fresh installation: pages travel compressed.
+		await s.send(Array.from({length: 20}, () => op())).expect(201);
+		const page = await s.http
+			.get('/api/v1/sync/changes?after=0&limit=100')
+			.set('Cookie', s.cookie)
+			.set('Accept-Encoding', 'gzip')
+			.expect(200);
+		assert.equal(page.headers['content-encoding'], 'gzip');
+		assert.equal(page.headers['cache-control'], 'no-store');
+		assert.equal(page.body.changes.length, 21);
 	} finally {
 		await s.app.close();
 	}

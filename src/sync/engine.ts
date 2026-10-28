@@ -15,6 +15,8 @@ import type {WorkoutRepository} from '../storage/repository';
  * that understands every kind replays the feed from zero.
  */
 export const DELETES_CURSOR = 'workout-deletes-cursor';
+/** Set once a feed read reaches its last page; until then the local history is incomplete. */
+export const HISTORY_DOWNLOADED = 'history-downloaded';
 // Unknown kinds fail the whole page before the cursor moves, so a newer server's
 // records are never skipped or written into the wrong table.
 const changeSchema = z
@@ -215,6 +217,7 @@ export class SyncEngine {
           await db.syncState.put({key: 'cursor', value: page.nextCursor});
           await db.syncState.put({key: 'body-weight-cursor', value: page.nextCursor});
           await db.syncState.put({key: DELETES_CURSOR, value: page.nextCursor});
+          if (!page.hasMore) await db.syncState.put({key: HISTORY_DOWNLOADED, value: true});
         },
       );
       cursor = page.nextCursor;

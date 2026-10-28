@@ -1,6 +1,7 @@
 import {Body, Controller, Delete, Get, Module, Post, Query, Req, Res} from '@nestjs/common';
 import {NestFactory} from '@nestjs/core';
 import {NestExpressApplication} from '@nestjs/platform-express';
+import compression from 'compression';
 import {Request, Response} from 'express';
 import 'reflect-metadata';
 
@@ -69,6 +70,10 @@ export async function createApp({indexHtml}: {indexHtml?: string} = {}) {
 	class AppModule {}
 	const app = await NestFactory.create<NestExpressApplication>(AppModule, {logger: false, bodyParser: false});
 	app.getHttpAdapter().getInstance().disable('x-powered-by');
+	// A fresh installation downloads the whole history feed and the app bundle; both are
+	// repetitive JSON/JS that gzip shrinks over 10x on slow phone links.
+	// Range requests keep their exact byte ranges.
+	app.use(compression({filter: (req, res) => !req.headers.range && compression.filter(req, res)}));
 	app.use((req: Request, res: Response, next: () => void) => {
 		res.setHeader('Cache-Control', 'no-store');
 		for (const [name, value] of Object.entries(headers)) res.setHeader(name, value);

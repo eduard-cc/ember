@@ -2,7 +2,16 @@ import {liveQuery} from 'dexie';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 import type {WorkoutRepository} from '../storage/repository';
-import {DatasetReset, type Session, SessionExpired, SyncEngine} from './engine';
+import {
+  DELETES_CURSOR,
+  DatasetReset,
+  HISTORY_DOWNLOADED,
+  type Session,
+  SessionExpired,
+  SyncEngine,
+} from './engine';
+
+const HISTORY_DOWNLOAD_STARTED = 'history-download-started';
 
 export function useSync(
   repository: WorkoutRepository,
@@ -26,6 +35,12 @@ export function useSync(
   const running = useRef(false);
   const paused = useRef(false);
   const [syncing, setSyncing] = useState(false);
+  // The server history has not completely arrived yet (fresh, evicted or reset installation):
+  // empty screens then mean "still downloading", not "no workouts".
+  const [historyIncomplete, setHistoryIncomplete] = useState(false);
+  // Whether the latest sync attempt failed; steadier than the status text, which shows
+  // 'Syncing…' on every retry.
+  const [lastAttemptFailed, setLastAttemptFailed] = useState(false);
   const inFlight = useRef<Promise<void> | null>(null);
   const pause = useCallback(async () => {
     paused.current = true;
@@ -52,6 +67,15 @@ export function useSync(
           .join(','),
         owner: (await repository.db.meta.get('ownerId'))?.value,
         trust: (await repository.db.meta.get('local-trust'))?.value,
+        // Only once connected to the owner's server. Installations that synced before the
+        // completion flag existed already hold a cursor; an interrupted first download also
+        // holds the start marker.
+        historyIncomplete:
+          !!(await repository.db.meta.get('ownerId'))?.value &&
+          !(await repository.db.syncState.get(HISTORY_DOWNLOADED)) &&
+          (!(await repository.db.syncState.get(DELETES_CURSOR)) ||
+            !!(await repository.db.syncState.get(HISTORY_DOWNLOAD_STARTED))) &&
+          !(await repository.db.meta.get('demo-installation'))?.value,
         issues,
       };
     }).subscribe({
@@ -59,6 +83,7 @@ export function useSync(
         setPending(state.pending);
         setEligibleWork(state.eligibleWork);
         setIssues(state.issues);
+        setHistoryIncomplete(state.historyIncomplete);
         setLocked(!!state.owner && !state.trust);
       },
     });
@@ -130,6 +155,8 @@ export function useSync(
             !(await repository.db.meta.get('local-trust'))?.value
           )
             return;
+          if (!(await repository.db.syncState.get(DELETES_CURSOR)))
+            await repository.db.syncState.put({key: HISTORY_DOWNLOAD_STARTED, value: true});
           try {
             await new SyncEngine(repository).sync(current.current);
             break;
@@ -145,6 +172,7 @@ export function useSync(
           }
         }
         await refreshRef.current();
+        setLastAttemptFailed(false);
         failures.current = 0;
         nextAttempt.current = 0;
         const issues = (await repository.db.syncState.toArray()).filter((r) =>
@@ -159,6 +187,7 @@ export function useSync(
               : 'Synced',
         );
       } catch (error) {
+        setLastAttemptFailed(true);
         failures.current++;
         nextAttempt.current =
           Date.now() + Math.min(60000, 1000 * 2 ** Math.min(failures.current, 6));
@@ -216,6 +245,12 @@ export function useSync(
     pause,
     resume,
     syncing,
+    historyDownload:
+      !enabled || !historyIncomplete
+        ? null
+        : lastAttemptFailed
+          ? ('waiting' as const)
+          : ('downloading' as const),
     status: !enabled
       ? 'Local only'
       : !locallySaved && status === 'Synced'

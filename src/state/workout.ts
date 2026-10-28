@@ -122,6 +122,13 @@ export function useWorkoutState() {
         setReadOnly(!lock.writable);
         setOwnershipError(lock.error);
         if (lock.writable) {
+          // Best-effort storage may be evicted, which empties the app until the whole history
+          // downloads again. Chrome grants persistence silently to installed apps; asking only
+          // when not yet persisted avoids repeat prompts in browsers that ask the user.
+          void navigator.storage
+            ?.persisted?.()
+            .then((persisted) => persisted || navigator.storage.persist())
+            .catch(() => false);
           await repository.db.transaction('rw', repository.db.meta, async () => {
             if (!(await repository.db.meta.get('installationId')))
               await repository.db.meta.add({key: 'installationId', value: crypto.randomUUID()});

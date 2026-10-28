@@ -2,10 +2,42 @@ import {expect, test} from '@playwright/test';
 
 import {addExercise, navigate} from '../navigation';
 
-test('fresh installation connects automatically without an app password or permanent sync card', async ({
+const syntheticHistory = {
+  id: 'synthetic-history',
+  name: 'Synthetic history',
+  date: '2026-01-02T10:00:00',
+  duration: 30,
+  exercises: [
+    {
+      name: 'Bench Press (Barbell)',
+      type: 'weighted',
+      sets: [{id: 'synthetic-set', weight: 60, reps: 5, seconds: null, distance: null}],
+    },
+  ],
+};
+
+const change = (n: number) => ({
+  entityId: `${syntheticHistory.id}-${n}`,
+  kind: 'putImportedWorkout',
+  revision: 1,
+  changeSeq: n,
+  payload: {...syntheticHistory, id: `${syntheticHistory.id}-${n}`, name: `Synthetic history ${n}`},
+});
+
+test('fresh installation connects automatically, keeps its storage and says history is downloading until all of it arrived', async ({
   page,
 }) => {
+  test.slow();
+  await page.addInitScript(() => {
+    const w = window as unknown as {persistRequests: number};
+    w.persistRequests = 0;
+    navigator.storage.persisted = async () => false;
+    navigator.storage.persist = async () => (w.persistRequests++, true);
+  });
   let bootstraps = 0;
+  let serverUp = true;
+  let releaseFeed!: () => void;
+  const feedHeld = new Promise<void>((resolve) => (releaseFeed = resolve));
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
     if (request.url().endsWith('/session')) {
@@ -17,15 +49,50 @@ test('fresh installation connects automatically without an app password or perma
       }
       return route.fulfill({json: {ownerId: 'owner', csrfToken: 'synthetic-csrf'}});
     }
-    return route.fulfill({json: {changes: [], nextCursor: 0, hasMore: false}});
+    if (request.url().includes('after=0')) {
+      await feedHeld;
+      return route.fulfill({json: {changes: [change(1)], nextCursor: 1, hasMore: true}});
+    }
+    if (request.url().includes('after=1&')) {
+      if (!serverUp) return route.abort('failed');
+      return route.fulfill({json: {changes: [change(2)], nextCursor: 2, hasMore: false}});
+    }
+    return route.fulfill({json: {changes: [], nextCursor: 2, hasMore: false}});
   });
   await page.goto('/');
+  const download = page.getByRole('status', {name: 'History download'});
+  await expect(download).toHaveText('Downloading your workout history from your server…');
+  await expect
+    .poll(() =>
+      page.evaluate(() => (window as unknown as {persistRequests: number}).persistRequests),
+    )
+    .toBeGreaterThan(0);
+  // The connection drops after the first page: the partial history is labelled, also after reopening.
+  serverUp = false;
+  releaseFeed();
+  await expect(page.locator('.app-shell')).toHaveAttribute(
+    'data-sync',
+    'Offline or server unavailable · changes pending',
+  );
+  await expect(download).toHaveText(
+    'Your workout history has not finished downloading. It continues when your server is reachable.',
+  );
+  await page.reload();
+  await expect(download).toBeVisible();
+  serverUp = true;
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
+  await expect(download).toHaveCount(0);
+  await navigate(page, 'History');
+  for (const n of [1, 2])
+    await expect(page.getByRole('heading', {name: `Synthetic history ${n}`})).toBeVisible();
   await expect(page.getByLabel('Server password')).toHaveCount(0);
   await expect(page.getByRole('button', {name: 'Sign out', exact: true})).toHaveCount(0);
   await expect(page.getByRole('status', {name: 'Server synchronization'})).toHaveCount(0);
-  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await expect.poll(() => bootstraps).toBe(1);
+  await page.reload();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
+  await expect(download).toHaveCount(0);
+  expect(bootstraps).toBe(1);
 });
 
 test('online wake reacquires an expired session before syncing pending changes', async ({page}) => {

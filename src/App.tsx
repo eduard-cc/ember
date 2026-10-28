@@ -433,6 +433,13 @@ export default function App() {
           <div className='library-scroll min-h-0 flex-1 overflow-auto px-8 pt-6.5 pb-10 max-desk:px-4.5 max-desk:pt-6 max-desk:pb-7.5'>
             <h1 className='mb-5'>{title}</h1>
             {!showSheet && !sync.locked && !settingsOpen && errors()}
+            {sync.historyDownload && !sync.locked && !(showSheet && mobile) && !settingsOpen && (
+              <div className={cn(noticeClass, 'mb-5')} role='status' aria-label='History download'>
+                {sync.historyDownload === 'waiting'
+                  ? 'Your workout history has not finished downloading. It continues when your server is reachable.'
+                  : 'Downloading your workout history from your server…'}
+              </div>
+            )}
             <ContentFieldset disabled={disabled}>
               {!showSheet && !settingsOpen && feedback()}
               {view === 'Workout' && !sync.locked && (

@@ -19,6 +19,11 @@ Also follow the sync-protocol-evolution workflow for a new record kind.
 - Filter opt-in kinds before pagination for legacy clients (`server/src/sync/service.ts`), so a legacy cursor is always the last change it could see.
 - Keep an independent opt-in cursor (see `DELETES_CURSOR` in `src/sync/engine.ts`). A one-time replay boolean is not enough: a rolled-back frontend can advance the shared cursor past hidden creates, edits or tombstones. Test upgrade, legacy cursor advancement and return to the new frontend.
 
+## First download
+
+- The writer tab asks for persistent storage (`navigator.storage.persist()`, only when not yet persisted). Best-effort IndexedDB can be evicted, after which the installation is fresh and downloads the whole feed again.
+- `history-downloaded` in `syncState` is written with the feed page that has `hasMore: false`. Until then `useSync().historyIncomplete` shows a download notice instead of letting empty states read as "no workouts"; `history-download-started` marks an interrupted first download so it stays labelled after reopening. Installations that synced before the flag existed already hold the deletes cursor and count as complete. The notice needs a connected owner (a fresh install that is offline on first open shows only the offline status), and a legacy install holding only `cursor` shows it once while it replays the feed.
+
 ## Retriggering sync
 
 `src/sync/use-sync.ts` triggers an immediate sync only for newly eligible operation IDs, excluding entities blocked by retained issues. Do not retrigger merely because a sync finished with a non-empty outbox: conflicts and rejections intentionally stay queued and would loop the change feed. Verify conflict and rejection quiescence with periodic polling disabled, while keeping normal periodic and wake (`online`/`focus`) retries.
