@@ -24,7 +24,7 @@ async function freePort() {
 const inlineTheme = "\n  document.documentElement.dataset.theme = 'dark';\n";
 const inlineHash = `'sha256-${createHash('sha256').update(inlineTheme).digest('base64')}'`;
 async function fixture() {
-	const root = await mkdtemp(join(tmpdir(), 'gym-log-trial-'));
+	const root = await mkdtemp(join(tmpdir(), 'ember-trial-'));
 	await mkdir(join(root, 'assets'));
 	await mkdir(join(root, 'icons'));
 	await writeFile(
@@ -51,11 +51,11 @@ async function start(root: string) {
 	const child = spawn(process.execPath, [resolve('dist/trial.js')], {
 		env: {
 			...process.env,
-			GYM_LOG_PORT: String(port),
-			GYM_LOG_ORIGIN: 'https://synthetic-trial.example',
-			GYM_LOG_SESSION_SECURE: 'true',
-			GYM_LOG_OWNER_PASSWORD_HASH: await argon2.hash(password),
-			GYM_LOG_WEB_ROOT: root,
+			EMBER_PORT: String(port),
+			EMBER_ORIGIN: 'https://synthetic-trial.example',
+			EMBER_SESSION_SECURE: 'true',
+			EMBER_OWNER_PASSWORD_HASH: await argon2.hash(password),
+			EMBER_WEB_ROOT: root,
 		},
 		stdio: ['ignore', 'pipe', 'pipe'],
 	});
@@ -180,7 +180,7 @@ for (const missing of ['index.html', 'manifest.webmanifest']) {
 			assert.ok(result, 'incomplete web root must fail startup rather than listen');
 			assert.equal(result[0], 1);
 			assert.doesNotMatch(server.output(), /listening/);
-			assert.match(server.output(), /Gym Log trial startup failed/);
+			assert.match(server.output(), /Ember trial startup failed/);
 		} finally {
 			await server.stop();
 			await rm(root, {recursive: true, force: true});

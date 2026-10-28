@@ -11,9 +11,9 @@ async function main() {
 	process.once('SIGINT', shutdown);
 	process.once('SIGTERM', shutdown);
 	await app.listen(cfg.port, cfg.host);
-	console.log(`Gym Log API listening on ${cfg.host}:${cfg.port}`);
+	console.log(`Ember API listening on ${cfg.host}:${cfg.port}`);
 }
 main().catch(() => {
-	console.error('Gym Log API startup failed (check local configuration and database)');
+	console.error('Ember API startup failed (check local configuration and database)');
 	process.exitCode = 1;
 });

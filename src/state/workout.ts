@@ -6,7 +6,7 @@ import {type DraftLock, acquireDraftLock} from '../storage/draft-lock';
 import {migrateLegacy} from '../storage/migrate-legacy';
 import {WorkoutRepository} from '../storage/repository';
 
-const KEY = 'gym-log:v1';
+const KEY = 'ember:v1';
 export function newWorkout(workout?: Workout): Workout {
   const now = new Date();
   const localTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;

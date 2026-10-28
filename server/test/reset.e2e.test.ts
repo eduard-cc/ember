@@ -28,7 +28,7 @@ const op = (kind = 'putWorkout') => {
 
 test('a dataset reset purges history, seeds imports and fences stale clients by epoch', async () => {
 	const s = await setup();
-	const db = await database(process.env.GYM_LOG_DATABASE_URL!).initialize();
+	const db = await database(process.env.EMBER_DATABASE_URL!).initialize();
 	try {
 		const send = (operations: unknown[], epoch?: string) => {
 			const req = s.http
@@ -79,7 +79,7 @@ test('a dataset reset purges history, seeds imports and fences stale clients by 
 for (const method of ['operations', 'changes'] as const) {
 	test(`a reset between authentication and ${method} is fenced under the owner lock`, async () => {
 		const s = await setup();
-		const db = await database(process.env.GYM_LOG_DATABASE_URL!).initialize();
+		const db = await database(process.env.EMBER_DATABASE_URL!).initialize();
 		const before = await s.http.get('/api/v1/session').set('Cookie', s.cookie).expect(200);
 		const original = SyncService.prototype[method];
 		// Deterministic barrier after any controller checks but before the service starts.
@@ -116,7 +116,7 @@ for (const method of ['operations', 'changes'] as const) {
 
 test('a reset refuses invalid seed documents and leaves history untouched', async () => {
 	const s = await setup();
-	const db = await database(process.env.GYM_LOG_DATABASE_URL!).initialize();
+	const db = await database(process.env.EMBER_DATABASE_URL!).initialize();
 	try {
 		const before = await db.query('SELECT count(*) FROM records');
 		const broken = {...workout('import:bad:0'), date: 'not a date'};

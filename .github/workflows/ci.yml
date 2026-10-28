@@ -53,27 +53,27 @@ jobs:
       postgres:
         image: postgres:17.11-bookworm
         env:
-          POSTGRES_USER: gym_log_ci
+          POSTGRES_USER: ember_ci
           POSTGRES_PASSWORD: synthetic-ci-only
-          POSTGRES_DB: gym_log_dev
+          POSTGRES_DB: ember_dev
         ports:
           - '127.0.0.1:55439:5432'
         options: >-
-          --health-cmd "pg_isready -h 127.0.0.1 -U gym_log_ci -d gym_log_dev"
+          --health-cmd "pg_isready -h 127.0.0.1 -U ember_ci -d ember_dev"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
       DOTENV_CONFIG_PATH: /dev/null
-      GYM_LOG_HOST: 127.0.0.1
-      GYM_LOG_PORT: '5190'
-      GYM_LOG_ORIGIN: http://127.0.0.1:5188
-      GYM_LOG_SESSION_SECURE: 'false'
-      GYM_LOG_SESSION_TTL_SECONDS: '86400'
-      GYM_LOG_AUTH_MODE: password
-      GYM_LOG_DATABASE_URL: postgres://gym_log_dev:synthetic-ci-only@127.0.0.1:55439/gym_log_dev
-      # Locally the backup scripts use Gym Log's own rootless Docker daemon; here the runner's.
-      GYM_LOG_DOCKER_HOST: unix:///var/run/docker.sock
+      EMBER_HOST: 127.0.0.1
+      EMBER_PORT: '5190'
+      EMBER_ORIGIN: http://127.0.0.1:5188
+      EMBER_SESSION_SECURE: 'false'
+      EMBER_SESSION_TTL_SECONDS: '86400'
+      EMBER_AUTH_MODE: password
+      EMBER_DATABASE_URL: postgres://ember_dev:synthetic-ci-only@127.0.0.1:55439/ember_dev
+      # Locally the backup scripts use Ember's own rootless Docker daemon; here the runner's.
+      EMBER_DOCKER_HOST: unix:///var/run/docker.sock
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -90,14 +90,14 @@ jobs:
       - name: Name the isolated test service
         env:
           POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
-        run: docker rename "$POSTGRES_CONTAINER" gym-log-local-postgres
+        run: docker rename "$POSTGRES_CONTAINER" ember-postgres
       # Tests connect as an unprivileged role, as in local development; only the
       # backup scripts use the service superuser through docker exec.
       - name: Create the unprivileged development role
         run: >-
-          docker exec gym-log-local-postgres psql -U gym_log_ci -d postgres -v ON_ERROR_STOP=1
-          -c "CREATE ROLE gym_log_dev LOGIN CREATEDB PASSWORD 'synthetic-ci-only'"
-          -c "ALTER DATABASE gym_log_dev OWNER TO gym_log_dev"
+          docker exec ember-postgres psql -U ember_ci -d postgres -v ON_ERROR_STOP=1
+          -c "CREATE ROLE ember_dev LOGIN CREATEDB PASSWORD 'synthetic-ci-only'"
+          -c "ALTER DATABASE ember_dev OWNER TO ember_dev"
       # The server date-contract tests also exercise shared frontend schemas.
       - run: npm ci --include=dev && npm --prefix server ci --include=dev
       # pretest:e2e builds the server first.

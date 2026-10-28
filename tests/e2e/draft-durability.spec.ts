@@ -14,7 +14,7 @@ test('Saving stays visible until the real IndexedDB transaction can commit', asy
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('gym-log');
+      const request = indexedDB.open('ember');
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -52,7 +52,7 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('gym-log');
+      const request = indexedDB.open('ember');
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -85,7 +85,7 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
   const readCounts = () =>
     page.evaluate(async () => {
       const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('gym-log');
+        const request = indexedDB.open('ember');
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
@@ -133,21 +133,21 @@ test('empty installation has no synthetic draft or history', async ({page}) => {
   await page.goto('/');
   await expect(page.getByRole('heading', {name: 'Quick start', exact: true})).toBeVisible();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  expect(await page.evaluate(() => localStorage.getItem('gym-log:v1'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('ember:v1'))).toBeNull();
 });
 test('saved edit survives a fresh page and original legacy bytes remain unchanged', async ({
   page,
   context,
 }) => {
   const raw = JSON.stringify(legacy, null, 2);
-  await page.addInitScript((raw) => localStorage.setItem('gym-log:v1', raw), raw);
+  await page.addInitScript((raw) => localStorage.setItem('ember:v1', raw), raw);
   await page.goto('/');
   await page
     .getByLabel(/Weight for .* set 1/)
     .first()
     .fill('42.5');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  expect(await page.evaluate(() => localStorage.getItem('gym-log:v1'))).toBe(raw);
+  expect(await page.evaluate(() => localStorage.getItem('ember:v1'))).toBe(raw);
   await page.close();
   const fresh = await context.newPage();
   await fresh.goto('/');
@@ -155,7 +155,7 @@ test('saved edit survives a fresh page and original legacy bytes remain unchange
   expect(
     await fresh.evaluate(async () => {
       const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('gym-log');
+        const request = indexedDB.open('ember');
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });

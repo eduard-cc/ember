@@ -1,4 +1,4 @@
-# Isolated local Gym Log API
+# Isolated local Ember API
 
 NestJS 11, TypeORM explicit PostgreSQL migrations, independent Zod document validation.
 No registration, telemetry, queues, remote resources or active-draft storage.
@@ -11,22 +11,22 @@ Run from repository root:
 ```sh
 ops/docker.sh compose -f ops/compose.local.yml up -d --wait
 # Once: the unprivileged development role and database (Compose itself only creates the
-# live gym_log database). Generate the role password locally; it goes only in server/.env.
-ops/docker.sh exec -it gym-log-local-postgres sh -c 'createuser -U "$POSTGRES_USER" --createdb --pwprompt gym_log_dev &&
-  createdb -U "$POSTGRES_USER" -O gym_log_dev gym_log_dev &&
-  psql -U "$POSTGRES_USER" -d postgres -c "REVOKE CONNECT, TEMPORARY ON DATABASE gym_log FROM PUBLIC"'
+# live ember database). Generate the role password locally; it goes only in server/.env.
+ops/docker.sh exec -it ember-postgres sh -c 'createuser -U "$POSTGRES_USER" --createdb --pwprompt ember_dev &&
+  createdb -U "$POSTGRES_USER" -O ember_dev ember_dev &&
+  psql -U "$POSTGRES_USER" -d postgres -c "REVOKE CONNECT, TEMPORARY ON DATABASE ember FROM PUBLIC"'
 npm --prefix server ci --include=dev
 npm --prefix server run migration
 npm --prefix server run dev
 ```
 
-Development API binds **127.0.0.1:5190 only** and uses the `gym_log_dev` database; the live
-app (`gym-log.service`) uses port 5191 and the `gym_log` database from external config. Origin is `http://127.0.0.1:5188`;
+Development API binds **127.0.0.1:5190 only** and uses the `ember_dev` database; the live
+app (`ember.service`) uses port 5191 and the `ember` database from external config. Origin is `http://127.0.0.1:5188`;
 frontend must proxy `/api/v1` to the API or access it same-origin. No CORS is enabled.
-Compose project `gym-log-local`; container `gym-log-local-postgres`;
+Compose project `ember-local`; container `ember-postgres`;
 image `postgres:17.11-bookworm`; port `127.0.0.1:55439`; named volume
-`gym-log-local-data`; independent project network `gym-log-local_default`; all inside Gym Log's own
-rootless Docker daemon (`gym-log-docker.service`, reached through `ops/docker.sh`).
+`ember-data`; independent project network `ember-local_default`; all inside Ember's own
+rootless Docker daemon (`ember-docker.service`, reached through `ops/docker.sh`).
 
 ```sh
 npm --prefix server run test:e2e
@@ -40,25 +40,25 @@ npm --prefix server run build
 
 Tests compile first, enumerate actual test files, and fail on a missing file.
 Each database integration test file creates and destroys its own
-`gym_log_test_<pid>` database inside the task-owned container, administered through
-`gym_log_dev`. Test setup refuses any other configured database, including live `gym_log`. Fault/delay triggers
+`ember_test_<pid>` database inside the task-owned container, administered through
+`ember_dev`. Test setup refuses any other configured database, including live `ember`. Fault/delay triggers
 never touch the ordinary database. HTTP requests are real loopback requests;
 compiled-process coverage exercises TCP, authentication and replay, then stops the process.
 Migrations are applied to empty test databases, not schema synchronization.
-Development and tests connect as the `gym_log_dev` role: it owns `gym_log_dev`, may create
-and drop its own test databases, is not a superuser and cannot connect to live `gym_log`.
+Development and tests connect as the `ember_dev` role: it owns `ember_dev`, may create
+and drop its own test databases, is not a superuser and cannot connect to live `ember`.
 Only the backup/restore scripts, and the backup test's cleanup of their validation copy, use
 the Compose superuser, through `ops/docker.sh exec`. CI creates the same unprivileged role.
-An existing setup with a superuser-owned `gym_log_dev` needs `createuser` plus
-`ALTER DATABASE gym_log_dev OWNER TO gym_log_dev` instead of `createdb`. Percent-encode
+An existing setup with a superuser-owned `ember_dev` needs `createuser` plus
+`ALTER DATABASE ember_dev OWNER TO ember_dev` instead of `createdb`. Percent-encode
 reserved characters in the role password when writing the URL.
 
 ## Secret provisioning
 
-`server/.env` contains the nonsecret settings in `.env.example` plus the `gym_log_dev` role's
+`server/.env` contains the nonsecret settings in `.env.example` plus the `ember_dev` role's
 database URL and externally provisioned encoded Argon2id hash; it never holds the superuser
 password. `server/.postgres.env` contains only
-`POSTGRES_USER=gym_log`, `POSTGRES_DB=gym_log`, and the generated database password.
+`POSTGRES_USER=ember`, `POSTGRES_DB=ember`, and the generated database password.
 Both are ignored and mode 0600. No plaintext owner password is stored.
 The initial local hash was generated from a discarded random synthetic password;
 there is intentionally no recoverable default login. Tests generate random passwords
@@ -68,18 +68,18 @@ workflow; never paste credentials in chat or commit them. Existing sessions shou
 revoked explicitly when changing owner credentials (no automatic password-rotation API).
 
 Startup restricts host to loopback and database URLs to PostgreSQL on
-`127.0.0.1:55439` with `gym_log` or `gym_log_*` database names. Insecure-cookie mode
+`127.0.0.1:55439` with `ember` or `ember_*` database names. Insecure-cookie mode
 requires an exact HTTP loopback origin. HTTPS mode sets Secure; deployment is not done.
 The stable synthetic single-owner identifier is `owner`, always derived server-side.
 
 ## Passwordless private Tailscale owner mode
 
-Authentication defaults to `GYM_LOG_AUTH_MODE=password`, preserving the existing
-Argon2id login path. Explicitly opt in with `GYM_LOG_AUTH_MODE=tailscale` and set
-`GYM_LOG_TAILSCALE_USER_LOGIN` to the exact owner login supplied by Tailscale Serve
+Authentication defaults to `EMBER_AUTH_MODE=password`, preserving the existing
+Argon2id login path. Explicitly opt in with `EMBER_AUTH_MODE=tailscale` and set
+`EMBER_TAILSCALE_USER_LOGIN` to the exact owner login supplied by Tailscale Serve
 (no trimming or case folding). In this mode no owner password hash is required.
 Non-loopback origins must be exact HTTPS origins on a `.ts.net` hostname with
-`GYM_LOG_SESSION_SECURE=true`. Loopback HTTP origins remain available for isolated
+`EMBER_SESSION_SECURE=true`. Loopback HTTP origins remain available for isolated
 tests/development with insecure cookies; the listener must still be `127.0.0.1`.
 
 Use private [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve),
@@ -119,7 +119,7 @@ No live Serve route, runtime environment, or deployment is changed by these test
 All paths below are prefixed `/api/v1`. Every response uses `Cache-Control: no-store`.
 `GET /health` returns `{status:"ready"}` after a database readiness query.
 `POST /session` accepts `{password}` in default password mode or `{}` in Tailscale mode; successful login returns
-`{ownerId,csrfToken}` plus `gym_log_session` HttpOnly, SameSite=Strict cookie,
+`{ownerId,csrfToken}` plus `ember_session` HttpOnly, SameSite=Strict cookie,
 scoped to `/api/v1`, Secure when configured. Only the token hash is persisted in PostgreSQL.
 `GET /session` returns current owner and CSRF token, or 401 for missing/revoked/expired session.
 `DELETE /session` revokes that session and clears the cookie, returning `{loggedOut:true}`.

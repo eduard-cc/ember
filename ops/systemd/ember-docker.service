@@ -1,0 +1,41 @@
+# User unit installed by ops/install.sh: Ember's own rootless Docker daemon. It runs only ember-postgres; nothing using its socket
+# (ops/docker.sh) can see other daemons' containers. The daemon and its containers live in
+# ember-live.slice, which caps their CPU and memory.
+[Unit]
+Description=Ember rootless Docker daemon
+# Five starts within five minutes means it is crash-looping: give up and alert.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+OnFailure=ember-notify-failure@%n.service
+
+[Service]
+Type=notify
+NotifyAccess=all
+Slice=ember-live.slice
+Environment=PATH=%h/bin:%h/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=DOCKERD_ROOTLESS_ROOTLESSKIT_NET=slirp4netns
+Environment=DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=builtin
+# Not the default state directory, which another rootless daemon of the same user may use.
+Environment=DOCKERD_ROOTLESS_ROOTLESSKIT_STATE_DIR=%t/ember/rootlesskit
+ExecStartPre=/usr/bin/mkdir -p %t/ember %h/.local/share/ember-docker
+ExecStartPre=/usr/bin/chmod 700 %t/ember %h/.local/share/ember-docker
+# Raw database files copied mid-write are no backup, and the image can be pulled again:
+# the nightly off-device backup skips this tagged folder (it excludes caches) and takes a consistent ember.dump through pg_dump instead.
+ExecStartPre=/usr/bin/sh -c 'printf "Signature: 8a477f597d28d172789f06886806bc55\\n# Ember Docker data: backed up as the nightly ember.dump, not as files.\\n" >%h/.local/share/ember-docker/CACHEDIR.TAG'
+ExecStart=%h/bin/dockerd-rootless.sh --host=unix://%t/ember/docker.sock --data-root=%h/.local/share/ember-docker --exec-root=%t/ember/exec --pidfile=%t/ember/docker.pid --storage-driver=fuse-overlayfs --cgroup-parent=ember-live.slice
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+Delegate=yes
+Restart=on-failure
+RestartSec=5s
+# Alert once when systemd gives up, not on every automatic restart.
+RestartMode=direct
+TimeoutStartSec=120s
+UMask=0077
+LimitNOFILE=1048576
+Nice=5
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+
+[Install]
+WantedBy=default.target

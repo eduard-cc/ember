@@ -10,15 +10,15 @@ const owner = 'owner@example.test';
 const origin = 'http://127.0.0.1:5188';
 async function setup(secure = false) {
 	Object.assign(process.env, {
-		GYM_LOG_AUTH_MODE: 'tailscale',
-		GYM_LOG_TAILSCALE_USER_LOGIN: owner,
-		GYM_LOG_HOST: '127.0.0.1',
-		GYM_LOG_PORT: '5190',
-		GYM_LOG_ORIGIN: secure ? 'https://gym.synthetic.ts.net' : origin,
-		GYM_LOG_SESSION_SECURE: String(secure),
-		GYM_LOG_SESSION_TTL_SECONDS: '86400',
+		EMBER_AUTH_MODE: 'tailscale',
+		EMBER_TAILSCALE_USER_LOGIN: owner,
+		EMBER_HOST: '127.0.0.1',
+		EMBER_PORT: '5190',
+		EMBER_ORIGIN: secure ? 'https://gym.synthetic.ts.net' : origin,
+		EMBER_SESSION_SECURE: String(secure),
+		EMBER_SESSION_TTL_SECONDS: '86400',
 	});
-	delete process.env.GYM_LOG_OWNER_PASSWORD_HASH;
+	delete process.env.EMBER_OWNER_PASSWORD_HASH;
 	const app = await createApp();
 	await app.listen(0, '127.0.0.1');
 	return {app, http: request(app.getHttpServer())};
@@ -146,7 +146,7 @@ test('configured Tailscale owner bootstraps without a password and reuses a data
 		assert.match(rawCookie, /SameSite=Strict/);
 		assert.match(rawCookie, /Path=\/api\/v1/);
 		const cookie = rawCookie.split(';')[0];
-		assert.match(cookie, /^gym_log_session=[a-f0-9]{64}$/);
+		assert.match(cookie, /^ember_session=[a-f0-9]{64}$/);
 		const current = await http
 			.get('/api/v1/session')
 			.set('Cookie', cookie)

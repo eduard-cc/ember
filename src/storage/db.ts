@@ -12,7 +12,7 @@ export class GymDatabase extends Dexie {
   outbox!: Table<LocalOperation, string>;
   syncState!: Table<{key: string; value: unknown}, string>;
   importSources!: Table<{key: string; value: unknown}, string>;
-  constructor(name = 'gym-log') {
+  constructor(name = 'ember') {
     super(name);
     this.version(1).stores({
       meta: '&key',

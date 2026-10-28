@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Monthly Hermes cron check (script-only, run from the main checkout): has a newer PostgreSQL
-# minor of the pinned major been released? If so, put one Gym Log kanban card on the board to
+# minor of the pinned major been released? If so, put one Ember kanban card on the board to
 # bump it; the dispatcher picks it up and its worker ships and reports the change. Prints
 # nothing when there is nothing to do or the card already exists. Read-only on the
 # repository, the container and the database.
@@ -36,7 +36,7 @@ while tag "$major.$((latest + 1))"; do
 	# A release without a bookworm build means the image moved to a newer Debian: that needs
 	# a deliberate decision, not a check that goes quiet.
 	tag "$major.$((latest + 1))-bookworm" || {
-		echo "postgres:$major.$((latest + 1)) has no bookworm tag; Gym Log's image pin needs a decision" >&2
+		echo "postgres:$major.$((latest + 1)) has no bookworm tag; Ember's image pin needs a decision" >&2
 		exit 1
 	}
 	latest=$((latest + 1))
@@ -46,13 +46,13 @@ done
 started=$(date +%s)
 # The idempotency key returns the existing card on later runs, so only a card created now
 # is news.
-created=$(hermes kanban create "Gym Log: bump PostgreSQL to $major.$latest" --json \
+created=$(hermes kanban create "Ember: bump PostgreSQL to $major.$latest" --json \
 	--assignee default --skill gym-log-operator --workspace "worktree:$repo" \
-	--idempotency-key "gym-log-postgres-$major.$latest" \
-	--body "Automated monthly check: postgres:$major.$latest-bookworm is out; Gym Log pins $major.$minor. Read the release notes from $major.$((minor + 1)) on for post-update steps, bump every pin (tests/postgres-image.test.ts lists them) and ship per AGENTS.md. Roll out: back up with the old scripts and restore-check it, recreate gym-log-local-postgres with ops/docker.sh compose -f ops/compose.local.yml up -d --wait right after the push, then rerun ops/backup.sh and ops/restore-check.sh on the new image. Keep the container name, database and daemon socket." |
+	--idempotency-key "ember-postgres-$major.$latest" \
+	--body "Automated monthly check: postgres:$major.$latest-bookworm is out; Ember pins $major.$minor. Read the release notes from $major.$((minor + 1)) on for post-update steps, bump every pin (tests/postgres-image.test.ts lists them) and ship per AGENTS.md. Roll out: back up with the old scripts and restore-check it, recreate ember-postgres with ops/docker.sh compose -f ops/compose.local.yml up -d --wait right after the push, then rerun ops/backup.sh and ops/restore-check.sh on the new image. Keep the container name, database and daemon socket." |
 	jq -r '.created_at') || {
 	echo 'could not create the kanban card' >&2
 	exit 1
 }
 ((created >= started)) || exit 0
-echo "Gym Log: PostgreSQL $major.$latest is out (running $major.$minor); queued a card to update it."
+echo "Ember: PostgreSQL $major.$latest is out (running $major.$minor); queued a card to update it."

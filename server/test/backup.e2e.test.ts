@@ -16,16 +16,16 @@ function run(script: string, ...args: string[]) {
 // restore-check.sh restores as the container superuser, like a real drill, so the unprivileged
 // development role needs explicit read access to compare and cannot drop the copy itself.
 function asSuperuser(name: string, command: string, ...args: string[]) {
-	assert.match(name, /^gym_log_restore_validation_[0-9]+$/);
+	assert.match(name, /^ember_restore_validation_[0-9]+$/);
 	const result = spawnSync(
 		resolve('../ops/docker.sh'),
-		['exec', 'gym-log-local-postgres', 'sh', '-c', command, 'sh', name, ...args],
+		['exec', 'ember-postgres', 'sh', '-c', command, 'sh', name, ...args],
 		{encoding: 'utf8'},
 	);
 	assert.equal(result.status, 0, result.stderr);
 }
 function grantValidationRead(name: string, role: string) {
-	assert.match(role, /^gym_log_[a-z_]+$/);
+	assert.match(role, /^ember_[a-z_]+$/);
 	asSuperuser(
 		name,
 		'exec psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -qc "GRANT SELECT ON ALL TABLES IN SCHEMA public TO $2"',
@@ -34,16 +34,16 @@ function grantValidationRead(name: string, role: string) {
 }
 const dropValidation = (name: string) => asSuperuser(name, 'exec dropdb -U "$POSTGRES_USER" "$1"');
 test('isolated pg_dump archive restores logical documents and ledger into a fresh validation database', async () => {
-	const url = new URL(process.env.GYM_LOG_DATABASE_URL!);
+	const url = new URL(process.env.EMBER_DATABASE_URL!);
 	assert.equal(url.hostname, '127.0.0.1');
 	assert.equal(url.port, '55439');
-	assert.equal(url.pathname, '/gym_log_dev', 'tests never run against the live gym_log database');
+	assert.equal(url.pathname, '/ember_dev', 'tests never run against the live ember database');
 	const adminUrl = new URL(url);
 	adminUrl.pathname = '/postgres';
 	const admin = await database(adminUrl.toString()).initialize();
-	const sourceName = `gym_log_backup_test_${process.pid}`;
-	const targetName = `gym_log_restore_validation_${process.pid}`;
-	const dir = mkdtempSync(join(tmpdir(), 'gym-backup-'));
+	const sourceName = `ember_backup_test_${process.pid}`;
+	const targetName = `ember_restore_validation_${process.pid}`;
+	const dir = mkdtempSync(join(tmpdir(), 'ember-backup-'));
 	const dump = join(dir, 'synthetic.dump');
 	let source: ReturnType<typeof database> | undefined;
 	let restored: ReturnType<typeof database> | undefined;
@@ -147,7 +147,7 @@ test('isolated pg_dump archive restores logical documents and ledger into a fres
 		const before = await restored.query('SELECT * FROM records');
 		const bad = join(dir, 'bad.dump');
 		writeFileSync(bad, 'not a PostgreSQL archive', {mode: 0o600});
-		const freshBadTarget = `gym_log_restore_validation_${process.pid}0`;
+		const freshBadTarget = `ember_restore_validation_${process.pid}0`;
 		assert.notEqual(run('restore-check.sh', bad, freshBadTarget).status, 0);
 		assert.equal(
 			(await admin.query('SELECT count(*)::int AS count FROM pg_database WHERE datname=$1', [freshBadTarget]))[0]
@@ -156,7 +156,7 @@ test('isolated pg_dump archive restores logical documents and ledger into a fres
 		);
 		assert.notEqual(run('restore-check.sh', bad, targetName).status, 0);
 		assert.deepEqual(await restored.query('SELECT * FROM records'), before);
-		assert.notEqual(run('restore-check.sh', dump, 'gym_log').status, 0);
+		assert.notEqual(run('restore-check.sh', dump, 'ember').status, 0);
 		assert.notEqual(run('backup.sh', 'unrelated', join(dir, 'unsafe.dump')).status, 0);
 	} finally {
 		await restored?.destroy();

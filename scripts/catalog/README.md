@@ -29,14 +29,14 @@ pair (also used by Chin Up (Assisted)) through `generated.py`.
 
 ## App-owned illustrations
 
-Missing illustrations may be generated specifically for Gym Log. They are marked
-`app-owned`, credited to `Gym Log (AI-assisted, gpt-image-2)`, and explicitly described as AI-assisted. This
+Missing illustrations may be generated specifically for Ember. They are marked
+`app-owned`, credited to `Ember (AI-assisted, gpt-image-2)`, and explicitly described as AI-assisted. This
 label describes app-created provenance, not a claim that AI output has exclusive
 copyright or a Creative Commons license. Existing licensed sources retain their
 original attribution and terms. Licensed Everkinetic reference drawings guide visual style only;
 no reference pixels are bundled in the new assets.
 
-Raw PNGs stay outside git in `~/.cache/gym-log-catalog/generated/`: one QA record
+Raw PNGs stay outside git in `~/.cache/ember-catalog/generated/`: one QA record
 per exercise in `qa/<slug>.json` (status `accepted`, `rejected` or `unreviewed`,
 SHA-256, attempts, notes) and accepted sources in `accepted/<slug>.png`. Like the
 licensed drawings, each exercise shows a start and a finish pose: a record's ordered
@@ -70,7 +70,7 @@ licensed drawings. It refuses mismatched source hashes and never replaces or
 edits a licensed illustration or its attribution. All inputs are validated before
 any asset changes. Run it after `generate.py` when rebuilding the licensed base.
 
-Each bundled drawing is credited `Gym Log (AI-assisted, gpt-image-2)`, license
+Each bundled drawing is credited `Ember (AI-assisted, gpt-image-2)`, license
 `app-owned`, with an adaptation note saying it is AI-assisted and not an
 Everkinetic or wger work.
 

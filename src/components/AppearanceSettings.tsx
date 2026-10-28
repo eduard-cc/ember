@@ -10,7 +10,7 @@ interface Appearance {
   version: 1;
   theme: Theme;
 }
-const key = 'gym-log:appearance:v1';
+const key = 'ember:appearance:v1';
 const defaults: Appearance = {version: 1, theme: 'system'};
 const oneOf = <T extends string>(values: readonly T[], value: unknown): value is T =>
   values.includes(value as T);

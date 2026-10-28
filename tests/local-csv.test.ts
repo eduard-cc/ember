@@ -6,7 +6,7 @@ import {expect, it} from 'vitest';
 import {localCsvMiddleware} from '../scripts/local-csv';
 
 it('serves only the explicitly configured private CSV at one local dev route without caching', async () => {
-  const dir = await mkdtemp(join(process.env.TMPDIR ?? process.cwd(), 'gym-csv-'));
+  const dir = await mkdtemp(join(process.env.TMPDIR ?? process.cwd(), 'ember-csv-'));
   try {
     const file = join(dir, 'synthetic.csv');
     await writeFile(file, 'synthetic;fixture');

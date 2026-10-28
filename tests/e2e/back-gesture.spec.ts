@@ -7,7 +7,7 @@ import {navigate, openSettings} from '../navigation';
 
 /** Extra history entries the app currently holds for open layers. */
 const depth = (page: Page) =>
-  page.evaluate(() => (history.state as {gymLogBackDepth?: number} | null)?.gymLogBackDepth ?? 0);
+  page.evaluate(() => (history.state as {emberBackDepth?: number} | null)?.emberBackDepth ?? 0);
 
 /** Browser Back that never navigates away; fails if the app document is replaced. */
 async function back(page: Page) {

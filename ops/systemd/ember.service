@@ -1,0 +1,33 @@
+# User unit installed by ops/install.sh. Serves the release `current` points at;
+# ops/deploy.sh and ops/rollback.sh switch the link and restart this unit.
+[Unit]
+Description=Ember (private, Tailscale Serve only)
+# The database runs in Ember's own rootless Docker daemon.
+Wants=ember-docker.service
+After=network.target ember-docker.service
+# Five starts within five minutes means it is crash-looping: give up and alert.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+OnFailure=ember-notify-failure@%n.service
+
+[Service]
+Type=simple
+# Shares the capped slice with the database; see ember-live.slice.
+Slice=ember-live.slice
+Nice=5
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+Environment=NODE_ENV=production
+# At boot the database container starts with its Docker daemon, a little after it.
+ExecStartPre=/usr/bin/timeout 120 /bin/sh -c 'until /usr/bin/docker --host unix://%t/ember/docker.sock exec ember-postgres pg_isready -q -U ember -d ember; do sleep 2; done'
+TimeoutStartSec=150
+WorkingDirectory=%h/.local/share/ember/current/server
+EnvironmentFile=%h/.config/ember/runtime.env
+ExecStart=%h/.local/bin/node %h/.local/share/ember/current/server/dist/trial.js
+Restart=on-failure
+RestartSec=5
+# Alert once when systemd gives up, not on every automatic restart.
+RestartMode=direct
+
+[Install]
+WantedBy=default.target

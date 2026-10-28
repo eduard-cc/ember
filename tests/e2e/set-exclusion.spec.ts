@@ -50,7 +50,7 @@ const mostReps = (page: Page) =>
 
 test('a flagged set can be excluded from records and included again', async ({page}) => {
   await page.addInitScript(
-    (value) => localStorage.setItem('gym-log:v1', JSON.stringify(value)),
+    (value) => localStorage.setItem('ember:v1', JSON.stringify(value)),
     seeded,
   );
   await page.goto('/?demo=1');
@@ -100,7 +100,7 @@ test('a flagged set can be excluded from records and included again', async ({pa
 
 test('the source workout excludes and includes any set reversibly', async ({page}) => {
   await page.addInitScript(
-    (value) => localStorage.setItem('gym-log:v1', JSON.stringify(value)),
+    (value) => localStorage.setItem('ember:v1', JSON.stringify(value)),
     seeded,
   );
   await page.goto('/?demo=1');
@@ -145,7 +145,7 @@ test('repeating a workout with flagged and excluded sets starts clean on Pixel 6
   });
   await page.clock.install({time: new Date('2026-03-01T10:00:00')});
   await page.addInitScript(
-    (value) => localStorage.setItem('gym-log:v1', JSON.stringify(value)),
+    (value) => localStorage.setItem('ember:v1', JSON.stringify(value)),
     withExcluded,
   );
   await page.goto('/?demo=1');

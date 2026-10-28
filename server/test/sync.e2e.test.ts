@@ -427,7 +427,7 @@ test('cursor is strictly bounded and pages preserve order', async () => {
 });
 test('database write failure rolls back record sequence and ledger; retry succeeds', async () => {
 	const s = await env();
-	const db = await database(process.env.GYM_LOG_DATABASE_URL!).initialize();
+	const db = await database(process.env.EMBER_DATABASE_URL!).initialize();
 	const fail = op();
 	const first = op();
 	try {
@@ -457,7 +457,7 @@ test('database write failure rolls back record sequence and ledger; retry succee
 });
 test('delayed first transaction cannot be skipped by a concurrent cursor reader', async () => {
 	const s = await env();
-	const db = await database(process.env.GYM_LOG_DATABASE_URL!).initialize();
+	const db = await database(process.env.EMBER_DATABASE_URL!).initialize();
 	const slow = op(),
 		fast = op();
 	try {

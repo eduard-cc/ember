@@ -39,7 +39,7 @@ test('Strong import roundtrip preserves source occurrences and identical-file no
     ],
   };
   const draft = {...native, id: 'private-draft', name: 'Draft preserved'};
-  await page.addInitScript((state) => localStorage.setItem('gym-log:v1', JSON.stringify(state)), {
+  await page.addInitScript((state) => localStorage.setItem('ember:v1', JSON.stringify(state)), {
     version: 1,
     dataset: null,
     active: draft,

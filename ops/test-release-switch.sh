@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2015 # every fail() exits, so A && B || fail is intended
 # Local check of the release switch, health check and rollback stack in ops/lib.sh,
-# against a throwaway user unit and synthetic releases. Never touches gym-log.service,
+# against a throwaway user unit and synthetic releases. Never touches ember.service,
 # the live releases or the database. Needs systemd --user, so it is not run in CI.
 set -Eeuo pipefail
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
-sandbox=$(mktemp -d "${TMPDIR:-/tmp}/gym-log-release-test.XXXXXX")
-unit=gym-log-release-test-$$.service
+sandbox=$(mktemp -d "${TMPDIR:-/tmp}/ember-release-test.XXXXXX")
+unit=ember-release-test-$$.service
 units=$HOME/.config/systemd/user
 port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
 cleanup() {
@@ -19,16 +19,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
-export GYM_LOG_HOME=$sandbox/home GYM_LOG_ENV=$sandbox/runtime.env GYM_LOG_UNIT=$unit
-mkdir -p "$GYM_LOG_HOME/releases"
-printf 'GYM_LOG_PORT="%s"\nGYM_LOG_ORIGIN="http://127.0.0.1:%s"\nGYM_LOG_WEB_ROOT="%s"\n' \
-	"$port" "$port" "$GYM_LOG_HOME/current/dist" >"$GYM_LOG_ENV"
+export EMBER_HOME=$sandbox/home EMBER_ENV=$sandbox/runtime.env EMBER_UNIT=$unit
+mkdir -p "$EMBER_HOME/releases"
+printf 'EMBER_PORT="%s"\nEMBER_ORIGIN="http://127.0.0.1:%s"\nEMBER_WEB_ROOT="%s"\n' \
+	"$port" "$port" "$EMBER_HOME/current/dist" >"$EMBER_ENV"
 
 # A synthetic release serves its own shell and the files its service worker precaches;
 # a broken one exits at startup. Like the real server, it refuses PNGs under assets/, so
 # an "unserved" release, whose worker precaches one, 404s on it.
 release() {
-	local dir=$GYM_LOG_HOME/releases/$1 extra=
+	local dir=$EMBER_HOME/releases/$1 extra=
 	mkdir -p "$dir/dist/assets" "$dir/server/dist"
 	echo "<!doctype html><title>$1</title>" >"$dir/dist/index.html"
 	echo "{\"name\": \"$1\"}" >"$dir/dist/manifest.webmanifest"
@@ -37,7 +37,7 @@ release() {
 		echo "synthetic drawing $1" >"$dir/dist/assets/drawing-$1.png"
 		extra=",\"/assets/drawing-$1.png\""
 	fi
-	printf 'const CACHE = "gym-log-shell-%s";\nconst URLS = ["/index.html","/assets/index-%s.js"%s,"/manifest.webmanifest"];\n' \
+	printf 'const CACHE = "ember-shell-%s";\nconst URLS = ["/index.html","/assets/index-%s.js"%s,"/manifest.webmanifest"];\n' \
 		"$1" "$1" "$extra" >"$dir/dist/sw.js"
 	if [[ ${2:-} == broken ]]; then
 		echo 'process.exit(1)' >"$dir/server/dist/trial.js"
@@ -46,21 +46,21 @@ release() {
 			const {existsSync, readFileSync} = require('node:fs');
 			require('node:http').createServer((req, res) => {
 				if (req.url === '/api/v1/health') return res.end('{"status":"ready"}');
-				const file = process.env.GYM_LOG_WEB_ROOT + (req.url === '/' ? '/index.html' : req.url);
+				const file = process.env.EMBER_WEB_ROOT + (req.url === '/' ? '/index.html' : req.url);
 				if (/^\/assets\/.*\.png$/.test(req.url) || !existsSync(file)) {
 					res.statusCode = 404;
 					return res.end();
 				}
 				res.end(readFileSync(file));
-			}).listen(+process.env.GYM_LOG_PORT, '127.0.0.1');
+			}).listen(+process.env.EMBER_PORT, '127.0.0.1');
 		EOF
 	fi
 	touch "$dir/.complete"
 }
 cat >"$units/$unit" <<EOF
 [Service]
-EnvironmentFile=$GYM_LOG_ENV
-ExecStart=$HOME/.local/bin/node $GYM_LOG_HOME/current/server/dist/trial.js
+EnvironmentFile=$EMBER_ENV
+ExecStart=$HOME/.local/bin/node $EMBER_HOME/current/server/dist/trial.js
 EOF
 systemctl --user daemon-reload
 
@@ -111,24 +111,24 @@ grep -q '/assets/drawing-unserved.png' "$sandbox/unserved.log" || fail 'the fail
 roll_back >/dev/null && [[ $(current_release) == aaa ]] && serving aaa || fail 'an unserved release should roll back to aaa'
 # A release missing its service worker is not a complete shell either.
 release noworker
-rm -- "$GYM_LOG_HOME/releases/noworker/dist/sw.js"
+rm -- "$EMBER_HOME/releases/noworker/dist/sw.js"
 point_current noworker
 restart_and_check 2>/dev/null && fail 'a release without sw.js must fail the health check'
 roll_back >/dev/null && [[ $(current_release) == aaa ]] || fail 'a release without sw.js should roll back to aaa'
 
 # A missing or incomplete release is skipped, never switched to.
 deploy bbb && deploy ccc || fail 'redeploys'
-rm -f -- "$GYM_LOG_HOME/releases/bbb/.complete"
+rm -f -- "$EMBER_HOME/releases/bbb/.complete"
 roll_back >/dev/null && serving aaa || fail 'rollback should skip incomplete bbb'
 
 # Extra-endpoint tripwire. A file stands in for an extra health endpoint; the "harmful" release
 # removes it on startup, as if the gym switch had taken it down.
-touch "$GYM_LOG_HOME/releases/bbb/.complete"
+touch "$EMBER_HOME/releases/bbb/.complete"
 deploy bbb || fail 'redeploy bbb'
-export GYM_LOG_EXTRA_HEALTH_URLS="file://$sandbox/extra-health" GYM_LOG_EXTRA_GRACE=4
+export EMBER_EXTRA_HEALTH_URLS="file://$sandbox/extra-health" EMBER_EXTRA_GRACE=4
 release harmful
 sed -i "1i require('node:fs').rmSync('$sandbox/extra-health', {force: true});" \
-	"$GYM_LOG_HOME/releases/harmful/server/dist/trial.js"
+	"$EMBER_HOME/releases/harmful/server/dist/trial.js"
 alerts=$sandbox/alerts
 notify() { echo "$1" >>"$alerts"; }
 switched() { # <sha> <extra_before>; prints switch_release's exit status
@@ -151,24 +151,24 @@ for _ in $(seq 1 50); do
 done
 [[ $shell_up == true ]] || { kill "$shell_pid" 2>/dev/null; fail 'the fake HTML shell server did not start'; }
 shell_healthy=false
-GYM_LOG_EXTRA_HEALTH_URLS="http://127.0.0.1:$shell_port/" extra_healthy && shell_healthy=true
+EMBER_EXTRA_HEALTH_URLS="http://127.0.0.1:$shell_port/" extra_healthy && shell_healthy=true
 kill "$shell_pid" && wait "$shell_pid" 2>/dev/null || true
 [[ $shell_healthy == false ]] || fail 'an HTML page must not count as a healthy endpoint'
 # runtime.env supplies the URLs when the environment does not; the environment wins.
-echo "GYM_LOG_EXTRA_HEALTH_URLS=\"file://$sandbox/from-env-file\"" >>"$GYM_LOG_ENV"
-[[ $(GYM_LOG_EXTRA_HEALTH_URLS='' extra_urls) == "file://$sandbox/from-env-file" ]] ||
-	fail 'extra_urls should read GYM_LOG_EXTRA_HEALTH_URLS from runtime.env'
+echo "EMBER_EXTRA_HEALTH_URLS=\"file://$sandbox/from-env-file\"" >>"$EMBER_ENV"
+[[ $(EMBER_EXTRA_HEALTH_URLS='' extra_urls) == "file://$sandbox/from-env-file" ]] ||
+	fail 'extra_urls should read EMBER_EXTRA_HEALTH_URLS from runtime.env'
 [[ $(extra_urls) == "file://$sandbox/extra-health" ]] ||
-	fail 'the GYM_LOG_EXTRA_HEALTH_URLS environment variable should override runtime.env'
+	fail 'the EMBER_EXTRA_HEALTH_URLS environment variable should override runtime.env'
 # A malformed list must stop the deploy instead of silently disabling the guard.
-(GYM_LOG_EXTRA_HEALTH_URLS="'http://127.0.0.1:1/x'" check_config) 2>/dev/null &&
+(EMBER_EXTRA_HEALTH_URLS="'http://127.0.0.1:1/x'" check_config) 2>/dev/null &&
 	fail 'check_config must reject a quoted extra health URL'
-(GYM_LOG_EXTRA_HEALTH_URLS='http://127.0.0.1:1/x #note' check_config) 2>/dev/null &&
+(EMBER_EXTRA_HEALTH_URLS='http://127.0.0.1:1/x #note' check_config) 2>/dev/null &&
 	fail 'check_config must reject an extra health URL list with a comment'
 check_config || fail 'check_config should accept the test URLs'
 [[ $(switched harmful true) == 1 ]] || fail 'a switch that breaks the extra endpoints must roll back'
 [[ $(current_release) == bbb ]] && serving bbb || fail 'extra-endpoint breakage should roll back to bbb'
-grep -q 'The extra health endpoints stopped responding after Gym Log deployed harmful.*rolled back to bbb.*STILL unhealthy' "$alerts" ||
+grep -q 'The extra health endpoints stopped responding after Ember deployed harmful.*rolled back to bbb.*STILL unhealthy' "$alerts" ||
 	fail 'extra-endpoint breakage must alert Discord'
 # Extra endpoints already down before the deploy: they cannot gate the switch.
 [[ $(switched ccc false) == 0 ]] && serving ccc || fail 'unhealthy extra endpoints before the deploy must not block it'
@@ -193,7 +193,7 @@ grep -q 'NOT rolled back because this release applied database migrations' "$ale
 	fail 'a migrated release must still alert Discord'
 touch "$sandbox/extra-health"
 # A link that cannot be switched changes nothing and does not roll back.
-mkdir -p "$GYM_LOG_HOME/current.tmp/blocker"
+mkdir -p "$EMBER_HOME/current.tmp/blocker"
 [[ $(switched ccc true) == 3 && $(current_release) == harmful ]] || fail 'a failed link switch must leave the release alone'
-rm -rf -- "$GYM_LOG_HOME/current.tmp"
+rm -rf -- "$EMBER_HOME/current.tmp"
 echo 'release switch checks passed'

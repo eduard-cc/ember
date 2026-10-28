@@ -21,8 +21,8 @@ source "$SCRIPT_DIR/docker-host.sh"
 }
 KEEP_RELEASES=5
 KEEP_BACKUPS=3
-BACKUPS=${GYM_LOG_BACKUPS:-$HOME/.local/share/gym-log-backups}
-REPO=${GYM_LOG_GITHUB_REPO:-eduard-cc/gym-log}
+BACKUPS=${EMBER_BACKUPS:-$HOME/.local/share/ember-backups}
+REPO=${EMBER_GITHUB_REPO:-eduard-cc/gym-log}
 GIT=(git -C "$SCRIPT_DIR/..")
 
 lock
@@ -91,32 +91,32 @@ release_migrations=$(cd "$release/server" && node -e '
 	const {database} = require("./dist/db/database");
 	for (const m of database("postgres://unused@127.0.0.1/unused").options.migrations) console.log(m.name);
 ') || die 'could not list the release migrations'
-applied=$(docker exec gym-log-local-postgres sh -c \
-	'exec psql -U "$POSTGRES_USER" -d gym_log -v ON_ERROR_STOP=1 -Atc "SELECT name FROM migrations"') ||
-	die 'could not read applied migrations from gym_log'
+applied=$(docker exec ember-postgres sh -c \
+	'exec psql -U "$POSTGRES_USER" -d ember -v ON_ERROR_STOP=1 -Atc "SELECT name FROM migrations"') ||
+	die 'could not read applied migrations from ember'
 unknown=$(comm -13 <(sort <<<"$release_migrations") <(sort <<<"$applied"))
 [[ -z $unknown ]] || die "the database has migrations this release lacks ($(tr '\n' ' ' <<<"$unknown")); refusing to run old code on a newer schema"
 pending=$(comm -23 <(sort <<<"$release_migrations") <(sort <<<"$applied"))
 if [[ -n $pending ]]; then
 	log "release adds migrations: $(tr '\n' ' ' <<<"$pending")"
 	[[ -d $BACKUPS ]] || mkdir -m 700 -- "$BACKUPS"
-	backup=$BACKUPS/gym_log-$(date +%Y%m%dT%H%M%S)-pre-deploy-${sha:0:12}.dump
-	"$SCRIPT_DIR/backup.sh" gym_log "$backup" || die 'pre-migration backup failed; nothing was deployed'
-	validation=gym_log_restore_validation_$(date +%s)
+	backup=$BACKUPS/ember-$(date +%Y%m%dT%H%M%S)-pre-deploy-${sha:0:12}.dump
+	"$SCRIPT_DIR/backup.sh" ember "$backup" || die 'pre-migration backup failed; nothing was deployed'
+	validation=ember_restore_validation_$(date +%s)
 	"$SCRIPT_DIR/restore-check.sh" "$backup" "$validation" ||
 		die "restore check of $backup failed; nothing was deployed"
 	# restore-check.sh leaves its validation copy for the caller; compare, then drop it.
 	count='SELECT (SELECT count(*) FROM public.records) || chr(32) || (SELECT count(*) FROM public.migrations)'
-	live=$(docker exec gym-log-local-postgres sh -c 'exec psql -U "$POSTGRES_USER" -d gym_log -Atc "$1"' sh "$count") || live=
-	restored=$(docker exec gym-log-local-postgres sh -c 'exec psql -U "$POSTGRES_USER" -d "$1" -Atc "$2"' sh "$validation" "$count") ||
+	live=$(docker exec ember-postgres sh -c 'exec psql -U "$POSTGRES_USER" -d ember -Atc "$1"' sh "$count") || live=
+	restored=$(docker exec ember-postgres sh -c 'exec psql -U "$POSTGRES_USER" -d "$1" -Atc "$2"' sh "$validation" "$count") ||
 		restored=
-	docker exec gym-log-local-postgres sh -c 'exec dropdb -U "$POSTGRES_USER" "$1"' sh "$validation" ||
+	docker exec ember-postgres sh -c 'exec dropdb -U "$POSTGRES_USER" "$1"' sh "$validation" ||
 		log "could not drop $validation; drop it by hand" >&2
 	[[ -n $live && $live == "$restored" ]] ||
-		die "restored copy differs from gym_log (records/migrations $restored vs $live); nothing was deployed"
+		die "restored copy differs from ember (records/migrations $restored vs $live); nothing was deployed"
 	log "restore-tested backup kept at $backup"
 	# Only pre-deploy backups rotate; manual archives are never touched.
-	find "$BACKUPS" -maxdepth 1 -name 'gym_log-*-pre-deploy-*.dump' -printf '%f\n' | sort | head -n -"$KEEP_BACKUPS" |
+	find "$BACKUPS" -maxdepth 1 -name 'ember-*-pre-deploy-*.dump' -printf '%f\n' | sort | head -n -"$KEEP_BACKUPS" |
 		while read -r old; do rm -f -- "${BACKUPS:?}/$old"; done
 fi
 

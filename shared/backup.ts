@@ -4,7 +4,7 @@ import {AppStateSchema, BodyWeightSchema, LocalOperationSchema} from './contract
 
 export const BackupSchema = z
   .object({
-    format: z.literal('gym-log-backup'),
+    format: z.literal('ember-backup'),
     version: z.union([z.literal(1), z.literal(2)]),
     bodyWeights: z.array(BodyWeightSchema).optional(),
     exportedAt: z.iso.datetime(),

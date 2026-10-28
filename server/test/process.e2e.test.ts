@@ -23,7 +23,7 @@ test('compiled API binds loopback and serves auth, replay and readiness over TCP
 	const password = randomBytes(32).toString('hex');
 	const port = await freePort();
 	const child = spawn(process.execPath, ['dist/main.js'], {
-		env: {...process.env, GYM_LOG_PORT: String(port), GYM_LOG_OWNER_PASSWORD_HASH: await argon2.hash(password)},
+		env: {...process.env, EMBER_PORT: String(port), EMBER_OWNER_PASSWORD_HASH: await argon2.hash(password)},
 		stdio: ['ignore', 'pipe', 'pipe'],
 	});
 	let output = '';
@@ -38,7 +38,7 @@ test('compiled API binds loopback and serves auth, replay and readiness over TCP
 		}
 		assert.match(output, new RegExp(`127\\.0\\.0\\.1:${port}\\b`));
 		const url = `http://127.0.0.1:${port}/api/v1`;
-		const origin = process.env.GYM_LOG_ORIGIN!;
+		const origin = process.env.EMBER_ORIGIN!;
 		const health = await fetch(url + '/health');
 		assert.equal(health.status, 200);
 		assert.equal(health.headers.get('cache-control'), 'no-store');

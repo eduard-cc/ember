@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Gym Log",
-  "short_name": "Gym Log",
+  "name": "Ember",
+  "short_name": "Ember",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -118,7 +118,7 @@ export async function exportBackup(repository: WorkoutRepository): Promise<strin
   const db = repository.db;
   return db.transaction('r', db.tables, async () => {
     const backup: Backup = {
-      format: 'gym-log-backup',
+      format: 'ember-backup',
       version: 2,
       bodyWeights: await db.bodyWeights.toArray(),
       exportedAt: new Date().toISOString(),

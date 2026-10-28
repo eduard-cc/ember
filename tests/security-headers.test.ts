@@ -12,7 +12,7 @@ describe('enforced content security policy', () => {
     // blocking the theme script, so pin it against the actual index.html.
     const html = readFileSync('index.html', 'utf8');
     const inline = html.split('<script>')[1].split('</script>')[0];
-    expect(inline).toContain('gym-log:appearance:v1');
+    expect(inline).toContain('ember:appearance:v1');
     expect(inlineScriptHashes(html)).toEqual([sha(inline)]);
     const csp = securityHeaders(html)['Content-Security-Policy'];
     expect(csp).toContain(`script-src 'self' ${sha(inline)};`);

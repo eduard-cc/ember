@@ -17,7 +17,7 @@ import {flushSync} from 'react-dom';
  * back resets that tap. Declined backs therefore reuse the existing entry instead of pushing a
  * new one, which Chrome would mark skippable and the next back would leave the app.
  */
-const KEY = 'gymLogBackDepth';
+const KEY = 'emberBackDepth';
 type Layer = {close: () => void};
 const layers: Layer[] = [];
 let depth = 0;

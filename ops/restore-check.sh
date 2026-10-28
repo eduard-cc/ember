@@ -2,13 +2,13 @@
 # Restore drills only: never an in-place replacement or ordinary database restore.
 set -euo pipefail
 umask 077
-[[ $# == 2 ]] || { printf '%s\n' 'Usage: restore-check.sh archive.dump gym_log_restore_validation_ID' >&2; exit 1; }
+[[ $# == 2 ]] || { printf '%s\n' 'Usage: restore-check.sh archive.dump ember_restore_validation_ID' >&2; exit 1; }
 archive=$1; target=$2
-[[ "$target" =~ ^gym_log_restore_validation_[0-9]+$ ]] || { printf '%s\n' 'Refusing non-validation restore target.' >&2; exit 1; }
+[[ "$target" =~ ^ember_restore_validation_[0-9]+$ ]] || { printf '%s\n' 'Refusing non-validation restore target.' >&2; exit 1; }
 [[ -f "$archive" && ! -L "$archive" ]] || { printf '%s\n' 'Archive must be a regular non-symlink file.' >&2; exit 1; }
 # shellcheck source=ops/docker-host.sh
 source "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/docker-host.sh"
-container=gym-log-local-postgres
+container=ember-postgres
 actual=$(docker inspect --format '{{.Config.Image}} {{.State.Health.Status}} {{range (index .NetworkSettings.Ports "5432/tcp")}}{{.HostIp}}:{{.HostPort}}{{end}}' "$container")
 [[ "$actual" == 'postgres:17.11-bookworm healthy 127.0.0.1:55439' ]] || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
 # Preflight never mutates an existing target; validation and creation both fail closed.

@@ -4,7 +4,7 @@ import {cn} from '../utils/cn';
 
 /**
  * A titled settings group: a small heading and optional one-line
- * context above the group's content. Gym Log adds `action`, a control on the title row (Add weight,
+ * context above the group's content. Ember adds `action`, a control on the title row (Add weight,
  * Import CSV), so a long description keeps the full width under it. `titleAs` is the title's
  * heading level: `h3` inside the Settings dialog, whose own title is an `h2`.
  */
@@ -41,7 +41,7 @@ export function SettingsGroup({
 
 /**
  * Rows of one group share a single bordered surface. `divide-border` and `border-border` are
- * explicit because Gym Log has no global border-color default; the radius is 0.
+ * explicit because Ember has no global border-color default; the radius is 0.
  */
 export function SettingsList({
   as: Tag = 'div',

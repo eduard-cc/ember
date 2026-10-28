@@ -133,7 +133,7 @@ test('replace requires exact confirmation, retains evidence and never copies old
   );
   expect(await target.db.syncState.count()).toBe(0);
 });
-test.each(['{bad', JSON.stringify({format: 'gym-log-backup', version: 99})])(
+test.each(['{bad', JSON.stringify({format: 'ember-backup', version: 99})])(
   'invalid JSON/schema preserves existing data: %s',
   async (text) => {
     const target = repo();

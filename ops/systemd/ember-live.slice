@@ -1,5 +1,5 @@
-# User slice installed by ops/install.sh. Holds the live app (gym-log.service), Gym Log's
-# Docker daemon, its PostgreSQL container and its Tailscale device (gym-log-tailscale.service),
+# User slice installed by ops/install.sh. Holds the live app (ember.service), Ember's
+# Docker daemon, its PostgreSQL container and its Tailscale device (ember-tailscale.service),
 # so a runaway gym process cannot starve other services on the host. Hitting the memory cap can stop any of them,
 # including the Tailscale device that serves the app's address; systemd restarts it.
 # System services sit outside the user manager, whose CPU weights do not reach them, so
@@ -7,7 +7,7 @@
 # I/O weights need the io controller, which this host does not delegate to user units.
 # Most of the memory in use is reclaimable page cache; the app and database need ~200 MB.
 [Unit]
-Description=Gym Log live app and database (capped)
+Description=Ember live app and database (capped)
 
 [Slice]
 CPUWeight=20

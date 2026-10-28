@@ -71,9 +71,9 @@ test('logout requires CSRF and revokes the PostgreSQL session', async () => {
 	}
 });
 test('database expiry makes the session unauthorized', async () => {
-	process.env.GYM_LOG_SESSION_TTL_SECONDS = '1';
+	process.env.EMBER_SESSION_TTL_SECONDS = '1';
 	const {app, http, cookie} = await setup();
-	process.env.GYM_LOG_SESSION_TTL_SECONDS = '86400';
+	process.env.EMBER_SESSION_TTL_SECONDS = '86400';
 	try {
 		await new Promise((r) => setTimeout(r, 1100));
 		await http.get('/api/v1/session').set('Cookie', cookie).expect(401);

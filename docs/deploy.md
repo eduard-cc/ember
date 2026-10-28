@@ -12,13 +12,13 @@ Read before squashing onto `main`, deploying, adding a static asset type, touchi
 - `ops/deploy.sh <commit>` sources `ops/lib.sh` from the checkout it is run from (`~/src/gym-log`); the release it builds with `git archive` never updates those scripts. Fast-forward that checkout first (`git fetch && git merge --ff-only origin/main`, keeping untracked files), or the deploy runs an old health check.
 - Never build, install or run dev servers in `~/src/gym-log` itself: it must stay a clean `main` for `ops/deploy.sh`. Work in a worktree.
 - The deploy refuses commits not on `origin/main` or whose latest code commit has no successful push CI run (docs-only commits inherit their code ancestor's run; cancelled runs don't count).
-- A release that adds migrations is preceded by `ops/backup.sh` plus `ops/restore-check.sh`, and a count comparison against `gym_log`. Migrations are never rolled back, and a release lacking migrations the database already has is refused.
-- Undo with `ops/rollback.sh` (previous healthy release from `~/.local/share/gym-log/history`).
+- A release that adds migrations is preceded by `ops/backup.sh` plus `ops/restore-check.sh`, and a count comparison against `ember`. Migrations are never rolled back, and a release lacking migrations the database already has is refused.
+- Undo with `ops/rollback.sh` (previous healthy release from `~/.local/share/ember/history`).
 
 ## Live app
 
-- The live origin is `GYM_LOG_ORIGIN` in `~/.config/gym-log/runtime.env`. It is served by Gym Log's own tailnet device (`gym-log-tailscale.service`), so it does not appear in the host's plain `tailscale serve status`.
-- Verify a deploy by comparing live `/sw.js` with `~/.local/share/gym-log/releases/<sha>/dist/sw.js`.
+- The live origin is `EMBER_ORIGIN` in `~/.config/ember/runtime.env`. It is served by Ember's own tailnet device (`ember-tailscale.service`), so it does not appear in the host's plain `tailscale serve status`.
+- Verify a deploy by comparing live `/sw.js` with `~/.local/share/ember/releases/<sha>/dist/sw.js`.
 - The server gzips responses only for clients that send `Accept-Encoding` (never Range requests). The plain-`curl` health check sends none, so its byte-for-byte comparisons still see the uncompressed files.
 - Small images are inlined into the JS bundle by Vite, so a live check must compare hashes of non-inlined assets rather than grep for file names.
 

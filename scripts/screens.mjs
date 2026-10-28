@@ -1,12 +1,12 @@
 // Screenshot and pixel-compare harness for visual-parity work. Not a test suite; not run in CI.
 //   node scripts/screens.mjs capture <outDir>
 //   node scripts/screens.mjs compare <beforeDir> <afterDir>
-// Capture needs the dev server already running on GYM_LOG_E2E_PORT (default 5188).
+// Capture needs the dev server already running on EMBER_E2E_PORT (default 5188).
 import {chromium} from '@playwright/test';
 import {mkdirSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 
-const port = Number(process.env.GYM_LOG_E2E_PORT ?? 5188);
+const port = Number(process.env.EMBER_E2E_PORT ?? 5188);
 const viewports = [
   {name: 'mobile', width: 390, height: 844},
   {name: 'desktop', width: 1440, height: 1000},

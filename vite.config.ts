@@ -14,7 +14,7 @@ export default defineConfig({
       name: 'private-local-csv',
       apply: 'serve',
       configureServer(server) {
-        const localCsv = localCsvMiddleware(process.env.GYM_LOG_CSV);
+        const localCsv = localCsvMiddleware(process.env.EMBER_CSV);
         // Connect ignores returned promises; the middleware handles its own read errors.
         server.middlewares.use((req, res, next) => void localCsv(req, res, next));
       },
@@ -23,9 +23,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/v1': {
-        target: `http://127.0.0.1:${process.env.GYM_LOG_TEST_API_PORT ?? '5190'}`,
-        ...(process.env.GYM_LOG_TEST_HARNESS === '1'
-          ? {headers: {'Tailscale-User-Login': 'gym-log-browser@example.invalid'}}
+        target: `http://127.0.0.1:${process.env.EMBER_TEST_API_PORT ?? '5190'}`,
+        ...(process.env.EMBER_TEST_HARNESS === '1'
+          ? {headers: {'Tailscale-User-Login': 'ember-browser@example.invalid'}}
           : {}),
       },
     },

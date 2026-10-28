@@ -1,32 +1,32 @@
 # shellcheck shell=bash
 # Shared by deploy.sh and rollback.sh; not executable on its own.
 #
-# Layout (GYM_LOG_HOME, default ~/.local/share/gym-log):
+# Layout (EMBER_HOME, default ~/.local/share/ember):
 #   releases/<sha>/   built web shell (dist/) and server (server/dist, production node_modules)
-#   current           symlink to the serving release; gym-log.service and GYM_LOG_WEB_ROOT use it
+#   current           symlink to the serving release; ember.service and EMBER_WEB_ROOT use it
 #   history           healthy deploys, oldest first; rollback pops it like a stack
 #   deploy.lock       held by every deploy or rollback
 set -Eeuo pipefail
 shopt -s inherit_errexit
 
 export PATH=$HOME/.local/bin:$PATH
-GYM_LOG_HOME=${GYM_LOG_HOME:-$HOME/.local/share/gym-log}
-GYM_LOG_ENV=${GYM_LOG_ENV:-$HOME/.config/gym-log/runtime.env}
-GYM_LOG_UNIT=${GYM_LOG_UNIT:-gym-log.service}
-RELEASES=$GYM_LOG_HOME/releases
-CURRENT=$GYM_LOG_HOME/current
-HISTORY=$GYM_LOG_HOME/history
+EMBER_HOME=${EMBER_HOME:-$HOME/.local/share/ember}
+EMBER_ENV=${EMBER_ENV:-$HOME/.config/ember/runtime.env}
+EMBER_UNIT=${EMBER_UNIT:-ember.service}
+RELEASES=$EMBER_HOME/releases
+CURRENT=$EMBER_HOME/current
+HISTORY=$EMBER_HOME/history
 
-log() { echo "gym-log-${ACTION:-ops}: $*"; }
+log() { echo "ember-${ACTION:-ops}: $*"; }
 die() {
 	log "ERROR: $*" >&2
 	exit 1
 }
-notify() { hermes send --quiet --to discord --subject '[gym-log]' "$1" || log 'could not send the Discord alert' >&2; }
+notify() { hermes send --quiet --to discord --subject '[ember]' "$1" || log 'could not send the Discord alert' >&2; }
 
 lock() {
 	mkdir -p "$RELEASES"
-	exec 9>"$GYM_LOG_HOME/deploy.lock"
+	exec 9>"$EMBER_HOME/deploy.lock"
 	flock -n 9 || {
 		log 'another deploy or rollback is running' >&2
 		exit 75
@@ -38,23 +38,23 @@ current_release() { [[ -L $CURRENT ]] && basename -- "$(readlink -- "$CURRENT")"
 # Read one non-secret value from runtime.env without sourcing the secrets in it.
 setting() {
 	local value
-	value=$(sed -nE "s/^$1=//p" "$GYM_LOG_ENV" | tail -n 1)
+	value=$(sed -nE "s/^$1=//p" "$EMBER_ENV" | tail -n 1)
 	value=${value#\"}
 	echo "${value%\"}"
 }
 
 check_config() {
-	[[ -f $GYM_LOG_ENV ]] || die "missing $GYM_LOG_ENV"
-	[[ $(setting GYM_LOG_WEB_ROOT) == "$CURRENT/dist" ]] || die "GYM_LOG_WEB_ROOT in $GYM_LOG_ENV must be $CURRENT/dist"
-	[[ $(setting GYM_LOG_PORT) =~ ^[0-9]+$ ]] || die "GYM_LOG_PORT missing from $GYM_LOG_ENV"
-	[[ -n $(setting GYM_LOG_ORIGIN) ]] || die "GYM_LOG_ORIGIN missing from $GYM_LOG_ENV"
+	[[ -f $EMBER_ENV ]] || die "missing $EMBER_ENV"
+	[[ $(setting EMBER_WEB_ROOT) == "$CURRENT/dist" ]] || die "EMBER_WEB_ROOT in $EMBER_ENV must be $CURRENT/dist"
+	[[ $(setting EMBER_PORT) =~ ^[0-9]+$ ]] || die "EMBER_PORT missing from $EMBER_ENV"
+	[[ -n $(setting EMBER_ORIGIN) ]] || die "EMBER_ORIGIN missing from $EMBER_ENV"
 	# A malformed value would make the extra endpoints look down on every deploy, which silently
 	# switches the guard off.
 	local url urls
 	read -ra urls <<<"$(extra_urls)"
-	((${#urls[@]})) || die "GYM_LOG_EXTRA_HEALTH_URLS in $GYM_LOG_ENV is empty"
+	((${#urls[@]})) || die "EMBER_EXTRA_HEALTH_URLS in $EMBER_ENV is empty"
 	for url in "${urls[@]}"; do
-		[[ $url =~ ^(https?|file)://[^[:space:]\'\"#]+$ ]] || die "invalid extra health URL '$url' in GYM_LOG_EXTRA_HEALTH_URLS"
+		[[ $url =~ ^(https?|file)://[^[:space:]\'\"#]+$ ]] || die "invalid extra health URL '$url' in EMBER_EXTRA_HEALTH_URLS"
 	done
 }
 
@@ -116,13 +116,13 @@ shell_served() {
 # loopback and through Serve, and Serve returns this release's shell and every file its
 # service worker precaches. Startup runs migrations, so the first answer may take a while.
 healthy() {
-	local port origin pid deadline=$((SECONDS + ${GYM_LOG_START_TIMEOUT:-120}))
+	local port origin pid deadline=$((SECONDS + ${EMBER_START_TIMEOUT:-120}))
 	HEALTH_DETAIL=
-	port=$(setting GYM_LOG_PORT)
-	origin=$(setting GYM_LOG_ORIGIN)
+	port=$(setting EMBER_PORT)
+	origin=$(setting EMBER_ORIGIN)
 	until curl -fsS --max-time 5 --output /dev/null "http://127.0.0.1:$port/api/v1/health" 2>/dev/null; do
-		systemctl --user is-active --quiet "$GYM_LOG_UNIT" || {
-			log "$GYM_LOG_UNIT is not running" >&2
+		systemctl --user is-active --quiet "$EMBER_UNIT" || {
+			log "$EMBER_UNIT is not running" >&2
 			return 1
 		}
 		((SECONDS < deadline)) || {
@@ -131,9 +131,9 @@ healthy() {
 		}
 		sleep 2
 	done
-	pid=$(systemctl --user show --property MainPID --value "$GYM_LOG_UNIT")
+	pid=$(systemctl --user show --property MainPID --value "$EMBER_UNIT")
 	ss -ltnpH "sport = :$port" | grep -q "pid=$pid," || {
-		log "port $port is not served by $GYM_LOG_UNIT (pid $pid)" >&2
+		log "port $port is not served by $EMBER_UNIT (pid $pid)" >&2
 		return 1
 	}
 	fetch --output /dev/null "$origin/api/v1/health" || return 1
@@ -146,16 +146,16 @@ healthy() {
 
 restart_and_check() {
 	# A crash-looping release can trip the start limit; clear it so a rollback can start.
-	systemctl --user reset-failed "$GYM_LOG_UNIT" 2>/dev/null || true
-	systemctl --user restart "$GYM_LOG_UNIT" || return 1
+	systemctl --user reset-failed "$EMBER_UNIT" 2>/dev/null || true
+	systemctl --user restart "$EMBER_UNIT" || return 1
 	healthy
 }
 
 # Read-only probes of the extra health endpoints bracket every gym switch.
 # runtime.env lists them, space-separated, in
-# GYM_LOG_EXTRA_HEALTH_URLS; the environment variable overrides it for tests.
+# EMBER_EXTRA_HEALTH_URLS; the environment variable overrides it for tests.
 extra_urls() {
-	local urls=${GYM_LOG_EXTRA_HEALTH_URLS:-$(setting GYM_LOG_EXTRA_HEALTH_URLS)}
+	local urls=${EMBER_EXTRA_HEALTH_URLS:-$(setting EMBER_EXTRA_HEALTH_URLS)}
 	echo "${urls:-http://127.0.0.1:<port>/api/health}"
 }
 
@@ -174,7 +174,7 @@ extra_healthy() {
 # An extra endpoint may restart on its own, so give it time to come back before
 # blaming the gym switch.
 extra_recovered() {
-	local deadline=$((SECONDS + ${GYM_LOG_EXTRA_GRACE:-90}))
+	local deadline=$((SECONDS + ${EMBER_EXTRA_GRACE:-90}))
 	until extra_healthy; do
 		((SECONDS < deadline)) || return 1
 		sleep 5
@@ -200,9 +200,9 @@ switch_release() {
 		problem="Deploy of ${sha:0:12} failed its health check${HEALTH_DETAIL:+ ($HEALTH_DETAIL)}"
 	elif [[ $extra_before == true ]] && ! extra_recovered; then
 		# Correlation, not proof: an endpoint may also restart on its own.
-		problem="The extra health endpoints stopped responding after Gym Log deployed ${sha:0:12}"
+		problem="The extra health endpoints stopped responding after Ember deployed ${sha:0:12}"
 		if [[ $migrated == true ]]; then
-			notify "$problem. Gym Log was NOT rolled back because this release applied database migrations the previous one does not know. Check them first; roll Gym Log back by hand only if it is the cause."
+			notify "$problem. Ember was NOT rolled back because this release applied database migrations the previous one does not know. Check them first; roll Ember back by hand only if it is the cause."
 			return 4
 		fi
 	else
@@ -210,13 +210,13 @@ switch_release() {
 	fi
 	log "$problem; rolling back" >&2
 	if ! roll_back; then
-		notify "$problem and the ROLLBACK FAILED. Gym Log needs attention: journalctl --user -u $GYM_LOG_UNIT -n 50"
+		notify "$problem and the ROLLBACK FAILED. Ember needs attention: journalctl --user -u $EMBER_UNIT -n 50"
 		return 2
 	fi
 	if [[ $extra_before == true ]]; then
 		if extra_recovered; then extra_after=' The extra endpoints are healthy again.'; else extra_after=' The extra endpoints are STILL unhealthy and need attention.'; fi
 	fi
-	notify "$problem, so it was rolled back to $(current_release).$extra_after Migrations are not rolled back. Details: journalctl --user -u $GYM_LOG_UNIT -n 50"
+	notify "$problem, so it was rolled back to $(current_release).$extra_after Migrations are not rolled back. Details: journalctl --user -u $EMBER_UNIT -n 50"
 	return 1
 }
 

@@ -10,3 +10,4 @@ test-results/
 *.csv
 .impeccable/
 .worktrees/
+__pycache__/

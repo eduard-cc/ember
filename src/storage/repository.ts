@@ -17,7 +17,7 @@ export class WorkoutRepository {
   readonly db: GymDatabase;
   private pending: Promise<unknown> = Promise.resolve();
   constructor(
-    name = 'gym-log',
+    name = 'ember',
     private readonly now: () => number = () => Date.now(),
   ) {
     this.db = new GymDatabase(name);

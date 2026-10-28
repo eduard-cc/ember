@@ -39,7 +39,7 @@ test('fresh Tailscale devices automatically connect completed history and templa
   await page.addInitScript(
     (state) => {
       if (!localStorage.getItem('seeded')) {
-        localStorage.setItem('gym-log:v1', JSON.stringify(state));
+        localStorage.setItem('ember:v1', JSON.stringify(state));
         localStorage.setItem('seeded', 'yes');
       }
     },
@@ -86,7 +86,7 @@ test('Tailscale reconnect automatically renews an expired session and sends offl
   await page.addInitScript((active) => {
     if (!localStorage.getItem('seeded')) {
       localStorage.setItem(
-        'gym-log:v1',
+        'ember:v1',
         JSON.stringify({version: 1, dataset: null, finished: [], templates: [], active}),
       );
       localStorage.setItem('seeded', 'yes');
@@ -98,11 +98,11 @@ test('Tailscale reconnect automatically renews an expired session and sends offl
   });
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
-  const url = new URL(process.env.GYM_LOG_TEST_DATABASE_URL!);
+  const url = new URL(process.env.EMBER_TEST_DATABASE_URL!);
   if (
     url.hostname !== '127.0.0.1' ||
     url.port !== '55439' ||
-    !/^\/gym_log_browser_test_\d+_\d+$/.test(url.pathname)
+    !/^\/ember_browser_test_\d+_\d+$/.test(url.pathname)
   )
     throw new Error('Session expiry fixture requires a disposable browser-test database');
   const require = createRequire(new URL('../../server/package.json', import.meta.url));

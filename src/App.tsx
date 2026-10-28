@@ -407,7 +407,7 @@ export default function App() {
         >
           <header className={appBarClass}>
             <span className='app-brand whitespace-nowrap max-desk:hidden desk:shrink-0 desk:text-base desk:font-semibold'>
-              Gym Log
+              Ember
             </span>
             <nav
               aria-label='Main navigation'

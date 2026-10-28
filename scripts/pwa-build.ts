@@ -9,12 +9,12 @@ import {isServedShellFile, publicShellFiles} from '../server/src/static-files.ts
 export function pwaShell(): Plugin {
   let root = '';
   return {
-    name: 'gym-log-production-shell',
+    name: 'ember-production-shell',
     apply: 'build',
     enforce: 'post',
     configResolved(config) {
       root = config.root;
-      if (config.base !== '/') throw new Error('Gym Log PWA requires same-origin root base /');
+      if (config.base !== '/') throw new Error('Ember PWA requires same-origin root base /');
     },
     transformIndexHtml() {
       return [
@@ -44,7 +44,7 @@ export function pwaShell(): Plugin {
       for (const name of publicShellFiles)
         hash.update(name).update(readFileSync(resolve(root, 'public', name)));
       const urls = [...names, ...publicShellFiles].map((name) => `/${name}`);
-      const cache = `gym-log-shell-${hash.digest('hex').slice(0, 24)}`;
+      const cache = `ember-shell-${hash.digest('hex').slice(0, 24)}`;
       // ops/lib.sh reads the `const URLS = [...];` line to check every file is served.
       this.emitFile({
         type: 'asset',
@@ -61,7 +61,7 @@ self.addEventListener('message', event => {
   }
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(names => Promise.all(names.filter(name => name.startsWith('gym-log-shell-') && name !== CACHE).map(name => caches.delete(name)))));
+  event.waitUntil(caches.keys().then(names => Promise.all(names.filter(name => name.startsWith('ember-shell-') && name !== CACHE).map(name => caches.delete(name)))));
 });
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);

@@ -38,7 +38,7 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
     if (!available || busy || !registration || registration.waiting !== waiting) return;
     if (
       !window.confirm(
-        'Apply the new app shell? No draft may be active in any tab. This page will stay open; close all gym log tabs and reopen later to use the update.',
+        'Apply the new app shell? No draft may be active in any tab. This page will stay open; close all Ember tabs and reopen later to use the update.',
       )
     )
       return;
@@ -51,7 +51,7 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
         begun = true;
         const locks = await navigator.locks?.query();
         if (
-          !locks?.held?.some((lock) => lock.name === 'gym-log:installation:writer') ||
+          !locks?.held?.some((lock) => lock.name === 'ember:installation:writer') ||
           (await repository.readDraft())
         )
           return false;
@@ -61,7 +61,7 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
       });
       setMessage(
         applied
-          ? 'Update activation requested. Close all gym log tabs and reopen when convenient; this page will not refresh.'
+          ? 'Update activation requested. Close all Ember tabs and reopen when convenient; this page will not refresh.'
           : 'Update deferred. Finish every active workout and save local changes before trying again.',
       );
     } catch {

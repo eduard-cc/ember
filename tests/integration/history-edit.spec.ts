@@ -24,7 +24,7 @@ test('history edits and deletion reach a second device through the real API', as
 }) => {
   await page.addInitScript((finished) => {
     localStorage.setItem(
-      'gym-log:v1',
+      'ember:v1',
       JSON.stringify({
         version: 1,
         dataset: null,

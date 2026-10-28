@@ -5,9 +5,9 @@ Read before changing the sync feed or outbox, local persistence, recovery export
 ## Invariants
 
 - IndexedDB/Dexie (`src/storage/`) owns durable local state. Legacy migration keeps the original bytes; invalid storage blocks writes. Report "saved" only after the transaction commits.
-- One writer tab per installation holds the Web Lock `gym-log:installation:writer` (`src/storage/draft-lock.ts`). Active workouts stay on the installation that started them and never enter server sync. Finish saves completed history, queues its operation and removes the draft in one transaction.
+- One writer tab per installation holds the Web Lock `ember:installation:writer` (`src/storage/draft-lock.ts`). Active workouts stay on the installation that started them and never enter server sync. Finish saves completed history, queues its operation and removes the draft in one transaction.
 - Outbox retries keep the operation's immutable identity. Revision conflicts and rejections stay visible and retained; never silently overwrite peer data.
-- Sessions use HttpOnly cookies and a memory-only CSRF token (`X-CSRF-Token`). Production uses Tailscale identity auth (`GYM_LOG_AUTH_MODE=tailscale`, exact owner login in external config); password mode exists for local development and tests.
+- Sessions use HttpOnly cookies and a memory-only CSRF token (`X-CSRF-Token`). Production uses Tailscale identity auth (`EMBER_AUTH_MODE=tailscale`, exact owner login in external config); password mode exists for local development and tests.
 - Reviewed Strong replacement touches imported history only. Compare the complete current imported membership and content before treating an identical file as a no-op; retained source hashes are provenance, not proof of current identity.
 - Recovery export is validated, versioned JSON with source evidence, owner/revision provenance and local drafts, without session secrets. Restore pauses edits and sync, requires confirmation, and rebuilds create-only operations rather than replaying acknowledgements.
 

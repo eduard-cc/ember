@@ -1,5 +1,5 @@
 {
-	"name": "gym-log-server",
+	"name": "@eduard-cc/ember-server",
 	"private": true,
 	"version": "0.1.0",
 	"scripts": {

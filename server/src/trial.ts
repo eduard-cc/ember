@@ -8,8 +8,8 @@ import {isServedShellFile} from './static-files';
 
 async function main() {
 	// tsc emits server/dist/trial.js; two levels up is the repository root.
-	const configuredRoot = process.env.GYM_LOG_WEB_ROOT ?? resolve(__dirname, '../../dist');
-	if (!isAbsolute(configuredRoot)) throw new Error('GYM_LOG_WEB_ROOT must be absolute');
+	const configuredRoot = process.env.EMBER_WEB_ROOT ?? resolve(__dirname, '../../dist');
+	if (!isAbsolute(configuredRoot)) throw new Error('EMBER_WEB_ROOT must be absolute');
 	const root = await realpath(configuredRoot);
 	for (const file of ['index.html', 'manifest.webmanifest']) {
 		const target = await realpath(join(root, file));
@@ -62,9 +62,9 @@ async function main() {
 		await app.close();
 		throw error;
 	}
-	console.log(`Gym Log trial listening on ${cfg.host}:${cfg.port}`);
+	console.log(`Ember trial listening on ${cfg.host}:${cfg.port}`);
 }
 main().catch(() => {
-	console.error('Gym Log trial startup failed (check production web root, local configuration and database)');
+	console.error('Ember trial startup failed (check production web root, local configuration and database)');
 	process.exitCode = 1;
 });

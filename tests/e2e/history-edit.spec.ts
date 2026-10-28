@@ -39,7 +39,7 @@ const seeded = {
 
 const open = async (page: Page, value = seeded) => {
   await page.addInitScript(
-    (value) => localStorage.setItem('gym-log:v1', JSON.stringify(value)),
+    (value) => localStorage.setItem('ember:v1', JSON.stringify(value)),
     value,
   );
   await page.goto('/?demo=1');

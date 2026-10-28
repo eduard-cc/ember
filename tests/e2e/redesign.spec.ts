@@ -332,7 +332,7 @@ test('routine starts use actual latest matching history unchecked, else the rout
   page,
 }) => {
   await page.addInitScript(
-    (value) => localStorage.setItem('gym-log:v1', JSON.stringify(value)),
+    (value) => localStorage.setItem('ember:v1', JSON.stringify(value)),
     seeded,
   );
   await page.goto('/?demo=1');
@@ -355,7 +355,7 @@ test('added exercises reuse matching history unchecked and unlogged catalog exer
   page,
 }) => {
   await page.addInitScript(
-    (value) => localStorage.setItem('gym-log:v1', JSON.stringify(value)),
+    (value) => localStorage.setItem('ember:v1', JSON.stringify(value)),
     seeded,
   );
   await page.goto('/?demo=1');
@@ -402,7 +402,7 @@ test('appearance is separate from workout saving, follows System, and persists t
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.getByLabel('WORKOUT NAME')).toHaveValue('Upper body A');
   expect(
-    await page.evaluate(() => JSON.parse(localStorage.getItem('gym-log:appearance:v1')!)),
+    await page.evaluate(() => JSON.parse(localStorage.getItem('ember:appearance:v1')!)),
   ).toEqual({version: 1, theme: 'dark'});
 });
 
@@ -459,11 +459,11 @@ test('denied appearance storage leaves workout durability independent and the ch
     const get = Storage.prototype.getItem,
       put = Storage.prototype.setItem;
     Storage.prototype.getItem = function (key) {
-      if (key === 'gym-log:appearance:v1') throw new DOMException('Denied', 'SecurityError');
+      if (key === 'ember:appearance:v1') throw new DOMException('Denied', 'SecurityError');
       return get.call(this, key);
     };
     Storage.prototype.setItem = function (key, value) {
-      if (key === 'gym-log:appearance:v1') throw new DOMException('Denied', 'SecurityError');
+      if (key === 'ember:appearance:v1') throw new DOMException('Denied', 'SecurityError');
       return put.call(this, key, value);
     };
   });
@@ -493,7 +493,7 @@ test('a saved dark theme applies before the app script runs, so dark phones do n
 }) => {
   await page.addInitScript(() =>
     localStorage.setItem(
-      'gym-log:appearance:v1',
+      'ember:appearance:v1',
       JSON.stringify({version: 1, theme: 'dark', accent: 'copper'}),
     ),
   );

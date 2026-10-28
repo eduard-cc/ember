@@ -10,17 +10,17 @@ const {Pool} = require('pg'),
   dotenv = require('dotenv');
 const root = new URL('../', import.meta.url).pathname;
 const config = dotenv.parse(readFileSync(root + 'server/.env'));
-const url = new URL(config.GYM_LOG_DATABASE_URL);
+const url = new URL(config.EMBER_DATABASE_URL);
 if (
   url.href.includes('?') ||
   url.href.includes('#') ||
   url.hostname !== '127.0.0.1' ||
   url.port !== '55439' ||
-  url.pathname !== '/gym_log_dev'
+  url.pathname !== '/ember_dev'
 )
-  throw Error('Expected the isolated gym_log_dev admin database, never the live gym_log database');
+  throw Error('Expected the isolated ember_dev admin database, never the live ember database');
 const admin = new Pool({connectionString: url.toString()});
-const apiPort = process.env.GYM_LOG_TEST_API_PORT ?? '5190';
+const apiPort = process.env.EMBER_TEST_API_PORT ?? '5190';
 if (!/^\d+$/.test(apiPort) || Number(apiPort) < 1024 || Number(apiPort) > 65535)
   throw Error('Invalid isolated test API port');
 const children = [];
@@ -70,17 +70,17 @@ try {
   const env = {
     ...process.env,
     ...config,
-    GYM_LOG_OWNER_PASSWORD_HASH: await argon2.hash(password),
-    GYM_LOG_ORIGIN: 'http://127.0.0.1:5188',
-    GYM_LOG_PORT: apiPort,
-    GYM_LOG_TEST_API_PORT: apiPort,
-    GYM_LOG_TEST_HARNESS: '1',
-    GYM_LOG_AUTH_MODE: 'password',
-    GYM_LOG_TAILSCALE_USER_LOGIN: 'gym-log-browser@example.invalid',
-    GYM_LOG_TEST_PASSWORD: password,
+    EMBER_OWNER_PASSWORD_HASH: await argon2.hash(password),
+    EMBER_ORIGIN: 'http://127.0.0.1:5188',
+    EMBER_PORT: apiPort,
+    EMBER_TEST_API_PORT: apiPort,
+    EMBER_TEST_HARNESS: '1',
+    EMBER_AUTH_MODE: 'password',
+    EMBER_TAILSCALE_USER_LOGIN: 'ember-browser@example.invalid',
+    EMBER_TEST_PASSWORD: password,
     NODE_ENV: 'development',
   };
-  delete env.GYM_LOG_CSV;
+  delete env.EMBER_CSV;
   const args = process.argv.slice(2);
   const listed = await run([...args, '--list', '--reporter=json'], env, true);
   if (listed.code) throw Error('Could not enumerate integration tests');
@@ -102,7 +102,7 @@ try {
   let passed = 0;
   for (const [index, spec] of specs.entries()) {
     // One fresh migrated DB and API per vertical scenario; production login throttling stays enabled.
-    const name = `gym_log_browser_test_${process.pid}_${index}`;
+    const name = `ember_browser_test_${process.pid}_${index}`;
     await admin.query(`CREATE DATABASE "${name}"`);
     created = name;
     url.pathname = '/' + name;
@@ -110,8 +110,8 @@ try {
       cwd: root + 'server',
       env: {
         ...env,
-        GYM_LOG_DATABASE_URL: url.toString(),
-        GYM_LOG_AUTH_MODE: spec.file.endsWith('automatic.spec.ts') ? 'tailscale' : 'password',
+        EMBER_DATABASE_URL: url.toString(),
+        EMBER_AUTH_MODE: spec.file.endsWith('automatic.spec.ts') ? 'tailscale' : 'password',
       },
       stdio: ['ignore', 'ignore', 'pipe'],
     });
@@ -122,7 +122,7 @@ try {
       const title = spec.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const result = await run([...args, spec.file, '--grep', title + '$'], {
         ...env,
-        GYM_LOG_TEST_DATABASE_URL: url.toString(),
+        EMBER_TEST_DATABASE_URL: url.toString(),
       });
       if (result.code) process.exitCode = 1;
       else passed++;

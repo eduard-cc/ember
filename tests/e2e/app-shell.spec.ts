@@ -64,7 +64,7 @@ test('desktop header carries brand, text links and Settings', async ({page}, inf
   const box = await bar.boundingBox();
   expect(box!.y).toBe(0);
   expect(box!.height).toBe(48);
-  await expect(bar.locator('.app-brand')).toHaveText('Gym Log');
+  await expect(bar.locator('.app-brand')).toHaveText('Ember');
   await expect(bar.locator('.nav-item svg').first()).toBeHidden();
   const color = await bar
     .locator('.nav-item.active')
@@ -491,7 +491,7 @@ test('empty states use the shared EmptyState', async ({page}) => {
     const root = page.locator('.empty-state', {hasText: title});
     await expect(root).toBeVisible();
     await expect(root).toHaveCSS('border-top-width', '1px');
-    // Gym Log has no global border-color default, so the frame must name the token itself.
+    // Ember has no global border-color default, so the frame must name the token itself.
     await expect(root).toHaveCSS('border-top-color', await resolve(page, 'hsl(var(--border))'));
     const card = await resolve(page, 'hsl(var(--card))');
     await expect(root).toHaveCSS('background-color', card);

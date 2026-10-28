@@ -7,7 +7,7 @@ import {login, revokeAndLock, syncNow} from './helpers';
 test('template preview is unmounted when local trust is revoked', async ({page}) => {
   await page.addInitScript((templates) => {
     localStorage.setItem(
-      'gym-log:v1',
+      'ember:v1',
       JSON.stringify({
         version: 1,
         dataset: null,
@@ -45,7 +45,7 @@ test('offline finish survives reopen and fresh independent peer sees only comple
   await page.addInitScript((active) => {
     if (!localStorage.getItem('seeded')) {
       localStorage.setItem(
-        'gym-log:v1',
+        'ember:v1',
         JSON.stringify({version: 1, dataset: null, active, finished: [], templates: []}),
       );
       localStorage.setItem('seeded', 'yes');
@@ -89,7 +89,7 @@ test('revoked legacy session retains pending changes and untrusted local data st
   await page.addInitScript(
     (active) =>
       localStorage.setItem(
-        'gym-log:v1',
+        'ember:v1',
         JSON.stringify({version: 1, dataset: null, active, finished: [], templates: []}),
       ),
     {...active, id: 'revoked-' + crypto.randomUUID(), name: 'Pending after revocation'},
@@ -164,7 +164,7 @@ test('an open Previous evidence dialog closes when local trust is revoked mid-wo
   await page.addInitScript(
     (active) =>
       localStorage.setItem(
-        'gym-log:v1',
+        'ember:v1',
         JSON.stringify({version: 1, dataset: null, active, finished: [], templates: []}),
       ),
     {...active, id: 'evidence-' + crypto.randomUUID(), name: 'Evidence while locked'},

@@ -2,7 +2,7 @@ import {type Page, expect, test} from '@playwright/test';
 
 import {navigate, openImport} from '../navigation';
 
-const sortKey = 'gym-log:exercise-sort:v1';
+const sortKey = 'ember:exercise-sort:v1';
 // Synthetic demo history: 24 workouts across three templates repeated eight times.
 // Seated Row (Cable) is in two templates (16 workouts); every other demo exercise has 8.
 async function openExercises(page: Page, storedSort?: string) {

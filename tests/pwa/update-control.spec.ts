@@ -14,10 +14,7 @@ test('real app-update control confirms activation without reload and defers upda
   await openSettings(page);
   const file = new URL('../../dist/sw.js', import.meta.url);
   const original = await readFile(file, 'utf8');
-  await writeFile(
-    file,
-    original.replace(/gym-log-shell-([a-f0-9]+)/, 'gym-log-shell-$1-control-test'),
-  );
+  await writeFile(file, original.replace(/ember-shell-([a-f0-9]+)/, 'ember-shell-$1-control-test'));
   try {
     await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())!.update());
     await expect
@@ -38,7 +35,7 @@ test('real app-update control confirms activation without reload and defers upda
     await page.getByRole('button', {name: 'Apply shell update'}).click();
     await expect(
       page.getByText(
-        'Update activation requested. Close all gym log tabs and reopen when convenient; this page will not refresh.',
+        'Update activation requested. Close all Ember tabs and reopen when convenient; this page will not refresh.',
       ),
     ).toBeVisible();
     await expect
@@ -51,7 +48,7 @@ test('real app-update control confirms activation without reload and defers upda
     );
     await writeFile(
       file,
-      original.replace(/gym-log-shell-([a-f0-9]+)/, 'gym-log-shell-$1-next-control-test'),
+      original.replace(/ember-shell-([a-f0-9]+)/, 'ember-shell-$1-next-control-test'),
     );
     await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())!.update());
     await expect

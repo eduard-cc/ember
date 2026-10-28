@@ -12,6 +12,7 @@ interface Session {
 	csrf: string;
 	expires_at: Date;
 }
+const SESSION_COOKIE = 'ember_session';
 const digest = (s: string) => createHash('sha256').update(s).digest('hex');
 export class AuthService {
 	private attempts = 0;
@@ -32,8 +33,8 @@ export class AuthService {
 		const token = req.headers.cookie
 			?.split(';')
 			.map((s) => s.trim())
-			.find((s) => s.startsWith('gym_log_session='))
-			?.slice(16);
+			.find((s) => s.startsWith(`${SESSION_COOKIE}=`))
+			?.slice(SESSION_COOKIE.length + 1);
 		const rows: Session[] = token
 			? await this.db.query('SELECT * FROM sessions WHERE token_hash=$1 AND expires_at>now()', [digest(token)])
 			: [];
@@ -64,7 +65,7 @@ export class AuthService {
 			csrf,
 			this.cfg.ttl,
 		]);
-		res.cookie('gym_log_session', token, {
+		res.cookie(SESSION_COOKIE, token, {
 			httpOnly: true,
 			sameSite: 'strict',
 			secure: this.cfg.secure,
@@ -76,7 +77,7 @@ export class AuthService {
 	async logout(req: Request, res: Response) {
 		const s = await this.mutation(req);
 		await this.db.query('DELETE FROM sessions WHERE token_hash=$1', [s.token_hash]);
-		res.clearCookie('gym_log_session', {
+		res.clearCookie(SESSION_COOKIE, {
 			httpOnly: true,
 			sameSite: 'strict',
 			secure: this.cfg.secure,

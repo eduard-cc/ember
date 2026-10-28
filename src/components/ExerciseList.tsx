@@ -17,7 +17,7 @@ import {EmptyState} from './ui/empty-state';
 import {Input} from './ui/input';
 import {ListLabel} from './ui/list-label';
 
-const sortKey = 'gym-log:exercise-sort:v1';
+const sortKey = 'ember:exercise-sort:v1';
 const sortOptions = [
   ['az', 'A–Z'],
   ['most', 'Most done'],

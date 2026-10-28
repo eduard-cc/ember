@@ -39,7 +39,7 @@ test('Cache Storage contains only the finite shell allowlist, never API, CSV or 
       );
     });
     expect(cached).toHaveLength(1);
-    expect(cached[0].name).toMatch(/^gym-log-shell-[a-f0-9]{24}$/);
+    expect(cached[0].name).toMatch(/^ember-shell-[a-f0-9]{24}$/);
     expect(cached[0].paths).toEqual(
       expect.arrayContaining([
         '/index.html',

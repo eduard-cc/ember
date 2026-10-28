@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Gym Log's bundled exercise catalog from open, attributable sources.
+"""Generate Ember's bundled exercise catalog from open, attributable sources.
 
 Inputs (downloaded once, never fetched at runtime):
   * wger exerciseinfo dump: https://wger.de/api/v2/exerciseinfo/?limit=200 (all pages, JSON list)
@@ -34,7 +34,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageOps
 ROOT = Path(__file__).resolve().parents[2]
 OUT_JSON = ROOT / 'src/catalog/exercises.json'
 OUT_IMAGES = ROOT / 'src/catalog/images'
-CACHE = Path.home() / '.cache/gym-log-catalog'
+CACHE = Path.home() / '.cache/ember-catalog'
 MAX_SIDE = 240
 LEVELS = 8
 
@@ -520,7 +520,7 @@ def fetch(url):
     CACHE.mkdir(parents=True, exist_ok=True)
     target = CACHE / re.sub(r'[^A-Za-z0-9._-]+', '_', url.split('://', 1)[1])
     if not target.exists():
-        request = urllib.request.Request(url, headers={'User-Agent': 'gym-log-catalog-generator'})
+        request = urllib.request.Request(url, headers={'User-Agent': 'ember-catalog-generator'})
         with urllib.request.urlopen(request, timeout=20) as response:
             target.write_bytes(response.read())
     return target.read_bytes()

@@ -33,7 +33,7 @@ describe('bundled exercise catalog', () => {
         expect(source.license).toMatch(/^(CC BY-SA [34]\.0|CC0 1\.0|app-owned)$/);
         if (source.license === 'app-owned') {
           expect(source.kind).toBe('illustration');
-          expect(source.author).toBe('Gym Log (AI-assisted, gpt-image-2)');
+          expect(source.author).toBe('Ember (AI-assisted, gpt-image-2)');
           expect(source.changes).toContain('AI-assisted illustration');
           expect(source.changes).toContain('not an Everkinetic or wger work');
           expect(`${source.author} ${source.url} ${source.licenseUrl}`).not.toMatch(
@@ -83,7 +83,7 @@ describe('bundled exercise catalog', () => {
       const illustrations = entry.sources.filter((s) => s.kind === 'illustration');
       expect(illustrations).toEqual([
         expect.objectContaining({
-          author: 'Gym Log (AI-assisted, gpt-image-2)',
+          author: 'Ember (AI-assisted, gpt-image-2)',
           license: 'app-owned',
         }),
       ]);

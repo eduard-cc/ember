@@ -16,6 +16,6 @@ source "$SCRIPT_DIR/lib.sh"
 lock
 check_config
 roll_back || {
-	notify "Manual rollback from $(current_release) FAILED. Gym Log needs attention: journalctl --user -u $GYM_LOG_UNIT -n 50"
+	notify "Manual rollback from $(current_release) FAILED. Ember needs attention: journalctl --user -u $EMBER_UNIT -n 50"
 	die 'rollback failed; the app may be unhealthy'
 }

@@ -7,7 +7,7 @@ test('deleting the only set of a duplicate-named exercise removes exactly that s
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('gym-log');
+      const request = indexedDB.open('ember');
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });

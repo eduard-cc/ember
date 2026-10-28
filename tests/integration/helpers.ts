@@ -6,7 +6,7 @@ import {openSettings} from '../navigation';
 export async function login(page: Page) {
   const response = await page.request.post('/api/v1/session', {
     headers: {Origin: 'http://127.0.0.1:5188'},
-    data: {password: process.env.GYM_LOG_TEST_PASSWORD!},
+    data: {password: process.env.EMBER_TEST_PASSWORD!},
   });
   if (!response.ok())
     throw new Error(`Test login failed (${response.status()}): ${await response.text()}`);

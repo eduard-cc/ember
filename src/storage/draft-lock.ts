@@ -5,7 +5,7 @@ export interface DraftLock {
   error: string;
   release: () => void;
 }
-// One gym-log DB is one installation per origin. This stable installation key
+// One ember DB is one installation per origin. This stable installation key
 // also guards first-run metadata and migration before a draft ID exists.
 export async function acquireDraftLock(signal: AbortSignal): Promise<DraftLock> {
   if (!navigator.locks?.request)
@@ -17,7 +17,7 @@ export async function acquireDraftLock(signal: AbortSignal): Promise<DraftLock> 
     };
   return new Promise((resolve, reject) => {
     const request = lifetime.then(() =>
-      navigator.locks.request('gym-log:installation:writer', {ifAvailable: true}, async (lock) => {
+      navigator.locks.request('ember:installation:writer', {ifAvailable: true}, async (lock) => {
         if (signal.aborted) throw new DOMException('Lock acquisition cancelled', 'AbortError');
         if (!lock) {
           resolve({

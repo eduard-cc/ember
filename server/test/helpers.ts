@@ -8,7 +8,7 @@ import './bootstrap';
 export const origin = 'http://127.0.0.1:5188';
 export async function setup() {
 	const password = randomBytes(32).toString('hex');
-	process.env.GYM_LOG_OWNER_PASSWORD_HASH = await argon2.hash(password);
+	process.env.EMBER_OWNER_PASSWORD_HASH = await argon2.hash(password);
 	const app = await createApp();
 	await app.listen(0, '127.0.0.1');
 	const http = request(app.getHttpServer());

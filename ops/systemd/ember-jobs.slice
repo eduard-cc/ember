@@ -1,8 +1,8 @@
 # User slice installed by ops/install.sh. ops/limited.sh runs the gym test suites here
 # (browsers, dev servers and test API processes included), so a runaway run cannot starve
-# other services on the host. See gym-log-live.slice for why the caps, not the weight, matter.
+# other services on the host. See ember-live.slice for why the caps, not the weight, matter.
 [Unit]
-Description=Gym Log test runs (capped)
+Description=Ember test runs (capped)
 
 [Slice]
 CPUWeight=20

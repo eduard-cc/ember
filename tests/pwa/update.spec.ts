@@ -13,10 +13,7 @@ test('a new worker waits for explicit activation without refreshing the open pag
   const path = new URL('../../dist/sw.js', import.meta.url);
   const original = await readFile(path, 'utf8');
   // Simulate deploying a new shell version, using the actual preview server and SW lifecycle.
-  await writeFile(
-    path,
-    original.replace(/gym-log-shell-([a-f0-9]+)/, 'gym-log-shell-$1-test-update'),
-  );
+  await writeFile(path, original.replace(/ember-shell-([a-f0-9]+)/, 'ember-shell-$1-test-update'));
   try {
     await page.evaluate(async () => {
       await (await navigator.serviceWorker.getRegistration())!.update();

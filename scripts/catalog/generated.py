@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bundle only QA-accepted app-owned (AI-assisted) illustrations without touching licensed assets.
 
-Usage: python3 scripts/catalog/generated.py [--source-dir ~/.cache/gym-log-catalog/generated]
+Usage: python3 scripts/catalog/generated.py [--source-dir ~/.cache/ember-catalog/generated]
 
 The source directory holds one QA record per exercise (qa/<slug>.json, status
 accepted|rejected|unreviewed) and accepted raw PNGs. A record's ordered `poses`
@@ -25,9 +25,9 @@ from generate import CACHE, OUT_IMAGES, OUT_JSON, ROOT, line_mask, slug
 
 MANIFEST = Path(__file__).with_name('generated-manifest.json')
 PROVENANCE_URL = 'https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md'
-AUTHOR = 'Gym Log (AI-assisted, gpt-image-2)'
+AUTHOR = 'Ember (AI-assisted, gpt-image-2)'
 LICENSE = 'app-owned'
-CHANGES = ('AI-assisted illustration made for Gym Log, not an Everkinetic or wger work; '
+CHANGES = ('AI-assisted illustration made for Ember, not an Everkinetic or wger work; '
            'cropped, resized and recoloured')
 
 

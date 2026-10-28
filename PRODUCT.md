@@ -1,4 +1,4 @@
-# Gym Log
+# Ember
 
 <!-- impeccable:product-schema 1 -->
 
@@ -37,11 +37,11 @@ The private mobile trial uses the owner's Tailscale identity with no separate ap
 
 Weighted charts show best reps, best load, session volume and bounded Epley estimates; assistance uses least assistance and reps, not resistance formulas. Best reps/load may come from different weights/rep counts and are not automatically comparable strength gains. Records include heaviest weight by exact rep count. Any recorded set can be excluded from analytics, and included again, from exercise History or the source workout; excluded sets stay visible and labelled but do not count toward records, charts, set evidence or targets. Raw values are unchanged, and a reviewed Strong reimport carries exclusions to the same raw row (vanished rows are reported). Correcting a set's values remains incomplete. When a chosen weight has no history, set evidence shows the nearest actual lighter and heavier recorded sets, never a converted equivalent. Duration/distance-specific charts are not implemented. Volume is recorded load × reps, not evidence of hypertrophy; machine loads are not equated across gyms.
 
-Catalog instructions and muscle data, and most drawings, use attributable Everkinetic/wger content. Gaps may be filled with reviewed AI-assisted drawings made for Gym Log, always labelled as AI-assisted and never attributed to Everkinetic/wger; an exercise with no drawing that passes review stays without one. The catalog data keeps item-level title, author, source/license URLs and adaptations; About shows drawings, equipment and muscles only, without instructions or credit text. Preserve original licenses and applicable attribution/share-alike obligations. Coverage varies; a custom exercise outside the catalog still retains its history and analytics.
+Catalog instructions and muscle data, and most drawings, use attributable Everkinetic/wger content. Gaps may be filled with reviewed AI-assisted drawings made for Ember, always labelled as AI-assisted and never attributed to Everkinetic/wger; an exercise with no drawing that passes review stays without one. The catalog data keeps item-level title, author, source/license URLs and adaptations; About shows drawings, equipment and muscles only, without instructions or credit text. Preserve original licenses and applicable attribution/share-alike obligations. Coverage varies; a custom exercise outside the catalog still retains its history and analytics.
 
 ## Brand Commitments
 
-Gym Log is a temporary name. Use a restrained shadcn-style visual family with an independent palette; do not reproduce Strong branding.
+Use a restrained shadcn-style visual family with an independent palette; do not reproduce Strong branding.
 
 ## Evidence on Hand
 

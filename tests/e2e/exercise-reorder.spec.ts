@@ -48,7 +48,7 @@ const savedOrder = (page: Page) =>
   page.evaluate(
     () =>
       new Promise<string[]>((resolve, reject) => {
-        const open = indexedDB.open('gym-log');
+        const open = indexedDB.open('ember');
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const db = open.result;
