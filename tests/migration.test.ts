@@ -45,7 +45,7 @@ it.each([
   expect(await repository.db.importSources.count()).toBe(0);
   repository.close();
 });
-it('preserves original strings, suspicious raw values, repeated exercise occurrences and document order', async () => {
+it('preserves original strings, unusual raw values, repeated exercise occurrences and document order', async () => {
   const repository = new WorkoutRepository(`migration-${crypto.randomUUID()}`);
   const workout = {
     ...state.finished[0],
@@ -62,7 +62,6 @@ it('preserves original strings, suspicious raw values, repeated exercise occurre
             reps: null,
             seconds: -1,
             distance: 0.5,
-            suspicious: true,
             original: {Weight: '0.00', Reps: '', Notes: 'line 1\nline 2'},
           },
         ],
@@ -77,7 +76,6 @@ it('preserves original strings, suspicious raw values, repeated exercise occurre
             reps: 3.5,
             seconds: null,
             distance: null,
-            suspicious: true,
             original: {Weight: '-2,5', Reps: '3.5'},
           },
         ],
@@ -130,5 +128,90 @@ it('migrates every legacy document and occurrence once with exact original bytes
   });
   expect(await migrateLegacy(repository, raw)).toBe('none');
   expect(await repository.db.workouts.count()).toBe(1);
+  repository.close();
+});
+it('opens an installation whose stored sets carry the retired review flags, dropping only those flags', async () => {
+  const name = `migration-${crypto.randomUUID()}`;
+  const flagged = {
+    ...state.finished[0],
+    id: 'flagged',
+    exercises: [
+      {
+        name: 'Press',
+        type: 'weighted' as const,
+        sets: [
+          {
+            id: 'csv-row-1',
+            weight: 500,
+            reps: 120,
+            seconds: null,
+            distance: null,
+            excluded: true,
+            suspicious: true,
+            original: {Weight: '500', Reps: '120'},
+          },
+        ],
+      },
+    ],
+  };
+  const raw = JSON.stringify({...state, dataset: {...state.dataset, workouts: [flagged]}});
+  // The store as an earlier app version wrote it.
+  const older = new Dexie(name);
+  older.version(1).stores({
+    meta: '&key',
+    drafts: '&key',
+    workouts: '&id',
+    templates: '&id',
+    outbox: '&operationId',
+    syncState: '&key',
+    importSources: '&key',
+  });
+  older.version(2).stores({bodyWeights: '&id'});
+  const dataset = {
+    ...state.dataset,
+    warnings: {...state.dataset.warnings, suspiciousRows: 1},
+    workouts: [flagged],
+  };
+  await older.table('workouts').add(flagged);
+  await older.table('templates').add({...flagged, id: 'template', date: ''});
+  await older.table('drafts').add({key: 'active', workout: {...flagged, id: 'draft'}});
+  await older.table('outbox').add({
+    operationId: crypto.randomUUID(),
+    entityId: 'flagged',
+    kind: 'putWorkout',
+    expectedRevision: null,
+    payload: flagged,
+  });
+  await older.table('importSources').bulkAdd([
+    {key: 'legacy-v1', value: {raw, dataset}},
+    {key: 'imported:flagged', value: flagged},
+  ]);
+  await older.table('meta').put({key: 'imported-sync-active', value: true});
+  older.close();
+
+  const repository = new WorkoutRepository(name);
+  const set = {...flagged.exercises[0].sets[0]} as Partial<
+    (typeof flagged.exercises)[0]['sets'][0]
+  >;
+  delete set.excluded;
+  delete set.suspicious;
+  const clean = {...flagged, exercises: [{...flagged.exercises[0], sets: [set]}]};
+  const loaded = await repository.readState();
+  expect(loaded.finished).toEqual([clean]);
+  expect(loaded.templates).toEqual([{...clean, id: 'template', date: ''}]);
+  expect(loaded.active).toEqual({...clean, id: 'draft'});
+  expect(loaded.dataset?.workouts).toEqual([clean]);
+  expect(loaded.dataset?.warnings).toEqual(state.dataset.warnings);
+  expect((await repository.db.outbox.toArray())[0].payload).toEqual(clean);
+  expect(await repository.db.workouts.get('flagged')).toEqual(clean);
+  expect(await repository.db.importSources.get('imported:flagged')).toEqual({
+    key: 'imported:flagged',
+    value: clean,
+  });
+  // The original legacy bytes are evidence and stay exactly as written.
+  expect(await repository.db.importSources.get('legacy-v1')).toEqual({
+    key: 'legacy-v1',
+    value: {raw, dataset: {...state.dataset, workouts: [clean]}},
+  });
   repository.close();
 });

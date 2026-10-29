@@ -77,8 +77,6 @@ export function PreviousSet({
           aria-label={`Previous for ${exercise.name} set ${index + 1}`}
         >
           {previousSet ? recorded(previousSet, exercise.type) : '—'}
-          {previousSet?.suspicious ? ' · flagged' : ''}
-          {previousSet?.excluded ? ' · excluded' : ''}
           {previousSet && (
             <span className='mt-[3px] block text-[11px]'>{dateLabel(previous.date)}</span>
           )}
@@ -101,8 +99,7 @@ export function PreviousSet({
             {comparable ? (
               <>
                 <p className='mt-3.5'>
-                  {recorded(comparable.set, exercise.type)}
-                  {comparable.set.suspicious ? ' · flagged' : ''} · {dateLabel(comparable.date)}
+                  {recorded(comparable.set, exercise.type)} · {dateLabel(comparable.date)}
                 </p>
                 <Button
                   variant='ghost'
@@ -144,8 +141,8 @@ export function PreviousSet({
                 entry ? (
                   <li key={label} className='grid gap-0'>
                     <span>
-                      <strong>{label}</strong> {recorded(entry.set, exercise.type)}
-                      {entry.set.suspicious ? ' · flagged' : ''} · {dateLabel(entry.date)}
+                      <strong>{label}</strong> {recorded(entry.set, exercise.type)} ·{' '}
+                      {dateLabel(entry.date)}
                     </span>
                     <Button
                       variant='ghost'
@@ -173,8 +170,6 @@ export function PreviousSet({
                 {previous.sets.map((record, i) => (
                   <li key={record.id}>
                     Set {i + 1}: {recorded(record, exercise.type)}
-                    {record.suspicious ? ' · flagged' : ''}
-                    {record.excluded ? ' · excluded' : ''}
                   </li>
                 ))}
               </ol>

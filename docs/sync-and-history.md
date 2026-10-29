@@ -30,7 +30,11 @@ Also follow the sync-protocol-evolution workflow for a new record kind.
 
 ## Editing history
 
-- Compare optimistic editor bases with `canonical()` (`src/storage/canonical.ts`), not `JSON.stringify`: schema-normalized reads and reimport's appended exclusion flags can reorder otherwise identical objects and falsely block edits or deletes. Test editing and deleting after a newer Strong import carries exclusions.
+- Compare optimistic editor bases with `canonical()` (`src/storage/canonical.ts`), not `JSON.stringify`: schema-normalized reads can reorder otherwise identical objects and falsely block edits or deletes. Test editing and deleting after a newer Strong reimport.
+
+## Retiring a stored field
+
+- Stored, synced and backed-up documents outlive the code that wrote them. When a field leaves the contracts, accept and drop it on parse (`z.preprocess` in `shared/contracts.ts` and `server/src/sync/schema.ts`), strip it from IndexedDB in a new Dexie version's `upgrade` (`src/storage/db.ts`, `src/storage/retired-fields.ts`) and from `records`/`changes` in a server migration, without bumping revisions. Never rewrite original import bytes (`raw`) or restore-evidence archives. The retired set flags `excluded`/`suspicious` and the `suspiciousRows` warning follow this pattern.
 
 ## Aggregating history
 

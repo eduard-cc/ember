@@ -3,6 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {test} from 'node:test';
 
 import {database} from '../src/db/database';
+import {RetiredSetFlags1790850000004} from '../src/db/migrations/retired-set-flags';
 import {origin, setup} from './helpers';
 
 export const workout = (id: string) => ({
@@ -197,50 +198,43 @@ test('workouts and templates can never revise each other', async () => {
 		await s.app.close();
 	}
 });
-test('finished workout accepts exclusion flags and owner edits at the expected revision', async () => {
+test('finished workout accepts owner edits at the expected revision', async () => {
 	const s = await env();
 	try {
 		const native = op();
 		await s.send([native]).expect(201);
-		const flag = (excluded: boolean, revision: number) => {
+		const update = (revision: number) => {
 			const payload = structuredClone(native.payload) as any;
-			if (excluded) payload.exercises[0].sets[0].excluded = true;
 			return {...native, operationId: randomUUID(), expectedRevision: revision, payload};
 		};
-		const exclude = await s.send([flag(true, 1)]).expect(201);
-		assert.equal(exclude.body.results[0].status, 'accepted');
-		assert.equal(exclude.body.results[0].revision, 2);
-		const feed = await s.http
-			.get('/api/v1/sync/changes?after=' + (exclude.body.results[0].changeSeq - 1))
-			.set('Cookie', s.cookie)
-			.expect(200);
-		assert.equal(feed.body.changes[0].kind, 'putWorkout');
-		assert.equal(feed.body.changes[0].payload.exercises[0].sets[0].excluded, true);
-		const stale = await s.send([flag(false, 1)]).expect(201);
-		assert.equal(stale.body.results[0].status, 'conflict');
-		const include = await s.send([flag(false, 2)]).expect(201);
-		assert.equal(include.body.results[0].status, 'accepted');
 		// Owner edits from History: values, name, date, duration and added sets.
-		let revision = 3;
+		let revision = 1;
 		for (const change of [
 			(p: any) => (p.exercises[0].sets[0].reps = 6),
 			(p: any) => (p.name = 'Renamed'),
 			(p: any) => ((p.date = '2026-01-02T08:30:00'), (p.duration = 55)),
 			(p: any) => p.exercises[0].sets.push({...p.exercises[0].sets[0], id: 'extra'}),
 		]) {
-			const edit = flag(false, revision);
+			const edit = update(revision);
 			change(edit.payload);
 			const r = await s.send([edit]).expect(201);
 			assert.equal(r.body.results[0].status, 'accepted');
 			assert.equal(r.body.results[0].revision, ++revision);
 		}
-		const staleEdit = flag(false, 3);
+		const feed = await s.http.get('/api/v1/sync/changes?after=0&limit=100').set('Cookie', s.cookie).expect(200);
+		const latest = feed.body.changes.filter((c: any) => c.entityId === native.entityId).at(-1);
+		assert.equal(latest.revision, 5);
+		assert.deepEqual(
+			latest.payload.exercises[0].sets.map((set: any) => set.id),
+			['source-row-1', 'extra'],
+		);
+		const staleEdit = update(3);
 		staleEdit.payload.name = 'Lost update';
 		assert.equal((await s.send([staleEdit]).expect(201)).body.results[0].status, 'conflict');
 		// An edit can never turn history back into a draft or an empty workout.
-		const draft = flag(false, revision);
+		const draft = update(revision);
 		draft.payload.exercises[0].sets[0].completed = false;
-		const empty = flag(false, revision);
+		const empty = update(revision);
 		empty.payload.exercises = [];
 		const invalid = await s.send([draft, empty]).expect(201);
 		assert.deepEqual(
@@ -251,7 +245,7 @@ test('finished workout accepts exclusion flags and owner edits at the expected r
 		await s.app.close();
 	}
 });
-test('imported workout accepts exclusion flags and owner edits at the expected revision', async () => {
+test('imported workout accepts owner edits at the expected revision', async () => {
 	const s = await env();
 	try {
 		const imported = op('putImportedWorkout');
@@ -261,19 +255,84 @@ test('imported workout accepts exclusion flags and owner edits at the expected r
 			change(payload);
 			return {...imported, operationId: randomUUID(), expectedRevision: revision, payload};
 		};
-		const exclude = await s.send([update(1, (p) => (p.exercises[0].sets[0].excluded = true))]).expect(201);
-		assert.equal(exclude.body.results[0].status, 'accepted');
-		assert.equal(exclude.body.results[0].revision, 2);
-		const include = await s.send([update(2, () => undefined)]).expect(201);
-		assert.equal(include.body.results[0].status, 'accepted');
-		const edit = await s.send([update(3, (p) => (p.exercises[0].sets[0].reps = 9))]).expect(201);
+		const edit = await s.send([update(1, (p) => (p.exercises[0].sets[0].reps = 9))]).expect(201);
 		assert.equal(edit.body.results[0].status, 'accepted');
-		assert.equal(edit.body.results[0].revision, 4);
-		const stale = await s.send([update(3, () => undefined)]).expect(201);
+		assert.equal(edit.body.results[0].revision, 2);
+		const stale = await s.send([update(1, () => undefined)]).expect(201);
 		assert.equal(stale.body.results[0].status, 'conflict');
 		// Native and imported kinds stay separate: neither may revise the other.
-		const crossed = await s.send([{...update(4, () => undefined), kind: 'putWorkout'}]).expect(201);
+		const crossed = await s.send([{...update(2, () => undefined), kind: 'putWorkout'}]).expect(201);
 		assert.equal(crossed.body.results[0].status, 'conflict');
+	} finally {
+		await s.app.close();
+	}
+});
+test('set flags from older clients and stored records are dropped, everything else kept', async () => {
+	const s = await env();
+	try {
+		// An installation that has not updated yet still sends the retired review flags.
+		const older = op('putImportedWorkout');
+		const flagged = structuredClone(older.payload) as any;
+		Object.assign(flagged.exercises[0].sets[0], {excluded: true, suspicious: true});
+		const sent = await s.send([{...older, payload: flagged}]).expect(201);
+		assert.equal(sent.body.results[0].status, 'accepted');
+		// Records written before the migration carry them in stored payloads and history.
+		const stored = op();
+		await s.send([stored]).expect(201);
+		const db = await database(process.env.EMBER_DATABASE_URL!).initialize();
+		try {
+			const [{owner_id: owner}] = await db.query('SELECT owner_id FROM records WHERE entity_id=$1', [
+				stored.entityId,
+			]);
+			const legacy = structuredClone(stored.payload) as any;
+			legacy.exercises[0].sets[0].suspicious = true;
+			legacy.exercises[0].sets.push({...legacy.exercises[0].sets[0], id: 'second', excluded: false});
+			for (const table of ['records', 'changes'])
+				await db.query(`UPDATE ${table} SET payload=$3 WHERE owner_id=$1 AND entity_id=$2`, [
+					owner,
+					stored.entityId,
+					legacy,
+				]);
+			const runner = db.createQueryRunner();
+			try {
+				await new RetiredSetFlags1790850000004().up(runner);
+			} finally {
+				await runner.release();
+			}
+			const [record] = await db.query('SELECT revision, payload FROM records WHERE entity_id=$1', [
+				stored.entityId,
+			]);
+			const {suspicious: _s, ...first} = legacy.exercises[0].sets[0];
+			const {excluded: _e, suspicious: _s2, ...second} = legacy.exercises[0].sets[1];
+			assert.equal(record.revision, 1);
+			assert.deepEqual(record.payload, {...legacy, exercises: [{...legacy.exercises[0], sets: [first, second]}]});
+		} finally {
+			await db.destroy();
+		}
+		const feed = await s.http
+			.get('/api/v1/sync/changes?after=' + (sent.body.results[0].changeSeq - 1) + '&limit=100')
+			.set('Cookie', s.cookie)
+			.expect(200);
+		for (const entityId of [older.entityId, stored.entityId]) {
+			const change = feed.body.changes.find((c: any) => c.entityId === entityId);
+			assert.deepEqual(Object.keys(change.payload.exercises[0].sets[0]).sort(), [
+				'completed',
+				'distance',
+				'id',
+				'original',
+				'reps',
+				'seconds',
+				'weight',
+			]);
+		}
+		// The stored document stays editable at its revision.
+		const edit = {
+			...stored,
+			operationId: randomUUID(),
+			expectedRevision: 1,
+			payload: {...stored.payload, name: 'Edited'},
+		};
+		assert.equal((await s.send([edit]).expect(201)).body.results[0].status, 'accepted');
 	} finally {
 		await s.app.close();
 	}

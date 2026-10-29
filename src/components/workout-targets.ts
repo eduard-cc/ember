@@ -31,10 +31,9 @@ export function historyTargets(
   fallback: SetRecord[] = [],
 ): ExerciseLog {
   const previous = getHistory(dataset, name).find(
-    (session) =>
-      session.type === type && session.sets.some((set) => !set.excluded && !set.suspicious),
+    (session) => session.type === type && session.sets.length,
   );
-  const evidence = previous?.sets.filter((set) => !set.excluded && !set.suspicious) ?? [];
+  const evidence = previous?.sets ?? [];
   const length = count ?? (evidence.length || (type === 'cardio' || type === 'duration' ? 1 : 3));
   return {
     name,

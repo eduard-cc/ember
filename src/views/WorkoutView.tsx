@@ -3,7 +3,6 @@ import {useCallback, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 
 import {ExercisePicker} from '../components/AddExercise';
-import type {ExcludeSetHandler} from '../components/ExcludeSet';
 import {ExerciseMenu} from '../components/ExerciseMenu';
 import {ReorderList, type ReorderStart, scrollParent, useHold} from '../components/ExerciseReorder';
 import {ExerciseThumb} from '../components/ExerciseThumb';
@@ -67,7 +66,6 @@ export function WorkoutView({
   onChange,
   onSource,
   onDeletingChange,
-  onExclude,
   disabled = false,
   targetsOnly = false,
 }: {
@@ -76,10 +74,9 @@ export function WorkoutView({
   onChange: (update: Workout | ((current: Workout) => Workout)) => void;
   onSource: (id: string) => void;
   onDeletingChange: (deleting: boolean) => void;
-  /** Given in the active workout: names and thumbnails then open the exercise's details. */
-  onExclude?: ExcludeSetHandler;
   /** Mirrors the logger's disabled fieldset, which the portaled details sit outside of. */
   disabled?: boolean;
+  /** Routine and history editors: no exercise details from names and thumbnails. */
   targetsOnly?: boolean;
 }) {
   // Save/Finish must wait for every exit, not just the first animated deletion.
@@ -107,7 +104,7 @@ export function WorkoutView({
   const focusAfterPicker = useRef<string | null>(null);
   // Exercise details layer over the logger, which stays mounted underneath: values, checks,
   // scroll position and the clock are untouched. Closing returns focus to the name button.
-  const showDetails = !!onExclude && !targetsOnly;
+  const showDetails = !targetsOnly;
   const [details, setDetails] = useState<{id: string; name: string} | null>(null);
   const detailButtons = useRef(new Map<string, HTMLButtonElement>());
   useBackLayer(details !== null, () => setDetails(null));
@@ -595,7 +592,6 @@ export function WorkoutView({
                     setDetails(null);
                     onSource(id);
                   }}
-                  onExclude={onExclude}
                   emptyFramed={false}
                   renderTitle={(heading) => <DialogTitle asChild>{heading}</DialogTitle>}
                 />

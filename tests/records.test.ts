@@ -21,7 +21,7 @@ const session = (id: string, date: string, type: ExerciseType, sets: SetRecord[]
 const dataset = (workouts: Workout[]): Dataset => ({
   sourceLabel: 'Synthetic',
   workouts,
-  warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+  warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
 });
 
 describe('exercise records', () => {
@@ -46,15 +46,11 @@ describe('exercise records', () => {
     ]);
     expect(twice.exercises).toHaveLength(2);
   });
-  it('reports weighted records with their exact source sets, ignoring excluded rows', () => {
+  it('reports weighted records with their exact source sets', () => {
     const records = getRecords(
       dataset([
         session('a', '2026-01-01T10:00:00', 'weighted', [set('a1', 100, 5), set('a2', 110, 1)]),
-        session('b', '2026-02-01T10:00:00', 'weighted', [
-          set('b1', 105, 8),
-          set('b2', 300, 3, {excluded: true}),
-          set('b3', 100, 12),
-        ]),
+        session('b', '2026-02-01T10:00:00', 'weighted', [set('b1', 105, 8), set('b3', 100, 12)]),
       ]),
       'Press',
     );

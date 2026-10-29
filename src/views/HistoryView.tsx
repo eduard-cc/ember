@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import {useRef, useState} from 'react';
 
-import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {OptionsMenu} from '../components/ExerciseMenu';
 import {HistoryEditor} from '../components/HistoryEditor';
 import {Button} from '../components/ui/button';
@@ -30,13 +29,7 @@ import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
 import {dateLabel} from './WorkoutView';
 
-export function WorkoutDetails({
-  workout,
-  onExclude,
-}: {
-  workout: Workout;
-  onExclude: ExcludeSetHandler;
-}) {
+export function WorkoutDetails({workout}: {workout: Workout}) {
   return (
     <div className='workout-details mt-[18px] grid grid-cols-2 gap-5 border-t border-border pt-[18px] max-desk:grid-cols-1'>
       {workout.exercises.map((ex, i) => (
@@ -44,30 +37,13 @@ export function WorkoutDetails({
           <h3>{ex.name}</h3>
           <div className='recorded-sets mt-[9px] flex flex-col gap-[7px] text-[12px] text-muted-foreground tabular-nums'>
             {ex.sets.map((set, j) => (
-              <div
-                key={set.id}
-                className={cn(
-                  'flex items-center justify-between gap-2',
-                  set.excluded && '[&>span:first-child]:opacity-60',
-                )}
-              >
-                <span className={cn(set.suspicious && 'text-destructive')}>
+              <div key={set.id} className='flex items-center justify-between gap-2'>
+                <span>
                   Set {j + 1}:{' '}
                   {ex.type === 'duration' || ex.type === 'cardio'
                     ? `${set.seconds ?? '—'} seconds${set.distance !== null ? ` · ${set.distance} km` : ''}`
                     : `${set.weight === null ? 'Bodyweight' : `${set.weight} kg${ex.type === 'assisted' ? ' assistance' : ''}`} × ${set.reps ?? '—'} reps`}
-                  {set.suspicious ? ' · review flagged' : ''}
-                  {set.excluded ? ' · excluded' : ''}
                 </span>
-                <ExcludeSet
-                  workoutId={workout.id}
-                  date={workout.date}
-                  exercise={ex.name}
-                  set={set}
-                  number={j + 1}
-                  type={ex.type}
-                  onExclude={onExclude}
-                />
               </div>
             ))}
           </div>
@@ -81,7 +57,6 @@ export function HistoryView({
   focusedId,
   onRepeat,
   onTemplate,
-  onExclude,
   onChange,
   disabled,
   locked,
@@ -90,7 +65,6 @@ export function HistoryView({
   focusedId: string | null;
   onRepeat: (workout: Workout) => void;
   onTemplate: (workout: Workout) => void;
-  onExclude: ExcludeSetHandler;
   /** Save an edited workout (`next`) or delete it (`next` null). */
   onChange: (base: Workout, next: Workout | null) => Promise<boolean>;
   /** Mirrors the library's disabled fieldset, which the portaled editor sits outside of. */
@@ -204,7 +178,7 @@ export function HistoryView({
                 />
               </div>
             </div>
-            {open && <WorkoutDetails workout={workout} onExclude={onExclude} />}
+            {open && <WorkoutDetails workout={workout} />}
             <footer className='mt-[18px] flex flex-wrap gap-2 border-t border-border pt-4'>
               <Button
                 aria-label={`Repeat workout ${workout.name} ${dateLabel(workout.date)}`}

@@ -2,7 +2,6 @@ import {ArrowLeft, ArrowUpRight, History, Info, Trophy} from 'lucide-react';
 import {type ReactElement, type ReactNode, useId, useState} from 'react';
 
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
-import {ExcludeSet, type ExcludeSetHandler} from '../components/ExcludeSet';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
 import {Button} from '../components/ui/button';
 import {MetricExplanation} from '../components/ui/chart';
@@ -83,13 +82,11 @@ function HistoryTab({
   dataset,
   name,
   onSource,
-  onExclude,
   framed,
 }: {
   dataset: Dataset;
   name: string;
   onSource: (id: string) => void;
-  onExclude: ExcludeSetHandler;
   framed: boolean;
 }) {
   const [limit, setLimit] = useState(10);
@@ -127,36 +124,22 @@ function HistoryTab({
           <div
             className={cn(
               'mt-1.5 grid items-center gap-x-3 gap-y-1 pr-2.5 text-[14px] tabular-nums',
-              session.type === 'weighted' ? 'grid-cols-[1fr_auto_auto]' : 'grid-cols-[1fr_auto]',
+              session.type === 'weighted' ? 'grid-cols-[1fr_auto]' : 'grid-cols-[1fr]',
             )}
           >
             <span className={sessionHeadClass}>Sets performed</span>
             {session.type === 'weighted' && <span className={sessionHeadClass}>Est. 1RM</span>}
-            <span className={sessionHeadClass}>
-              <span className='sr-only'>Analytics</span>
-            </span>
             {session.sets.map((set, j) => {
               const e1rm = estimate1RM(set, session.type);
               return (
                 <div key={set.id} className='session-set contents'>
-                  <span className={cn(set.excluded && 'opacity-60')}>
+                  <span>
                     <b className='inline-block min-w-[22px] font-semibold text-muted-foreground'>
                       {j + 1}
                     </b>
                     {setLabel(set, session.type)}
-                    {set.suspicious ? ' · flagged' : ''}
-                    {set.excluded ? ' · excluded' : ''}
                   </span>
                   {session.type === 'weighted' && <span>{e1rm === null ? '—' : kg(e1rm)}</span>}
-                  <ExcludeSet
-                    workoutId={session.workoutId}
-                    date={session.date}
-                    exercise={name}
-                    set={set}
-                    number={j + 1}
-                    type={session.type}
-                    onExclude={onExclude}
-                  />
                 </div>
               );
             })}
@@ -282,7 +265,6 @@ export function ExerciseDetail({
   name,
   onBack,
   onSource,
-  onExclude,
   backLabel = 'Back to exercises',
   renderTitle = (heading) => heading,
   emptyFramed = true,
@@ -291,7 +273,6 @@ export function ExerciseDetail({
   name: string;
   onBack: () => void;
   onSource: (id: string) => void;
-  onExclude: ExcludeSetHandler;
   backLabel?: string;
   /** Lets a dialog host wrap the name heading as its accessible title. */
   renderTitle?: (heading: ReactElement) => ReactNode;
@@ -339,13 +320,7 @@ export function ExerciseDetail({
       <div role='tabpanel' id={`${id}-panel`} aria-labelledby={`${id}-tab-${tab}`}>
         {tab === 'About' && <About name={name} framed={emptyFramed} />}
         {tab === 'History' && (
-          <HistoryTab
-            dataset={dataset}
-            name={name}
-            onSource={onSource}
-            onExclude={onExclude}
-            framed={emptyFramed}
-          />
+          <HistoryTab dataset={dataset} name={name} onSource={onSource} framed={emptyFramed} />
         )}
         {tab === 'Charts' && (
           <ExerciseCharts

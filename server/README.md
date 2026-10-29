@@ -137,8 +137,8 @@ local wall time, kg above 0 and at most 500 with at most two decimals, and a tom
 stored in the same generic `records`/`changes` tables; each kind may only revise records of its own
 kind, so measurements and workouts can never overwrite each other. Measurement updates and
 tombstones require the current revision, like templates. Source entity/set IDs are not forced to UUIDs.
-All Workout fields including optional set flags and string-valued `original` evidence
-are preserved, with no timestamp conversion, name merging, set deduplication or analytics.
+All Workout fields including the optional completion flag and string-valued `original` evidence
+are preserved (the retired `excluded`/`suspicious` set flags are accepted from older clients and dropped), with no timestamp conversion, name merging, set deduplication or analytics.
 Unknown fields, nonfinite values and ID mismatches are rejected. Defensive bounds:
 IDs 512 characters; names 1000; up to 1000 exercises and 5000 sets per exercise.
 Dates are calendar-valid timezone-free `YYYY-MM-DDTHH:mm:ss` wall timestamps or

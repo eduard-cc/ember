@@ -69,7 +69,7 @@ it('repeats and templates start with zero duration and unchecked targets without
   expect(historical.exercises[0].sets[0].completed).toBe(true);
 });
 
-it('repeats and templates start clean of imported source evidence, flags and exclusions', () => {
+it('repeats and templates start clean of imported source evidence', () => {
   const evidence = {Date: '2026-01-03 09:00:00', 'Exercise Name': 'Press', Weight: '40', Reps: '5'};
   const historical: Workout = {
     id: 'import:synthetic:0',
@@ -95,8 +95,6 @@ it('repeats and templates start clean of imported source evidence, flags and exc
             reps: 50,
             seconds: null,
             distance: null,
-            suspicious: true,
-            excluded: true,
             original: {...evidence, Reps: '50'},
           },
         ],
@@ -125,6 +123,6 @@ it('repeats and templates start clean of imported source evidence, flags and exc
     });
     expect(first.id).not.toMatch(/^import:/);
   }
-  expect(historical.exercises[0].sets[1]).toMatchObject({suspicious: true, excluded: true});
+  expect(historical.exercises[0].sets[1].original).toEqual({...evidence, Reps: '50'});
   expect(historical.exercises[0].sets[0].original).toBe(evidence);
 });

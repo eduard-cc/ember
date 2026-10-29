@@ -164,6 +164,7 @@ test('five-column Previous opens evidence for the selected set weight and source
   await second.getByRole('button', {name: /Previous for .* set 2/}).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toContainText('Best at 60 kg');
+  await expect(dialog).toContainText(/60 kg × \d+ · \d/);
   await expect(dialog).toContainText('Previous session');
   await expect(dialog.getByRole('button', {name: /View source workout/}).first()).toBeVisible();
   await dialog
@@ -196,8 +197,8 @@ test('an unrecorded weight shows the nearest actual lighter and heavier sets wit
   await expect(nearest).toContainText('actual sets');
   const lighter = nearest.getByRole('listitem').filter({hasText: 'Lighter'});
   const heavier = nearest.getByRole('listitem').filter({hasText: 'Heavier'});
-  await expect(lighter).toContainText('60 kg × 9');
-  await expect(heavier).toContainText('62.5 kg × 8');
+  await expect(lighter).toContainText(/60 kg × 9 · \d/);
+  await expect(heavier).toContainText(/62\.5 kg × 8 · \d/);
   const view = heavier.getByRole('button', {name: /View source workout/});
   const box = (await view.boundingBox())!;
   expect(box.height).toBeGreaterThanOrEqual(44);
@@ -321,7 +322,7 @@ const seeded = {
   dataset: {
     sourceLabel: 'Synthetic fixture',
     workouts: historical,
-    warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+    warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
   },
   active: null,
   finished: [],

@@ -14,17 +14,24 @@ const date = z
 				new Date(value + 'Z').toISOString().slice(0, 19) === value),
 		'Invalid local timestamp',
 	);
-const set = z.strictObject({
-	id,
-	weight: numeric,
-	reps: numeric,
-	seconds: numeric,
-	distance: numeric,
-	completed: z.boolean().optional(),
-	excluded: z.boolean().optional(),
-	suspicious: z.boolean().optional(),
-	original: z.record(z.string(), z.string()).optional(),
-});
+// Older clients and stored documents may still carry the retired `excluded`/`suspicious`
+// set flags: accept them and drop them, so they are never stored again.
+const set = z.preprocess(
+	(value) => {
+		if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+		const {excluded: _excluded, suspicious: _suspicious, ...rest} = value as Record<string, unknown>;
+		return rest;
+	},
+	z.strictObject({
+		id,
+		weight: numeric,
+		reps: numeric,
+		seconds: numeric,
+		distance: numeric,
+		completed: z.boolean().optional(),
+		original: z.record(z.string(), z.string()).optional(),
+	}),
+);
 export const workout = z.strictObject({
 	id,
 	name: z.string().min(1).max(1000),

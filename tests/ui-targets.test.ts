@@ -21,17 +21,11 @@ const workout = (id: string, date: string, type: ExerciseType, sets: SetRecord[]
 });
 const dataset: Dataset = {
   sourceLabel: 'Synthetic fixture',
-  warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+  warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
   workouts: [
     workout('old', '2026-01-01T12:00:00', 'weighted', [set('old-1', 20, 8)]),
     workout('new', '2026-02-01T12:00:00', 'weighted', [set('new-1', 50, 10), set('new-2', 45, 9)]),
     workout('wrong-type', '2026-03-01T12:00:00', 'assisted', [set('assist-1', 15, 8)]),
-    workout('excluded', '2026-04-01T12:00:00', 'weighted', [
-      {...set('excluded-1', 999, 100), excluded: true},
-    ]),
-    workout('flagged', '2026-05-01T12:00:00', 'weighted', [
-      {...set('flagged-1', 998, 100), suspicious: true},
-    ]),
   ],
 };
 

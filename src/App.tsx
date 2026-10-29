@@ -100,7 +100,6 @@ export default function App() {
     ownershipError,
     saveStatus,
     finishWorkout,
-    setSetExcluded,
     changeHistoryWorkout,
     persistenceError,
     recoveryError,
@@ -230,7 +229,7 @@ export default function App() {
       state.dataset ?? {
         sourceLabel: 'History',
         workouts: [],
-        warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+        warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
       },
     [state.dataset],
   );
@@ -470,7 +469,6 @@ export default function App() {
                   focusedId={focusedId}
                   onRepeat={start}
                   onTemplate={saveTemplate}
-                  onExclude={setSetExcluded}
                   onChange={changeHistoryWorkout}
                   disabled={disabled}
                   locked={sync.locked}
@@ -484,7 +482,6 @@ export default function App() {
                     name={exercise}
                     onBack={() => setExercise(null)}
                     onSource={source}
-                    onExclude={setSetExcluded}
                   />
                 ) : (
                   <ExercisesView dataset={allDataset} onOpen={setExercise} />
@@ -610,7 +607,6 @@ export default function App() {
                     }
                     onDeletingChange={setDeletingSets}
                     onSource={source}
-                    onExclude={setSetExcluded}
                     disabled={disabled}
                   />
                   <div className='flex flex-col gap-3 px-4 pt-[18px] pb-[30px]'>
@@ -710,12 +706,9 @@ export default function App() {
                         const result = await commitStrongImport(repository, prepared, true);
                         await refresh();
                         setNotice(
-                          (result.status === 'identical'
+                          result.status === 'identical'
                             ? 'Identical file already imported. No history changed.'
-                            : 'History replaced. Your draft and finished workouts were kept.') +
-                            (result.unmatchedExclusions
-                              ? ` ${plural(result.unmatchedExclusions, 'excluded set')} no longer in this export, so ${result.unmatchedExclusions === 1 ? 'its' : 'their'} exclusion was dropped.`
-                              : ''),
+                            : 'History replaced. Your draft and finished workouts were kept.',
                         );
                         void sync.sync();
                       })();

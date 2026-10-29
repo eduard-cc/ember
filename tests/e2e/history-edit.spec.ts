@@ -30,7 +30,7 @@ const seeded = {
         exercises: [{name: 'Synthetic Row', type: 'weighted', sets: [set('r1', 30, 10)]}],
       },
     ],
-    warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+    warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
   },
   active: null,
   finished: [],

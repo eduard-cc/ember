@@ -19,7 +19,7 @@ const workout = (id: string, date: string, names: string[]): Workout => ({
 });
 const dataset: Dataset = {
   sourceLabel: 'Synthetic fixture',
-  warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+  warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
   workouts: [
     workout('a', '2026-01-01T12:00:00', ['Squat', 'Squat', 'Curl']),
     workout('b', '2026-02-01T12:00:00', ['Curl']),

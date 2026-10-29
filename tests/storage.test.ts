@@ -47,7 +47,7 @@ describe('durable repository', () => {
       dataset: {
         sourceLabel: 'Synthetic import',
         workouts: [imported],
-        warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+        warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
       },
       active,
       finished: [past],

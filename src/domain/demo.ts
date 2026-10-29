@@ -99,5 +99,5 @@ for (let week = 0; week < 8; week++) {
 export const demoDataset: Dataset = {
   sourceLabel: 'Demo data',
   workouts: history.sort((a, b) => b.date.localeCompare(a.date)),
-  warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+  warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
 };

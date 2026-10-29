@@ -33,7 +33,6 @@ describe('exercise-specific metrics', () => {
     expect(estimate1RM({...set, reps: 1}, 'weighted')).toBe(60);
     expect(estimate1RM({...set, reps: 11}, 'weighted')).toBeNull();
     expect(estimate1RM(set, 'assisted')).toBeNull();
-    expect(estimate1RM({...set, excluded: true}, 'weighted')).toBeNull();
     expect(setVolume(set, 'weighted')).toBe(480);
     expect(setVolume(set, 'assisted')).toBeNull();
     expect(classifyExercise('Pull Up (Assisted)', [set])).toBe('assisted');
@@ -91,8 +90,6 @@ describe('inspectable exercise history', () => {
     expect(best?.set.reps).toBe(10);
     expect(best?.date.slice(0, 10)).toBe('2026-01-12');
     expect(bestComparable(data, 'Bench Press (Barbell)', 62.5)).toBeNull();
-    data.workouts[0].exercises[0].sets[0].excluded = true;
-    expect(getTrend(data, 'Bench Press (Barbell)', 'load').map((p) => p.value)).toEqual([60, 60]);
     expect(getHistory(data, 'Bench Press (Barbell)')).toHaveLength(3);
   });
 });
@@ -106,7 +103,7 @@ describe('Strong import', () => {
     const overflowDistance = row.replace(';8;;;;0;', ';8;;' + '17' + '0'.repeat(307) + ';mi;0;');
     expect(() => parseStrongCsv(header + '\n' + overflowDistance)).toThrow();
   });
-  it('normalizes units without losing originals and flags unusual values instead of silently correcting them', () => {
+  it('normalizes units without losing originals and keeps unusual values as recorded', () => {
     const data = parseStrongCsv(
       header +
         '\n' +
@@ -119,9 +116,6 @@ describe('Strong import', () => {
     expect(sets[0].original?.Weight).toBe('100');
     expect(sets[1].weight).toBe(500);
     expect(sets[1].reps).toBe(121);
-    expect(sets[1].suspicious).toBe(true);
-    expect(sets[1].excluded).not.toBe(true);
-    expect(data.warnings.suspiciousRows).toBe(1);
   });
   it('rejects malformed dates, invalid numbers and unknown units without inventing records', () => {
     for (const csv of [

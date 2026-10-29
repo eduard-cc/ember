@@ -84,8 +84,7 @@ export function ImportPanel({
           </p>
           <p className='mt-2'>
             {preview.warnings.duplicateRows} repeated rows · {preview.warnings.duplicateKeys} key
-            collisions · {preview.warnings.suspiciousRows} flagged sets. Repeated rows are
-            preserved, not silently merged.
+            collisions. Repeated rows are preserved, not silently merged.
           </p>
           <p className='mt-2'>
             Replace the imported/demo history, not append to it. Finished workouts, templates and

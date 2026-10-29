@@ -77,7 +77,6 @@ export function getTrend(dataset: Dataset, name: string, metric: Metric): TrendP
   const points = getHistory(dataset, name)
     .flatMap((session) => {
       const values = session.sets
-        .filter((set) => !set.excluded)
         .map((set) =>
           metric === 'e1rm'
             ? estimate1RM(set, session.type)
@@ -115,7 +114,7 @@ export function getTrend(dataset: Dataset, name: string, metric: Metric): TrendP
 function repEvidence(sessions: ExerciseSession[]): Comparable[] {
   return sessions.flatMap((session) =>
     session.sets
-      .filter((set) => !set.excluded && set.reps !== null && set.reps > 0)
+      .filter((set) => set.reps !== null && set.reps > 0)
       .map((set) => ({
         set,
         workoutId: session.workoutId,
@@ -124,14 +123,11 @@ function repEvidence(sessions: ExerciseSession[]): Comparable[] {
       })),
   );
 }
-/** Unflagged before flagged, then most reps, then newest. */
+/** Most reps, then newest. */
 function bestReps(candidates: Comparable[]): Comparable | null {
   return (
     [...candidates].sort(
-      (a, b) =>
-        Number(a.set.suspicious === true) - Number(b.set.suspicious === true) ||
-        (b.set.reps ?? 0) - (a.set.reps ?? 0) ||
-        b.date.localeCompare(a.date),
+      (a, b) => (b.set.reps ?? 0) - (a.set.reps ?? 0) || b.date.localeCompare(a.date),
     )[0] ?? null
   );
 }
@@ -175,33 +171,6 @@ export function nearestRecorded(
     ),
   };
 }
-/**
- * Owner review flag: exclude one recorded set from analytics, or include it again.
- * Raw values, ids, order and the import flag stay untouched; only `excluded` changes.
- * Including again removes the key so the document matches its original form.
- */
-export function withSetExcluded(workout: Workout, setId: string, excluded: boolean): Workout {
-  const matches = workout.exercises
-    .flatMap((exercise) => exercise.sets)
-    .filter((set) => set.id === setId);
-  if (matches.length !== 1) throw new Error('Set not found in this workout');
-  return {
-    ...workout,
-    exercises: workout.exercises.map((exercise) =>
-      exercise.sets.some((set) => set.id === setId)
-        ? {
-            ...exercise,
-            sets: exercise.sets.map((set) => {
-              if (set.id !== setId) return set;
-              const next = {...set, excluded: true};
-              if (!excluded) delete (next as SetRecord).excluded;
-              return next;
-            }),
-          }
-        : exercise,
-    ),
-  };
-}
 export function classifyExercise(name: string, sets: SetRecord[]): ExerciseType {
   if (/assisted/i.test(name)) return 'assisted';
   if (/^(Pull Up|Triceps Dip|Chest Dip|Push Up|Sit Up|Hanging Leg Raise)(?:$|\s*\()/i.test(name))
@@ -214,7 +183,6 @@ export function classifyExercise(name: string, sets: SetRecord[]): ExerciseType 
 export function estimate1RM(set: SetRecord, type: ExerciseType): number | null {
   if (
     type !== 'weighted' ||
-    set.excluded ||
     set.weight === null ||
     set.weight <= 0 ||
     set.reps === null ||
@@ -229,7 +197,6 @@ export function estimate1RM(set: SetRecord, type: ExerciseType): number | null {
 export function setVolume(set: SetRecord, type: ExerciseType): number | null {
   if (
     type !== 'weighted' ||
-    set.excluded ||
     set.weight === null ||
     set.weight < 0 ||
     set.reps === null ||
@@ -267,7 +234,7 @@ export function parseStrongCsv(text: string): Dataset {
   const workouts = new Map<string, Workout>();
   const exact = new Set<string>();
   const keys = new Set<string>();
-  const warnings = {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0};
+  const warnings = {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0};
   result.data.forEach((row, index) => {
     if (!row['Workout Name']?.trim() || !row['Exercise Name']?.trim())
       throw new Error(`Row ${index + 2} is missing a workout or exercise name.`);
@@ -342,12 +309,6 @@ export function parseStrongCsv(text: string): Dataset {
       throw new Error(
         `Row ${index + 2} exceeds the supported numeric range after unit conversion.`,
       );
-    set.suspicious =
-      (set.weight !== null && (set.weight < 0 || set.weight > 400)) ||
-      (set.reps !== null && (set.reps < 0 || set.reps > 50 || !Number.isInteger(set.reps))) ||
-      (set.seconds !== null && set.seconds < 0) ||
-      (set.distance !== null && set.distance < 0);
-    if (set.suspicious) warnings.suspiciousRows++;
     exercise.sets.push(set);
     const exactKey = JSON.stringify(row);
     if (exact.has(exactKey)) warnings.duplicateRows++;
@@ -392,7 +353,7 @@ export interface ExerciseRecords {
   /** Heaviest recorded weight for each exact rep count (weighted work only). */
   repBests: (RecordEntry & {reps: number})[];
 }
-/** Every record links back to the exact set that produced it; excluded rows never count. */
+/** Every record links back to the exact set that produced it. */
 export function getRecords(dataset: Dataset, name: string): ExerciseRecords {
   const history = getHistory(dataset, name);
   const best = (
@@ -403,7 +364,6 @@ export function getRecords(dataset: Dataset, name: string): ExerciseRecords {
     // Oldest first, so ties keep the first time a record was reached.
     for (const session of [...history].reverse())
       for (const set of session.sets) {
-        if (set.excluded) continue;
         const value = pick(set, session.type);
         if (value === null || !Number.isFinite(value)) continue;
         if (!found || better(value, found.value))
@@ -439,7 +399,7 @@ export function getRecords(dataset: Dataset, name: string): ExerciseRecords {
   for (const session of [...history].reverse())
     if (session.type === 'weighted')
       for (const set of session.sets)
-        if (!set.excluded && weightedReps(set) && Number.isInteger(set.reps)) {
+        if (weightedReps(set) && Number.isInteger(set.reps)) {
           const current = reps.get(set.reps!);
           if (!current || set.weight! > current.value)
             reps.set(set.reps!, {

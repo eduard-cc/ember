@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {bestComparable, nearestRecorded} from '../src/domain/model';
+import {nearestRecorded} from '../src/domain/model';
 import type {Dataset, ExerciseType, SetRecord} from '../src/domain/types';
 
 type Row = [
@@ -15,7 +15,7 @@ type Row = [
 function dataset(rows: Row[]): Dataset {
   return {
     sourceLabel: 'synthetic',
-    warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+    warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
     workouts: rows.map(([id, date, weight, reps, extra = {}], i) => {
       const {name = 'Bench Press (Barbell)', type = 'weighted', ...set} = extra;
       return {
@@ -80,9 +80,8 @@ describe('nearest recorded weights when the chosen weight has no history', () =>
     expect(nearestRecorded(data, bench, 'weighted', 62.5).below?.workoutId).toBe('new');
   });
 
-  it('ignores excluded sets and sets without reps', () => {
+  it('ignores sets without reps', () => {
     const data = dataset([
-      ['excluded', '2026-01-01T18:00:00', 62.5, 10, {excluded: true}],
       ['noreps', '2026-01-02T18:00:00', 63, null],
       ['zero', '2026-01-03T18:00:00', 63.5, 0],
       ['real', '2026-01-04T18:00:00', 60, 6],
@@ -91,17 +90,6 @@ describe('nearest recorded weights when the chosen weight has no history', () =>
       below: {workoutId: 'real'},
       above: null,
     });
-  });
-
-  it('keeps flagged sets as evidence but never prefers them over an unflagged set at that weight', () => {
-    const data = dataset([
-      ['flagged', '2026-02-01T18:00:00', 60, 40, {suspicious: true}],
-      ['clean', '2026-01-01T18:00:00', 60, 8],
-      ['onlyflagged', '2026-01-05T18:00:00', 70, 5, {suspicious: true}],
-    ]);
-    const near = nearestRecorded(data, bench, 'weighted', 65);
-    expect(near.below?.workoutId).toBe('clean');
-    expect(near.above).toMatchObject({workoutId: 'onlyflagged', set: {suspicious: true}});
   });
 
   it('keeps assistance as recorded assistance without conversion', () => {
@@ -146,15 +134,5 @@ describe('nearest recorded weights when the chosen weight has no history', () =>
     ]);
     expect(nearestRecorded(data, 'Pull Up', 'bodyweight', 5)).toEqual({below: null, above: null});
     expect(nearestRecorded(data, 'Pull Up', 'duration', 5)).toEqual({below: null, above: null});
-  });
-});
-
-describe('best exact-weight evidence', () => {
-  it('prefers an unflagged set over a flagged one with more reps', () => {
-    const data = dataset([
-      ['flagged', '2026-02-01T18:00:00', 60, 40, {suspicious: true}],
-      ['clean', '2026-01-01T18:00:00', 60, 8],
-    ]);
-    expect(bestComparable(data, bench, 60)?.workoutId).toBe('clean');
   });
 });

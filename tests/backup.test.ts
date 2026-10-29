@@ -45,7 +45,7 @@ const state = {
   dataset: {
     sourceLabel: 'synthetic',
     workouts: [workout],
-    warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+    warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
   },
   active: {...workout, id: 'draft'},
   finished: [],

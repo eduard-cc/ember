@@ -126,7 +126,7 @@ it('bootstraps legacy finished imported and template records once without upload
       dataset: {
         sourceLabel: 'Strong CSV',
         workouts: [{...workout, id: 'legacy-import'}],
-        warnings: {duplicateRows: 0, duplicateKeys: 0, suspiciousRows: 0, unparsedRows: 0},
+        warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
       },
     },
   });

@@ -33,7 +33,22 @@ export const BodyWeightSchema = z.strictObject({
   deleted: z.boolean(),
 });
 export type BodyWeight = z.infer<typeof BodyWeightSchema>;
-export const SetRecordSchema = z
+/**
+ * Drops keys that older documents may still carry: sets once held `excluded`/`suspicious`
+ * review flags and import warnings a `suspiciousRows` count. Stored, synced and backed-up
+ * documents keep loading; the parsed result never contains them.
+ */
+const without =
+  (...keys: string[]) =>
+  (value: unknown) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+    const rest: Record<string, unknown> = {...value};
+    for (const key of keys) delete rest[key];
+    return rest;
+  };
+export const RETIRED_SET_KEYS = ['excluded', 'suspicious'] as const;
+export const RETIRED_WARNING_KEYS = ['suspiciousRows'] as const;
+const setFields = z
   .object({
     id,
     weight: number,
@@ -41,11 +56,10 @@ export const SetRecordSchema = z
     seconds: number,
     distance: number,
     completed: z.boolean().optional(),
-    excluded: z.boolean().optional(),
-    suspicious: z.boolean().optional(),
     original: z.record(z.string(), z.string()).optional(),
   })
   .strict();
+export const SetRecordSchema = z.preprocess(without(...RETIRED_SET_KEYS), setFields);
 export const WorkoutSchema = z
   .object({
     id,
@@ -67,14 +81,16 @@ export const DatasetSchema = z
   .object({
     sourceLabel: z.string(),
     workouts: z.array(WorkoutSchema),
-    warnings: z
-      .object({
-        duplicateRows: z.number().int().nonnegative(),
-        duplicateKeys: z.number().int().nonnegative(),
-        suspiciousRows: z.number().int().nonnegative(),
-        unparsedRows: z.number().int().nonnegative(),
-      })
-      .strict(),
+    warnings: z.preprocess(
+      without(...RETIRED_WARNING_KEYS),
+      z
+        .object({
+          duplicateRows: z.number().int().nonnegative(),
+          duplicateKeys: z.number().int().nonnegative(),
+          unparsedRows: z.number().int().nonnegative(),
+        })
+        .strict(),
+    ),
   })
   .strict();
 export const AppStateSchema = z

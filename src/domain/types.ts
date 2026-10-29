@@ -6,8 +6,6 @@ export interface SetRecord {
   seconds: number | null;
   distance: number | null;
   completed?: boolean;
-  excluded?: boolean;
-  suspicious?: boolean;
   original?: Record<string, string>;
 }
 export interface ExerciseLog {
@@ -28,7 +26,6 @@ export interface Dataset {
   warnings: {
     duplicateRows: number;
     duplicateKeys: number;
-    suspiciousRows: number;
     unparsedRows: number;
   };
 }

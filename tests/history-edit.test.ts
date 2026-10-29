@@ -46,7 +46,7 @@ const operations = async (repository: WorkoutRepository) => {
   return order.map((id) => all.find((o) => o.operationId === id)!).filter(Boolean);
 };
 
-it('edits keep untouched imported evidence and clear the review flag only on corrected sets', () => {
+it('edits keep untouched imported evidence and the source evidence of corrected sets', () => {
   const base: Workout = {
     ...native,
     exercises: [
@@ -60,8 +60,6 @@ it('edits keep untouched imported evidence and clear the review flag only on cor
             reps: 80,
             seconds: null,
             distance: null,
-            suspicious: true,
-            excluded: true,
             original: {Reps: '80'},
           },
           {id: 'raw', weight: null, reps: 0, seconds: null, distance: null, original: {Reps: '0'}},
@@ -82,14 +80,13 @@ it('edits keep untouched imported evidence and clear the review flag only on cor
   expect('completed' in kept).toBe(false);
   // Untouched invalid raw value is allowed to stay as imported.
   expect(raw).toEqual(base.exercises[0].sets[2]);
-  // Corrected: new value, same evidence and exclusion, no review flag, no draft state.
+  // Corrected: new value, same evidence, no draft state.
   expect(corrected).toEqual({
     id: 'odd',
     weight: 40,
     reps: 8,
     seconds: null,
     distance: null,
-    excluded: true,
     original: {Reps: '80'},
   });
 });
@@ -209,7 +206,7 @@ it('edits and deletes synchronized imported history with imported operation kind
 });
 
 it.each(['edit', 'delete'] as const)(
-  '%s works after a Strong reimport carries a set exclusion',
+  '%s works on a workout carried over by a newer Strong reimport',
   async (action) => {
     const repository = repo();
     try {
@@ -219,7 +216,6 @@ it.each(['edit', 'delete'] as const)(
         true,
       );
       const earlier = (await repository.readState()).dataset!.workouts[1];
-      await repository.setSetExcluded(earlier.id, earlier.exercises[0].sets[1].id, true);
       const newerCsv = csv + '\n2026-01-15 10:00:00;Upper;Press;1;44;kg;8;;30m';
       await commitStrongImport(
         repository,
@@ -229,8 +225,7 @@ it.each(['edit', 'delete'] as const)(
       const base = (await repository.readState()).dataset!.workouts.find(
         (w) => w.date === earlier.date,
       )!;
-      expect(base.exercises[0].sets[1].excluded).toBe(true);
-      // readState normalizes schema key order; the carried flag was appended in storage.
+      expect(base.exercises[0].sets[1].original).toEqual(earlier.exercises[0].sets[1].original);
       const next = action === 'edit' ? {...base, name: 'Corrected import'} : null;
       await repository.changeHistoryWorkout(base, next);
       const stored = (await repository.readState()).dataset!.workouts.find((w) => w.id === base.id);

@@ -25,8 +25,8 @@ export interface HistoryEdit {
 /**
  * Turn an edited copy back into a history document. Untouched sets keep every stored field,
  * so imported raw values survive even when they would not pass today's validation. New and
- * changed sets must be valid. A changed set keeps its source evidence and exclusion but loses
- * the import's review flag: the owner has corrected it. New sets carry no copied provenance.
+ * changed sets must be valid. A changed set keeps its source evidence. New sets carry no
+ * copied provenance.
  * Exercises left without sets are dropped.
  */
 export function editedHistory(base: Workout, draft: Workout): HistoryEdit {
@@ -52,7 +52,6 @@ export function editedHistory(base: Workout, draft: Workout): HistoryEdit {
             completed: true,
           };
         const kept: SetRecord = {...set};
-        if (changed) delete kept.suspicious;
         if (old.set.completed === undefined) delete kept.completed;
         else kept.completed = old.set.completed;
         return kept;

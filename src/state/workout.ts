@@ -18,8 +18,8 @@ export function newWorkout(workout?: Workout): Workout {
     exercises:
       workout?.exercises.map((ex) => ({
         ...ex,
-        // Only the targets carry over: source evidence, review flags and exclusions belong to
-        // the recorded set, not to a new session prefilled from it.
+        // Only the targets carry over: source evidence belongs to the recorded set, not to a
+        // new session prefilled from it.
         sets: ex.sets.map(({weight, reps, seconds, distance}) => ({
           id: crypto.randomUUID(),
           weight,
@@ -258,48 +258,6 @@ export function useWorkoutState() {
       finishing.current = false;
     }
   }, [repository]);
-  /** Owner review: exclude a recorded set from analytics or include it again. */
-  const setSetExcluded = useCallback(
-    (workoutId: string, setId: string, excluded: boolean) => {
-      if (
-        !ready.current ||
-        !writable.current ||
-        blocked.current ||
-        suspended.current ||
-        finishing.current
-      )
-        return Promise.resolve(false);
-      const revision = ++generation.current;
-      setSaveStatus('saving');
-      const job = writeQueue.current.then(async () => {
-        try {
-          // An unsaved earlier edit must be retried first; never claim it saved here.
-          if (failedWrite.current) throw new Error('Earlier changes are not saved');
-          await repository.setSetExcluded(workoutId, setId, excluded);
-          const stored = await repository.readState();
-          const history = {dataset: stored.dataset, finished: stored.finished};
-          committed.current = {...committed.current, ...history};
-          current.current = {...current.current, ...history};
-          updateState(current.current);
-          if (revision === generation.current) {
-            lastSavedGeneration.current = revision;
-            setSaveStatus('saved');
-            setError('');
-          }
-          return true;
-        } catch {
-          if (revision === generation.current) {
-            setSaveStatus('error');
-            setError('Could not save on this device. The set was not changed; retry.');
-          }
-          return false;
-        }
-      });
-      writeQueue.current = job;
-      return job;
-    },
-    [repository],
-  );
   /** Owner edit (`next`) or deletion (`next` null) of a finished or imported workout. */
   const changeHistoryWorkout = useCallback(
     (base: Workout, next: Workout | null) => {
@@ -434,7 +392,6 @@ export function useWorkoutState() {
     ownershipError,
     saveStatus,
     finishWorkout,
-    setSetExcluded,
     changeHistoryWorkout,
     recoveryError,
     resetUnreadableStorage,
