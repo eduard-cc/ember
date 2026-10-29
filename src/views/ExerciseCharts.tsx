@@ -173,7 +173,7 @@ export function ExerciseCharts({
       )}
       <MetricExplanation>
         {activeMetric === 'e1rm'
-          ? 'Epley estimate = weight × (1 + reps / 30), for 2–10 reps. One rep uses recorded weight. This is an estimate, not a tested maximum.'
+          ? 'Epley estimate = weight × (1 + reps / 30), for 1–10 reps. One rep uses recorded weight. This is an estimate, not a tested maximum.'
           : activeMetric === 'volume'
             ? 'Recorded load × reps, summed per session. Not a measure of hypertrophy. Dumbbell load is per dumbbell.'
             : activeMetric === 'load' && type === 'assisted'

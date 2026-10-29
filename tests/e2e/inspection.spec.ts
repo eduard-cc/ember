@@ -26,7 +26,9 @@ test('progress exposes source sets and selectable metrics', async ({page}) => {
   await page.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).first().click();
   await page.getByRole('tab', {name: 'Charts', exact: true}).click();
   await page.getByRole('button', {name: 'Estimated 1RM', exact: true}).click();
-  await expect(page.getByText(/Epley/)).toBeVisible();
+  await expect(
+    page.getByText(/Epley estimate .* for 1–10 reps\. One rep uses recorded weight/),
+  ).toBeVisible();
   await expect(page.getByRole('table', {name: 'Exact trend values'})).toBeVisible();
   await page.getByLabel('Time range').selectOption('all');
   await expect(page.getByRole('button', {name: /View source workout/}).first()).toBeVisible();
