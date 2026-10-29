@@ -62,6 +62,12 @@ EMBER_CSV=/absolute/path/to/strong-export.csv npm run dev
 
 Then use `/?localCsv=1`. This loopback-only development route is not present in production output, and is not service-worker cached. Do not expose the development server publicly or on the tailnet. Private CSVs, `.local/`, ignored credentials, database dumps and personal screenshots must not enter tracked source, `public/`, build artifacts or external services. Only synthetic fixtures belong in tests.
 
+Owner-approved one-time fixes to an export are applied before import with a separate cleaned copy, never in the app. The fixes file names real training data, so it stays private with the export; its format is documented in `src/domain/strong-cleanup.ts`. Every listed fix must match exactly or the run fails, and the original export is only read:
+
+```sh
+node scripts/strong-cleanup.ts /private/strong-export.csv /private/approved-fixes.json /private/cleaned.csv
+```
+
 ## Offline app shell
 
 Production builds include a manifest, icons and a finite service-worker app-shell cache. After a successful initial online load, the shell can reopen offline and use IndexedDB. API responses, private CSVs, JSON payloads and arbitrary runtime requests are not cached. Updates wait instead of silently refreshing the logger; no native background-sync or Android ongoing-notification guarantee is implied.
