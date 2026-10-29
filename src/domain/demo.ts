@@ -1,3 +1,4 @@
+import {localDay} from '../utils/date';
 import type {Dataset, ExerciseLog, ExerciseType, Workout} from './types';
 
 function exercise(
@@ -66,8 +67,6 @@ export const demoTemplates: Workout[] = [
 const history: Workout[] = [];
 const anchor = new Date();
 anchor.setHours(18, 0, 0, 0);
-const localDate = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T18:00:00`;
 for (let week = 0; week < 8; week++) {
   for (let day = 0; day < 3; day++) {
     const template = demoTemplates[day];
@@ -76,7 +75,7 @@ for (let week = 0; week < 8; week++) {
     history.push({
       ...template,
       id: `demo-workout-${week}-${day}`,
-      date: localDate(date),
+      date: localDay(date) + 'T18:00:00',
       duration: 48 + day * 4,
       exercises: template.exercises.map((ex, ei) => ({
         ...ex,

@@ -82,10 +82,10 @@ describe('inspectable exercise history', () => {
     const trend = getTrend(data, 'Bench Press (Barbell)', 'load');
     expect(trend.map((p) => p.value)).toEqual([60, 60, 65]);
     expect(trend.every((p) => data.workouts.some((w) => w.id === p.workoutId))).toBe(true);
-    const best = bestComparable(data, 'Bench Press (Barbell)', 60);
+    const best = bestComparable(data, 'Bench Press (Barbell)', 'weighted', 60);
     expect(best?.set.reps).toBe(10);
     expect(best?.date.slice(0, 10)).toBe('2026-01-12');
-    expect(bestComparable(data, 'Bench Press (Barbell)', 62.5)).toBeNull();
+    expect(bestComparable(data, 'Bench Press (Barbell)', 'weighted', 62.5)).toBeNull();
     expect(getHistory(data, 'Bench Press (Barbell)')).toHaveLength(3);
   });
 });

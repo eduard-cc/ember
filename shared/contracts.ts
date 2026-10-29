@@ -59,7 +59,7 @@ const setFields = z
     original: z.record(z.string(), z.string()).optional(),
   })
   .strict();
-export const SetRecordSchema = z.preprocess(without(...RETIRED_SET_KEYS), setFields);
+const SetRecordSchema = z.preprocess(without(...RETIRED_SET_KEYS), setFields);
 export const WorkoutSchema = z
   .object({
     id,
@@ -77,7 +77,7 @@ export const WorkoutSchema = z
     ),
   })
   .strict();
-export const DatasetSchema = z
+const DatasetSchema = z
   .object({
     sourceLabel: z.string(),
     workouts: z.array(WorkoutSchema),
@@ -102,36 +102,30 @@ export const AppStateSchema = z
     templates: z.array(WorkoutSchema).nullable(),
   })
   .strict();
+export const OperationKindSchema = z.enum([
+  'putBodyWeight',
+  'putWorkout',
+  'putTemplate',
+  'deleteTemplate',
+  'putImportedWorkout',
+  'deleteImportedWorkout',
+  'deleteWorkout',
+]);
 export interface LocalOperation {
   operationId: string;
   entityId: string;
-  kind:
-    | 'putBodyWeight'
-    | 'putWorkout'
-    | 'putTemplate'
-    | 'deleteTemplate'
-    | 'putImportedWorkout'
-    | 'deleteImportedWorkout'
-    | 'deleteWorkout';
+  kind: z.infer<typeof OperationKindSchema>;
   expectedRevision: number | null;
   /** A BodyWeight only for putBodyWeight; validated per kind by LocalOperationSchema. */
   payload: Workout | BodyWeight | null;
 }
-export const DELETE_KINDS = ['deleteTemplate', 'deleteImportedWorkout', 'deleteWorkout'] as const;
+const DELETE_KINDS = ['deleteTemplate', 'deleteImportedWorkout', 'deleteWorkout'] as const;
 export const isDeleteKind = (kind: string) => (DELETE_KINDS as readonly string[]).includes(kind);
 export const LocalOperationSchema = z
   .object({
     operationId: z.uuid(),
     entityId: id,
-    kind: z.enum([
-      'putBodyWeight',
-      'putWorkout',
-      'putTemplate',
-      'deleteTemplate',
-      'putImportedWorkout',
-      'deleteImportedWorkout',
-      'deleteWorkout',
-    ]),
+    kind: OperationKindSchema,
     expectedRevision: z.number().int().nonnegative().nullable(),
     payload: z.union([WorkoutSchema, BodyWeightSchema]).nullable(),
   })

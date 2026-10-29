@@ -1,3 +1,5 @@
+import {localDay} from '../utils/date';
+import {isTimed} from './sets';
 import type {
   Comparable,
   Dataset,
@@ -129,13 +131,17 @@ function bestReps(candidates: Comparable[]): Comparable | null {
     )[0] ?? null
   );
 }
+/** Most reps at exactly this weight, from the exercise's sessions of the same type. */
 export function bestComparable(
   dataset: Dataset,
   name: string,
+  type: ExerciseType,
   weight: number | null,
 ): Comparable | null {
   return bestReps(
-    repEvidence(getHistory(dataset, name)).filter((entry) => entry.set.weight === weight),
+    repEvidence(getHistory(dataset, name).filter((session) => session.type === type)).filter(
+      (entry) => entry.set.weight === weight,
+    ),
   );
 }
 /**
@@ -284,15 +290,11 @@ export function getRecords(dataset: Dataset, name: string): ExerciseRecords {
           : null,
       (a, b) => a < b,
     ),
-    mostReps: best((set, type) =>
-      type === 'duration' || type === 'cardio' ? null : positive(set.reps),
-    ),
+    mostReps: best((set, type) => (isTimed(type) ? null : positive(set.reps))),
     repBests: [...reps.values()].sort((a, b) => a.reps - b.reps),
   };
 }
 
-const localDay = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const weekStart = (date: Date) => {
   const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   start.setDate(start.getDate() - ((start.getDay() + 6) % 7));

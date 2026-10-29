@@ -1,4 +1,5 @@
 import {getHistory} from '../domain/model';
+import {isTimed} from '../domain/sets';
 import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
 
 const blank = (type: ExerciseType): SetRecord => ({
@@ -34,7 +35,7 @@ export function historyTargets(
     (session) => session.type === type && session.sets.length,
   );
   const evidence = previous?.sets ?? [];
-  const length = count ?? (evidence.length || (type === 'cardio' || type === 'duration' ? 1 : 3));
+  const length = count ?? (evidence.length || (isTimed(type) ? 1 : 3));
   return {
     name,
     type,

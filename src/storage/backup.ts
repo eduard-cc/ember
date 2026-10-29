@@ -76,8 +76,12 @@ export async function restoreBackup(
     if (state.templates) await db.templates.bulkAdd(state.templates);
     if (state.active) await db.drafts.add({key: 'active', workout: state.active});
     await db.meta.put({key: 'imported-sync-active', value: state.dataset !== null});
-    for (const workout of state.dataset?.workouts ?? [])
-      await db.importSources.put({key: 'imported:' + workout.id, value: workout});
+    await db.importSources.bulkPut(
+      (state.dataset?.workouts ?? []).map((workout) => ({
+        key: 'imported:' + workout.id,
+        value: workout,
+      })),
+    );
     const operations = [
       ...(backup.bodyWeights ?? []).map((measurement) => ({
         operationId: crypto.randomUUID(),

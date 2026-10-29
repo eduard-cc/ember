@@ -25,7 +25,7 @@ export function stripWorkout(workout: unknown): boolean {
 }
 
 /** The same for a stored dataset: every workout and the retired import warning count. */
-export function stripDataset(dataset: unknown): boolean {
+function stripDataset(dataset: unknown): boolean {
   if (!isDoc(dataset)) return false;
   let changed = isDoc(dataset.warnings) && drop(dataset.warnings, RETIRED_WARNING_KEYS);
   if (Array.isArray(dataset.workouts))

@@ -6,11 +6,16 @@ import {z} from 'zod';
 import {workout} from './schema';
 
 /** Before any reset every owner is in the implicit 'initial' epoch, which pre-epoch clients match. */
-export const INITIAL_EPOCH = 'initial';
+const INITIAL_EPOCH = 'initial';
 
 export async function currentEpoch(db: DataSource | EntityManager, owner: string): Promise<string> {
 	const [row] = await db.query('SELECT epoch FROM dataset_epochs WHERE owner_id=$1', [owner]);
 	return row?.epoch ?? INITIAL_EPOCH;
+}
+
+/** Serializes reset and sync mutations for one owner until the transaction ends. */
+export async function lockOwner(tx: EntityManager, owner: string) {
+	await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
 }
 
 /** Check only while holding the same owner lock used by reset and sync mutations. */
@@ -34,7 +39,7 @@ export async function resetDataset(db: DataSource, owner: string, imported: unkn
 	}
 	const epoch = randomUUID();
 	await db.transaction(async (tx) => {
-		await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
+		await lockOwner(tx, owner);
 		for (const table of ['changes', 'records', 'operation_ledger', 'owner_sequences'])
 			await tx.query(`DELETE FROM ${table} WHERE owner_id=$1`, [owner]);
 		await tx.query('INSERT INTO owner_sequences(owner_id, seq) VALUES ($1, 0)', [owner]);

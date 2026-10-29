@@ -98,14 +98,15 @@ export function ExerciseList({
   const [storedSort, setSort] = useExerciseSort();
   const sort = sortable ? storedSort : 'az';
   const ordered = useMemo(() => sortExerciseNames(names, stats, sort), [names, stats, sort]);
+  const byRecency = useMemo(
+    () =>
+      [...stats.entries()].sort((a, b) => b[1].last.localeCompare(a[1].last)).map(([name]) => name),
+    [stats],
+  );
   const query = search.trim().toLowerCase();
   const matches = (name: string) =>
     (!query || name.toLowerCase().includes(query)) && (part === 'All' || bodyPartOf(name) === part);
-  const recent = [...stats.entries()]
-    .sort((a, b) => b[1].last.localeCompare(a[1].last))
-    .map(([name]) => name)
-    .filter(matches)
-    .slice(0, 6);
+  const recent = byRecency.filter(matches).slice(0, 6);
   const all = ordered.filter(matches);
   return (
     <div className='exercises-view'>

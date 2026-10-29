@@ -20,7 +20,6 @@ export function useSync(
   refresh: () => Promise<void>,
   locallySaved = true,
 ) {
-  const [session, setSession] = useState<Session | null>(null);
   const current = useRef<Session | null>(null);
   const [locked, setLocked] = useState(true);
   const [status, setStatus] = useState('Connecting…');
@@ -54,9 +53,9 @@ export function useSync(
     if (!ready) return;
     const sub = liveQuery(async () => {
       const operations = await repository.db.outbox.toArray();
-      const issues = (await repository.db.syncState.toArray())
-        .filter((r) => r.key.startsWith('issue:'))
-        .map((r) => r.value as {operationId: string; entityId: string; errorCode?: string});
+      const issues = (
+        await repository.db.syncState.where('key').startsWith('issue:').toArray()
+      ).map((r) => r.value as {operationId: string; entityId: string; errorCode?: string});
       const blocked = new Set(issues.map((issue) => issue.entityId));
       return {
         pending: operations.length,
@@ -65,8 +64,7 @@ export function useSync(
           .map((operation) => operation.operationId)
           .sort()
           .join(','),
-        owner: (await repository.db.meta.get('ownerId'))?.value,
-        trust: (await repository.db.meta.get('local-trust'))?.value,
+        locked: await repository.needsReconnect(),
         // Only once connected to the owner's server. Installations that synced before the
         // completion flag existed already hold a cursor; an interrupted first download also
         // holds the start marker.
@@ -75,7 +73,7 @@ export function useSync(
           !(await repository.db.syncState.get(HISTORY_DOWNLOADED)) &&
           (!(await repository.db.syncState.get(DELETES_CURSOR)) ||
             !!(await repository.db.syncState.get(HISTORY_DOWNLOAD_STARTED))) &&
-          !(await repository.db.meta.get('demo-installation'))?.value,
+          !(await repository.isDemo()),
         issues,
       };
     }).subscribe({
@@ -84,7 +82,7 @@ export function useSync(
         setEligibleWork(state.eligibleWork);
         setIssues(state.issues);
         setHistoryIncomplete(state.historyIncomplete);
-        setLocked(!!state.owner && !state.trust);
+        setLocked(state.locked);
       },
     });
     return () => sub.unsubscribe();
@@ -104,7 +102,7 @@ export function useSync(
     const job = (async () => {
       try {
         await repository.flush();
-        if ((await repository.db.meta.get('demo-installation'))?.value === true) {
+        if (await repository.isDemo()) {
           setStatus('Local only');
           return;
         }
@@ -112,13 +110,7 @@ export function useSync(
           setStatus('Not saved locally · unsaved changes are not synchronized');
           return;
         }
-        if (
-          (await repository.db.meta.get('ownerId'))?.value &&
-          !(await repository.db.meta.get('local-trust'))?.value
-        ) {
-          current.current = null;
-          setSession(null);
-        }
+        if (await repository.needsReconnect()) current.current = null;
         for (let attempt = 0; attempt < 2; attempt++) {
           if (!current.current) {
             let response = await fetch('/api/v1/session', {credentials: 'same-origin'});
@@ -147,14 +139,9 @@ export function useSync(
             await repository.db.meta.put({key: 'ownerId', value: next.ownerId});
             await repository.db.meta.put({key: 'local-trust', value: true});
             current.current = next;
-            setSession(next);
             setLocked(false);
           }
-          if (
-            (await repository.db.meta.get('ownerId'))?.value &&
-            !(await repository.db.meta.get('local-trust'))?.value
-          )
-            return;
+          if (await repository.needsReconnect()) return;
           if (!(await repository.db.syncState.get(DELETES_CURSOR)))
             await repository.db.syncState.put({key: HISTORY_DOWNLOAD_STARTED, value: true});
           try {
@@ -167,7 +154,6 @@ export function useSync(
             }
             if (!(error instanceof SessionExpired) || attempt === 1) throw error;
             current.current = null;
-            setSession(null);
             if (paused.current || !savedRef.current) return;
           }
         }
@@ -175,12 +161,10 @@ export function useSync(
         setLastAttemptFailed(false);
         failures.current = 0;
         nextAttempt.current = 0;
-        const issues = (await repository.db.syncState.toArray()).filter((r) =>
-          r.key.startsWith('issue:'),
-        );
+        const issues = await repository.db.syncState.where('key').startsWith('issue:').count();
         const pending = await repository.db.outbox.count();
         setStatus(
-          issues.length
+          issues
             ? 'Sync conflict or rejection · local changes kept for review/export'
             : pending
               ? `${pending} changes pending`
@@ -193,7 +177,6 @@ export function useSync(
           Date.now() + Math.min(60000, 1000 * 2 ** Math.min(failures.current, 6));
         if (error instanceof SessionExpired) {
           current.current = null;
-          setSession(null);
           setStatus('Reconnecting · pending changes kept');
         } else setStatus('Offline or server unavailable · changes pending');
       } finally {
@@ -238,9 +221,7 @@ export function useSync(
     };
   }, [ready, enabled, sync]);
   return {
-    session,
     locked,
-    pending,
     issues,
     pause,
     resume,
@@ -258,6 +239,5 @@ export function useSync(
         : pending && status === 'Synced'
           ? `${pending} changes pending`
           : status,
-    sync,
   };
 }

@@ -1,5 +1,5 @@
 import {Check, Plus} from 'lucide-react';
-import {useCallback, useLayoutEffect, useRef, useState} from 'react';
+import {type KeyboardEvent, useCallback, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 
 import {ExercisePicker} from '../components/AddExercise';
@@ -13,30 +13,22 @@ import {Button} from '../components/ui/button';
 import {ContentFieldset} from '../components/ui/content-fieldset';
 import {Dialog, DialogContent, DialogDescription, DialogTitle} from '../components/ui/dialog';
 import {moveItem} from '../domain/reorder';
-import type {Dataset, ExerciseLog, ExerciseType, SetRecord, Workout} from '../domain/types';
+import {countedSets, isTimed, validSet} from '../domain/sets';
+import type {Dataset, ExerciseLog, SetRecord, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
 import {ExerciseDetail} from './ExerciseDetail';
 
-export function dateLabel(date: string) {
-  return new Date(date.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-export function validSet(set: SetRecord, type: ExerciseType) {
-  const bounded = (value: number | null, min: number, max: number) =>
-    value !== null && Number.isFinite(value) && value >= min && value <= max;
-  if (type === 'duration' || type === 'cardio')
-    return bounded(set.seconds, 1, 86400) && (type !== 'cardio' || bounded(set.distance, 0, 1000));
-  return (
-    bounded(set.reps, 1, 1000) &&
-    Number.isInteger(set.reps) &&
-    (type === 'bodyweight' || bounded(set.weight, 0, 2000))
-  );
-}
+const titleClass =
+  'exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.exercise-thumb]:col-1 [&>.exercise-thumb]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere]';
+/** Ref callback keeping `map` in step with the mounted element for `id`. */
+const register =
+  <T,>(map: Map<string, T>, id: string) =>
+  (node: T | null) => {
+    if (node) map.set(id, node);
+    else map.delete(id);
+  };
 /** Set-row fields: centred 18/600 values; a completed row drops the field chrome. */
 const setInput = (completed?: boolean) =>
   cn(
@@ -71,7 +63,7 @@ export function WorkoutView({
 }: {
   workout: Workout;
   dataset: Dataset;
-  onChange: (update: Workout | ((current: Workout) => Workout)) => void;
+  onChange: (update: (current: Workout) => Workout) => void;
   onSource: (id: string) => void;
   onDeletingChange: (deleting: boolean) => void;
   /** Mirrors the logger's disabled fieldset, which the portaled details sit outside of. */
@@ -241,7 +233,7 @@ export function WorkoutView({
     }));
   };
   const edit = (ei: number, si: number, patch: Partial<SetRecord>) =>
-    onChange({
+    onChange(() => ({
       ...workout,
       exercises: workout.exercises.map((ex, i) =>
         i !== ei
@@ -258,7 +250,14 @@ export function WorkoutView({
               }),
             ),
       ),
-    });
+    }));
+  /** Enter on a set's last field ticks it when valid, then leaves the field. */
+  const completeAndBlur = (event: KeyboardEvent<HTMLInputElement>, ei: number, si: number) => {
+    const ex = workout.exercises[ei];
+    const set = ex.sets[si];
+    if (!set.completed && validSet(set, ex.type)) edit(ei, si, {completed: true});
+    event.currentTarget.blur();
+  };
   // While an exercise is held the compact list stands in for the cards. They stay mounted but
   // hidden, so dropping doesn't rebuild every set row (and its history lookup) mid-animation.
   return (
@@ -288,7 +287,7 @@ export function WorkoutView({
             targetsOnly
               ? undefined
               : (ex) => {
-                  const done = ex.sets.filter((set) => set.completed && validSet(set, ex.type));
+                  const done = countedSets(ex);
                   return `${done.length} / ${plural(ex.sets.length, 'set')}`;
                 }
           }
@@ -296,18 +295,22 @@ export function WorkoutView({
       )}
       {/* eslint-disable-next-line react-hooks/refs -- identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use. */}
       {workout.exercises.map((ex, ei) => {
-        const timed = ex.type === 'cardio' || ex.type === 'duration';
-        const checked = ex.sets.filter((set) => set.completed && validSet(set, ex.type)).length;
+        const timed = isTimed(ex.type);
+        const checked = countedSets(ex).length;
         const done = ex.sets.length > 0 && checked === ex.sets.length;
+        const caption = targetsOnly && loadCaption(ex);
+        const title = (
+          <>
+            <ExerciseThumb name={ex.name} className='size-10' />
+            <span id={`${identity(ex)}-name`}>{ex.name}</span>
+          </>
+        );
         return (
           <section
             className='exercise-card border-b border-border px-4 pt-5 pb-[18px] narrow:px-3 [.workout-sheet_&]:desk:px-6 [.workout-sheet_&]:desk:py-[22px]'
             key={identity(ex)}
             hidden={!!reordering}
-            ref={(node) => {
-              if (node) cards.current.set(identity(ex), node);
-              else cards.current.delete(identity(ex));
-            }}
+            ref={register(cards.current, identity(ex))}
           >
             <header
               className='exercise-heading mb-1 grid grid-cols-[40px_minmax(0,1fr)_auto] grid-rows-[minmax(22px,auto)_minmax(22px,auto)] items-center gap-x-2 select-none [-webkit-touch-callout:none]'
@@ -325,25 +328,18 @@ export function WorkoutView({
               >
                 {showDetails ? (
                   <button
-                    className='exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.exercise-thumb]:col-1 [&>.exercise-thumb]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere] hover:[&>span:last-child]:underline hover:[&>span:last-child]:decoration-border hover:[&>span:last-child]:underline-offset-[3px]'
+                    className={`${titleClass} hover:[&>span:last-child]:underline hover:[&>span:last-child]:decoration-border hover:[&>span:last-child]:underline-offset-[3px]`}
                     aria-label={`Show details for ${ex.name}`}
-                    ref={(node) => {
-                      if (node) detailButtons.current.set(identity(ex), node);
-                      else detailButtons.current.delete(identity(ex));
-                    }}
+                    ref={register(detailButtons.current, identity(ex))}
                     onClick={() => {
                       detailsReturn.current = identity(ex);
                       setDetails({id: identity(ex), name: ex.name});
                     }}
                   >
-                    <ExerciseThumb name={ex.name} className='size-10' />
-                    <span id={`${identity(ex)}-name`}>{ex.name}</span>
+                    {title}
                   </button>
                 ) : (
-                  <span className='exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.exercise-thumb]:col-1 [&>.exercise-thumb]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere]'>
-                    <ExerciseThumb name={ex.name} className='size-10' />
-                    <span id={`${identity(ex)}-name`}>{ex.name}</span>
-                  </span>
+                  <span className={titleClass}>{title}</span>
                 )}
               </h2>
               <div className='exercise-meta pointer-events-none col-2 row-2 min-w-0 self-start'>
@@ -367,17 +363,12 @@ export function WorkoutView({
                     )}
                   </span>
                 )}
-                {targetsOnly && loadCaption(ex) && (
-                  <p className='mt-[3px] text-[12px]'>{loadCaption(ex)}</p>
-                )}
+                {caption && <p className='mt-[3px] text-[12px]'>{caption}</p>}
               </div>
               <ExerciseMenu
                 className='col-3 row-[1/3] -mr-[13px]'
                 name={ex.name}
-                ref={(node) => {
-                  if (node) menuButtons.current.set(identity(ex), node);
-                  else menuButtons.current.delete(identity(ex));
-                }}
+                ref={register(menuButtons.current, identity(ex))}
                 onReplace={() => {
                   focusAfterPicker.current = identity(ex);
                   setReplacing(identity(ex));
@@ -431,11 +422,8 @@ export function WorkoutView({
                     onKeyDown={(event) => {
                       if (event.key !== 'Enter' || targetsOnly) return;
                       event.preventDefault();
-                      if (ex.type === 'duration') {
-                        if (!set.completed && validSet(set, ex.type))
-                          edit(ei, si, {completed: true});
-                        event.currentTarget.blur();
-                      } else {
+                      if (ex.type === 'duration') completeAndBlur(event, ei, si);
+                      else {
                         const row = event.currentTarget.closest('.set-row');
                         row?.querySelectorAll('input')[1]?.focus();
                       }
@@ -462,9 +450,7 @@ export function WorkoutView({
                       onKeyDown={(event) => {
                         if (event.key !== 'Enter' || targetsOnly) return;
                         event.preventDefault();
-                        if (!set.completed && validSet(set, ex.type))
-                          edit(ei, si, {completed: true});
-                        event.currentTarget.blur();
+                        completeAndBlur(event, ei, si);
                       }}
                       inputMode={timed ? 'decimal' : 'numeric'}
                       min={timed ? 0 : 1}
@@ -508,7 +494,7 @@ export function WorkoutView({
               variant='ghost'
               className='mt-1 w-full'
               onClick={() =>
-                onChange({
+                onChange(() => ({
                   ...workout,
                   exercises: workout.exercises.map((x, i) =>
                     i !== ei
@@ -527,7 +513,7 @@ export function WorkoutView({
                           },
                         ]),
                   ),
-                })
+                }))
               }
             >
               <Plus size={16} /> Add set

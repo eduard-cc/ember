@@ -2,7 +2,7 @@ import {z} from 'zod';
 
 import {AppStateSchema, BodyWeightSchema, LocalOperationSchema} from './contracts';
 
-export const BackupSchema = z
+const BackupSchema = z
   .object({
     format: z.literal('ember-backup'),
     version: z.union([z.literal(1), z.literal(2)]),
@@ -61,13 +61,13 @@ export const BackupSchema = z
     if (backup.version === 2 && backup.bodyWeights === undefined)
       context.addIssue({code: 'custom', message: 'Version 2 backups must list measurements'});
     const history = [...(backup.state.dataset?.workouts ?? []), ...backup.state.finished];
+    const workouts = [
+      ...history,
+      ...(backup.state.templates ?? []),
+      ...(backup.state.active ? [backup.state.active] : []),
+    ];
     unique(
-      [
-        ...(backup.bodyWeights ?? []),
-        ...history,
-        ...(backup.state.templates ?? []),
-        ...(backup.state.active ? [backup.state.active] : []),
-      ].map((w) => w.id),
+      [...(backup.bodyWeights ?? []), ...workouts].map((w) => w.id),
       'domain document',
     );
     unique(
@@ -98,11 +98,7 @@ export const BackupSchema = z
       history.flatMap((w) => w.exercises.flatMap((e) => e.sets.map((s) => s.id))),
       'history set',
     );
-    for (const w of [
-      ...history,
-      ...(backup.state.templates ?? []),
-      ...(backup.state.active ? [backup.state.active] : []),
-    ])
+    for (const w of workouts)
       unique(
         w.exercises.flatMap((e) => e.sets.map((s) => s.id)),
         'workout set',

@@ -3,6 +3,7 @@ import {z} from 'zod';
 import {
   type BodyWeight,
   BodyWeightSchema,
+  OperationKindSchema,
   WorkoutSchema,
   isDeleteKind,
 } from '../../shared/contracts';
@@ -22,15 +23,7 @@ export const HISTORY_DOWNLOADED = 'history-downloaded';
 const changeSchema = z
   .strictObject({
     entityId: z.string().min(1),
-    kind: z.enum([
-      'putBodyWeight',
-      'putWorkout',
-      'deleteWorkout',
-      'putTemplate',
-      'deleteTemplate',
-      'putImportedWorkout',
-      'deleteImportedWorkout',
-    ]),
+    kind: OperationKindSchema,
     revision: z.number().int().positive(),
     changeSeq: z.number().int().positive(),
     payload: z.union([WorkoutSchema, BodyWeightSchema]).nullable(),
@@ -84,17 +77,20 @@ export class SyncEngine {
     const owner = (await db.meta.get('ownerId'))?.value;
     if (owner && owner !== session.ownerId)
       throw new Error('Owner mismatch; local records were not changed');
-    if ((await db.meta.get('demo-installation'))?.value === true)
-      throw new Error('Demo data cannot be synchronized');
+    if (await this.repository.isDemo()) throw new Error('Demo data cannot be synchronized');
     for (;;) {
       const order = (await db.syncState.get('queue-order'))?.value as string[] | undefined;
       const operations = await db.outbox.toArray();
-      operations.sort(
-        (a, b) => (order?.indexOf(a.operationId) ?? -1) - (order?.indexOf(b.operationId) ?? -1),
+      if (order) {
+        // First occurrence wins, as with indexOf.
+        const rank = new Map(order.map((id, i) => [id, i] as const).reverse());
+        operations.sort(
+          (a, b) => (rank.get(a.operationId) ?? -1) - (rank.get(b.operationId) ?? -1),
+        );
+      }
+      const issues = (await db.syncState.where('key').startsWith('issue:').toArray()).map(
+        (r) => r.value as {entityId: string},
       );
-      const issues = (await db.syncState.toArray())
-        .filter((r) => r.key.startsWith('issue:'))
-        .map((r) => r.value as {entityId: string});
       const seen = new Set(issues.map((i) => i.entityId));
       const batch = operations
         .filter((o) => {
@@ -191,8 +187,10 @@ export class SyncEngine {
           db.importSources,
         ],
         async () => {
+          // Nothing below writes the outbox, so one read covers the whole page.
+          const pendingIds = new Set((await db.outbox.toArray()).map((o) => o.entityId));
           for (const c of page.changes) {
-            const pending = (await db.outbox.toArray()).some((o) => o.entityId === c.entityId);
+            const pending = pendingIds.has(c.entityId);
             const old = Number((await db.syncState.get('revision:' + c.entityId))?.value ?? 0);
             if (c.revision >= old) {
               await db.syncState.put({key: 'revision:' + c.entityId, value: c.revision});

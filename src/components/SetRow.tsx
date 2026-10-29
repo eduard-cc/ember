@@ -2,6 +2,7 @@ import {Ellipsis, Trash2} from 'lucide-react';
 import {type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
 import {cn} from '../utils/cn';
+import {reducedMotion} from '../utils/motion';
 import {Button} from './ui/button';
 
 /** The five-column set grid, shared by the header row and each row's sliding content. */
@@ -26,8 +27,6 @@ type Gesture = {
   offset: number;
   samples: {x: number; t: number}[];
 };
-
-const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
  * The row slides under the finger as soon as a drag reads as horizontal. Native pan-y keeps

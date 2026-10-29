@@ -1,14 +1,20 @@
 import {ArrowUpRight, LineChart} from 'lucide-react';
-import {useEffect, useRef, useState} from 'react';
+import {useMemo, useState} from 'react';
 
 import {Button} from '../components/ui/button';
-import {EmptyChart, MetricExplanation, trendChartClass} from '../components/ui/chart';
+import {cardClass} from '../components/ui/card';
+import {
+  EmptyChart,
+  MetricExplanation,
+  trendChartClass,
+  useElementWidth,
+} from '../components/ui/chart';
 import {TextAction, dataTableClass} from '../components/ui/data-table';
 import {EmptyState} from '../components/ui/empty-state';
 import {getHistory, getTrend} from '../domain/model';
 import type {Dataset, Metric} from '../domain/types';
+import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
-import {dateLabel} from './WorkoutView';
 
 const labels: Record<Metric, string> = {
   load: 'Best load',
@@ -16,6 +22,13 @@ const labels: Record<Metric, string> = {
   e1rm: 'Estimated 1RM',
   volume: 'Session volume',
 };
+
+/** UTC day `days` ago, the first day a ranged chart shows. */
+function since(days: string) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - Number(days));
+  return cutoff.toISOString().slice(0, 10);
+}
 
 /** Per-session trend for one exercise. Every point is listed with its source workout. */
 export function ExerciseCharts({
@@ -30,22 +43,11 @@ export function ExerciseCharts({
   /** False inside a dialog, which already is a surface. */
   framed?: boolean;
 }) {
-  const containerRef = useRef<HTMLElement>(null);
-  const [chartWidth, setChartWidth] = useState(750);
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    // One SVG unit per CSS pixel keeps labels readable without enlarging them
-    // into each other. Re-measure when the card resizes, not just the window.
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry.contentRect.width > 0) setChartWidth(entry.contentRect.width);
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [name, dataset]);
+  const [containerRef, chartWidth] = useElementWidth(750);
   const plotLeft = 54;
   const plotRight = chartWidth - 46;
-  const history = getHistory(dataset, name);
+  // The library stays mounted beside the logger: rescan history only when it changes.
+  const history = useMemo(() => getHistory(dataset, name), [dataset, name]);
   const type = history[0]?.type;
   const applicable =
     type === 'weighted'
@@ -56,11 +58,9 @@ export function ExerciseCharts({
   const [metric, setMetric] = useState<Metric>(applicable[0]);
   const [range, setRange] = useState('all');
   const activeMetric = applicable.includes(metric) ? metric : applicable[0];
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - Number(range));
-  const inRange = (date: string) =>
-    range === 'all' || date.slice(0, 10) >= cutoff.toISOString().slice(0, 10);
-  const points = getTrend(dataset, name, activeMetric).filter((p) => inRange(p.date));
+  const trend = useMemo(() => getTrend(dataset, name, activeMetric), [dataset, name, activeMetric]);
+  const first = range === 'all' ? null : since(range);
+  const points = first ? trend.filter((p) => p.date.slice(0, 10) >= first) : trend;
   const unit = activeMetric === 'reps' ? 'reps' : activeMetric === 'volume' ? 'kg·reps' : 'kg';
   const metricLabel =
     activeMetric === 'load' && type === 'assisted' ? 'Least assistance' : labels[activeMetric];
@@ -84,7 +84,7 @@ export function ExerciseCharts({
       />
     );
   return (
-    <section className='min-w-0 border border-border bg-card p-5' ref={containerRef}>
+    <section className={cardClass} ref={containerRef}>
       {/* `[align-items:start]` matches main's computed `start`; `items-start` computes `flex-start`. */}
       <div className='flex [align-items:start] justify-between gap-4 max-desk:flex-wrap'>
         <div

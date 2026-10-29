@@ -5,15 +5,14 @@ import type {Dataset, Workout} from '../domain/types';
 import {type DraftLock, acquireDraftLock} from '../storage/draft-lock';
 import {migrateLegacy} from '../storage/migrate-legacy';
 import {WorkoutRepository} from '../storage/repository';
+import {localTimestamp} from '../utils/date';
 
 const KEY = 'ember:v1';
 export function newWorkout(workout?: Workout): Workout {
-  const now = new Date();
-  const localTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
   return {
     id: crypto.randomUUID(),
     name: workout?.name ?? 'Untitled workout',
-    date: localTimestamp,
+    date: localTimestamp(new Date()),
     duration: 0,
     exercises:
       workout?.exercises.map((ex) => ({
@@ -188,16 +187,19 @@ export function useWorkoutState() {
       void writeQueue.current.then(() => repository.flush()).finally(() => lock?.release());
     };
   }, [repository]);
+  /** Writes wait while loading, read-only, blocked by recovery, paused or finishing. */
+  const locked = useCallback(
+    () =>
+      !ready.current ||
+      !writable.current ||
+      blocked.current ||
+      suspended.current ||
+      finishing.current,
+    [],
+  );
   const setState = useCallback(
     (action: AppState | ((state: AppState) => AppState), templateBase?: Workout) => {
-      if (
-        !ready.current ||
-        !writable.current ||
-        blocked.current ||
-        suspended.current ||
-        finishing.current
-      )
-        return Promise.resolve(false);
+      if (locked()) return Promise.resolve(false);
       const next = typeof action === 'function' ? action(current.current) : action;
       if (next === current.current) return Promise.resolve(false);
       const draftOnly =
@@ -211,18 +213,10 @@ export function useWorkoutState() {
       updateState(next);
       return persist(next, draftOnly, previous);
     },
-    [persist],
+    [locked, persist],
   );
   const finishWorkout = useCallback(async () => {
-    if (
-      !ready.current ||
-      !writable.current ||
-      blocked.current ||
-      suspended.current ||
-      finishing.current ||
-      !current.current.active
-    )
-      return null;
+    if (locked() || !current.current.active) return null;
     finishing.current = true;
     setSaveStatus('saving');
     ++generation.current;
@@ -257,18 +251,11 @@ export function useWorkoutState() {
     } finally {
       finishing.current = false;
     }
-  }, [repository]);
+  }, [locked, repository]);
   /** Owner edit (`next`) or deletion (`next` null) of a finished or imported workout. */
   const changeHistoryWorkout = useCallback(
     (base: Workout, next: Workout | null) => {
-      if (
-        !ready.current ||
-        !writable.current ||
-        blocked.current ||
-        suspended.current ||
-        finishing.current
-      )
-        return Promise.resolve(false);
+      if (locked()) return Promise.resolve(false);
       const revision = ++generation.current;
       setSaveStatus('saving');
       const job = writeQueue.current.then(async () => {
@@ -299,7 +286,7 @@ export function useWorkoutState() {
       writeQueue.current = job;
       return job;
     },
-    [repository],
+    [locked, repository],
   );
   const resetUnreadableStorage = async () => {
     if (!writable.current) return;
@@ -336,14 +323,7 @@ export function useWorkoutState() {
   }, [repository]);
   const pauseEditing = useCallback(
     async (requireSaved: boolean) => {
-      if (
-        !ready.current ||
-        !writable.current ||
-        suspended.current ||
-        finishing.current ||
-        blocked.current
-      )
-        throw new Error('Local state unavailable for recovery');
+      if (locked()) throw new Error('Local state unavailable for recovery');
       suspended.current = true;
       setMaintenance(true);
       try {
@@ -360,28 +340,15 @@ export function useWorkoutState() {
         throw error;
       }
     },
-    [repository],
+    [locked, repository],
   );
   const resumeEditing = useCallback(() => {
     suspended.current = false;
     setMaintenance(false);
   }, []);
-  const reloadState = useCallback(async () => {
-    if (!suspended.current) throw new Error('Pause editing before restoring the view');
-    const next = await repository.readState();
-    committed.current = next;
-    current.current = next;
-    updateState(next);
-    failedWrite.current = false;
-    templateBases.current.clear();
-    lastSavedGeneration.current = generation.current;
-    setSaveStatus('saved');
-    setError('');
-  }, [repository]);
   return {
     repository,
     refresh,
-    reloadState,
     pauseEditing,
     resumeEditing,
     maintenance,

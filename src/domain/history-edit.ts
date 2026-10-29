@@ -1,4 +1,4 @@
-import {validSet} from '../views/WorkoutView';
+import {validSet} from './sets';
 import type {SetRecord, Workout} from './types';
 
 const values = ['weight', 'reps', 'seconds', 'distance'] as const;

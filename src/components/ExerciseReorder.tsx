@@ -3,14 +3,15 @@ import {type PointerEvent as ReactPointerEvent, useEffect, useLayoutEffect, useR
 
 import {reorderShift, reorderTarget} from '../domain/reorder';
 import type {ExerciseLog} from '../domain/types';
+import {reducedMotion} from '../utils/motion';
 import {plural} from '../utils/plural';
 import {ExerciseThumb} from './ExerciseThumb';
 
 /** Completed of total, like the card's status line; validity is the card's rule. */
-export type SetProgress = (exercise: ExerciseLog) => string;
+type SetProgress = (exercise: ExerciseLog) => string;
 
 /** How long a header must be held before it lifts. Shorter than Android's context-menu press. */
-export const HOLD_MS = 400;
+const HOLD_MS = 400;
 /** Moving further than this before the hold completes is a scroll, not a hold. */
 const SLOP = 8;
 /** Distance from the scroller's edge where a held row starts scrolling the list. */
@@ -34,8 +35,6 @@ export interface ReorderStart {
   claim: () => 'ended' | null;
 }
 
-const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 /** Nearest ancestor that scrolls vertically: the logger, the library or an editor panel. */
 export function scrollParent(node: Element | null): HTMLElement | null {
   for (let el = node?.parentElement; el; el = el.parentElement) {
@@ -48,8 +47,8 @@ export function scrollParent(node: Element | null): HTMLElement | null {
 /**
  * Press-and-hold detection for exercise headers. A tap still clicks (opens details), and
  * moving before the hold completes is left to native scrolling. Only a still hold lifts.
+ * `onHold` may return false to refuse the lift (the card then stays as it was).
  */
-/** `onHold` may return false to refuse the lift (the card then stays as it was). */
 export function useHold(onHold: (start: ReorderStart) => boolean | void) {
   const latest = useRef(onHold);
   useLayoutEffect(() => {

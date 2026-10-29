@@ -48,7 +48,7 @@ export const workout = z.strictObject({
 		.max(1000),
 });
 /** Body weight is its own record kind: never part of workouts, volume, records or imports. */
-export const bodyWeight = z.strictObject({
+const bodyWeight = z.strictObject({
 	id,
 	date: date.refine((value) => value !== '', 'Measurement date is required'),
 	kg: z

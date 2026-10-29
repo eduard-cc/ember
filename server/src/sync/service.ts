@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import {DataSource} from 'typeorm';
 import type {z} from 'zod';
 
-import {requireEpoch} from './reset';
+import {lockOwner, requireEpoch} from './reset';
 import {batch, operation} from './schema';
 
 type OperationKind = z.infer<typeof operation>['kind'];
@@ -21,6 +21,21 @@ function canonical(value: any): string {
 		'}'
 	);
 }
+// Each kind may only revise records of its own kind, so a measurement can never
+// overwrite workout history, nor native history an import, and vice versa.
+// The owner may edit finished and imported workouts and delete them; every
+// update needs the expected revision and earlier revisions stay in `changes`.
+// Native workout tombstones are final; a put at an imported tombstone's revision revives it.
+// Keyed by the schema's kind enum, so a new kind without an entry fails to compile.
+const allowedKinds: Record<OperationKind, readonly OperationKind[]> = {
+	putBodyWeight: ['putBodyWeight'],
+	putWorkout: ['putWorkout'],
+	deleteWorkout: ['putWorkout'],
+	putImportedWorkout: ['putImportedWorkout', 'deleteImportedWorkout'],
+	deleteImportedWorkout: ['putImportedWorkout'],
+	putTemplate: ['putTemplate'],
+	deleteTemplate: ['putTemplate'],
+};
 export class SyncService {
 	constructor(private db: DataSource) {}
 	async operations(owner: string, body: unknown, epoch?: unknown) {
@@ -44,7 +59,7 @@ export class SyncService {
 			const hash = createHash('sha256').update(canonical(o)).digest('hex');
 			results.push(
 				await this.db.transaction(async (tx) => {
-					await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
+					await lockOwner(tx, owner);
 					await requireEpoch(tx, owner, epoch);
 					const [existing] = await tx.query(
 						'SELECT * FROM operation_ledger WHERE owner_id=$1 AND operation_id=$2',
@@ -61,25 +76,10 @@ export class SyncService {
 									changeSeq: null,
 									errorCode: 'OPERATION_ID_REUSED',
 								};
-					const [record] = await tx.query('SELECT * FROM records WHERE owner_id=$1 AND entity_id=$2', [
-						owner,
-						o.entityId,
-					]);
-					// Each kind may only revise records of its own kind, so a measurement can never
-					// overwrite workout history, nor native history an import, and vice versa.
-					// The owner may edit finished and imported workouts and delete them; every
-					// update needs the expected revision and earlier revisions stay in `changes`.
-					// Native workout tombstones are final; a put at an imported tombstone's revision revives it.
-					// Keyed by the schema's kind enum, so a new kind without an entry fails to compile.
-					const allowedKinds: Record<OperationKind, readonly OperationKind[]> = {
-						putBodyWeight: ['putBodyWeight'],
-						putWorkout: ['putWorkout'],
-						deleteWorkout: ['putWorkout'],
-						putImportedWorkout: ['putImportedWorkout', 'deleteImportedWorkout'],
-						deleteImportedWorkout: ['putImportedWorkout'],
-						putTemplate: ['putTemplate'],
-						deleteTemplate: ['putTemplate'],
-					};
+					const [record] = await tx.query(
+						'SELECT revision, kind FROM records WHERE owner_id=$1 AND entity_id=$2',
+						[owner, o.entityId],
+					);
 					const mismatch =
 						o.expectedRevision === null
 							? !!record
@@ -104,9 +104,8 @@ export class SyncService {
 						return conflict;
 					}
 					const revision = record ? record.revision + 1 : 1;
-					await tx.query('INSERT INTO owner_sequences(owner_id) VALUES ($1) ON CONFLICT DO NOTHING', [owner]);
 					const [s] = await tx.query(
-						'WITH updated AS (UPDATE owner_sequences SET seq=seq+1 WHERE owner_id=$1 RETURNING seq) SELECT seq FROM updated',
+						'INSERT INTO owner_sequences(owner_id, seq) VALUES ($1, 1) ON CONFLICT (owner_id) DO UPDATE SET seq=owner_sequences.seq+1 RETURNING seq',
 						[owner],
 					);
 					await tx.query(
@@ -158,7 +157,7 @@ export class SyncService {
 		)
 			throw new BadRequestException('Invalid cursor or limit');
 		const rows = await this.db.transaction(async (tx) => {
-			await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
+			await lockOwner(tx, owner);
 			await requireEpoch(tx, owner, epoch);
 			// Filter before pagination: legacy cursors remain the last visible change,
 			// never a skipped record kind that their strict page validator cannot read.

@@ -120,9 +120,7 @@ export function HistoryEditor({
             targetsOnly
             workout={draft}
             dataset={dataset}
-            onChange={(update) =>
-              setDraft((current) => (typeof update === 'function' ? update(current) : update))
-            }
+            onChange={setDraft}
             onDeletingChange={setDeletingSets}
             onSource={() => {}}
           />

@@ -55,9 +55,7 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
           (await repository.readDraft())
         )
           return false;
-        const owner = (await repository.db.meta.get('ownerId'))?.value;
-        if (owner && !(await repository.db.meta.get('local-trust'))?.value) return false;
-        return true;
+        return !(await repository.needsReconnect());
       });
       setMessage(
         applied

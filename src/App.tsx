@@ -33,6 +33,7 @@ import {Input} from './components/ui/input';
 import {ListLabel} from './components/ui/list-label';
 import {SectionHeading} from './components/ui/section-heading';
 import {routineTargets} from './components/workout-targets';
+import {countedSets} from './domain/sets';
 import type {Workout} from './domain/types';
 import {useBackLayer} from './state/back';
 import {newWorkout, useWorkoutState} from './state/workout';
@@ -44,7 +45,7 @@ import {ExercisesView} from './views/ExercisesView';
 import {HistoryView} from './views/HistoryView';
 import {ProfileView} from './views/ProfileView';
 import {TemplatesView} from './views/TemplatesView';
-import {WorkoutView, validSet} from './views/WorkoutView';
+import {WorkoutView} from './views/WorkoutView';
 
 /** Below the CSS `desk` breakpoint (`--breakpoint-desk: 1000px` in index.css). */
 const MOBILE_QUERY = '(width < 1000px)';
@@ -140,11 +141,7 @@ export default function App() {
       const settled = await Promise.allSettled([sync.pause(), pauseEditing(requireSaved)]);
       if (settled.some((result) => result.status === 'rejected'))
         throw new Error('Could not pause safely');
-      if (
-        (await repository.db.meta.get('ownerId')) &&
-        !(await repository.db.meta.get('local-trust'))?.value
-      )
-        throw new Error('Reconnect first');
+      if (await repository.needsReconnect()) throw new Error('Reconnect first');
     } catch (error) {
       endTransition();
       throw error;
@@ -218,6 +215,8 @@ export default function App() {
     setFocusedId(id);
     setExpanded(false);
   };
+  const updateActive = (update: (active: Workout) => Workout) =>
+    setState((s) => (s.active ? {...s, active: update(s.active)} : s));
   const start = (workout: Workout) => {
     if (state.active) setPendingWorkout(workout);
     else {
@@ -240,11 +239,7 @@ export default function App() {
     );
   };
   const sets = state.active?.exercises.flatMap((ex) => ex.sets) ?? [];
-  const completed =
-    state.active?.exercises.reduce(
-      (n, ex) => n + ex.sets.filter((set) => set.completed && validSet(set, ex.type)).length,
-      0,
-    ) ?? 0;
+  const completed = state.active?.exercises.reduce((n, ex) => n + countedSets(ex).length, 0) ?? 0;
   const finish = async () => {
     if (!completed || deletingSets) return;
     const workout = await finishWorkout();
@@ -282,52 +277,51 @@ export default function App() {
     );
   // Sync is silent. Only states that need the owner surface here. In the logger the banners stay
   // on screen while a long workout scrolls.
-  const errors = (where: 'page' | 'logger' | 'settings' = 'page') => (
-    <>
-      {ownershipError && (
-        <div className={cn(errorBannerClass, where === 'logger' && stickyClass)} role='alert'>
-          {ownershipError}
-          <Button onClick={() => location.reload()}>Reload to enable editing</Button>
-        </div>
-      )}
-      {persistenceError && (
-        <div className={cn(errorBannerClass, where === 'logger' && stickyClass)} role='alert'>
-          {persistenceError}
-          {recoveryError && (
-            <Button
-              variant='secondary'
-              className='text-destructive'
-              onClick={resetUnreadableStorage}
-            >
-              Reset unreadable saved data
-            </Button>
-          )}
-        </div>
-      )}
-      {!sync.locked && sync.issues.length > 0 && (
-        <section
-          aria-label='Sync problems'
-          className={cn(
-            errorBannerClass,
-            where === 'logger' && stickyClass,
-            where === 'settings' && 'mt-5',
-          )}
-        >
-          <p className={cn('text-inherit', where === 'settings' && 'mt-3.5')}>
-            {plural(sync.issues.length, 'change')} could not sync. Later edits to the same item wait
-            until this is resolved.
-          </p>
-          <ul className='w-full [overflow-wrap:anywhere]'>
-            {sync.issues.map((issue) => (
-              <li key={issue.operationId}>
-                <strong>{issue.errorCode ?? 'SYNC_REJECTED'}</strong>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </>
-  );
+  const errors = (where: 'page' | 'logger' | 'settings' = 'page') => {
+    const banner = cn(errorBannerClass, where === 'logger' && stickyClass);
+    return (
+      <>
+        {ownershipError && (
+          <div className={banner} role='alert'>
+            {ownershipError}
+            <Button onClick={() => location.reload()}>Reload to enable editing</Button>
+          </div>
+        )}
+        {persistenceError && (
+          <div className={banner} role='alert'>
+            {persistenceError}
+            {recoveryError && (
+              <Button
+                variant='secondary'
+                className='text-destructive'
+                onClick={resetUnreadableStorage}
+              >
+                Reset unreadable saved data
+              </Button>
+            )}
+          </div>
+        )}
+        {!sync.locked && sync.issues.length > 0 && (
+          <section
+            aria-label='Sync problems'
+            className={cn(banner, where === 'settings' && 'mt-5')}
+          >
+            <p className={cn('text-inherit', where === 'settings' && 'mt-3.5')}>
+              {plural(sync.issues.length, 'change')} could not sync. Later edits to the same item
+              wait until this is resolved.
+            </p>
+            <ul className='w-full [overflow-wrap:anywhere]'>
+              {sync.issues.map((issue) => (
+                <li key={issue.operationId}>
+                  <strong>{issue.errorCode ?? 'SYNC_REJECTED'}</strong>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </>
+    );
+  };
   const settingsButton = (
     <Button
       variant='ghost'
@@ -531,9 +525,7 @@ export default function App() {
                   className='workout-title flex-1 border-0 bg-transparent px-1 py-0 text-[18px] font-semibold narrow:text-[16px]'
                   value={state.active.name}
                   onChange={(event) =>
-                    setState((s) =>
-                      s.active ? {...s, active: {...s.active, name: event.target.value}} : s,
-                    )
+                    updateActive((active) => ({...active, name: event.target.value}))
                   }
                 />
                 {showSheet && (
@@ -560,13 +552,7 @@ export default function App() {
                     key={state.active.id}
                     workout={state.active}
                     dataset={allDataset}
-                    onChange={(update) =>
-                      setState((s) =>
-                        s.active
-                          ? {...s, active: typeof update === 'function' ? update(s.active) : update}
-                          : s,
-                      )
-                    }
+                    onChange={updateActive}
                     onDeletingChange={setDeletingSets}
                     onSource={source}
                     disabled={disabled}
@@ -576,14 +562,10 @@ export default function App() {
                       dataset={allDataset}
                       existingNames={state.active.exercises.map((exercise) => exercise.name)}
                       onAdd={(exercise) =>
-                        setState((s) =>
-                          s.active
-                            ? {
-                                ...s,
-                                active: {...s.active, exercises: [...s.active.exercises, exercise]},
-                              }
-                            : s,
-                        )
+                        updateActive((active) => ({
+                          ...active,
+                          exercises: [...active.exercises, exercise],
+                        }))
                       }
                     />
                     <Button
@@ -712,8 +694,8 @@ export default function App() {
             </p>
           )}
           <DialogDescription>
-            {completed} completed set{completed !== 1 ? 's' : ''} will be saved.{' '}
-            {sets.length - completed} uncompleted sets will be excluded.
+            {plural(completed, 'completed set')} will be saved. {sets.length - completed}{' '}
+            uncompleted sets will be excluded.
           </DialogDescription>
           <DialogActions>
             <DialogClose asChild>

@@ -1,5 +1,5 @@
 import {ArrowLeft, ArrowUpRight, History, Info, Trophy} from 'lucide-react';
-import {type ReactElement, type ReactNode, useId, useState} from 'react';
+import {type ReactElement, type ReactNode, useId, useMemo, useState} from 'react';
 
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
@@ -9,19 +9,21 @@ import {TextAction, dataTableClass} from '../components/ui/data-table';
 import {EmptyState} from '../components/ui/empty-state';
 import {ListLabel} from '../components/ui/list-label';
 import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
+import {isTimed} from '../domain/sets';
 import type {Dataset, ExerciseType, SetRecord} from '../domain/types';
 import {cn} from '../utils/cn';
+import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
 import {ExerciseCharts} from './ExerciseCharts';
-import {dateLabel} from './WorkoutView';
 
 const tabs = ['About', 'History', 'Charts', 'Records'] as const;
 type Tab = (typeof tabs)[number];
 const kg = (n: number) => `${Number(n.toFixed(1))} kg`;
+const kgReps = (n: number) => `${Number(n.toFixed(1))} kg·reps`;
 const sessionHeadClass = 'text-[12px] font-medium text-muted-foreground';
 
-export function setLabel(set: SetRecord, type: ExerciseType) {
-  if (type === 'duration' || type === 'cardio')
+function setLabel(set: SetRecord, type: ExerciseType) {
+  if (isTimed(type))
     return `${set.seconds ?? '—'} s${set.distance !== null ? ` · ${set.distance} km` : ''}`;
   if (type === 'bodyweight' || set.weight === null) return `BW × ${set.reps ?? '—'}`;
   return `${set.weight} kg${type === 'assisted' ? ' assist.' : ''} × ${set.reps ?? '—'}`;
@@ -90,7 +92,7 @@ function HistoryTab({
   framed: boolean;
 }) {
   const [limit, setLimit] = useState(10);
-  const history = getHistory(dataset, name);
+  const history = useMemo(() => getHistory(dataset, name), [dataset, name]);
   if (!history.length)
     return (
       <EmptyState
@@ -164,8 +166,8 @@ function RecordsTab({
   onSource: (id: string) => void;
   framed: boolean;
 }) {
-  const records = getRecords(dataset, name);
-  const type = getHistory(dataset, name)[0]?.type;
+  const records = useMemo(() => getRecords(dataset, name), [dataset, name]);
+  const type = useMemo(() => getHistory(dataset, name)[0]?.type, [dataset, name]);
   const rows: {label: string; value: string; detail: string; workoutId: string}[] = [];
   const add = (
     label: string,
@@ -182,8 +184,8 @@ function RecordsTab({
   };
   add('Estimated 1RM (Epley)', records.estimated, kg);
   add('Heaviest weight', records.heaviest, kg);
-  add('Best set volume', records.bestSetVolume, (n) => `${Number(n.toFixed(1))} kg·reps`);
-  add('Best session volume', records.sessionVolume, (n) => `${Number(n.toFixed(1))} kg·reps`);
+  add('Best set volume', records.bestSetVolume, kgReps);
+  add('Best session volume', records.sessionVolume, kgReps);
   add('Least assistance', records.leastAssistance, kg);
   add('Most reps in a set', records.mostReps, (n) => `${n} reps`);
   if (!rows.length)
@@ -280,7 +282,7 @@ export function ExerciseDetail({
   emptyFramed?: boolean;
 }) {
   // Unique workouts, matching the Exercises list; History/Charts/Records stay per exercise block.
-  const workouts = exerciseWorkoutCount(dataset, name);
+  const workouts = useMemo(() => exerciseWorkoutCount(dataset, name), [dataset, name]);
   const [tab, setTab] = useState<Tab>(workouts ? 'History' : 'About');
   // The library and the workout can both show details at once; ids must stay unique.
   const id = useId();

@@ -2,9 +2,10 @@ import {ArrowUpRight} from 'lucide-react';
 import {useId, useMemo, useState} from 'react';
 
 import {bestComparable, getHistory, nearestRecorded} from '../domain/model';
+import {isTimed} from '../domain/sets';
 import type {Dataset, ExerciseLog, SetRecord} from '../domain/types';
 import {useBackLayer} from '../state/back';
-import {dateLabel} from '../views/WorkoutView';
+import {dateLabel} from '../utils/date';
 import {Button} from './ui/button';
 import {
   Dialog,
@@ -16,7 +17,7 @@ import {
 } from './ui/dialog';
 
 function recorded(set: SetRecord, type: ExerciseLog['type']) {
-  if (type === 'duration' || type === 'cardio')
+  if (isTimed(type))
     return `${set.seconds ?? '—'} s${type === 'cardio' ? ` · ${set.distance ?? '—'} km` : ''}`;
   return `${type === 'bodyweight' ? 'BW' : `${set.weight ?? '—'} kg${type === 'assisted' ? ' assistance' : ''}`} × ${set.reps ?? '—'}`;
 }
@@ -43,19 +44,14 @@ export function PreviousSet({
     [dataset, exercise.name, exercise.type],
   );
   const previousSet = previous?.sets[index];
-  const timed = exercise.type === 'duration' || exercise.type === 'cardio';
+  const timed = isTimed(exercise.type);
   // The exact-weight lookup is only needed while the evidence dialog is open.
   const comparable =
     open && !timed && (exercise.type === 'bodyweight' || set.weight !== null)
       ? bestComparable(
-          {
-            ...dataset,
-            workouts: dataset.workouts.map((workout) => ({
-              ...workout,
-              exercises: workout.exercises.filter((ex) => ex.type === exercise.type),
-            })),
-          },
+          dataset,
           exercise.name,
+          exercise.type,
           exercise.type === 'bodyweight' ? null : set.weight,
         )
       : null;

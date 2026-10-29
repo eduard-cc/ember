@@ -5,10 +5,10 @@ import {
   type LocalOperation,
   WorkoutSchema,
 } from '../../shared/contracts';
+import {countedSets} from '../domain/sets';
 import type {Workout} from '../domain/types';
 import {elapsedMinutes} from '../domain/workout-duration';
 import type {AppState} from '../state/workout';
-import {validSet} from '../views/WorkoutView';
 import {canonical} from './canonical';
 import {GymDatabase} from './db';
 
@@ -26,16 +26,51 @@ export class WorkoutRepository {
     this.pending = next.catch(() => undefined);
     return next;
   }
+  /** Connected to an owner but this device's trust was revoked: writes wait for a reconnect. */
+  async needsReconnect(): Promise<boolean> {
+    return (
+      !!(await this.db.meta.get('ownerId'))?.value &&
+      !(await this.db.meta.get('local-trust'))?.value
+    );
+  }
+  async isDemo(): Promise<boolean> {
+    return (await this.db.meta.get('demo-installation'))?.value === true;
+  }
+  /** The locally kept (pre-sync) imported dataset, from its current or legacy record. */
+  private async storedDataset(): Promise<AppState['dataset'] | undefined> {
+    const source =
+      (await this.db.importSources.get('current-dataset')) ??
+      (await this.db.importSources.get('legacy-v1'));
+    return (source?.value as {dataset?: AppState['dataset']} | undefined)?.dataset;
+  }
+  private async importedWorkouts(): Promise<Workout[]> {
+    return (await this.db.importSources.where('key').startsWith('imported:').toArray()).map(
+      (r) => r.value as Workout,
+    );
+  }
+  /** Sort rows by the id list stored under a meta key, when there is one. */
+  private async sortByStoredOrder<T extends {id: string}>(key: string, rows: T[]): Promise<T[]> {
+    const order = (await this.db.meta.get(key))?.value as string[] | undefined;
+    if (order) {
+      // First occurrence wins, as with indexOf.
+      const rank = new Map(order.map((id, i) => [id, i] as const).reverse());
+      rows.sort((a, b) => (rank.get(a.id) ?? -1) - (rank.get(b.id) ?? -1));
+    }
+    return rows;
+  }
+  /** The server has a revision for the entity, or an operation for it is queued. */
+  private async wasSent(id: string): Promise<boolean> {
+    return (
+      !!(await this.db.syncState.get('revision:' + id)) ||
+      (await this.db.outbox.toArray()).some((o) => o.entityId === id)
+    );
+  }
   async queueOperation(
     kind: LocalOperation['kind'],
     entityId: string,
     payload: LocalOperation['payload'],
   ): Promise<void> {
-    if (
-      (kind === 'putTemplate' || kind === 'deleteTemplate') &&
-      (await this.db.meta.get('demo-installation'))?.value === true
-    )
-      return;
+    if ((kind === 'putTemplate' || kind === 'deleteTemplate') && (await this.isDemo())) return;
     const pending = (await this.db.outbox.toArray()).filter((o) => o.entityId === entityId);
     const revision = Number((await this.db.syncState.get('revision:' + entityId))?.value ?? 0);
     const expectedRevision = pending.length
@@ -63,11 +98,7 @@ export class WorkoutRepository {
         'rw',
         [this.db.meta, this.db.bodyWeights, this.db.outbox, this.db.syncState],
         async () => {
-          if (
-            (await this.db.meta.get('ownerId')) &&
-            !(await this.db.meta.get('local-trust'))?.value
-          )
-            throw new Error('Reconnect before editing measurements');
+          if (await this.needsReconnect()) throw new Error('Reconnect before editing measurements');
           const stored = await this.db.bodyWeights.get(snapshot.id);
           if (JSON.stringify(stored ?? null) !== JSON.stringify(original))
             throw new Error('Measurement changed since it was displayed');
@@ -95,10 +126,7 @@ export class WorkoutRepository {
       ...parsed,
       duration: elapsedMinutes(parsed.date, this.now()),
       exercises: parsed.exercises
-        .map((ex) => ({
-          ...ex,
-          sets: ex.sets.filter((set) => set.completed && validSet(set, ex.type)),
-        }))
+        .map((ex) => ({...ex, sets: countedSets(ex)}))
         .filter((ex) => ex.sets.length),
     };
     if (!finished.exercises.length) throw new Error('No valid completed sets');
@@ -171,10 +199,7 @@ export class WorkoutRepository {
             await this.queueTombstone('deleteImportedWorkout', base.id);
             return;
           }
-          const source =
-            (await this.db.importSources.get('current-dataset')) ??
-            (await this.db.importSources.get('legacy-v1'));
-          const dataset = (source?.value as {dataset?: AppState['dataset']} | undefined)?.dataset;
+          const dataset = await this.storedDataset();
           const workout = dataset?.workouts.find((w) => w.id === base.id);
           if (!dataset || !workout || !same(workout, base)) throw changed();
           await this.db.importSources.put({
@@ -197,33 +222,24 @@ export class WorkoutRepository {
    * create was never sent, so dropping it locally is the whole deletion.
    */
   private async queueTombstone(kind: 'deleteWorkout' | 'deleteImportedWorkout', id: string) {
-    const sent =
-      (await this.db.syncState.get('revision:' + id)) ||
-      (await this.db.outbox.toArray()).some((o) => o.entityId === id);
-    if (sent) await this.queueOperation(kind, id, null);
+    if (await this.wasSent(id)) await this.queueOperation(kind, id, null);
   }
   async readState(): Promise<AppState> {
     return this.db.transaction(
       'r',
       [this.db.meta, this.db.drafts, this.db.workouts, this.db.templates, this.db.importSources],
       async () => {
-        const source =
-          (await this.db.importSources.get('current-dataset')) ??
-          (await this.db.importSources.get('legacy-v1'));
-        const value = source?.value as {dataset?: AppState['dataset']} | undefined;
-        const templates = await this.db.templates.toArray();
-        const order = (await this.db.meta.get('template-order'))?.value as string[] | undefined;
-        if (order) templates.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-        const finished = await this.db.workouts.toArray();
-        const finishedOrder = (await this.db.meta.get('finished-order'))?.value as
-          string[] | undefined;
-        if (finishedOrder)
-          finished.sort((a, b) => finishedOrder.indexOf(a.id) - finishedOrder.indexOf(b.id));
-        let dataset = value?.dataset ?? null;
+        let dataset = (await this.storedDataset()) ?? null;
+        const templates = await this.sortByStoredOrder(
+          'template-order',
+          await this.db.templates.toArray(),
+        );
+        const finished = await this.sortByStoredOrder(
+          'finished-order',
+          await this.db.workouts.toArray(),
+        );
         if ((await this.db.meta.get('imported-sync-active'))?.value === true) {
-          const imported = (await this.db.importSources.toArray())
-            .filter((r) => r.key.startsWith('imported:'))
-            .map((r) => r.value as Workout);
+          const imported = await this.importedWorkouts();
           dataset = {
             sourceLabel: dataset?.sourceLabel ?? 'Strong CSV',
             warnings: dataset?.warnings ?? {
@@ -384,37 +400,42 @@ export class WorkoutRepository {
           this.db.importSources,
         ],
         async () => {
-          if ((await this.db.meta.get('demo-installation'))?.value === true)
+          if (await this.isDemo())
             throw new Error(
               'Demo data cannot be synchronized. Use a separate empty browser profile for real data.',
             );
           const epoch = await this.dropLegacyPurgedMeasurements();
           if (!(await this.db.meta.get('imported-sync-active'))?.value) {
-            const source =
-              (await this.db.importSources.get('current-dataset')) ??
-              (await this.db.importSources.get('legacy-v1'));
-            const dataset = (source?.value as {dataset?: AppState['dataset']} | undefined)?.dataset;
+            const dataset = await this.storedDataset();
             if (dataset) {
-              for (const workout of dataset.workouts)
-                await this.db.importSources.put({key: 'imported:' + workout.id, value: workout});
+              await this.db.importSources.bulkPut(
+                dataset.workouts.map((workout) => ({
+                  key: 'imported:' + workout.id,
+                  value: workout,
+                })),
+              );
               await this.db.meta.put({key: 'imported-sync-active', value: true});
             }
           }
-          const imported = (await this.db.importSources.toArray())
-            .filter((r) => r.key.startsWith('imported:'))
-            .map((r) => r.value as Workout);
+          // Read what was already sent once; nothing below writes revisions, and each
+          // queued record joins the pending set.
+          const sent = new Set([
+            ...(await this.db.syncState.where('key').startsWith('revision:').primaryKeys()).map(
+              (key) => key.slice(9),
+            ),
+            ...(await this.db.outbox.toArray()).map((o) => o.entityId),
+          ]);
           for (const [kind, records] of [
             ['putBodyWeight', await this.db.bodyWeights.toArray()],
             ['putWorkout', await this.db.workouts.toArray()],
             ['putTemplate', await this.db.templates.toArray()],
-            ['putImportedWorkout', imported],
+            ['putImportedWorkout', await this.importedWorkouts()],
           ] as const) {
             for (const record of records)
-              if (
-                !(await this.db.syncState.get('revision:' + record.id)) &&
-                !(await this.db.outbox.toArray()).some((o) => o.entityId === record.id)
-              )
+              if (!sent.has(record.id)) {
                 await this.queueOperation(kind, record.id, record);
+                sent.add(record.id);
+              }
           }
           await this.db.meta.put({key: 'body-weight-epoch', value: epoch});
         },

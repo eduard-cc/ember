@@ -21,8 +21,9 @@ import {SectionHeading} from '../components/ui/section-heading';
 import type {Dataset, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
 import {newWorkout} from '../state/workout';
+import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
-import {WorkoutView, dateLabel} from './WorkoutView';
+import {WorkoutView} from './WorkoutView';
 
 /** Latest finished session with the template's exact name, if any. */
 function lastPerformed(dataset: Dataset, name: string): string | undefined {
@@ -100,11 +101,7 @@ export function TemplatesView({
             targetsOnly
             workout={editing}
             dataset={dataset}
-            onChange={(update) =>
-              setEditing(
-                (current) => current && (typeof update === 'function' ? update(current) : update),
-              )
-            }
+            onChange={(update) => setEditing((current) => current && update(current))}
             onDeletingChange={setDeletingSets}
             onSource={() => {}}
           />

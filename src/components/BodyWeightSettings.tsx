@@ -14,12 +14,12 @@ import {
 import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {cn} from '../utils/cn';
-import {dateLabel} from '../views/WorkoutView';
+import {dateLabel} from '../utils/date';
 import {noticeClass} from './banner';
 import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
 import {Button} from './ui/button';
 import {Card} from './ui/card';
-import {trendChartClass} from './ui/chart';
+import {trendChartClass, useElementWidth} from './ui/chart';
 import {ContentFieldset} from './ui/content-fieldset';
 import {EmptyState} from './ui/empty-state';
 import {fieldLabelClass} from './ui/field-label';
@@ -31,18 +31,7 @@ const describe = (m: BodyWeight) => `${dateLabel(m.date)} ${time(m.date)}, ${for
 
 /** Exact-value list is the accessible alternative; the chart only draws real entries. */
 function WeightChart({entries}: {entries: BodyWeight[]}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(480);
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    // One SVG unit per CSS pixel keeps labels at their declared size on any width.
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry.contentRect.width > 0) setWidth(entry.contentRect.width);
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
+  const [containerRef, width] = useElementWidth(480);
   const points = [...entries].reverse();
   const values = points.map((p) => p.kg);
   const min = Math.min(...values);

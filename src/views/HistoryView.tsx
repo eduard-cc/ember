@@ -22,14 +22,15 @@ import {
 } from '../components/ui/dialog';
 import {EmptyState} from '../components/ui/empty-state';
 import {Input} from '../components/ui/input';
+import {isTimed, setCount} from '../domain/sets';
 import type {Dataset, Workout} from '../domain/types';
 import {durationLabel} from '../domain/workout-duration';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
+import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
-import {dateLabel} from './WorkoutView';
 
-export function WorkoutDetails({workout}: {workout: Workout}) {
+function WorkoutDetails({workout}: {workout: Workout}) {
   return (
     <div className='workout-details mt-[18px] grid grid-cols-2 gap-5 border-t border-border pt-[18px] max-desk:grid-cols-1'>
       {workout.exercises.map((ex, i) => (
@@ -40,7 +41,7 @@ export function WorkoutDetails({workout}: {workout: Workout}) {
               <div key={set.id} className='flex items-center justify-between gap-2'>
                 <span>
                   Set {j + 1}:{' '}
-                  {ex.type === 'duration' || ex.type === 'cardio'
+                  {isTimed(ex.type)
                     ? `${set.seconds ?? '—'} seconds${set.distance !== null ? ` · ${set.distance} km` : ''}`
                     : `${set.weight === null ? 'Bodyweight' : `${set.weight} kg${ex.type === 'assisted' ? ' assistance' : ''}`} × ${set.reps ?? '—'} reps`}
                 </span>
@@ -117,7 +118,7 @@ export function HistoryView({
       </div>
       {ordered.slice(0, limit).map((workout) => {
         const open = expanded === workout.id || focusedId === workout.id;
-        const count = workout.exercises.reduce((n, ex) => n + ex.sets.length, 0);
+        const count = setCount(workout);
         return (
           <article
             className={cn(
@@ -133,9 +134,7 @@ export function HistoryView({
                   {workout.duration ? ` · ${durationLabel(workout.duration)}` : ''}
                 </span>
                 <h2 className='my-2'>{workout.name}</h2>
-                <p className='mt-[7px]'>
-                  {count} completed set{count !== 1 ? 's' : ''}
-                </p>
+                <p className='mt-[7px]'>{plural(count, 'completed set')}</p>
                 <p className='mt-[7px]'>{workout.exercises.map((ex) => ex.name).join(' · ')}</p>
               </div>
               {/* The negative margin pulls the 44px ⋯ target into the card padding so its glyph sits at the content edge. */}
@@ -230,10 +229,7 @@ export function HistoryView({
           <DialogTitle>Delete this workout?</DialogTitle>
           <DialogDescription>
             {deleting &&
-              `${deleting.name} on ${dateLabel(deleting.date)} and its ${plural(
-                deleting.exercises.reduce((n, ex) => n + ex.sets.length, 0),
-                'set',
-              )} will be removed from history, records and charts on every device.`}
+              `${deleting.name} on ${dateLabel(deleting.date)} and its ${plural(setCount(deleting), 'set')} will be removed from history, records and charts on every device.`}
           </DialogDescription>
           {deleteError && (
             <p className='mt-3.5' role='alert'>

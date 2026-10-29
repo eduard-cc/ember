@@ -1,6 +1,7 @@
 import type {BodyWeight} from '../../shared/contracts';
+import {localTimestamp} from '../utils/date';
 
-export const MAX_BODY_WEIGHT_KG = 500;
+const MAX_BODY_WEIGHT_KG = 500;
 
 /** Typed kg (comma or point, at most two decimals) or null when ambiguous/out of range. */
 export function parseKg(text: string): number | null {
@@ -22,10 +23,7 @@ export function fromLocalInput(value: string): string | null {
     : null;
 }
 export const toLocalInput = (date: string) => date.slice(0, 16);
-export function localNow(now = new Date()): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:00`;
-}
+export const localNow = (now = new Date()) => localTimestamp(now).slice(0, 16) + ':00';
 
 /** Live (non-deleted) measurements, newest first; equal times fall back to a stable id order. */
 export function sortedMeasurements(measurements: readonly BodyWeight[]): BodyWeight[] {

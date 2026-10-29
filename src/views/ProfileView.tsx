@@ -3,6 +3,7 @@ import {useMemo} from 'react';
 import {Card} from '../components/ui/card';
 import {SectionHeading} from '../components/ui/section-heading';
 import {workoutsPerWeek} from '../domain/model';
+import {setCount} from '../domain/sets';
 import type {Workout} from '../domain/types';
 import {plural} from '../utils/plural';
 
@@ -12,10 +13,7 @@ const WEEKS = 12;
 export function ProfileView({workouts}: {workouts: Workout[]}) {
   const weeks = useMemo(() => workoutsPerWeek(workouts, WEEKS), [workouts]);
   const max = Math.max(3, ...weeks.map((w) => w.count));
-  const sets = useMemo(
-    () => workouts.reduce((n, w) => n + w.exercises.reduce((m, e) => m + e.sets.length, 0), 0),
-    [workouts],
-  );
+  const sets = useMemo(() => workouts.reduce((n, w) => n + setCount(w), 0), [workouts]);
   const first = workouts.at(-1)?.date.slice(0, 4);
   const thisWeek = weeks.at(-1)?.count ?? 0;
   const average = weeks.slice(0, -1).reduce((n, w) => n + w.count, 0) / (WEEKS - 1);
