@@ -24,7 +24,7 @@ sys.dont_write_bytecode = True
 from generate import CACHE, OUT_IMAGES, OUT_JSON, ROOT, line_mask, slug
 
 MANIFEST = Path(__file__).with_name('generated-manifest.json')
-PROVENANCE_URL = 'https://github.com/eduard-cc/gym-log/blob/main/scripts/catalog/README.md'
+PROVENANCE_URL = 'https://github.com/eduard-cc/ember/blob/main/scripts/catalog/README.md'
 AUTHOR = 'Ember (AI-assisted, gpt-image-2)'
 LICENSE = 'app-owned'
 CHANGES = ('AI-assisted illustration made for Ember, not an Everkinetic or wger work; '

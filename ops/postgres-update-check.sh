@@ -47,7 +47,7 @@ started=$(date +%s)
 # The idempotency key returns the existing card on later runs, so only a card created now
 # is news.
 created=$(hermes kanban create "Ember: bump PostgreSQL to $major.$latest" --json \
-	--assignee default --skill gym-log-operator --workspace "worktree:$repo" \
+	--assignee default --skill ember-operator --workspace "worktree:$repo" \
 	--idempotency-key "ember-postgres-$major.$latest" \
 	--body "Automated monthly check: postgres:$major.$latest-bookworm is out; Ember pins $major.$minor. Read the release notes from $major.$((minor + 1)) on for post-update steps, bump every pin (tests/postgres-image.test.ts lists them) and ship per AGENTS.md. Roll out: back up with the old scripts and restore-check it, recreate ember-postgres with ops/docker.sh compose -f ops/compose.local.yml up -d --wait right after the push, then rerun ops/backup.sh and ops/restore-check.sh on the new image. Keep the container name, database and daemon socket." |
 	jq -r '.created_at') || {

@@ -20,7 +20,7 @@ Read when a local test chain fails or dies mid-run, a port is busy, CI shows a f
 
 ```sh
 NODE_ENV=development npm --prefix server ci --include=dev   # else "Cannot find module 'pg'"
-cp -p ~/src/gym-log/server/.env <worktree>/server/          # keep mode 0600
+cp -p ~/src/ember/server/.env <worktree>/server/          # keep mode 0600
 ```
 
 ## Flaky or killed local runs

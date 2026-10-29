@@ -22,7 +22,7 @@ source "$SCRIPT_DIR/docker-host.sh"
 KEEP_RELEASES=5
 KEEP_BACKUPS=3
 BACKUPS=${EMBER_BACKUPS:-$HOME/.local/share/ember-backups}
-REPO=${EMBER_GITHUB_REPO:-eduard-cc/gym-log}
+REPO=${EMBER_GITHUB_REPO:-eduard-cc/ember}
 GIT=(git -C "$SCRIPT_DIR/..")
 
 lock

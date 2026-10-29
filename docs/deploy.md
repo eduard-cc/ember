@@ -9,8 +9,8 @@ Read before squashing onto `main`, deploying, adding a static asset type, touchi
 
 ## Deploying
 
-- `ops/deploy.sh <commit>` sources `ops/lib.sh` from the checkout it is run from (`~/src/gym-log`); the release it builds with `git archive` never updates those scripts. Fast-forward that checkout first (`git fetch && git merge --ff-only origin/main`, keeping untracked files), or the deploy runs an old health check.
-- Never build, install or run dev servers in `~/src/gym-log` itself: it must stay a clean `main` for `ops/deploy.sh`. Work in a worktree.
+- `ops/deploy.sh <commit>` sources `ops/lib.sh` from the checkout it is run from (`~/src/ember`); the release it builds with `git archive` never updates those scripts. Fast-forward that checkout first (`git fetch && git merge --ff-only origin/main`, keeping untracked files), or the deploy runs an old health check.
+- Never build, install or run dev servers in `~/src/ember` itself: it must stay a clean `main` for `ops/deploy.sh`. Work in a worktree.
 - The deploy refuses commits not on `origin/main` or whose latest code commit has no successful push CI run (docs-only commits inherit their code ancestor's run; cancelled runs don't count).
 - A release that adds migrations is preceded by `ops/backup.sh` plus `ops/restore-check.sh`, and a count comparison against `ember`. Migrations are never rolled back, and a release lacking migrations the database already has is refused.
 - Undo with `ops/rollback.sh` (previous healthy release from `~/.local/share/ember/history`).
