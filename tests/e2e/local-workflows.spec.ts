@@ -1,9 +1,7 @@
 import {expect, test} from '@playwright/test';
 
-import {addExercise, navigate, openImport} from '../navigation';
+import {addExercise, navigate} from '../navigation';
 
-const csv =
-  'Date;Workout Name;Exercise Name;Set Order;Weight;Weight Unit;Reps;Seconds;Workout Duration\n2026-01-10 12:00:00;Synthetic import;Synthetic Press;1;30;kg;8;;40m';
 test('templates can be created edited started and deleted', async ({page}) => {
   await page.goto('/?demo=1');
   await navigate(page, 'Workouts');
@@ -25,54 +23,6 @@ test('templates can be created edited started and deleted', async ({page}) => {
   await page.getByRole('button', {name: 'Delete template Edited session'}).click();
   await page.getByRole('button', {name: 'Confirm delete template'}).click();
   await expect(page.getByRole('heading', {name: 'Edited session'})).toHaveCount(0);
-});
-test('CSV previews require explicit replacement and malformed files preserve history', async ({
-  page,
-}) => {
-  await page.goto('/?demo=1');
-  await openImport(page);
-  await page
-    .getByLabel('Choose CSV file')
-    .setInputFiles({name: 'synthetic.csv', mimeType: 'text/csv', buffer: Buffer.from(csv)});
-  await expect(page.getByText('1 workout · 1 set · 1 exercise')).toBeVisible();
-  expect(
-    await page.evaluate(async () => {
-      const path = '/src/storage/repository.ts';
-      const {WorkoutRepository} = await import(path);
-      const repository = new WorkoutRepository();
-      try {
-        return (await repository.readState()).dataset?.sourceLabel;
-      } finally {
-        repository.close();
-      }
-    }),
-  ).toBe('Demo data');
-  await page.getByRole('button', {name: 'Replace history', exact: true}).click();
-  await expect(
-    page
-      .getByRole('dialog', {name: 'Settings'})
-      .getByText('History replaced. Your draft and finished workouts were kept.', {exact: true}),
-  ).toBeVisible();
-  // Replacing closes the panel and leaves focus on the toggle, not on the dialog.
-  await expect(page.locator('.import-panel')).toHaveCount(0);
-  await expect(page.getByRole('button', {name: 'Import CSV', exact: true})).toBeFocused();
-  await openImport(page);
-  await page.getByLabel('Choose CSV file').setInputFiles({
-    name: 'broken.csv',
-    mimeType: 'text/csv',
-    buffer: Buffer.from('not,a,strong,export'),
-  });
-  await expect(page.getByRole('alert')).toContainText('not a supported Strong export');
-  await page.getByRole('button', {name: 'Close import'}).click();
-  // Close import removes the panel, flips the toggle back and keeps focus on it.
-  await expect(page.locator('.import-panel')).toHaveCount(0);
-  const toggle = page.getByRole('button', {name: 'Import CSV', exact: true});
-  await expect(toggle).toBeVisible();
-  await expect(page.getByRole('button', {name: 'Close import'})).toHaveCount(0);
-  await expect(toggle).toBeFocused();
-  await page.getByRole('button', {name: 'Close settings'}).click();
-  await navigate(page, 'History');
-  await expect(page.getByRole('heading', {name: 'Synthetic import'})).toBeVisible();
 });
 test('a failed template commit never announces that it was saved', async ({page}) => {
   await page.goto('/?demo=1');

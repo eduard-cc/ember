@@ -6,7 +6,6 @@ import {LocalOperationSchema} from '../shared/contracts';
 import {editableCopy, editedHistory} from '../src/domain/history-edit';
 import type {Workout} from '../src/domain/types';
 import {exportBackup} from '../src/storage/backup';
-import {commitStrongImport, prepareStrongImport} from '../src/storage/import';
 import {WorkoutRepository} from '../src/storage/repository';
 import {DELETES_CURSOR, SyncEngine} from '../src/sync/engine';
 
@@ -27,11 +26,52 @@ const native: Workout = {
     },
   ],
 };
-const csv =
-  'Date;Workout Name;Exercise Name;Set Order;Weight;Weight Unit;Reps;Seconds;Workout Duration\n' +
-  '2026-01-01 10:00:00;Upper;Press;1;40;kg;8;;30m\n' +
-  '2026-01-01 10:00:00;Upper;Press;2;40;kg;80;;30m\n' +
-  '2026-01-08 10:00:00;Upper;Press;1;42;kg;8;;30m';
+// Imported history as an earlier Strong import stored it: newest first, raw values in `original`.
+const importedSet = (id: string, weight: number, reps: number) => ({
+  id: 'import:synthetic:' + id,
+  weight,
+  reps,
+  seconds: null,
+  distance: null,
+  original: {Weight: String(weight), 'Weight Unit': 'kg', Reps: String(reps)},
+});
+const imported: Workout[] = [
+  {
+    id: 'import:synthetic:1',
+    name: 'Upper',
+    date: '2026-01-08T10:00:00',
+    duration: 30,
+    exercises: [{name: 'Press', type: 'weighted', sets: [importedSet('r3', 42, 8)]}],
+  },
+  {
+    id: 'import:synthetic:0',
+    name: 'Upper',
+    date: '2026-01-01T10:00:00',
+    duration: 30,
+    exercises: [
+      {
+        name: 'Press',
+        type: 'weighted',
+        sets: [importedSet('r1', 40, 8), importedSet('r2', 40, 80)],
+      },
+    ],
+  },
+];
+const importedDataset = () => ({
+  sourceLabel: 'Strong CSV',
+  workouts: structuredClone(imported),
+  warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
+});
+const rawEvidence = {hash: 'a'.repeat(64), raw: 'synthetic raw export', workoutIds: ['x']};
+/** Imported history already synchronized from the server, plus its retained source bytes. */
+const seedSyncedImport = async (repository: WorkoutRepository) => {
+  await repository.db.meta.put({key: 'imported-sync-active', value: true});
+  for (const workout of imported) {
+    await repository.db.importSources.put({key: 'imported:' + workout.id, value: workout});
+    await repository.db.syncState.put({key: 'revision:' + workout.id, value: 1});
+  }
+  await repository.db.importSources.put({key: 'hash:' + rawEvidence.hash, value: rawEvidence});
+};
 const repo = () =>
   new WorkoutRepository('history-edit-' + crypto.randomUUID(), () =>
     new Date('2026-03-01T10:30:00').getTime(),
@@ -180,13 +220,8 @@ it('a pending create is followed by its tombstone; a never-queued local record j
 
 it('edits and deletes synchronized imported history with imported operation kinds', async () => {
   const repository = repo();
-  const prepared = await prepareStrongImport(new TextEncoder().encode(csv));
-  await commitStrongImport(repository, prepared, true);
-  await repository.db.outbox.clear();
-  await repository.db.syncState.put({key: 'queue-order', value: []});
+  await seedSyncedImport(repository);
   const [later, earlier] = (await repository.readState()).dataset!.workouts;
-  for (const w of [later, earlier])
-    await repository.db.syncState.put({key: 'revision:' + w.id, value: 1});
   const draft = editableCopy(earlier);
   draft.exercises[0].sets[1].reps = 8;
   const {workout: edited} = editedHistory(earlier, draft);
@@ -200,63 +235,14 @@ it('edits and deletes synchronized imported history with imported operation kind
     ['deleteImportedWorkout', later.id],
   ]);
   // Raw import evidence is never touched.
-  const source = await repository.db.importSources.get('hash:' + prepared.hash);
-  expect((source?.value as {raw: string}).raw).toBe(csv);
+  const source = await repository.db.importSources.get('hash:' + rawEvidence.hash);
+  expect(source?.value).toEqual(rawEvidence);
   repository.close();
-});
-
-it.each(['edit', 'delete'] as const)(
-  '%s works on a workout carried over by a newer Strong reimport',
-  async (action) => {
-    const repository = repo();
-    try {
-      await commitStrongImport(
-        repository,
-        await prepareStrongImport(new TextEncoder().encode(csv)),
-        true,
-      );
-      const earlier = (await repository.readState()).dataset!.workouts[1];
-      const newerCsv = csv + '\n2026-01-15 10:00:00;Upper;Press;1;44;kg;8;;30m';
-      await commitStrongImport(
-        repository,
-        await prepareStrongImport(new TextEncoder().encode(newerCsv)),
-        true,
-      );
-      const base = (await repository.readState()).dataset!.workouts.find(
-        (w) => w.date === earlier.date,
-      )!;
-      expect(base.exercises[0].sets[1].original).toEqual(earlier.exercises[0].sets[1].original);
-      const next = action === 'edit' ? {...base, name: 'Corrected import'} : null;
-      await repository.changeHistoryWorkout(base, next);
-      const stored = (await repository.readState()).dataset!.workouts.find((w) => w.id === base.id);
-      if (next) expect(stored).toEqual(next);
-      else expect(stored).toBeUndefined();
-    } finally {
-      repository.close();
-    }
-  },
-);
-
-it('a Strong reimport overwrites edited and deleted imported workouts with the export', async () => {
-  // Owner decision: importing replaces imported history wholesale; edits are not kept.
-  const repository = repo();
-  try {
-    const bytes = new TextEncoder().encode(csv);
-    await commitStrongImport(repository, await prepareStrongImport(bytes), true);
-    const original = (await repository.readState()).dataset!.workouts;
-    const [later, earlier] = original;
-    await repository.changeHistoryWorkout(earlier, {...earlier, name: 'Edited in app'});
-    await repository.changeHistoryWorkout(later, null);
-    await commitStrongImport(repository, await prepareStrongImport(bytes), true);
-    expect((await repository.readState()).dataset!.workouts).toEqual(original);
-  } finally {
-    repository.close();
-  }
 });
 
 it('edits and deletes a never-synchronized import in the local dataset copy only', async () => {
   const repository = repo();
-  const dataset = (await prepareStrongImport(new TextEncoder().encode(csv))).dataset;
+  const dataset = importedDataset();
   await repository.commitState({version: 1, dataset, active: null, finished: [], templates: []});
   const [later, earlier] = dataset.workouts;
   await repository.changeHistoryWorkout(later, null);

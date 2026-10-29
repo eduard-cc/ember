@@ -1,6 +1,6 @@
 # Sync, outbox and history data
 
-Read before changing the sync feed or outbox, local persistence, recovery export/restore, Strong reimport, history editors, or per-session aggregates.
+Read before changing the sync feed or outbox, local persistence, recovery export/restore, imported history, history editors, or per-session aggregates.
 
 ## Invariants
 
@@ -8,7 +8,7 @@ Read before changing the sync feed or outbox, local persistence, recovery export
 - One writer tab per installation holds the Web Lock `ember:installation:writer` (`src/storage/draft-lock.ts`). Active workouts stay on the installation that started them and never enter server sync. Finish saves completed history, queues its operation and removes the draft in one transaction.
 - Outbox retries keep the operation's immutable identity. Revision conflicts and rejections stay visible and retained; never silently overwrite peer data.
 - Sessions use HttpOnly cookies and a memory-only CSRF token (`X-CSRF-Token`). Production uses Tailscale identity auth (`EMBER_AUTH_MODE=tailscale`, exact owner login in external config); password mode exists for local development and tests.
-- Reviewed Strong replacement touches imported history only. Compare the complete current imported membership and content before treating an identical file as a no-op; retained source hashes are provenance, not proof of current identity.
+- Strong import is retired; Ember is the source of truth. History imported earlier stays: it syncs with its own `putImportedWorkout` / `deleteImportedWorkout` kinds (never mixed with native `putWorkout`), lives under `imported:<id>` in `importSources` once synchronized (`current-dataset` before), and keeps each set's raw `original` cells and the original export bytes (`hash:<sha256>` sources, also in recovery archives). Keep all of these readable for existing installs and archives; the server's `resetDataset` (`server/src/sync/reset.ts`) reseeds imported history for recovery.
 - Recovery export is validated, versioned JSON with source evidence, owner/revision provenance and local drafts, without session secrets. Restore pauses edits and sync, requires confirmation, and rebuilds create-only operations rather than replaying acknowledgements.
 
 ## Extending the sync feed
@@ -30,7 +30,7 @@ Also follow the sync-protocol-evolution workflow for a new record kind.
 
 ## Editing history
 
-- Compare optimistic editor bases with `canonical()` (`src/storage/canonical.ts`), not `JSON.stringify`: schema-normalized reads can reorder otherwise identical objects and falsely block edits or deletes. Test editing and deleting after a newer Strong reimport.
+- Compare optimistic editor bases with `canonical()` (`src/storage/canonical.ts`), not `JSON.stringify`: schema-normalized reads can reorder otherwise identical objects and falsely block edits or deletes. Test editing and deleting imported as well as native workouts.
 
 ## Retiring a stored field
 

@@ -3,7 +3,6 @@ import {
   ChevronRight,
   ChevronUp,
   Dumbbell,
-  FileUp,
   History,
   Plus,
   Settings,
@@ -16,11 +15,9 @@ import {AddExercise} from './components/AddExercise';
 import {AppearanceSettings, useAppearance} from './components/AppearanceSettings';
 import {BodyWeightSettings} from './components/BodyWeightSettings';
 import {ElapsedTimer} from './components/ElapsedTimer';
-import {ImportPanel} from './components/ImportPanel';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
 import {errorBannerClass, noticeClass} from './components/banner';
-import {SettingsGroup} from './components/settings-group';
 import {Button} from './components/ui/button';
 import {ContentFieldset} from './components/ui/content-fieldset';
 import {
@@ -36,11 +33,9 @@ import {Input} from './components/ui/input';
 import {ListLabel} from './components/ui/list-label';
 import {SectionHeading} from './components/ui/section-heading';
 import {routineTargets} from './components/workout-targets';
-import {parseStrongCsv} from './domain/model';
 import type {Workout} from './domain/types';
 import {useBackLayer} from './state/back';
 import {newWorkout, useWorkoutState} from './state/workout';
-import {commitStrongImport} from './storage/import';
 import {useSync} from './sync/use-sync';
 import {cn} from './utils/cn';
 import {plural} from './utils/plural';
@@ -130,7 +125,6 @@ export default function App() {
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const transitioning = useRef(false);
-  const pendingImport = useRef<Promise<void> | null>(null);
   // App-shell updates pause editing and sync around a saved, draft-free transition.
   const endTransition = (safeToResume = true) => {
     if (!safeToResume) return;
@@ -143,11 +137,7 @@ export default function App() {
       throw new Error('Transition is locked');
     transitioning.current = true;
     try {
-      const settled = await Promise.allSettled([
-        sync.pause(),
-        pauseEditing(requireSaved),
-        pendingImport.current,
-      ]);
+      const settled = await Promise.allSettled([sync.pause(), pauseEditing(requireSaved)]);
       if (settled.some((result) => result.status === 'rejected'))
         throw new Error('Could not pause safely');
       if (
@@ -160,8 +150,6 @@ export default function App() {
       throw error;
     }
   };
-  const [importOpen, setImportOpen] = useState(false);
-  const importToggle = useRef<HTMLButtonElement>(null);
   const [notice, setNotice] = useState('');
   useEffect(() => {
     let frame = 0;
@@ -198,32 +186,6 @@ export default function App() {
       window.visualViewport?.removeEventListener('scroll', revealField);
     };
   }, []);
-  const importedManually = useRef(false);
-  useEffect(() => {
-    if (
-      !hydrated ||
-      state.dataset ||
-      !import.meta.env.DEV ||
-      new URLSearchParams(location.search).get('localCsv') !== '1'
-    )
-      return;
-    const controller = new AbortController();
-    fetch('/__local/strong.csv', {signal: controller.signal})
-      .then(async (response) => {
-        if (response.status === 404) return;
-        if (!response.ok) throw new Error('Could not read the configured history file.');
-        const parsed = parseStrongCsv(await response.text());
-        if (!controller.signal.aborted && !importedManually.current)
-          void setState((s) => (s.dataset ? s : {...s, dataset: parsed}));
-      })
-      .catch((error) => {
-        if (!controller.signal.aborted)
-          setNotice(error instanceof Error ? error.message : 'Could not load history.');
-      });
-    return () => controller.abort();
-    // Keeps the existing run-once-after-hydration behavior for the configured CSV.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setState, hydrated]);
   const dataset = useMemo(
     () =>
       state.dataset ?? {
@@ -654,9 +616,7 @@ export default function App() {
               </Button>
             </DialogClose>
           </SectionHeading>
-          <DialogDescription srOnly>
-            Appearance, body weight, Strong import and app updates.
-          </DialogDescription>
+          <DialogDescription srOnly>Appearance, body weight and app updates.</DialogDescription>
           {errors('settings')}
           {feedback('mt-5')}
           <div className='mt-5 space-y-10'>
@@ -665,64 +625,6 @@ export default function App() {
             {hydrated && !sync.locked && !recoveryError && (
               <BodyWeightSettings repository={repository} disabled={disabled} />
             )}
-            <SettingsGroup
-              id='import-heading'
-              titleAs='h3'
-              title='Import your Strong history'
-              description='Parsed in this browser. Confirmed history synchronizes to your own server when signed in.'
-              action={
-                // One toggle that turns into the close control, so focus stays on it either way.
-                <Button
-                  ref={importToggle}
-                  aria-label={importOpen ? 'Close import' : 'Import CSV'}
-                  variant={importOpen ? 'ghost' : 'secondary'}
-                  size={importOpen ? 'icon' : 'normal'}
-                  disabled={disabled}
-                  onClick={() => setImportOpen((value) => !value)}
-                >
-                  {importOpen ? (
-                    <X size={18} />
-                  ) : (
-                    <>
-                      <FileUp size={17} />
-                      Import CSV
-                    </>
-                  )}
-                </Button>
-              }
-            >
-              {importOpen && (
-                <ContentFieldset disabled={disabled}>
-                  <ImportPanel
-                    onClose={() => {
-                      setImportOpen(false);
-                      // The panel (and the Replace button holding focus) unmounts: keep focus on the toggle.
-                      importToggle.current?.focus();
-                    }}
-                    onReplace={async (prepared) => {
-                      if (transitioning.current) throw new Error('Update in progress');
-                      const job = (async () => {
-                        importedManually.current = true;
-                        const result = await commitStrongImport(repository, prepared, true);
-                        await refresh();
-                        setNotice(
-                          result.status === 'identical'
-                            ? 'Identical file already imported. No history changed.'
-                            : 'History replaced. Your draft and finished workouts were kept.',
-                        );
-                        void sync.sync();
-                      })();
-                      pendingImport.current = job;
-                      try {
-                        await job;
-                      } finally {
-                        if (pendingImport.current === job) pendingImport.current = null;
-                      }
-                    }}
-                  />
-                </ContentFieldset>
-              )}
-            </SettingsGroup>
             {!demo && (
               <ShellUpdatePanel
                 repository={repository}

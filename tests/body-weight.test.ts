@@ -12,7 +12,6 @@ import {
   toLocalInput,
 } from '../src/domain/body-weight';
 import {exportBackup, restoreBackup} from '../src/storage/backup';
-import {commitStrongImport, prepareStrongImport} from '../src/storage/import';
 import {WorkoutRepository} from '../src/storage/repository';
 import {SyncEngine} from '../src/sync/engine';
 
@@ -160,23 +159,6 @@ it('refuses stale bases, untrusted installations and failed outbox writes withou
     'Reconnect',
   );
   expect(await repository.db.bodyWeights.get('locked')).toBeUndefined();
-  repository.close();
-});
-
-it('a Strong CSV replacement leaves measurements and their pending operations untouched', async () => {
-  const repository = repo();
-  await repository.putBodyWeight(measurement, null);
-  const before = await repository.db.outbox.toArray();
-  const csv =
-    'Date;Workout Name;Exercise Name;Set Order;Weight;Weight Unit;Reps;Seconds;Workout Duration;Notes\n2026-01-01 10:00:00;Synthetic;Press;1;20;kg;8;;30m;\n';
-  await commitStrongImport(
-    repository,
-    await prepareStrongImport(new TextEncoder().encode(csv)),
-    true,
-  );
-  expect(await repository.db.bodyWeights.toArray()).toEqual([measurement]);
-  const after = await repository.db.outbox.toArray();
-  expect(after.filter((o) => o.kind === 'putBodyWeight')).toEqual(before);
   repository.close();
 });
 

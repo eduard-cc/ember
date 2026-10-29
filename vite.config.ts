@@ -2,24 +2,10 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import {defineConfig} from 'vite';
 
-import {localCsvMiddleware} from './scripts/local-csv.ts';
 import {pwaShell} from './scripts/pwa-build.ts';
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    react(),
-    pwaShell(),
-    {
-      name: 'private-local-csv',
-      apply: 'serve',
-      configureServer(server) {
-        const localCsv = localCsvMiddleware(process.env.EMBER_CSV);
-        // Connect ignores returned promises; the middleware handles its own read errors.
-        server.middlewares.use((req, res, next) => void localCsv(req, res, next));
-      },
-    },
-  ],
+  plugins: [tailwindcss(), react(), pwaShell()],
   server: {
     proxy: {
       '/api/v1': {

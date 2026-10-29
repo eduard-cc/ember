@@ -5,7 +5,6 @@ import {afterEach, expect, test} from 'vitest';
 
 import {parseBackup} from '../shared/backup';
 import {exportBackup, restoreBackup} from '../src/storage/backup';
-import {commitStrongImport, prepareStrongImport} from '../src/storage/import';
 import {WorkoutRepository} from '../src/storage/repository';
 
 const repos: WorkoutRepository[] = [];
@@ -51,17 +50,17 @@ const state = {
   finished: [],
   templates: [{...workout, id: 'template'}],
 };
-test('BOM Strong import preserves exact source bytes and SHA-256 through export, restore and re-export', async () => {
-  const csv =
+test('retained import source bytes keep their exact BOM bytes and SHA-256 through export, restore and re-export', async () => {
+  const raw =
     '\uFEFFDate;Workout Name;Exercise Name;Set Order;Weight;Weight Unit;Reps;Seconds;Workout Duration;Notes\r\n2026-01-01 10:00:00;Synthetic BOM;Press;1;0;kg;8;;30m;synthetic\r\n';
-  const bytes = new TextEncoder().encode(csv);
+  const bytes = new TextEncoder().encode(raw);
   const hash = createHash('sha256').update(bytes).digest('hex');
-  const prepared = await prepareStrongImport(bytes);
-  expect(prepared.dataset.workouts).toHaveLength(1);
-  expect(prepared.hash).toBe(hash);
-  expect(prepared.hash).not.toBe(createHash('sha256').update(bytes.slice(3)).digest('hex'));
   const source = repo();
-  await commitStrongImport(source, prepared, true);
+  await source.commitState({...state, active: null});
+  await source.db.importSources.put({
+    key: 'hash:' + hash,
+    value: {hash, raw, workoutIds: [workout.id]},
+  });
   const exported = await exportBackup(source);
   const target = repo();
   await restoreBackup(target, exported);
@@ -73,8 +72,8 @@ test('BOM Strong import preserves exact source bytes and SHA-256 through export,
     const retainedBytes = new TextEncoder().encode(evidence.raw!);
     expect(retainedBytes).toEqual(bytes);
     expect(createHash('sha256').update(retainedBytes).digest('hex')).toBe(evidence.hash);
-    expect(evidence.workoutIds).toEqual(prepared.dataset.workouts.map((w) => w.id));
-    expect(backup.state.dataset).toEqual(prepared.dataset);
+    expect(evidence.workoutIds).toEqual([workout.id]);
+    expect(backup.state.dataset).toEqual(state.dataset);
   }
 });
 test('restore into fresh database retains source IDs, resets draft ownership and rebuilds unsent operations', async () => {

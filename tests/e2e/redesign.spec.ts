@@ -423,7 +423,7 @@ test('a read-only writer follower can minimize and reach settings and recovery g
   );
   await follower.getByRole('button', {name: 'Settings', exact: true}).last().click();
   await expect(follower.getByRole('dialog', {name: 'Settings'})).toBeVisible();
-  await expect(follower.getByRole('button', {name: 'Import CSV'})).toBeDisabled();
+  await expect(follower.getByRole('button', {name: 'Add weight'})).toBeDisabled();
   await expect(follower.getByRole('button', {name: 'Reload to enable editing'})).toBeEnabled();
   await follower.getByRole('button', {name: 'Close settings'}).click();
   await follower.getByRole('button', {name: 'Minimize workout'}).click();

@@ -55,9 +55,3 @@ export async function openSettings(page: Page) {
   }).toPass({timeout: 15000});
   await expect(page.getByRole('dialog', {name: 'Settings', exact: true})).toBeVisible();
 }
-
-export async function openImport(page: Page) {
-  await openSettings(page);
-  if (!(await page.getByLabel('Choose CSV file').isVisible()))
-    await page.getByRole('button', {name: 'Import CSV', exact: true}).click();
-}

@@ -277,7 +277,7 @@ export function BodyWeightSettings({
       id='body-weight-heading'
       titleAs='h3'
       title='Body weight'
-      description='Separate from workouts, lifted weights and Strong imports.'
+      description='Separate from workouts and lifted weights.'
       action={add}
     >
       <div className='flex flex-col gap-3'>

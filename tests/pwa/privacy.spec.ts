@@ -6,7 +6,7 @@ test('Cache Storage contains only the finite shell allowlist, never API, CSV or 
   context,
 }) => {
   const api = new URL('../../dist/api/pwa-probe.json', import.meta.url);
-  const csv = new URL('../../dist/__local/strong.csv', import.meta.url);
+  const csv = new URL('../../dist/private/export.csv', import.meta.url);
   await mkdir(new URL('.', api), {recursive: true});
   await mkdir(new URL('.', csv), {recursive: true});
   await writeFile(api, '{"synthetic":"api-not-for-cache"}');
@@ -19,7 +19,7 @@ test('Cache Storage contains only the finite shell allowlist, never API, CSV or 
       Promise.all(
         [
           '/api/pwa-probe.json',
-          '/__local/strong.csv',
+          '/private/export.csv',
           '/index.html?synthetic=private',
           '/anything-else',
         ].map(async (path) => (await fetch(path)).text()),
@@ -71,7 +71,7 @@ test('Cache Storage contains only the finite shell allowlist, never API, CSV or 
       Promise.all(
         [
           '/api/pwa-probe.json',
-          '/__local/strong.csv',
+          '/private/export.csv',
           '/index.html?synthetic=private',
           '/anything-else',
         ].map(async (path) => {

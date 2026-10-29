@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate, openImport} from '../navigation';
+import {navigate} from '../navigation';
 
 const sortKey = 'ember:exercise-sort:v1';
 // Synthetic demo history: 24 workouts across three templates repeated eight times.
@@ -173,40 +173,59 @@ test('the Add exercise picker ignores a stored Most done sort and stays A–Z', 
 });
 
 const longName = 'Incline Bench Press (Dumbbell, Neutral Grip)';
-/** Strong CSV: `workouts` dated workouts of the long-named exercise; the first also repeats it as a second block. */
-function longHistoryCsv(workouts: number) {
-  const lines = [
-    'Date;Workout Name;Exercise Name;Set Order;Weight;Weight Unit;Reps;Seconds;Workout Duration',
-  ];
-  for (let i = 0; i < workouts; i++) {
-    const date = new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10);
-    lines.push(`${date} 12:00:00;Synthetic ${i};${longName};1;20;kg;8;;40m`);
-    if (i === 0)
-      lines.push(
-        `${date} 12:00:00;Synthetic ${i};Plank;1;;;;60;40m`,
-        `${date} 12:00:00;Synthetic ${i};${longName};1;22;kg;6;;40m`,
-      );
-  }
-  return lines.join('\n');
+/** `workouts` dated workouts of the long-named exercise; the first also repeats it as a second block. */
+function longHistory(workouts: number) {
+  const set = (id: string, weight: number | null, reps: number | null, seconds: number | null) => ({
+    id,
+    weight,
+    reps,
+    seconds,
+    distance: null,
+  });
+  return {
+    version: 1,
+    dataset: {
+      sourceLabel: 'Synthetic fixture',
+      workouts: Array.from({length: workouts}, (_, i) => {
+        const date = new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10);
+        const block = (n: number, weight: number, reps: number) => ({
+          name: longName,
+          type: 'weighted',
+          sets: [set(`s${i}-${n}`, weight, reps, null)],
+        });
+        return {
+          id: `synthetic-${i}`,
+          name: `Synthetic ${i}`,
+          date: `${date}T12:00:00`,
+          duration: 40,
+          exercises:
+            i === 0
+              ? [
+                  block(0, 20, 8),
+                  {name: 'Plank', type: 'duration', sets: [set(`s${i}-p`, null, null, 60)]},
+                  block(1, 22, 6),
+                ]
+              : [block(0, 20, 8)],
+        };
+      }).reverse(),
+      warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
+    },
+    active: null,
+    finished: [],
+    templates: [],
+  };
 }
 
 test('a long name wraps beside a 3-digit count, and the detail header counts workouts, not blocks', async ({
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844});
+  await page.addInitScript(
+    (value) => localStorage.setItem('ember:v1', JSON.stringify(value)),
+    longHistory(120),
+  );
   await page.goto('/?demo=1');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  await openImport(page);
-  await page.getByLabel('Choose CSV file').setInputFiles({
-    name: 'synthetic.csv',
-    mimeType: 'text/csv',
-    buffer: Buffer.from(longHistoryCsv(120)),
-  });
-  await page.getByRole('button', {name: 'Replace history', exact: true}).click();
-  await expect(
-    page.getByRole('dialog', {name: 'Settings'}).getByText(/History replaced/),
-  ).toBeVisible();
-  await page.getByRole('button', {name: 'Close settings'}).click();
   await navigate(page, 'Exercises');
   const all = page.getByRole('region', {name: 'All exercises'});
   const row = all.getByRole('button', {name: longName, exact: true});

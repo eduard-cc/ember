@@ -4,8 +4,8 @@ import {cn} from '../utils/cn';
 
 /**
  * A titled settings group: a small heading and optional one-line
- * context above the group's content. Ember adds `action`, a control on the title row (Add weight,
- * Import CSV), so a long description keeps the full width under it. `titleAs` is the title's
+ * context above the group's content. Ember adds `action`, a control on the title row (Add weight),
+ * so a long description keeps the full width under it. `titleAs` is the title's
  * heading level: `h3` inside the Settings dialog, whose own title is an `h2`.
  */
 export function SettingsGroup({

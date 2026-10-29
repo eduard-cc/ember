@@ -569,7 +569,7 @@ test('Settings sections are h3 groups under the h2 dialog title; Body weight emp
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await openSettings(page);
   const dialog = page.getByRole('dialog', {name: 'Settings', exact: true});
-  for (const name of ['Appearance', 'Body weight', 'Import your Strong history']) {
+  for (const name of ['Appearance', 'Body weight']) {
     const group = dialog.getByRole('region', {name, exact: true});
     await expect(group).toBeVisible();
     const id = await group.getAttribute('aria-labelledby');

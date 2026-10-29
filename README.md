@@ -1,6 +1,6 @@
 # Ember
 
-A local-first mobile workout tracker with inspectable history, editable templates, preservation-aware Strong CSV import, and a separate privately hosted API. The prototype baseline is preserved in local Git history; the current foundation is not yet an approved replacement for Strong.
+A local-first mobile workout tracker with inspectable history, editable templates, and a separate privately hosted API. Ember is the source of truth for the owner's training history: their Strong history was imported once and Strong import is retired. The prototype baseline is preserved in local Git history.
 
 ## Run locally
 
@@ -34,7 +34,7 @@ The main navigation is **Profile / History / Workout / Exercises**, with Workout
 - **Workout:** Start empty workout and unlimited editable templates. Template targets are not completed sets. Add exercise opens the full-screen exercise library with search, body-part filters, recent rows and thumbnails. Selecting a row adds it and closes the picker; a new search name can be created after choosing its type. The same picker is used in template editing. An active workout can be minimized to browse any tab and resumed from its named bar, which shows elapsed time and completed/total sets. This does not discard the durable local draft.
 - **Exercises:** searchable catalog plus all exact recorded/custom names, body-part filters, recent exercises and thumbnails. Names are not fuzzy-matched or merged. Exercise details have **About / History / Charts / Records** tabs: available drawings, equipment and muscle data; actual session sets; applicable per-session trends with exact-value tables; and eligible records with source-workout links. Exercises with history initially open History; others open About. About shows no instructions or credit text.
 
-Settings contains appearance, body weight, Strong CSV import and app updates. Body weight entries (kg, local date and time) show as a full-history chart above newest-first rows; tap a row to correct or delete it. There is no manual Sync Now control or user-facing Backup & Recovery panel. Synchronization is automatic and normally silent; ownership/authentication blocks, failed saves and rejected changes still surface when action is needed. Removing those controls does not remove storage recovery functions or server backups.
+Settings contains appearance, body weight and app updates. Body weight entries (kg, local date and time) show as a full-history chart above newest-first rows; tap a row to correct or delete it. There is no manual Sync Now control or user-facing Backup & Recovery panel. Synchronization is automatic and normally silent; ownership/authentication blocks, failed saves and rejected changes still surface when action is needed. Removing those controls does not remove storage recovery functions or server backups.
 
 ### Exercise content and licensing
 
@@ -50,27 +50,15 @@ Bundled instructions and muscle data, and most drawings, come from the Everkinet
 - Successful server synchronization is not off-device disaster recovery. Routine sync status is not shown as a permanent card. Rejected/conflicting operations remain visible and retained in storage; there is no automatic merge UI.
 - Valid legacy `ember:v1` localStorage data migrates transactionally, retaining original bytes. Malformed or unsupported data blocks writes; explicit reset preserves recovery evidence rather than silently overwriting it.
 
-## Import and privacy
+## Imported history and privacy
 
-The UI accepts a local Strong CSV with preview and explicit replacement of imported history. Native logged workouts and the draft are preserved. Exact file bytes determine source identity; repeated rows, exercise occurrences, original cells, blank-versus-zero values and wall-time timestamps are retained. Imported and native history have distinct server operation kinds so CSV replacement cannot remove native logged workouts.
+Workouts imported once from Strong stay ordinary, editable history. They keep their own `putImportedWorkout` / `deleteImportedWorkout` sync kinds, each set's raw `original` cells, and the retained source bytes (`importSources` in IndexedDB, `sources` in recovery archives). There is no import path in the app; new history is logged in Ember.
 
-A private development input can also be made available explicitly:
-
-```sh
-EMBER_CSV=/absolute/path/to/strong-export.csv npm run dev
-```
-
-Then use `/?localCsv=1`. This loopback-only development route is not present in production output, and is not service-worker cached. Do not expose the development server publicly or on the tailnet. Private CSVs, `.local/`, ignored credentials, database dumps and personal screenshots must not enter tracked source, `public/`, build artifacts or external services. Only synthetic fixtures belong in tests.
-
-Owner-approved one-time fixes to an export are applied before import with a separate cleaned copy, never in the app. The fixes file names real training data, so it stays private with the export; its format is documented in `src/domain/strong-cleanup.ts`. Every listed fix must match exactly or the run fails, and the original export is only read:
-
-```sh
-node scripts/strong-cleanup.ts /private/strong-export.csv /private/approved-fixes.json /private/cleaned.csv
-```
+Private exports, `.local/`, ignored credentials, database dumps and personal screenshots must not enter tracked source, `public/`, build artifacts or external services. Only synthetic fixtures belong in tests.
 
 ## Offline app shell
 
-Production builds include a manifest, icons and a finite service-worker app-shell cache. After a successful initial online load, the shell can reopen offline and use IndexedDB. API responses, private CSVs, JSON payloads and arbitrary runtime requests are not cached. Updates wait instead of silently refreshing the logger; no native background-sync or Android ongoing-notification guarantee is implied.
+Production builds include a manifest, icons and a finite service-worker app-shell cache. After a successful initial online load, the shell can reopen offline and use IndexedDB. API responses, private exports, JSON payloads and arbitrary runtime requests are not cached. Updates wait instead of silently refreshing the logger; no native background-sync or Android ongoing-notification guarantee is implied.
 
 ## Technical recovery and backups
 
@@ -161,7 +149,7 @@ System services sit outside the user manager, so these hard caps, not CPU weight
 
 ## Mobile logger and analytics
 
-Exercise Charts offers best reps, highest recorded load, session volume and estimated 1RM for weighted work; assisted work offers best reps and least assistance. Bodyweight work has rep trends; duration/distance-specific charts are not implemented. Best reps may use different weights and best load may use different reps: these summaries are not fixed-load or fixed-rep strength comparisons. Exact-value tables link back to source workouts. Records include eligible estimated 1RM, heaviest weight, best set/session volume, least assistance, most reps and heaviest weight for each exact rep count. Any History workout can be edited (name, start, duration, exercises and set values) or deleted from its ⋯ menu; both sync at the expected revision. Untouched sets keep their stored values and import evidence, and native deletions are final. A reviewed Strong reimport restores edited or deleted imported workouts from the file. Bad imported data is fixed once at import time; the app has no set flagging or exclusion.
+Exercise Charts offers best reps, highest recorded load, session volume and estimated 1RM for weighted work; assisted work offers best reps and least assistance. Bodyweight work has rep trends; duration/distance-specific charts are not implemented. Best reps may use different weights and best load may use different reps: these summaries are not fixed-load or fixed-rep strength comparisons. Exact-value tables link back to source workouts. Records include eligible estimated 1RM, heaviest weight, best set/session volume, least assistance, most reps and heaviest weight for each exact rep count. Any History workout can be edited (name, start, duration, exercises and set values) or deleted from its ⋯ menu; both sync at the expected revision. Untouched sets keep their stored values and import evidence, and native deletions are final. Imported workouts are corrected by editing them like any other workout; the app has no set flagging or exclusion.
 
 The compact logger retains full-width exercise sections, explicit completion, large editable fields and keyboard-aware scrolling. Swipe left to **reveal** Delete, then tap it; the set-number action provides the keyboard/non-gesture alternative. Deleting a set removes it without an alert or undo banner; remaining sets keep their values and order.
 

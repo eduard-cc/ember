@@ -158,7 +158,6 @@ test('compiled trial serves the production shell and API on one loopback listene
 			'/assets/private-export.csv',
 			'/assets/outside.js',
 			'/assets/index-synthetic.js.map',
-			'/local-csv',
 			'/@vite/client',
 		])
 			assert.equal((await fetch(url + path)).status, 404, path);

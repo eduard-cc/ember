@@ -1,5 +1,3 @@
-import Papa from 'papaparse';
-
 import type {
   Comparable,
   Dataset,
@@ -171,15 +169,6 @@ export function nearestRecorded(
     ),
   };
 }
-export function classifyExercise(name: string, sets: SetRecord[]): ExerciseType {
-  if (/assisted/i.test(name)) return 'assisted';
-  if (/^(Pull Up|Triceps Dip|Chest Dip|Push Up|Sit Up|Hanging Leg Raise)(?:$|\s*\()/i.test(name))
-    return 'bodyweight';
-  if (sets.some((set) => set.distance !== null && set.distance > 0)) return 'cardio';
-  if (sets.some((set) => set.weight !== null && set.weight > 0)) return 'weighted';
-  if (sets.some((set) => set.seconds !== null && set.seconds > 0)) return 'duration';
-  return 'bodyweight';
-}
 export function estimate1RM(set: SetRecord, type: ExerciseType): number | null {
   if (
     type !== 'weighted' ||
@@ -205,134 +194,6 @@ export function setVolume(set: SetRecord, type: ExerciseType): number | null {
     return null;
   const value = set.weight * set.reps;
   return Number.isFinite(value) ? value : null;
-}
-
-export function parseStrongCsv(text: string): Dataset {
-  const result = Papa.parse<Record<string, string>>(text.replace(/^\uFEFF/, ''), {
-    header: true,
-    skipEmptyLines: 'greedy',
-  });
-  const fields = result.meta.fields ?? [];
-  const required = [
-    'Date',
-    'Workout Name',
-    'Exercise Name',
-    'Set Order',
-    'Weight',
-    'Weight Unit',
-    'Reps',
-    'Seconds',
-    'Workout Duration',
-  ];
-  if (required.some((field) => !fields.includes(field)))
-    throw new Error(
-      'This is not a supported Strong export. Export your workout history as CSV and try again.',
-    );
-  if (result.errors.length)
-    throw new Error('The CSV has malformed or uneven rows. The current history was not changed.');
-  if (!result.data.length) throw new Error('The CSV contains no workout sets.');
-  const workouts = new Map<string, Workout>();
-  const exact = new Set<string>();
-  const keys = new Set<string>();
-  const warnings = {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0};
-  result.data.forEach((row, index) => {
-    if (!row['Workout Name']?.trim() || !row['Exercise Name']?.trim())
-      throw new Error(`Row ${index + 2} is missing a workout or exercise name.`);
-    if (
-      !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(row.Date) ||
-      !Number.isFinite(Date.parse(row.Date.replace(' ', 'T') + 'Z')) ||
-      new Date(row.Date.replace(' ', 'T') + 'Z').toISOString().slice(0, 19) !==
-        row.Date.replace(' ', 'T')
-    )
-      throw new Error(`Row ${index + 2} has an invalid local timestamp.`);
-    if (row.Weight?.trim() && !['kg', 'lbs', 'lb'].includes(row['Weight Unit']))
-      throw new Error(`Row ${index + 2} has an unsupported weight unit.`);
-    const durationText = row['Workout Duration'].trim();
-    const durationParts =
-      /^(?:(\d+(?:\.\d+)?)h\s*)?(?:(\d+(?:\.\d+)?)m\s*)?(?:(\d+(?:\.\d+)?)s)?$/.exec(durationText);
-    if (!durationParts) throw new Error(`Row ${index + 2} has an invalid workout duration.`);
-    const duration =
-      Number(durationParts[1] ?? 0) * 60 +
-      Number(durationParts[2] ?? 0) +
-      Number(durationParts[3] ?? 0) / 60;
-    if (!Number.isFinite(duration))
-      throw new Error(`Row ${index + 2} has an invalid workout duration.`);
-    const sessionKey = JSON.stringify([row.Date, row['Workout Name']]);
-    let workout = workouts.get(sessionKey);
-    if (!workout) {
-      workout = {
-        id: `csv-${sessionKey}`,
-        name: row['Workout Name'],
-        date: row.Date.replace(' ', 'T'),
-        duration,
-        exercises: [],
-      };
-      workouts.set(sessionKey, workout);
-    }
-    // Preserve source occurrence order: the same name after another exercise is a new occurrence.
-    let exercise = workout.exercises.at(-1);
-    if (!exercise || exercise.name !== row['Exercise Name']) {
-      exercise = {name: row['Exercise Name'], type: 'weighted', sets: []};
-      workout.exercises.push(exercise);
-    }
-    const number = (value: string | undefined) => {
-      if (!value?.trim()) return null;
-      const normalized = value.trim().replace(',', '.');
-      if (!/^[-+]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized))
-        throw new Error(`Row ${index + 2} has an invalid numeric value.`);
-      const parsed = Number(normalized);
-      if (!Number.isFinite(parsed))
-        throw new Error(`Row ${index + 2} has an invalid numeric value.`);
-      return parsed;
-    };
-    const set: SetRecord = {
-      id: `csv-row-${index + 1}`,
-      weight: number(row.Weight),
-      reps: number(row.Reps),
-      seconds: number(row.Seconds),
-      distance: number(row.Distance),
-      original: {...row},
-    };
-    if (set.weight !== null && ['lb', 'lbs'].includes(row['Weight Unit'])) set.weight *= 0.45359237;
-    if (set.distance !== null) {
-      const unit = row['Distance Unit'];
-      if (!['km', 'm', 'mi', 'mile', 'miles'].includes(unit))
-        throw new Error(`Row ${index + 2} has an unsupported distance unit.`);
-      if (unit === 'm') set.distance /= 1000;
-      if (['mi', 'mile', 'miles'].includes(unit)) set.distance *= 1.609344;
-    }
-    if (
-      [set.weight, set.reps, set.seconds, set.distance].some(
-        (value) => value !== null && !Number.isFinite(value),
-      )
-    )
-      throw new Error(
-        `Row ${index + 2} exceeds the supported numeric range after unit conversion.`,
-      );
-    exercise.sets.push(set);
-    const exactKey = JSON.stringify(row);
-    if (exact.has(exactKey)) warnings.duplicateRows++;
-    exact.add(exactKey);
-    const key = JSON.stringify([
-      row.Date,
-      row['Workout Name'],
-      row['Exercise Name'],
-      row['Set Order'],
-    ]);
-    if (keys.has(key)) warnings.duplicateKeys++;
-    keys.add(key);
-  });
-  const values = [...workouts.values()];
-  values.forEach((workout) =>
-    workout.exercises.forEach((exercise) => {
-      exercise.type = classifyExercise(exercise.name, exercise.sets);
-    }),
-  );
-  return {
-    sourceLabel: 'Strong CSV',
-    workouts: values.sort((a, b) => b.date.localeCompare(a.date)),
-    warnings,
-  };
 }
 
 export interface RecordEntry {

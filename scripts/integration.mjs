@@ -80,7 +80,6 @@ try {
     EMBER_TEST_PASSWORD: password,
     NODE_ENV: 'development',
   };
-  delete env.EMBER_CSV;
   const args = process.argv.slice(2);
   const listed = await run([...args, '--list', '--reporter=json'], env, true);
   if (listed.code) throw Error('Could not enumerate integration tests');
