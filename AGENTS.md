@@ -1,4 +1,4 @@
-# Gym Log agent context
+# Ember agent context
 
 Rules and non-obvious traps only. Product scope is in PRODUCT.md, the visual system in DESIGN.md, commands and operations in README.md; derive everything else from the code.
 
@@ -6,13 +6,13 @@ Rules and non-obvious traps only. Product scope is in PRODUCT.md, the visual sys
 
 - CI, local test runs, ports, Playwright: `docs/ci-and-tests.md`
 - Squash, deploy, rollback, live checks, static assets and the precache: `docs/deploy.md`
-- Sync feed, outbox, local storage, import, recovery, history editing and aggregates: `docs/sync-and-history.md`
+- Sync feed, outbox, local storage, recovery, history editing and aggregates: `docs/sync-and-history.md`
 - UI, layout, accessibility, phone gestures, installed PWA: `docs/phone-and-pwa.md`
 - Catalog drawings (licensed and AI-assisted): `docs/catalog-drawings.md`
 
 ## Product rules
 
-Gym Log is a temporary name. It is a personal-use-first, self-hosted workout tracker inspired by Strong's logging workflow; not a branded Strong clone or an AI coach. Strong informs generic workflows, not exact branded UI or assets.
+Ember (formerly Gym Log) is a personal-use-first, self-hosted workout tracker inspired by Strong's logging workflow; not a branded Strong clone or an AI coach. Strong informs generic workflows, not exact branded UI or assets. Ember is the owner's source of truth for workout history; Strong is retired and its history was imported once.
 
 - Training splits change: never encode a fixed program.
 - Repeating a workout prefills editable targets; every set stays uncompleted until explicitly confirmed.
@@ -22,39 +22,46 @@ Gym Log is a temporary name. It is a personal-use-first, self-hosted workout tra
 
 ## Analytics invariants
 
-Lead with reps at the same weight and weight at comparable reps. Show complete exercise history, rep-specific records, per-session volume and set counts, estimated-strength trends, and workouts per week. Every trend must expose source sets. Volume is recorded load times reps, not proof of strength or hypertrophy. Estimated 1RM is secondary, formula-labelled, bounded to low-repetition resistance sets; lack of effort data prevents claims of true maximum strength. Never apply resistance formulas to assistance, unweighted work, or duration/distance. Machine weights can differ between gyms: keep recorded-load trends without equating different machines or inventing adjustments. Preserve raw imported values; flag and allow correction/exclusion of suspicious sets. Never silently discard repeated rows or auto-merge exercise names.
+Lead with reps at the same weight and weight at comparable reps. Show complete exercise history, rep-specific records, per-session volume and set counts, estimated-strength trends, and workouts per week. Every trend must expose source sets. Volume is recorded load times reps, not proof of strength or hypertrophy. Estimated 1RM is secondary, formula-labelled, bounded to low-repetition resistance sets; lack of effort data prevents claims of true maximum strength. Never apply resistance formulas to assistance, unweighted work, or duration/distance. Machine weights can differ between gyms: keep recorded-load trends without equating different machines or inventing adjustments. Imported history keeps its raw values; bad data was fixed once during the import, with the owner's approval. Never add in-app flagging, exclusion or data-cleanup controls. Never silently discard repeated sets or auto-merge exercise names.
 
-## Privacy and data import
+## Privacy
 
-Personal exports stay outside tracked source, public assets, build output, CI, screenshots intended for publication, and external services. Use synthetic fixtures in committed work. No telemetry or cloud processing in the prototype. The original export must remain unchanged.
-The supplied CSV is semicolon-delimited UTF-8 with Date, Workout Name, Exercise Name, Set Order, Weight, Weight Unit, Reps, RPE, Distance, Distance Unit, Seconds, Notes, Workout Notes, Workout Duration. Parse quoted/multiline CSV properly; blanks and zero differ. Local timestamps have no timezone. The export has historical workouts/sets, not separate template or bodyweight records. Create templates from historical workouts rather than claiming missing records were restored.
-Keep source occurrence identity separate from cross-export reconciliation. Duplicate candidates require review; reimport must not accidentally multiply history. Malformed imports must leave existing data intact.
+Personal workout history, exports and backups stay outside tracked source, public assets, build output, CI, screenshots intended for publication, and external services. Use synthetic fixtures in committed work. No telemetry or cloud processing. Imported sets keep their original source cells (`original`); never rewrite them.
 
 ## Architecture rules
 
-- Keep parsing and metrics in pure domain functions, separate from UI/state. Do not add Redis, queues or email infrastructure without an actual need.
-- Development and tests use only the dedicated `gym-log-local` resources: PostgreSQL on 127.0.0.1:55439 (`gym_log_dev`), API on 127.0.0.1:5190. The live app alone uses `gym_log` and port 5191; never point development at it.
+- Keep metrics in pure domain functions, separate from UI/state. Do not add Redis, queues or email infrastructure without an actual need.
+- Development and tests use only disposable databases on the `ember-postgres` container (127.0.0.1:55439: `ember_dev`, plus per-run test databases) and the API on 127.0.0.1:5190. The live app alone uses the `ember` database and port 5191; never point development or tests at it.
 - The API stays loopback-only behind Tailscale Serve, which strips spoofed identity headers. Production auth is the exact owner's Tailscale identity; never enable Funnel or accept arbitrary tailnet users.
 - Active workouts never enter server sync. Revision conflicts stay visible and retained; never silently overwrite peer data.
 - Never reload an active logger silently: shell updates need explicit confirmation and a saved, draft-free transition.
-- Never build in or serve from a checkout; `~/src/gym-log` stays a clean `main` for `ops/deploy.sh`. Work in a worktree.
+- Never build in or serve from a checkout; `~/src/ember` stays a clean `main` for `ops/deploy.sh`. Work in a worktree.
 
 ## Design and delivery
 
-DESIGN.md is the visual contract. Preserve a restrained shadcn style with an independent color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support, desktop/mobile browser verification.
+DESIGN.md is the visual contract. Preserve a restrained shadcn style with Ember's own amber color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support, desktop/mobile browser verification.
 Preserve unrelated work. Prefer tests before domain behavior; verify observable Playwright flows and typecheck/build before handoff.
+
+## Production data
+
+The `ember` database is production: the owner's only copy of their training history, which cannot be recreated. These rules are hard limits; autonomous ownership does not override them.
+
+- Before any schema migration, bulk data change or data repair, take a fresh `ops/backup.sh` dump and run `ops/restore-check.sh` on it, then compare row counts before and after the change. `ops/deploy.sh` does this for every release; a manual change must do it itself.
+- Destructive operations (deleting, wiping, resetting or rewriting stored history, including `resetDataset`, dropping or truncating tables, restoring over the live database) need, in this order: a fresh dump, a verified restore of that dump, and the owner's explicit approval of the exact operation. Approval of one operation does not cover another.
+- Migrations are forward-only and never rolled back; a release lacking migrations the database already has is refused. Prefer additive migrations; a migration that strips or rewrites stored fields counts as a bulk data change.
+- The nightly encrypted off-device backup and its restore drill must keep working. Confirm the next nightly run produced `ember.dump` after any change to the container, database name, user or daemon socket.
+- Never connect development tools, tests, scratch scripts or dry runs to the `ember` database; use a disposable database.
 
 ## Autonomous ownership
 
 The owner is the client, not a code reviewer. Hermes owns this repository end to end. It decides what to build, implements it, verifies it, pushes to `main` and deploys without asking. Treat the owner's messages as product requirements, not implementation instructions. This policy applies only to this repository.
 
 - Delivery: work on a short-lived branch, then squash onto `main` and push. Before pushing, typecheck, unit, e2e and any relevant integration/PWA suites must pass. A separate review agent must also review the change. Fix its findings or record why each one was rejected.
-- Deploy: only from a green `main`, at any time; the app's update gate never reloads an open workout. Database migrations may run at any time, subject to the backup and data-approval requirements below. Every deploy needs a one-command rollback. Check the deployed app afterwards and roll back if it fails.
-- CI budget: the owner's GitHub Free plan includes 2,000 Linux Actions minutes and 500 MB of artifact/package storage per month, shared by every private repository, and no money will be added. Gym Log may use at most 1,600 minutes a month, leaving about 400 for the other private repositories. Use Linux runners only, cancel superseded runs, skip CI for docs-only changes, cache dependencies and browsers, set job timeouts, and upload artifacts only on failure with short retention. No container images on GHCR (they count against storage). Before pushing, check month-to-date Actions usage per repository (the account's billing usage API). Above 1,600 minutes account-wide, stop triggering CI, verify locally instead, and say so in the Discord report. Running out blocks CI for every private repo until the month resets.
-- Data: workout history is the one thing that can't be replaced. Before any schema migration or bulk data change, run `ops/backup.sh` and check that the backup restores. Ask the owner before permanently deleting or rewriting history. Anything reversible needs no approval.
+- Deploy: only from a green `main`, at any time; the app's update gate never reloads an open workout. Database migrations may run at any time, subject to the Production data rules above. Every deploy needs a one-command rollback. Check the deployed app afterwards and roll back if it fails.
+- CI budget: the owner's GitHub Free plan includes 2,000 Linux Actions minutes and 500 MB of artifact/package storage per month, shared by every private repository, and no money will be added. Ember may use at most 1,600 minutes a month, leaving about 400 for the other private repositories. Use Linux runners only, cancel superseded runs, skip CI for docs-only changes, cache dependencies and browsers, set job timeouts, and upload artifacts only on failure with short retention. No container images on GHCR (they count against storage). Before pushing, check month-to-date Actions usage per repository (the account's billing usage API). Above 1,600 minutes account-wide, stop triggering CI, verify locally instead, and say so in the Discord report. Running out blocks CI for every private repo until the month resets.
 - Proactive work: Hermes may choose improvements itself, such as release gates, bugs found by using the app, or patterns in the owner's usage (analysed on this machine only). At most one self-initiated change per daily run. PRODUCT.md's exclusions hold unless the owner changes them.
-- Reporting: after every shipped change, send a short changelog to the owner on Discord: what changed and why, in one or two plain lines. Don't add an undo line; the owner knows "revert that" works, so mention undo only when it needs something unusual from the owner. "Revert that" means revert and redeploy.
-- Isolation: the host is shared with other apps. Gym containers run only in Gym Log's own rootless Docker daemon (`gym-log-docker.service`); use `ops/docker.sh` for every gym Docker command, never the root daemon or another account's. Still name gym-log containers/projects explicitly; never run `docker system/volume/image prune` or unscoped `compose down -v`. Change Tailscale Serve only on Gym Log's own device, `tailscale --socket="$XDG_RUNTIME_DIR/gym-log-tailscale/tailscaled.sock" serve …`; never change the host's Serve config or run `tailscale serve reset`. Never write Hermes memory or edit skills other than gym-log-operator and mobile-workout-ledger. Keep the `gym-log-local-postgres` container, the `gym_log` database and the daemon socket `/run/user/$UID/gym-log/docker.sock`: the nightly off-device backup depends on them, so changing any of them means changing the backup job in the same change. The live app, its daemon and database run in the capped `gym-log-live.slice`; npm test scripts run through `ops/limited.sh` in `gym-log-jobs.slice`.
+- Reporting: after every shipped change, send a short changelog to the owner on Discord: what changed and why, in one or two plain lines. Don't add an undo line; the owner knows "revert that" works, so mention undo only when it needs something unusual from the owner. "Revert that" means revert and redeploy; a revert that would delete or rewrite stored history follows the Production data rules.
+- Isolation: the host is shared with other apps. Ember containers run only in Ember's own rootless Docker daemon (`ember-docker.service`); use `ops/docker.sh` for every Ember Docker command, never the root daemon or another account's. Still name Ember containers/projects explicitly; never run `docker system/volume/image prune` or unscoped `compose down -v`. Change Tailscale Serve only on Ember's own device, `tailscale --socket="$XDG_RUNTIME_DIR/ember-tailscale/tailscaled.sock" serve …`; never change the host's Serve config or run `tailscale serve reset`. Never write Hermes memory or edit skills other than ember-operator and mobile-workout-ledger. Keep the `ember-postgres` container, the `ember` database and the daemon socket `/run/user/$UID/ember/docker.sock`: the nightly off-device backup depends on them, so changing any of them means changing the backup job in the same change. The live app, its daemon and database run in the capped `ember-live.slice`; npm test scripts run through `ops/limited.sh` in `ember-jobs.slice`.
 - Hard limits: the repository stays private and the app is reachable only on the owner's Tailscale network: never Funnel, never other tailnet users. No spending, no new third-party services or telemetry, and no outside contact except the owner's Discord. Never publish personal workout history, credentials or recovery archives.
 
 ## Writing tests
