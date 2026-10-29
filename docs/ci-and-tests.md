@@ -7,6 +7,13 @@ Read when a local test chain fails or dies mid-run, a port is busy, CI shows a f
 - `npm run test:run`, `test:e2e`, `test:integration`, `test:pwa` and `npm --prefix server run test:e2e` all go through `ops/limited.sh`, which runs them in `ember-jobs.slice`. Without the installed slice (`ops/install.sh`) or a user systemd session it exits with an error instead of running uncapped. Under `CI=true` it runs the command directly.
 - CI (`.github/workflows/ci.yml`) has three jobs: `checks` (format, lint, typecheck, unit, build), `server-e2e` (`server/test/*.e2e.test.ts` against a disposable PostgreSQL service) and `playwright` (`test:e2e`, then `test:pwa`). The root `tests/integration` suite (`npm run test:integration`) is **not** in CI: run it locally whenever sync, imported history or recovery is touched.
 - Pushes run CI only on `main`; PRs run separately. Markdown-only (`**/*.md`) changes skip CI, so run `npm run format:check` locally before pushing docs.
+- Lint configs use type-aware `typescript-eslint` and React hooks rules for the web app, `typescript-eslint` recommended for the server; each rule turned off or narrowed carries a one-line reason in the config.
+- Integration harnesses generate synthetic credentials in memory, refuse any admin database other than `ember_dev`, and refuse occupied test ports rather than reusing or killing unrelated processes.
+- PWA reports (`playwright-pwa-report/`, `test-results/pwa/`) are separate from normal E2E diagnostics. CI uploads reports only on failure, with three-day retention. CI does not replace physical Android/iPhone testing.
+
+## Measuring CI cost
+
+Total month-to-date Actions minutes by repository with the account's billing usage API. Aim for under 15 aggregate runner-minutes per code push, measured from real job start/completion timestamps, not wall time; GitHub bills each job per started minute, which is why cheap checks share one job. The last measurement (3 October 2026, before the PWA checks joined the browser job) was 4m50s of runner time billed as 6 minutes; re-measure from recent runs before relying on it.
 
 ## Ports
 

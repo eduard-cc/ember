@@ -1,11 +1,12 @@
 # Ember agent context
 
-Rules and non-obvious traps only. Product scope is in PRODUCT.md, the visual system in DESIGN.md, commands and operations in README.md; derive everything else from the code.
+Rules and non-obvious traps only. Product scope is in PRODUCT.md, the visual system in DESIGN.md, setup and commands in README.md, operations in `docs/`; derive everything else from the code.
 
 ## Read before touching
 
 - CI, local test runs, ports, Playwright: `docs/ci-and-tests.md`
 - Squash, deploy, rollback, live checks, static assets and the precache: `docs/deploy.md`
+- Backups, restore drills, Docker daemon, PostgreSQL pin, slices: `docs/operations.md`
 - Sync feed, outbox, local storage, recovery, history editing and aggregates: `docs/sync-and-history.md`
 - UI, layout, accessibility, phone gestures, installed PWA: `docs/phone-and-pwa.md`
 - Catalog drawings (licensed and AI-assisted): `docs/catalog-drawings.md`
@@ -73,4 +74,4 @@ The owner is the client, not a code reviewer. Hermes owns this repository end to
 
 ## Checks
 
-Commands are in package.json and README.md. Before handoff: `format:check`, `lint:check` (CI runs both, also for server/), typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched, and `npm --prefix server run typecheck/build/test:e2e` when server/ changed. `test:integration` is not in CI. Do not run fixed-port suites concurrently. Fixtures are synthetic and databases disposable. Do not invent successful check output; state production gaps explicitly. Remaining release gates are listed in README.md.
+Commands are in package.json and README.md. Before handoff: `format:check`, `lint:check` (CI runs both, also for server/), typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched, and `npm --prefix server run typecheck/build/test:e2e` when server/ changed. `test:integration` is not in CI. Do not run fixed-port suites concurrently. Fixtures are synthetic and databases disposable. Do not invent successful check output; state production gaps explicitly. Remaining release gates are listed in PRODUCT.md.

@@ -11,6 +11,15 @@ Read before changing the sync feed or outbox, local persistence, recovery export
 - Strong import is retired; Ember is the source of truth. History imported earlier stays: it syncs with its own `putImportedWorkout` / `deleteImportedWorkout` kinds (never mixed with native `putWorkout`), lives under `imported:<id>` in `importSources` once synchronized (`current-dataset` before), and keeps each set's raw `original` cells and the original export bytes (`hash:<sha256>` sources, also in recovery archives). Keep all of these readable for existing installs and archives; the server's `resetDataset` (`server/src/sync/reset.ts`) reseeds imported history for recovery.
 - Recovery export is validated, versioned JSON with source evidence, owner/revision provenance and local drafts, without session secrets. Restore pauses edits and sync, requires confirmation, and rebuilds create-only operations rather than replaying acknowledgements.
 
+## Saving and sync guarantees
+
+- "Saved on this device" means the IndexedDB transaction committed. It does not protect against clearing browser storage, uninstalling the PWA or losing the device; server sync is not off-device backup either (see `docs/operations.md`).
+- A second same-origin tab is read-only until the writer closes and it is reloaded. Failed writes keep the draft and show a visible storage error rather than claiming success.
+- Completed history, imported history, templates and body-weight entries sync automatically while the app is open and connected, with no manual Sync Now control; routine sync is silent, while auth blocks, failed saves and rejected changes surface. An expired session reconnects automatically. Pending changes survive reopening, and previously trusted installations keep logging offline. Android does not guarantee uploads while the PWA is closed.
+- Body-weight entries are their own `putBodyWeight` record kind: corrections need the current revision, and deletion syncs as a revisioned tombstone (`deleted: true`) that Undo revives.
+- Valid legacy `ember:v1` localStorage data migrates transactionally, keeping the original bytes. Malformed or unsupported data blocks writes; an explicit reset preserves recovery evidence.
+- Recovery export/restore lives in the storage layer and is not exposed in the UI. Exports are version 2 and always list body-weight entries (tombstones included); version 1 archives still restore. Diagnostic pending operations are labelled, not replayed as old acknowledgements, and a restore never authorizes overwriting newer server revisions.
+
 ## Extending the sync feed
 
 Also follow the sync-protocol-evolution workflow for a new record kind.

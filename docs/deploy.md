@@ -1,6 +1,18 @@
 # Shipping, deploy and live checks
 
-Read before squashing onto `main`, deploying, adding a static asset type, touching the app shell or service worker, or checking the live app. README.md "Deploy and rollback" describes what `ops/deploy.sh` checks; this file holds the traps.
+Read before squashing onto `main`, deploying, adding a static asset type, touching the app shell or service worker, or checking the live app.
+
+## Release layout
+
+The live app runs from built releases, never from a checkout, so source can be edited and built freely. The `ember.service` user unit (`ops/systemd/`, installed with `ops/install.sh`) serves `~/.local/share/ember/current`, a symlink to `releases/<commit>/`. Runtime settings and secrets live in `~/.config/ember/runtime.env` (mode 0600, outside the repository) with `EMBER_WEB_ROOT` set to the absolute path of `~/.local/share/ember/current/dist` (systemd does not expand `~`). The app has its own tailnet device, `ember`, run by the `ember-tailscale.service` user unit (userspace networking, UDP 41642, state in `~/.local/share/ember-tailscale`); its Tailscale Serve config proxies HTTPS 443 to the service on loopback, so the app has its own origin. `EMBER_ORIGIN` must be that address.
+
+## What `ops/deploy.sh` checks
+
+- It builds a `git archive` export of the commit, keeping only the web shell and the compiled server with production dependencies, then switches `current` atomically and restarts the unit.
+- After the switch it checks that the unit's own process owns the port, `/api/v1/health` on loopback (waiting up to two minutes for startup migrations) and through Serve, and that Serve returns this release's `index.html`, `sw.js`, `manifest.webmanifest` and every precached file byte for byte. Any failure rolls back automatically and alerts Discord.
+- A lock prevents overlapping deploys and rollbacks. The newest five releases are kept, and `history` records healthy deploys for rollback.
+- The server applies migrations on startup. When a release adds migrations, the deploy first runs `ops/backup.sh` into `~/.local/share/ember-backups/`, restores it into a validation database, compares record and migration counts with `ember` and drops the copy; any failure cancels the deploy. Writes between the backup and the restart are not in it. The newest three pre-deploy backups are kept; manual archives there are never rotated.
+- `ops/test-release-switch.sh` exercises the switch, health check and rollback against synthetic releases and a throwaway unit; it needs systemd and is local-only.
 
 ## Squashing onto main
 
