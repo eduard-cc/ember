@@ -4,7 +4,7 @@ import {resolve} from './colour-helpers';
 
 type Scheme = 'light' | 'dark';
 
-const PINE = {light: 'hsl(155.6 47.8% 26.3%)', dark: 'hsl(145.4 33% 64.9%)'};
+const AMBER = {light: 'hsl(33 100% 31%)', dark: 'hsl(38 90% 60%)'};
 const PAPER = 'hsl(38.6 43.8% 93.7%)';
 const NIGHT = 'hsl(252 10.2% 9.6%)';
 
@@ -24,7 +24,7 @@ async function minimizeWorkout(page: Page) {
 
 for (const scheme of ['light', 'dark'] as const) {
   test.describe(`${scheme} theme`, () => {
-    test('primary buttons are Pine with Paper or Night labels', async ({page}) => {
+    test('primary buttons are Amber with Paper or Night labels', async ({page}) => {
       await open(page, scheme);
       await page
         .getByRole('button', {name: /Complete .* set 1/})
@@ -38,7 +38,7 @@ for (const scheme of ['light', 'dark'] as const) {
         const cs = getComputedStyle(el);
         return {background: cs.backgroundColor, color: cs.color};
       });
-      expect(style.background).toBe(await resolve(page, PINE[scheme]));
+      expect(style.background).toBe(await resolve(page, AMBER[scheme]));
       expect(style.color).toBe(await resolve(page, scheme === 'light' ? PAPER : NIGHT));
     });
 
@@ -85,7 +85,7 @@ for (const scheme of ['light', 'dark'] as const) {
       expect(style.style).toBe('solid');
       expect(style.width).toBe('2px');
       expect(style.offset).toBe('2px');
-      expect(style.color).toBe(await resolve(page, PINE[scheme]));
+      expect(style.color).toBe(await resolve(page, AMBER[scheme]));
     });
 
     test('dialogs sit over the Night scrim', async ({page}) => {

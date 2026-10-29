@@ -3,7 +3,7 @@ import {expect, test} from '@playwright/test';
 import {navigate, openSettings} from '../navigation';
 import {resolve} from './colour-helpers';
 
-const PINE = 'hsl(155.6 47.8% 26.3%)';
+const AMBER = 'hsl(33 100% 31%)';
 
 async function open(page: import('@playwright/test').Page, minimize: boolean) {
   await page.goto('/?demo=1');
@@ -23,7 +23,7 @@ test('phones have no top bar and the title scrolls with the page', async ({page}
   ).toHaveCount(0);
 });
 
-test('phone tab bar marks the active tab with a Pine top rule', async ({page}, info) => {
+test('phone tab bar marks the active tab with an Amber top rule', async ({page}, info) => {
   test.skip(info.project.name !== 'mobile');
   await open(page, true);
   const nav = page.locator('nav[aria-label="Main navigation"]');
@@ -32,7 +32,7 @@ test('phone tab bar marks the active tab with a Pine top rule', async ({page}, i
     const cs = getComputedStyle(el);
     return {color: cs.borderTopColor, width: cs.borderTopWidth};
   });
-  expect(style.color).toBe(await resolve(page, PINE));
+  expect(style.color).toBe(await resolve(page, AMBER));
   expect(style.width).toBe('2px');
   const box = await nav.boundingBox();
   expect(Math.abs(box!.y + box!.height - 844)).toBeLessThanOrEqual(1);
@@ -69,11 +69,11 @@ test('desktop header carries brand, text links and Settings', async ({page}, inf
   const color = await bar
     .locator('.nav-item.active')
     .evaluate((el) => getComputedStyle(el).borderBottomColor);
-  expect(color).toBe(await resolve(page, PINE));
+  expect(color).toBe(await resolve(page, AMBER));
   await expect(bar.getByRole('button', {name: 'Settings', exact: true})).toBeVisible();
 });
 
-test('resume bar is a card strip with a Pine edge', async ({page}, info) => {
+test('resume bar is a card strip with an Amber edge', async ({page}, info) => {
   test.skip(info.project.name !== 'mobile');
   await page.emulateMedia({colorScheme: 'light'});
   await open(page, true);
@@ -88,7 +88,7 @@ test('resume bar is a card strip with a Pine edge', async ({page}, info) => {
     };
   });
   expect(style.background).toBe(await resolve(page, 'hsl(42 55.6% 96.5%)'));
-  expect(style.shadow).toContain(await resolve(page, PINE));
+  expect(style.shadow).toContain(await resolve(page, AMBER));
   expect(style.span).toBe(await resolve(page, 'hsl(33.7 7.8% 40%)'));
 });
 
@@ -150,7 +150,7 @@ test('labels are sentence case', async ({page}) => {
     expect(s.size).toBe('14px');
   }
   const selected = styles.find((s) => s.selected)!;
-  expect(selected.border).toBe(await resolve(page, PINE));
+  expect(selected.border).toBe(await resolve(page, AMBER));
   expect(selected.color).toBe(await resolve(page, 'hsl(var(--foreground))'));
 });
 
@@ -239,7 +239,7 @@ for (const [scheme, token] of [
   });
 }
 
-test('trend lines are Ink, not Pine', async ({page}) => {
+test('trend lines are Ink, not Amber', async ({page}) => {
   await page.emulateMedia({colorScheme: 'light'});
   await open(page, false);
   await minimizeIfPossible(page);
@@ -269,7 +269,7 @@ test('metric explanations are readable', async ({page}) => {
   );
 });
 
-test('selected appearance is a Pine ring on a neutral ground', async ({page}, info) => {
+test('selected appearance is an Amber ring on a neutral ground', async ({page}, info) => {
   // The Profile Settings row is the phone entry point; desktop uses the header gear.
   test.skip(info.project.name !== 'mobile');
   await openProfile(page, 'light');
@@ -281,8 +281,8 @@ test('selected appearance is a Pine ring on a neutral ground', async ({page}, in
     const cs = getComputedStyle(el);
     return {shadow: cs.boxShadow, background: cs.backgroundColor};
   });
-  const pine = await resolve(page, 'hsl(var(--primary))');
-  expect(style.shadow).toContain(pine);
+  const amber = await resolve(page, 'hsl(var(--primary))');
+  expect(style.shadow).toContain(amber);
   expect(style.background).toBe(await resolve(page, 'hsl(var(--card))'));
 });
 

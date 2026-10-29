@@ -5,7 +5,7 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. DESIGN.md 
 ## Styling conventions
 
 - `src/index.css` is the only stylesheet; everything else is Tailwind v4 utilities, with no `!` important modifiers.
-- Pine is the only accent. Every border names a token (`border-border`); there is no global border colour.
+- Amber is the only accent. Every border names a token (`border-border`); there is no global border colour.
 - Shared primitives live in `src/components/ui/`.
 - Keep hook classes such as `app-shell`, `settings-panel` and `nav-item`: tests and JS select on them.
 - Other agents also open PRs against this repo (`claude/*` branches). Check open PRs and those branches before starting UI work.

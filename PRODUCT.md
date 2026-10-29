@@ -57,4 +57,4 @@ A private Strong CSV is available outside the repository. Its historical set row
 
 ## Open Decisions
 
-Permanent product name; conflict-resolution UX; future watch or health integration. Pine is the only accent.
+Permanent product name; conflict-resolution UX; future watch or health integration. Amber is the only accent.
