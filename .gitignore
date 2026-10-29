@@ -9,5 +9,6 @@ test-results/
 .env.*.local
 *.csv
 .impeccable/
+.hermes/
 .worktrees/
 __pycache__/

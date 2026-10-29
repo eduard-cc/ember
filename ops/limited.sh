@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run a command in ember-jobs.slice (CPU and memory caps, ops/systemd/) at low CPU and
-# I/O priority. The npm test scripts go through this, so a runaway gym test run cannot
+# I/O priority. The npm test scripts go through this, so a runaway Ember test run cannot
 # starve other services on the host. The I/O class only takes effect under a
 # priority-aware disk scheduler, which many NVMe disks do not use.
 #   ops/limited.sh <command> [args...]

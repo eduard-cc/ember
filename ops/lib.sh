@@ -151,7 +151,7 @@ restart_and_check() {
 	healthy
 }
 
-# Read-only probes of the extra health endpoints bracket every gym switch.
+# Read-only probes of the extra health endpoints bracket every Ember switch.
 # runtime.env lists them, space-separated, in
 # EMBER_EXTRA_HEALTH_URLS; the environment variable overrides it for tests.
 extra_urls() {
@@ -172,7 +172,7 @@ extra_healthy() {
 }
 
 # An extra endpoint may restart on its own, so give it time to come back before
-# blaming the gym switch.
+# blaming the Ember switch.
 extra_recovered() {
 	local deadline=$((SECONDS + ${EMBER_EXTRA_GRACE:-90}))
 	until extra_healthy; do

@@ -37,7 +37,7 @@ test('all navigation screens fit their viewport without horizontal overflow', as
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/?demo=1');
-  await page.screenshot({path: `.impeccable/review/workout-${testInfo.project.name}.png`});
+  await page.screenshot({path: testInfo.outputPath('workout.png')});
   for (const view of ['Workouts', 'Exercises', 'History'] as const) {
     await navigate(page, view);
     expect(
@@ -45,7 +45,7 @@ test('all navigation screens fit their viewport without horizontal overflow', as
     ).toBe(true);
     if (view === 'Exercises')
       await page.screenshot({
-        path: `.impeccable/review/progress-${testInfo.project.name}.png`,
+        path: testInfo.outputPath('exercises.png'),
         fullPage: false,
       });
   }

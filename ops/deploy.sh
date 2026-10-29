@@ -35,7 +35,7 @@ sha=$("${GIT[@]}" rev-parse --verify --quiet "$1^{commit}") || die "unknown comm
 # Docs-only commits skip CI and a push runs CI only for its head commit, so any
 # commit from the newest code change up to $sha has the same code and may carry
 # the run. A cancelled or still-running run is not green.
-code_sha=$("${GIT[@]}" log -1 --format=%H "$sha" -- . ':(exclude,glob)**/*.md' ':(exclude).hermes') ||
+code_sha=$("${GIT[@]}" log -1 --format=%H "$sha" -- . ':(exclude,glob)**/*.md') ||
 	die 'could not find the latest code commit'
 same_code=$({ echo "$code_sha"; "${GIT[@]}" rev-list "$code_sha..$sha"; }) || die 'could not list commits'
 green=$(gh run list -R "$REPO" --workflow CI --event push --branch main --limit 100 \
@@ -120,7 +120,7 @@ if [[ -n $pending ]]; then
 		while read -r old; do rm -f -- "${BACKUPS:?}/$old"; done
 fi
 
-# Tripwire: a gym deploy must not take the extra endpoints down with it.
+# Tripwire: an Ember deploy must not take the extra endpoints down with it.
 if extra_healthy; then
 	extra_before=true
 else

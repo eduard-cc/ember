@@ -1,7 +1,5 @@
 # Ember
 
-<!-- impeccable:product-schema 1 -->
-
 ## Platform
 
 web
@@ -27,7 +25,7 @@ Start a template or repeat a historical workout. Adjust prefilled weight/repetit
 Implemented: unlimited editable templates, empty start, existing-library exercise selection, repeat-from-history, resilient device-local active-workout saving, per-exercise analytics, imported Strong history (one-time, now retired) and body-weight logging. Weighted, assisted, bodyweight, duration and cardio exercise rows are supported; broader cardio workflows remain future scope. No rest timers, notifications required for core use, nutrition, body-part measurements, social features, or watch support initially. Silent Android active-workout notifications remain optional and unverified on-device.
 The private mobile trial uses the owner's Tailscale identity with no separate app password. Completed history and templates sync automatically while connected; unfinished workouts remain device-local. Sync is not off-device backup; the server database is backed up nightly, encrypted, off-device, and a restore from it has been verified on this host. Routine sync is silent, with no manual Sync Now or Backup & Recovery panel; actionable failures remain visible. Storage recovery APIs and database backup safeguards remain intact. Conflict merge, a recovery rehearsal on a rebuilt machine and real phone acceptance remain incomplete.
 
-### Implemented Phase 2 navigation and evidence
+### Navigation and evidence
 
 - **Profile:** workout/set totals, this week's workout count, a 12-week frequency chart and Settings.
 - **Body weight (Settings):** kg entries with date and time (default now, editable for backdating), a chart of the full history and newest-first rows that open for correction or deletion (with Undo). Fewer than two entries show an explicit empty/one-entry state, never a drawn line. Entries sync between devices like history and are included in recovery exports. They are independent of lifted weights, volume, records, drafts, templates and imported history; the imported Strong history had no body-weight data and none is inferred.
@@ -57,4 +55,4 @@ The owner's Strong history was imported once into production and now lives in Em
 
 ## Open Decisions
 
-Permanent product name; conflict-resolution UX; future watch or health integration. Amber is the only accent.
+Conflict-resolution UX; future watch or health integration. Amber is the only accent.

@@ -69,7 +69,7 @@ export class SyncService {
 					// overwrite workout history, nor native history an import, and vice versa.
 					// The owner may edit finished and imported workouts and delete them; every
 					// update needs the expected revision and earlier revisions stay in `changes`.
-					// Native workout tombstones are final; imported ones are revived by reimport.
+					// Native workout tombstones are final; a put at an imported tombstone's revision revives it.
 					// Keyed by the schema's kind enum, so a new kind without an entry fails to compile.
 					const allowedKinds: Record<OperationKind, readonly OperationKind[]> = {
 						putBodyWeight: ['putBodyWeight'],

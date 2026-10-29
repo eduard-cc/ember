@@ -122,7 +122,7 @@ rm -f -- "$EMBER_HOME/releases/bbb/.complete"
 roll_back >/dev/null && serving aaa || fail 'rollback should skip incomplete bbb'
 
 # Extra-endpoint tripwire. A file stands in for an extra health endpoint; the "harmful" release
-# removes it on startup, as if the gym switch had taken it down.
+# removes it on startup, as if the Ember switch had taken it down.
 touch "$EMBER_HOME/releases/bbb/.complete"
 deploy bbb || fail 'redeploy bbb'
 export EMBER_EXTRA_HEALTH_URLS="file://$sandbox/extra-health" EMBER_EXTRA_GRACE=4

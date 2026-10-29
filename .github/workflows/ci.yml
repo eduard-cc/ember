@@ -5,11 +5,9 @@ on:
     branches: [main]
     paths-ignore:
       - '**/*.md'
-      - '.hermes/**'
   pull_request:
     paths-ignore:
       - '**/*.md'
-      - '.hermes/**'
 
 permissions:
   contents: read

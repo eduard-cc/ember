@@ -1,6 +1,6 @@
 # User slice installed by ops/install.sh. Holds the live app (ember.service), Ember's
 # Docker daemon, its PostgreSQL container and its Tailscale device (ember-tailscale.service),
-# so a runaway gym process cannot starve other services on the host. Hitting the memory cap can stop any of them,
+# so a runaway Ember process cannot starve other services on the host. Hitting the memory cap can stop any of them,
 # including the Tailscale device that serves the app's address; systemd restarts it.
 # System services sit outside the user manager, whose CPU weights do not reach them, so
 # the hard caps are what protect them; the low weight only yields to other user work.

@@ -2,7 +2,7 @@
 
 NestJS 11, TypeORM explicit PostgreSQL migrations, independent Zod document validation.
 No registration, telemetry, queues, remote resources or active-draft storage.
-All fixtures are synthetic. The ordinary database is empty after foundation verification.
+All fixtures are synthetic.
 
 ## Local resources and commands
 
@@ -69,7 +69,7 @@ revoked explicitly when changing owner credentials (no automatic password-rotati
 
 Startup restricts host to loopback and database URLs to PostgreSQL on
 `127.0.0.1:55439` with `ember` or `ember_*` database names. Insecure-cookie mode
-requires an exact HTTP loopback origin. HTTPS mode sets Secure; deployment is not done.
+requires an exact HTTP loopback origin. HTTPS mode sets Secure.
 The stable synthetic single-owner identifier is `owner`, always derived server-side.
 
 ## Passwordless private Tailscale owner mode
@@ -129,7 +129,7 @@ Password-mode login is limited to five attempts per minute, globally per API pro
 This constant-space local limiter is not a distributed or restart-resistant deployment limiter.
 
 `POST /sync/operations` accepts `{version:1,operations:[...]}` (1–50, at most 10 MiB).
-Operation fields match the plan: UUID `operationId`, nonempty string `entityId`,
+Operation fields: UUID `operationId`, nonempty string `entityId`,
 `kind` (`putBodyWeight`, `putWorkout`, `deleteWorkout`, `putTemplate`, `deleteTemplate`,
 `putImportedWorkout`, `deleteImportedWorkout`), nullable `expectedRevision`,
 and `payload` (Workout, BodyWeight or null). A BodyWeight is `{id,date,kg,deleted}`: a calendar-valid
@@ -147,7 +147,7 @@ Workout creates require at least one set and reject any explicitly uncompleted s
 absent completion flags are supported for historical imports. This does not allow clients
 to sync active drafts: they must keep drafts entirely outside the operations contract.
 
-Response envelope refinement (not specified in the plan): **`{results:[ack,...]}`**.
+Responses use the envelope **`{results:[ack,...]}`**.
 Each ack has `{operationId,status,entityId,revision,changeSeq,errorCode?}`;
 null revision/sequence means no accepted write. Malformed operation IDs are echoed only
 for client diagnosis; schema rejections are not entered in the validated operation ledger.
@@ -160,14 +160,15 @@ Same operation ID/same content returns its original accepted/conflict/semantic r
 different validated content returns `OPERATION_ID_REUSED` conflict without writes.
 `expectedRevision:null` is create-only. Existing IDs cannot be silently recreated.
 Template updates/deletes require the current revision. Deletion keeps a revisioned
-tombstone that cannot be resurrected in this milestone. The owner may edit finished
+tombstone that cannot be resurrected. The owner may edit finished
 (`putWorkout`) and imported (`putImportedWorkout`) workouts at the current revision; an edit
 still needs at least one set and no uncompleted set. `deleteWorkout` tombstones a native
 workout at its current revision and is final. Every earlier revision stays in `changes`.
 Each kind revises only its own records: native and imported history, templates and
 measurements can never overwrite one another.
-Imported history uses separate operation kinds: replacement removes only imported records
-at the current revision, and reimport may revive an imported tombstone at that exact revision.
+Imported history uses separate operation kinds. Strong import is retired in the app, but the
+kinds stay for existing imported history: deletion tombstones only imported records at the
+current revision, and a put at an imported tombstone's exact revision revives it.
 
 `GET /sync/changes?after=0&limit=100` accepts safe integer cursor and limit 1–100.
 Returns `{changes,nextCursor,hasMore}`; each change has
@@ -196,9 +197,10 @@ Concurrent stale edits, delayed commits, rollback/retry and pagination use real 
 
 ## Boundaries
 
-This is a local API foundation, not production deployment or off-device backup.
-Browser sync, reviewed imported-only replacement, deliberate JSON restore, and a local
-PostgreSQL archive/restore drill are implemented and tested in the repository.
-Interactive password provisioning, private HTTPS deployment, hardened production DB roles,
-and automated off-device encrypted backups remain release gates. Do not delete the volume
-as a cleanup shortcut.
+This README covers the API and its local setup. The live deployment (`ember.service` behind
+Tailscale Serve), nightly encrypted off-device backups and the restore drill are described in
+the root README.md. Browser sync, deliberate JSON restore and a local PostgreSQL
+archive/restore drill are implemented and tested in the repository. Password mode is for
+local development and tests; production uses Tailscale owner identity. Hardened
+production database roles remain a release gate. Do not delete the
+volume as a cleanup shortcut.

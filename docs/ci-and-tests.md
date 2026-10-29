@@ -6,7 +6,7 @@ Read when a local test chain fails or dies mid-run, a port is busy, CI shows a f
 
 - `npm run test:run`, `test:e2e`, `test:integration`, `test:pwa` and `npm --prefix server run test:e2e` all go through `ops/limited.sh`, which runs them in `ember-jobs.slice`. Without the installed slice (`ops/install.sh`) or a user systemd session it exits with an error instead of running uncapped. Under `CI=true` it runs the command directly.
 - CI (`.github/workflows/ci.yml`) has three jobs: `checks` (format, lint, typecheck, unit, build), `server-e2e` (`server/test/*.e2e.test.ts` against a disposable PostgreSQL service) and `playwright` (`test:e2e`, then `test:pwa`). The root `tests/integration` suite (`npm run test:integration`) is **not** in CI: run it locally whenever sync, imported history or recovery is touched.
-- Pushes run CI only on `main`; PRs run separately. Paths `**/*.md` and `.hermes/**` skip CI, so run `npm run format:check` locally before pushing docs.
+- Pushes run CI only on `main`; PRs run separately. Markdown-only (`**/*.md`) changes skip CI, so run `npm run format:check` locally before pushing docs.
 
 ## Ports
 
