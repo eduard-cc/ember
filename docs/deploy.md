@@ -10,7 +10,7 @@ The live app runs from built releases, never from a checkout, so source can be e
 
 - It builds a `git archive` export of the commit, keeping only the web shell and the compiled server with production dependencies, then switches `current` atomically and restarts the unit.
 - After the switch it checks that the unit's own process owns the port, `/api/v1/health` on loopback (waiting up to two minutes for startup migrations) and through Serve, and that Serve returns this release's `index.html`, `sw.js`, `manifest.webmanifest` and every precached file byte for byte. Any failure rolls back automatically and alerts Discord.
-- A lock prevents overlapping deploys and rollbacks. The newest five releases are kept, and `history` records healthy deploys for rollback.
+- A lock prevents overlapping deploys and rollbacks. `ops/auto-deploy.sh` holds it for its whole run and `ops/deploy.sh` reuses it, so a rollback started meanwhile refuses with "another deploy or rollback is running"; run it again once the timer's run ends. The newest five releases are kept, and `history` records healthy deploys for rollback.
 - The server applies migrations on startup. When a release adds migrations, the deploy first runs `ops/backup.sh` into `~/.local/share/ember-backups/`, restores it into a validation database, compares record and migration counts with `ember` and drops the copy; any failure cancels the deploy. Writes between the backup and the restart are not in it. The newest three pre-deploy backups are kept; manual archives there are never rotated.
 - `ops/test-release-switch.sh` exercises the switch, health check and rollback against synthetic releases and a throwaway unit; it needs systemd and is local-only.
 
@@ -21,6 +21,10 @@ The live app runs from built releases, never from a checkout, so source can be e
 
 ## Deploying
 
+- Main deploys itself. `ember-auto-deploy.timer` (installed and started by `ops/install.sh`) runs `ops/auto-deploy.sh` five minutes after each run ends. Once CI has passed for the head of `origin/main`, it fast-forwards `~/src/ember` and runs `ops/deploy.sh` on it. While CI is pending, or GitHub is unreachable (including when the keyring holding `gh`'s token is locked), it waits for the next run.
+- A head commit whose CI fails, whose deploy fails, or which `~/src/ember` cannot fast-forward to (not on `main`) is held in `~/.local/share/ember/auto-deploy.hold`: Discord is told once and it is never retried. A commit is held while it deploys too, so a run killed by the unit's 30-minute timeout is not retried (systemd's failure alert reports it); `ops/deploy.sh` exits 69 when GitHub is unreachable or CI is still running, which the timer retries instead. `ops/rollback.sh` holds main's head, so the timer does not put it straight back, however many rollbacks follow. The next commit on main replaces the hold; to retry a held commit, run `ops/deploy.sh <commit>` by hand. A failed health check alerts twice: once from the rollback, once from the hold.
+- Merging is shipping: a green merge to main is live within about five minutes plus build time. Still check the live app after each change ships.
+- `ops/test-auto-deploy.sh` checks those decisions against a throwaway git origin, a fake `gh` and a stub deploy; it is local-only.
 - `ops/deploy.sh <commit>` sources `ops/lib.sh` from the checkout it is run from (`~/src/ember`); the release it builds with `git archive` never updates those scripts. Fast-forward that checkout first (`git fetch && git merge --ff-only origin/main`, keeping untracked files), or the deploy runs an old health check.
 - Never build, install or run dev servers in `~/src/ember` itself: it must stay a clean `main` for `ops/deploy.sh`. Work in a worktree.
 - The deploy refuses commits not on `origin/main` or whose latest code commit has no successful push CI run (docs-only commits inherit their code ancestor's run; cancelled runs don't count).

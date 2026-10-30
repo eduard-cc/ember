@@ -6,6 +6,7 @@
 #   current           symlink to the serving release; ember.service and EMBER_WEB_ROOT use it
 #   history           healthy deploys, oldest first; rollback pops it like a stack
 #   deploy.lock       held by every deploy or rollback
+#   auto-deploy.hold  a main commit ops/auto-deploy.sh must not deploy
 set -Eeuo pipefail
 shopt -s inherit_errexit
 
@@ -16,6 +17,9 @@ EMBER_UNIT=${EMBER_UNIT:-ember.service}
 RELEASES=$EMBER_HOME/releases
 CURRENT=$EMBER_HOME/current
 HISTORY=$EMBER_HOME/history
+HOLD=$EMBER_HOME/auto-deploy.hold
+REPO=${EMBER_GITHUB_REPO:-eduard-cc/ember}
+GIT=(git -C "$SCRIPT_DIR/..")
 
 log() { echo "ember-${ACTION:-ops}: $*"; }
 die() {
@@ -24,9 +28,12 @@ die() {
 }
 notify() { hermes send --quiet --to discord --subject '[ember]' "$1" || log 'could not send the Discord alert' >&2; }
 
+# ops/auto-deploy.sh takes the lock and runs ops/deploy.sh with it on fd 9, which this
+# reuses: flock on the same open file succeeds, and reopening would release it.
 lock() {
 	mkdir -p "$RELEASES"
-	exec 9>"$EMBER_HOME/deploy.lock"
+	[[ $(readlink -- /proc/self/fd/9 2>/dev/null) == "$(readlink -f -- "$EMBER_HOME/deploy.lock")" ]] ||
+		exec 9>"$EMBER_HOME/deploy.lock"
 	flock -n 9 || {
 		log 'another deploy or rollback is running' >&2
 		exit 75
@@ -34,6 +41,36 @@ lock() {
 }
 
 current_release() { [[ -L $CURRENT ]] && basename -- "$(readlink -- "$CURRENT")" || true; }
+
+# CI result for a commit on main: success, pending or failure. Docs-only commits skip
+# CI and a push runs CI only for its head commit, so any commit from the newest code
+# change up to $1 has the same code and may carry the run. A cancelled run is not green;
+# a commit with no run yet is pending. Fails when GitHub cannot be read.
+ci_state() {
+	local code_sha same_code runs
+	code_sha=$("${GIT[@]}" log -1 --format=%H "$1" -- . ':(exclude,glob)**/*.md') || return 1
+	same_code=$({ echo "$code_sha"; "${GIT[@]}" rev-list "$code_sha..$1"; }) || return 1
+	runs=$(gh run list -R "$REPO" --workflow CI --event push --branch main --limit 100 \
+		--json headSha,status,conclusion --jq '.[] | "\(.headSha) \(.status) \(.conclusion)"') || return 1
+	runs=$(grep -Ff <(echo "$same_code") <<<"$runs" || true)
+	if grep -q ' success$' <<<"$runs"; then
+		echo success
+	elif [[ -z $runs ]] || grep -qv ' completed ' <<<"$runs"; then
+		echo pending
+	else
+		echo failure
+	fi
+}
+
+held() { cat -- "$HOLD" 2>/dev/null || true; }
+hold() { echo "$1" >"$HOLD.tmp" && mv -T -- "$HOLD.tmp" "$HOLD"; }
+# After a manual rollback main stays off until a newer commit lands, however many
+# rollbacks follow. The checkout's origin/main is at most one timer run old.
+hold_main() {
+	local head
+	head=$("${GIT[@]}" rev-parse --verify --quiet origin/main) || head=$(current_release)
+	[[ -z $head ]] || hold "$head"
+}
 
 # Read one non-secret value from runtime.env without sourcing the secrets in it.
 setting() {

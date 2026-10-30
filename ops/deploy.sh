@@ -22,26 +22,23 @@ source "$SCRIPT_DIR/docker-host.sh"
 KEEP_RELEASES=5
 KEEP_BACKUPS=3
 BACKUPS=${EMBER_BACKUPS:-$HOME/.local/share/ember-backups}
-REPO=${EMBER_GITHUB_REPO:-eduard-cc/ember}
-GIT=(git -C "$SCRIPT_DIR/..")
 
 lock
 check_config
 
-"${GIT[@]}" fetch --quiet origin main || die 'could not fetch origin/main'
+# GitHub unreachable or CI still running exits 69, which ops/auto-deploy.sh retries
+# instead of holding.
+retry_later() {
+	log "ERROR: $*" >&2
+	exit 69
+}
+"${GIT[@]}" fetch --quiet origin main || retry_later 'could not fetch origin/main'
 sha=$("${GIT[@]}" rev-parse --verify --quiet "$1^{commit}") || die "unknown commit $1"
 "${GIT[@]}" merge-base --is-ancestor "$sha" origin/main || die "$sha is not on main"
 
-# Docs-only commits skip CI and a push runs CI only for its head commit, so any
-# commit from the newest code change up to $sha has the same code and may carry
-# the run. A cancelled or still-running run is not green.
-code_sha=$("${GIT[@]}" log -1 --format=%H "$sha" -- . ':(exclude,glob)**/*.md') ||
-	die 'could not find the latest code commit'
-same_code=$({ echo "$code_sha"; "${GIT[@]}" rev-list "$code_sha..$sha"; }) || die 'could not list commits'
-green=$(gh run list -R "$REPO" --workflow CI --event push --branch main --limit 100 \
-	--json headSha,conclusion --jq '.[] | select(.conclusion == "success") | .headSha') ||
-	die 'could not read CI results from GitHub'
-grep -qxFf <(echo "$same_code") <<<"$green" || die "CI has not passed for ${code_sha:0:12} or a docs-only commit after it"
+ci=$(ci_state "$sha") || retry_later 'could not read CI results from GitHub'
+[[ $ci != pending ]] || retry_later "CI is still running for ${sha:0:12}"
+[[ $ci == success ]] || die "CI failed for ${sha:0:12}"
 
 previous=$(current_release)
 if [[ $previous == "$sha" ]]; then

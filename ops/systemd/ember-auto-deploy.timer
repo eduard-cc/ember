@@ -1,0 +1,11 @@
+# User unit installed and enabled by ops/install.sh. Five minutes after each run ends,
+# so a long build never overlaps the next check.
+[Unit]
+Description=Check main for an Ember release every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+
+[Install]
+WantedBy=timers.target

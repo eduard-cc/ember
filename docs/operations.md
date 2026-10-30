@@ -39,7 +39,7 @@ The image is pinned to an exact minor (`postgres:17.N-bookworm`) in `ops/compose
 Installed by `ops/install.sh`, units in `ops/systemd/`:
 
 - `ember-live.slice` holds `ember.service`, the Docker daemon and the PostgreSQL container: at most 2 CPUs, 1.5 GiB memory (throttled from 1 GiB) and 512 MiB swap. The app and daemon run at nice 5 with low best-effort I/O priority.
-- `ember-jobs.slice` holds test runs: the npm `test:*` scripts and `server` `test:e2e` start through `ops/limited.sh` (nice 10, low I/O priority), browsers, dev servers and test API processes included. At most 4 CPUs, 4 GiB memory and 1 GiB swap. The server build in `pretest:e2e` runs outside it, and the database work tests cause counts against the live slice, since PostgreSQL runs there. CI runs the commands directly.
+- `ember-jobs.slice` holds test runs: the npm `test:*` scripts and `server` `test:e2e` start through `ops/limited.sh` (nice 10, low I/O priority), browsers, dev servers and test API processes included. At most 4 CPUs, 4 GiB memory and 1 GiB swap. The server build in `pretest:e2e` runs outside it, and the database work tests cause counts against the live slice, since PostgreSQL runs there. CI runs the commands directly. Auto-deploy builds (`ember-auto-deploy.service`) run here too.
 
 System services sit outside the user manager, so these hard caps, not CPU weights, are what protect them. The I/O priority only takes effect under a priority-aware disk scheduler, and the user manager has no I/O controller; disks without such a scheduler (common for NVMe) leave disk I/O uncapped.
 

@@ -4,6 +4,7 @@
 #   ops/rollback.sh
 #
 # Database migrations are not rolled back; restore the pre-deploy backup for that.
+# ops/auto-deploy.sh then leaves main alone until a newer commit lands on it.
 ACTION=rollback
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 # shellcheck source=ops/lib.sh
@@ -15,6 +16,9 @@ source "$SCRIPT_DIR/lib.sh"
 }
 lock
 check_config
+# Keep ops/auto-deploy.sh from putting main straight back; the next commit on main
+# clears this.
+hold_main
 roll_back || {
 	notify "Manual rollback from $(current_release) FAILED. Ember needs attention: journalctl --user -u $EMBER_UNIT -n 50"
 	die 'rollback failed; the app may be unhealthy'

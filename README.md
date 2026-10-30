@@ -46,6 +46,8 @@ npm --prefix server run test:e2e
 
 ## Deploy and rollback
 
+Main deploys itself within about five minutes of its CI passing (`ember-auto-deploy.timer`).
+
 ```sh
 ops/deploy.sh <commit>   # build, switch, restart, health-check; rolls back on failure
 ops/rollback.sh          # switch back to the previous healthy release
