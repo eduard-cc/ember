@@ -49,6 +49,11 @@ export {imageUrl} from './image-urls';
 export function bodyPartOf(name: string): BodyPart {
   return catalogEntry(name)?.bodyPart ?? 'Other';
 }
+/** Body parts, in display order, that at least one of these exercises belongs to. */
+export function bodyPartsOf(names: readonly string[]): BodyPart[] {
+  const present = new Set(names.map(bodyPartOf));
+  return bodyParts.filter((part) => present.has(part));
+}
 /** Recorded history decides the type first; the catalog only fills in for new exercises. */
 export function exerciseTypeFor(name: string, dataset: Dataset): ExerciseType | undefined {
   for (const workout of dataset.workouts)

@@ -343,8 +343,9 @@ test('the ⋯ icon sits at the far right of the card, flush with the set column'
   const check = (await card.getByRole('button', {name: /^Complete .* set 1$/}).boundingBox())!;
   const trigger = (await options(page, 'Bench Press (Barbell)').boundingBox())!;
   const cardBox = (await card.boundingBox())!;
-  // Lucide's ellipsis has ~1.5px of built-in side bearing at 18px.
-  expect(Math.abs(icon.x + icon.width - (check.x + check.width))).toBeLessThanOrEqual(3);
+  // Lucide's ellipsis draws its last dot ending at 20 of 24 viewBox units.
+  const dotsRight = icon.x + (icon.width * 20) / 24;
+  expect(Math.abs(dotsRight - (check.x + check.width))).toBeLessThanOrEqual(1);
   expect(trigger.width).toBeGreaterThanOrEqual(44);
   expect(trigger.x + trigger.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
 });

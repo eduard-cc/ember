@@ -64,32 +64,33 @@ test('session count sits at the far right as a bare number, absent when never do
   await expect(page.locator('.exercises-view')).not.toContainText(/\d+ sessions?\b/);
 });
 
-test('sort toggle orders A–Z or by most done, persists across reload and respects search', async ({
+test('sort toggle orders by most done first or A–Z, persists across reload and respects search', async ({
   page,
 }) => {
   const all = await openExercises(page);
   const sort = page.getByRole('group', {name: 'Sort exercises'});
   const az = sort.getByRole('button', {name: 'A–Z', exact: true});
   const most = sort.getByRole('button', {name: 'Most done', exact: true});
-  await expect(az).toHaveAttribute('aria-pressed', 'true');
-  await expect(most).toHaveAttribute('aria-pressed', 'false');
+  await expect(sort.getByRole('button')).toHaveText(['Most done', 'A–Z']);
+  await expect(most).toHaveAttribute('aria-pressed', 'true');
+  await expect(az).toHaveAttribute('aria-pressed', 'false');
   for (const button of [az, most]) {
     const box = (await button.boundingBox())!;
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(box.width).toBeGreaterThanOrEqual(44);
   }
-  const alphabetical = await rowNames(all);
-  expect(alphabetical).toEqual([...alphabetical].sort((a, b) => a!.localeCompare(b!)));
-
-  await most.click();
-  await expect(most).toHaveAttribute('aria-pressed', 'true');
-  await expect(az).toHaveAttribute('aria-pressed', 'false');
   const rows = await readRows(all);
   const byCount = rows.map((r) => r.name);
   // Expected order comes from the counts read off the rows, not from the demo data's shape.
   expect(byCount).toEqual(mostDoneOrder(rows));
   expect(new Set(rows.map((r) => r.count)).size).toBeGreaterThan(2);
   expect(rows.at(-1)!.count).toBe(0);
+
+  await az.click();
+  await expect(az).toHaveAttribute('aria-pressed', 'true');
+  await expect(most).toHaveAttribute('aria-pressed', 'false');
+  const alphabetical = await rowNames(all);
+  expect(alphabetical).toEqual([...alphabetical].sort((a, b) => a!.localeCompare(b!)));
   expect([...byCount].sort(byName)).toEqual(alphabetical);
 
   // Search narrows the sorted list without losing the chosen order.
@@ -98,27 +99,27 @@ test('sort toggle orders A–Z or by most done, persists across reload and respe
   const searched = await readRows(all);
   expect(searched.length).toBeGreaterThan(1);
   expect(searched.every((r) => r.name.toLowerCase().includes('row'))).toBe(true);
-  expect(searched.map((r) => r.name)).toEqual(mostDoneOrder(searched));
+  expect(searched.map((r) => r.name)).toEqual([...searched.map((r) => r.name)].sort(byName));
 
-  await most.focus();
-  await page.keyboard.press('Tab');
+  await az.focus();
   await page.keyboard.press('Shift+Tab');
-  await expect(most).toBeFocused();
-  expect(await most.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
+  await page.keyboard.press('Tab');
+  await expect(az).toBeFocused();
+  expect(await az.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
 
   await page.reload();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await navigate(page, 'Exercises');
   await expect(
-    page.getByRole('group', {name: 'Sort exercises'}).getByRole('button', {name: 'Most done'}),
+    page.getByRole('group', {name: 'Sort exercises'}).getByRole('button', {name: 'A–Z'}),
   ).toHaveAttribute('aria-pressed', 'true');
-  expect(await rowNames(page.getByRole('region', {name: 'All exercises'}))).toEqual(byCount);
+  expect(await rowNames(page.getByRole('region', {name: 'All exercises'}))).toEqual(alphabetical);
   await page
     .getByRole('group', {name: 'Sort exercises'})
-    .getByRole('button', {name: 'A–Z', exact: true})
+    .getByRole('button', {name: 'Most done', exact: true})
     .click();
   const back = await rowNames(page.getByRole('region', {name: 'All exercises'}));
-  expect(back).toEqual(alphabetical);
+  expect(back).toEqual(byCount);
 });
 
 test('body-part filter combined with Most done keeps the count order within that part', async ({
@@ -137,20 +138,20 @@ test('body-part filter combined with Most done keeps the count order within that
   expect(rows.map((r) => r.name)).toEqual(mostDoneOrder(rows));
 });
 
-test('an unknown stored sort falls back to A–Z', async ({page}) => {
+test('an unknown stored sort falls back to Most done', async ({page}) => {
   const all = await openExercises(page, 'garbage');
   const sort = page.getByRole('group', {name: 'Sort exercises'});
-  await expect(sort.getByRole('button', {name: 'A–Z', exact: true})).toHaveAttribute(
+  await expect(sort.getByRole('button', {name: 'Most done'})).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  await expect(sort.getByRole('button', {name: 'Most done'})).toHaveAttribute(
+  await expect(sort.getByRole('button', {name: 'A–Z', exact: true})).toHaveAttribute(
     'aria-pressed',
     'false',
   );
-  const names = await rowNames(all);
-  expect(names.length).toBeGreaterThan(10);
-  expect(names).toEqual([...names].sort((a, b) => byName(a!, b!)));
+  const rows = await readRows(all);
+  expect(rows.length).toBeGreaterThan(10);
+  expect(rows.map((r) => r.name)).toEqual(mostDoneOrder(rows));
 });
 
 test('the Add exercise picker ignores a stored Most done sort and stays A–Z', async ({page}) => {

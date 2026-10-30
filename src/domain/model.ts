@@ -43,9 +43,9 @@ export function exerciseWorkoutCount(dataset: Dataset, name: string): number {
   ).length;
 }
 export type ExerciseSort = 'az' | 'most';
-/** A stored sort preference; anything unknown or missing falls back to A–Z. */
+/** A stored sort preference; anything unknown or missing falls back to Most done. */
 export function parseExerciseSort(value: string | null): ExerciseSort {
-  return value === 'most' ? 'most' : 'az';
+  return value === 'az' ? 'az' : 'most';
 }
 /** A–Z, or most unique workouts first with name ties A–Z; never-done names stay last. */
 export function sortExerciseNames(

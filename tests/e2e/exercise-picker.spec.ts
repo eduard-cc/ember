@@ -21,7 +21,18 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
   const picker = await openPicker(page);
   // Same list as the Exercises tab: search, body-part chips, Recent and All sections.
   await expect(picker.getByLabel('Search exercises')).toBeVisible();
-  await expect(picker.getByRole('group', {name: 'Body part'})).toBeVisible();
+  // Only body parts that hold exercises; every demo name is in the catalog, so no Other.
+  await expect(picker.getByRole('group', {name: 'Body part'}).getByRole('button')).toHaveText([
+    'All',
+    'Chest',
+    'Back',
+    'Shoulders',
+    'Arms',
+    'Legs',
+    'Core',
+    'Cardio',
+    'Full body',
+  ]);
   await expect(picker.getByRole('region', {name: 'Recent exercises'})).toBeVisible();
   await picker
     .getByRole('group', {name: 'Body part'})

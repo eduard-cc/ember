@@ -1,7 +1,7 @@
 import {Search, SearchX} from 'lucide-react';
 import {useId, useMemo, useState} from 'react';
 
-import {type BodyPart, allExerciseNames, bodyPartOf, bodyParts} from '../catalog/catalog';
+import {type BodyPart, allExerciseNames, bodyPartOf, bodyPartsOf} from '../catalog/catalog';
 import {
   type ExerciseSort,
   exerciseStats,
@@ -19,8 +19,8 @@ import {ListLabel} from './ui/list-label';
 
 const sortKey = 'ember:exercise-sort:v1';
 const sortOptions = [
-  ['az', 'A–Z'],
   ['most', 'Most done'],
+  ['az', 'A–Z'],
 ] as const satisfies readonly (readonly [ExerciseSort, string])[];
 /** Library sort order: a device preference like appearance, never workout data. */
 function useExerciseSort() {
@@ -28,7 +28,7 @@ function useExerciseSort() {
     try {
       return parseExerciseSort(localStorage.getItem(sortKey));
     } catch {
-      return 'az';
+      return 'most';
     }
   });
   const choose = (next: ExerciseSort) => {
@@ -80,7 +80,7 @@ function ExerciseRow({
   );
 }
 
-/** Catalog and recorded exercises: search, body-part filter, recent first, then everything A–Z or most done. */
+/** Catalog and recorded exercises: search, body-part filter, recent first, then everything most done or A–Z. */
 export function ExerciseList({
   dataset,
   onSelect,
@@ -88,12 +88,13 @@ export function ExerciseList({
 }: {
   dataset: Dataset;
   onSelect: (name: string) => void;
-  /** Offer the persisted A–Z / Most done order (Exercises tab). The picker stays A–Z. */
+  /** Offer the persisted Most done / A–Z order (Exercises tab). The picker stays A–Z. */
   sortable?: boolean;
 }) {
   const [search, setSearch] = useState('');
   const [part, setPart] = useState<BodyPart | 'All'>('All');
   const names = useMemo(() => allExerciseNames(dataset), [dataset]);
+  const parts = useMemo(() => bodyPartsOf(names), [names]);
   const stats = useMemo(() => exerciseStats(dataset), [dataset]);
   const [storedSort, setSort] = useExerciseSort();
   const sort = sortable ? storedSort : 'az';
@@ -124,7 +125,7 @@ export function ExerciseList({
         />
       </div>
       <ChipRow role='group' aria-label='Body part'>
-        {(['All', ...bodyParts] as const).map((value) => (
+        {(['All', ...parts] as const).map((value) => (
           <Chip key={value} aria-pressed={part === value} onClick={() => setPart(value)}>
             {value}
           </Chip>

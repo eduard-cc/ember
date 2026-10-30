@@ -149,6 +149,11 @@ test('mobile ledger reaches first set quickly with wide fields and explicit empt
     expect(rect.width).toBeGreaterThanOrEqual(44);
     expect(rect.height).toBeGreaterThanOrEqual(44);
   }
+  // The completion box lines up with the fields beside it, top and bottom.
+  const check = (await row.getByRole('button', {name: /Complete/}).boundingBox())!;
+  const reps = (await row.getByLabel(/Reps for/).boundingBox())!;
+  expect(check.y).toBeCloseTo(reps.y, 0);
+  expect(check.height).toBeCloseTo(reps.height, 0);
   await page.setViewportSize({width: 320, height: 740});
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });

@@ -366,7 +366,7 @@ export function WorkoutView({
                 {caption && <p className='mt-[3px] text-[12px]'>{caption}</p>}
               </div>
               <ExerciseMenu
-                className='col-3 row-[1/3] -mr-[13px]'
+                className='col-3 row-[1/3] -mr-[13px] [&_svg]:translate-x-[3px]'
                 name={ex.name}
                 ref={register(menuButtons.current, identity(ex))}
                 onReplace={() => {
@@ -470,7 +470,7 @@ export function WorkoutView({
                   ) : (
                     <Button
                       size='icon'
-                      className='set-check h-12 w-12'
+                      className='set-check h-11 w-11 justify-self-end'
                       variant={set.completed ? 'primary' : 'secondary'}
                       aria-pressed={!!set.completed}
                       aria-label={`${set.completed ? 'Uncomplete' : 'Complete'} ${ex.name} set ${si + 1}`}

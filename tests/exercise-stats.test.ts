@@ -46,12 +46,12 @@ it('gives the detail header the same unique-workout count as the list, not the b
   expect(exerciseWorkoutCount(dataset, 'Row')).toBe(0);
 });
 
-it('reads a stored sort preference, falling back to A–Z for anything unknown', () => {
+it('reads a stored sort preference, falling back to Most done for anything unknown', () => {
   expect(parseExerciseSort('most')).toBe('most');
   expect(parseExerciseSort('az')).toBe('az');
-  expect(parseExerciseSort('garbage')).toBe('az');
-  expect(parseExerciseSort('')).toBe('az');
-  expect(parseExerciseSort(null)).toBe('az');
+  expect(parseExerciseSort('garbage')).toBe('most');
+  expect(parseExerciseSort('')).toBe('most');
+  expect(parseExerciseSort(null)).toBe('most');
 });
 
 it('sorts A–Z or by most done with name ties and never-done exercises last', () => {

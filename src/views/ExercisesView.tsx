@@ -1,7 +1,7 @@
 import {ExerciseList} from '../components/ExerciseList';
 import type {Dataset} from '../domain/types';
 
-/** Library of catalog and recorded exercises: recent first, then everything A–Z or most done. */
+/** Library of catalog and recorded exercises: recent first, then everything most done or A–Z. */
 export function ExercisesView({
   dataset,
   onOpen,
