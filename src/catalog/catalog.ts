@@ -44,14 +44,7 @@ export function catalogEntry(name: string): CatalogExercise | undefined {
   return byName.get(name);
 }
 
-const urls = import.meta.glob<string>('./images/*.webp', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-});
-export function imageUrl(file: string): string | undefined {
-  return urls[`./images/${file}`];
-}
+export {imageUrl} from './image-urls';
 
 export function bodyPartOf(name: string): BodyPart {
   return catalogEntry(name)?.bodyPart ?? 'Other';

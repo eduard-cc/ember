@@ -4,8 +4,12 @@ import {defineConfig} from 'vite';
 
 import {pwaShell} from './scripts/pwa-build.ts';
 
-export default defineConfig({
+export default defineConfig(({command}) => ({
   plugins: [tailwindcss(), react(), pwaShell()],
+  // Builds keep the eager image URLs; see src/catalog/image-urls.dev.ts.
+  resolve: {
+    alias: command === 'serve' ? [{find: /^\.\/image-urls$/, replacement: './image-urls.dev'}] : [],
+  },
   server: {
     proxy: {
       '/api/v1': {
@@ -19,4 +23,4 @@ export default defineConfig({
     port: 5188,
     strictPort: true,
   },
-});
+}));

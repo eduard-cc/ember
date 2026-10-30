@@ -70,18 +70,36 @@ export class WorkoutRepository {
     entityId: string,
     payload: LocalOperation['payload'],
   ): Promise<void> {
-    if ((kind === 'putTemplate' || kind === 'deleteTemplate') && (await this.isDemo())) return;
-    const pending = (await this.db.outbox.toArray()).filter((o) => o.entityId === entityId);
-    const revision = Number((await this.db.syncState.get('revision:' + entityId))?.value ?? 0);
-    const expectedRevision = pending.length
-      ? Math.max(...pending.map((o) => (o.expectedRevision ?? 0) + 1))
-      : revision || null;
-    const operation = {operationId: crypto.randomUUID(), entityId, kind, expectedRevision, payload};
-    await this.db.outbox.add(operation);
+    await this.queueOperations([{kind, entityId, payload}]);
+  }
+  /**
+   * Queue operations in order, reading the outbox and queue order once and writing each once,
+   * so a first sync or reset of a large history stays linear. An operation follows any pending
+   * one for the same entity, else the entity's acknowledged revision.
+   */
+  async queueOperations(
+    queued: Pick<LocalOperation, 'kind' | 'entityId' | 'payload'>[],
+  ): Promise<void> {
+    if (queued.some((o) => o.kind === 'putTemplate' || o.kind === 'deleteTemplate')) {
+      if (await this.isDemo())
+        queued = queued.filter((o) => o.kind !== 'putTemplate' && o.kind !== 'deleteTemplate');
+    }
+    if (!queued.length) return;
+    // Next expected revision per entity with pending operations.
+    const next = new Map<string, number>();
+    for (const o of await this.db.outbox.toArray())
+      next.set(o.entityId, Math.max(next.get(o.entityId) ?? 0, (o.expectedRevision ?? 0) + 1));
+    const revisions = await this.db.syncState.bulkGet(queued.map((o) => 'revision:' + o.entityId));
+    const operations = queued.map(({kind, entityId, payload}, i): LocalOperation => {
+      const expectedRevision = next.get(entityId) ?? (Number(revisions[i]?.value ?? 0) || null);
+      next.set(entityId, (expectedRevision ?? 0) + 1);
+      return {operationId: crypto.randomUUID(), entityId, kind, expectedRevision, payload};
+    });
+    await this.db.outbox.bulkAdd(operations);
     const order = (await this.db.syncState.get('queue-order'))?.value as string[] | undefined;
     await this.db.syncState.put({
       key: 'queue-order',
-      value: [...(order ?? []), operation.operationId],
+      value: [...(order ?? []), ...operations.map((o) => o.operationId)],
     });
   }
   /**
@@ -425,6 +443,7 @@ export class WorkoutRepository {
             ),
             ...(await this.db.outbox.toArray()).map((o) => o.entityId),
           ]);
+          const queued: Parameters<WorkoutRepository['queueOperations']>[0] = [];
           for (const [kind, records] of [
             ['putBodyWeight', await this.db.bodyWeights.toArray()],
             ['putWorkout', await this.db.workouts.toArray()],
@@ -433,10 +452,11 @@ export class WorkoutRepository {
           ] as const) {
             for (const record of records)
               if (!sent.has(record.id)) {
-                await this.queueOperation(kind, record.id, record);
+                queued.push({kind, entityId: record.id, payload: record});
                 sent.add(record.id);
               }
           }
+          await this.queueOperations(queued);
           await this.db.meta.put({key: 'body-weight-epoch', value: epoch});
         },
       );
@@ -508,14 +528,16 @@ export class WorkoutRepository {
             db.syncState.clear(),
             db.importSources.clear(),
           ]);
-          for (const workout of kept) {
-            await db.workouts.add(workout);
-            await this.queueOperation('putWorkout', workout.id, workout);
-          }
-          for (const measurement of keptMeasurements) {
-            await db.bodyWeights.add(measurement);
-            await this.queueOperation('putBodyWeight', measurement.id, measurement);
-          }
+          await db.workouts.bulkAdd(kept);
+          await db.bodyWeights.bulkAdd(keptMeasurements);
+          await this.queueOperations([
+            ...kept.map((w) => ({kind: 'putWorkout' as const, entityId: w.id, payload: w})),
+            ...keptMeasurements.map((m) => ({
+              kind: 'putBodyWeight' as const,
+              entityId: m.id,
+              payload: m,
+            })),
+          ]);
           const order =
             ((await db.meta.get('finished-order'))?.value as string[] | undefined) ?? [];
           await db.meta.put({key: 'finished-order', value: order.filter((id) => unsent.has(id))});
