@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {addExercise, navigate} from '../navigation';
+import {addExercise, navigate, openSettings} from '../navigation';
 import {resolve} from './colour-helpers';
 
 test('workout sheet minimizes to a named resume bar preserving the draft and ledger scroll', async ({
@@ -405,6 +405,73 @@ test('appearance is separate from workout saving, follows System, and persists t
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem('ember:appearance:v1')!)),
   ).toEqual({version: 1, theme: 'dark'});
+});
+
+test('sounds and haptics start on, play when a workout starts and each switch persists on this device', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const record = window as unknown as {vibrations: number[][]; audioContexts: number};
+    record.vibrations = [];
+    record.audioContexts = 0;
+    navigator.vibrate = (pattern) => {
+      record.vibrations.push(typeof pattern === 'number' ? [pattern] : [...pattern]);
+      return true;
+    };
+    const Native = window.AudioContext;
+    window.AudioContext = class extends Native {
+      constructor(options?: AudioContextOptions) {
+        super(options);
+        record.audioContexts++;
+      }
+    };
+  });
+  await page.route('**/api/v1/**', (route) =>
+    route.fulfill({
+      json: route.request().url().endsWith('/session')
+        ? {ownerId: 'owner', csrfToken: 'synthetic'}
+        : {changes: [], nextCursor: 0, hasMore: false},
+    }),
+  );
+  const cues = () =>
+    page.evaluate(() => {
+      const record = window as unknown as {vibrations: number[][]; audioContexts: number};
+      return {vibrations: record.vibrations, audioContexts: record.audioContexts};
+    });
+  await page.goto('/');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await page.getByRole('button', {name: 'Start empty workout'}).click();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
+  expect(await cues()).toEqual({vibrations: [[18, 60, 10]], audioContexts: 1});
+
+  await openSettings(page);
+  const settings = page.getByRole('dialog', {name: 'Settings', exact: true});
+  const feedback = settings.getByRole('region', {name: 'Feedback'});
+  const sounds = feedback.getByRole('switch', {name: 'Sounds'});
+  const haptics = feedback.getByRole('switch', {name: 'Haptics'});
+  await expect(sounds).toHaveAttribute('aria-checked', 'true');
+  await expect(sounds).toHaveAccessibleDescription('Short, quiet cues. They mix with your music.');
+  await expect(haptics).toHaveAttribute('aria-checked', 'true');
+  for (const control of [sounds, haptics])
+    expect((await control.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await haptics.click();
+  await expect(haptics).toHaveAttribute('aria-checked', 'false');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ember:feedback:v1')!))).toEqual(
+    {version: 1, sound: true, haptics: false},
+  );
+
+  await page.reload();
+  await openSettings(page);
+  await expect(haptics).toHaveAttribute('aria-checked', 'false');
+  await expect(sounds).toHaveAttribute('aria-checked', 'true');
+  await settings.getByRole('button', {name: 'Close settings'}).click();
+  await page.getByRole('button', {name: 'Cancel workout'}).click();
+  await page.getByRole('button', {name: 'Discard workout'}).click();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toHaveCount(0);
+  await page.getByRole('button', {name: 'Start empty workout'}).click();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
+  // Haptics off: the start cue only plays its sound.
+  expect(await cues()).toEqual({vibrations: [], audioContexts: 1});
 });
 
 test('a read-only writer follower can minimize and reach settings and recovery guidance', async ({

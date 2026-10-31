@@ -270,10 +270,13 @@ test('metric explanations are readable', async ({page}) => {
 });
 
 test('selected appearance is an Amber ring on a neutral ground', async ({page}, info) => {
-  // The Profile Settings row is the phone entry point; desktop uses the header gear.
+  // The Profile cog is the phone entry point; desktop uses the header gear.
   test.skip(info.project.name !== 'mobile');
   await openProfile(page, 'light');
-  await page.getByRole('navigation', {name: 'Profile'}).getByRole('button').click();
+  await page
+    .locator('.library-scroll')
+    .getByRole('button', {name: 'Settings', exact: true})
+    .click();
   const dialog = page.getByRole('dialog', {name: 'Settings', exact: true});
   const system = dialog.getByRole('button', {name: 'System', exact: true});
   await expect(system).toHaveAttribute('aria-pressed', 'true');
@@ -286,27 +289,29 @@ test('selected appearance is an Amber ring on a neutral ground', async ({page}, 
   expect(style.background).toBe(await resolve(page, 'hsl(var(--card))'));
 });
 
-test('desktop hides the Profile Settings row because the header gear is the entry', async ({
-  page,
-}, info) => {
+test('desktop hides the Profile cog because the header gear is the entry', async ({page}, info) => {
   test.skip(info.project.name !== 'desktop');
   await openProfile(page, 'light');
   await expect(page.locator('.profile-view')).toBeVisible();
-  await expect(page.getByRole('navigation', {name: 'Profile'})).toBeHidden();
+  await expect(
+    page.locator('.library-scroll').getByRole('button', {name: 'Settings', exact: true}),
+  ).toBeHidden();
 });
 
-test('Settings opened from the Profile row returns focus to that row', async ({page}, info) => {
+test('Settings opened from the Profile cog returns focus to the cog', async ({page}, info) => {
   test.skip(info.project.name !== 'mobile');
   for (const close of ['button', 'escape'] as const) {
     await openProfile(page, 'light');
-    const row = page.getByRole('navigation', {name: 'Profile'}).getByRole('button');
-    await row.click();
+    const cog = page
+      .locator('.library-scroll')
+      .getByRole('button', {name: 'Settings', exact: true});
+    await cog.click();
     const dialog = page.getByRole('dialog', {name: 'Settings', exact: true});
     await expect(dialog).toBeVisible();
     if (close === 'button') await page.getByRole('button', {name: 'Close settings'}).click();
     else await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
-    await expect(row).toBeFocused();
+    await expect(cog).toBeFocused();
   }
 });
 

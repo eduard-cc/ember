@@ -1,4 +1,6 @@
 @import 'tailwindcss' source(none);
+/* Drawer and dialog enter/exit animations (`animate-in`, `fade-in-0`, `zoom-in-95`…). */
+@import 'tw-animate-css';
 @source './**/*.{ts,tsx}';
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
@@ -18,6 +20,8 @@
   --primary: 33 100% 31%;
   --primary-foreground: 38.6 43.8% 93.7%;
   --primary-tint: 38 60% 90%;
+  --secondary: 34.3 38.2% 89.2%;
+  --secondary-foreground: 33 100% 31%;
   --muted: 37.9 20% 81.4%;
   --muted-foreground: 33.7 7.8% 40%;
   --accent: 37.1 36.8% 88.8%;
@@ -50,6 +54,8 @@
   --primary: 38 90% 60%;
   --primary-foreground: 252 10.2% 9.6%;
   --primary-tint: 36 25% 16%;
+  --secondary: 265.7 8.2% 16.7%;
+  --secondary-foreground: 38 90% 60%;
   --muted: 266.7 8.7% 20.2%;
   --muted-foreground: 36 9.2% 68%;
   --accent: 262.5 9.1% 17.3%;
@@ -82,6 +88,8 @@
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-primary-tint: hsl(var(--primary-tint));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-accent: hsl(var(--accent));
@@ -121,6 +129,26 @@
   --text-label--font-weight: 500;
   --text-caption: 0.6875rem;
   --text-caption--line-height: 1;
+  /* Gym-distance numerals: set values and summary stats. */
+  --text-set-value: 1.125rem;
+  --text-set-value--line-height: 1.5;
+  --text-set-value--font-weight: 600;
+  --text-stat: 1.75rem;
+  --text-stat--line-height: 1.1;
+  --text-stat--font-weight: 600;
+  --text-stat--letter-spacing: -0.02em;
+
+  /* The radius scale on Ember's 0 radius, so copied `rounded-md` corners stay square. */
+  --radius-lg: var(--radius);
+  --radius-md: max(0px, calc(var(--radius) - 2px));
+  --radius-sm: max(0px, calc(var(--radius) - 4px));
+
+  /* Motion curves: strong ease-out for UI, ease-in-out for on-screen moves, iOS drawer. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --animate-slow-spin: spin 1.6s linear infinite;
 }
 
 /* Bare element defaults. In the base layer (after preflight) so utilities can override them. */
@@ -135,6 +163,12 @@
   }
   :root[data-theme='dark'] {
     color-scheme: dark;
+  }
+  /* Mobile-native baseline: no grey tap flash, no font inflation, no page bounce or pull-to-refresh. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
   }
   body {
     margin: 0;
@@ -171,7 +205,21 @@
   }
   button {
     cursor: pointer;
+  }
+  /* Controls: no double-tap zoom delay, no text selection or iOS callout on a long press. */
+  button,
+  a,
+  [role='button'],
+  [role='tab'],
+  [role='switch'] {
     touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* 16px keeps iOS from zooming into a focused field; set values and utilities size up from here. */
+  input {
+    font-size: 16px;
   }
   button:disabled {
     cursor: not-allowed;
@@ -231,6 +279,26 @@
    sits in one layer with the base declarations it overrides (transition, background, colour),
    because a utility on the same element would beat any rule here. */
 @layer components {
+  /* Shared overlay motion: a 180ms strong ease-out for dialog enter and exit. Set through
+     tw-animate's variables, which its `animate-in`/`animate-out` utilities read. */
+  .overlay-motion {
+    --tw-animation-duration: 180ms;
+    --tw-ease: var(--ease-out);
+  }
+  /* Press feedback: pressed controls sink slightly on touch screens. */
+  .press-feedback {
+    transition:
+      color 160ms ease,
+      background-color 160ms ease,
+      border-color 160ms ease,
+      transform 160ms var(--ease-out);
+  }
+  @media (prefers-reduced-motion: no-preference) and (pointer: coarse) {
+    .press-feedback:active:not(:disabled):not([aria-disabled='true']) {
+      transform: scale(0.97);
+    }
+  }
+
   /* Swipe rows: the ledger slides over a Delete layer that is always there underneath. */
   .set-row.set-swipe {
     display: block;
@@ -343,4 +411,15 @@
     scale: 1;
     box-shadow: none;
   }
+}
+
+/* Unlayered on purpose: vaul injects its drawer transition (500ms) as an unlayered style, which
+   beats every layer. This keeps the 250ms drawer curve. Reduced motion still wins, because the
+   base layer's `!important` rule beats unlayered normal declarations. */
+[data-vaul-drawer].overlay-motion,
+[data-vaul-overlay].overlay-motion {
+  animation-duration: 250ms;
+  transition-duration: 250ms;
+  animation-timing-function: var(--ease-drawer);
+  transition-timing-function: var(--ease-drawer);
 }

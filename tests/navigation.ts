@@ -29,7 +29,8 @@ export async function addExercise(page: Page, name: string) {
 
 /**
  * Phones have no Settings button in the tab bar, so with the logger minimized they reach it
- * through the Profile page; the desktop header and the open logger still expose the button.
+ * through the cog beside the Profile title; the desktop header and the open logger still expose
+ * the button.
  */
 export async function openSettings(page: Page) {
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', /^(saved|error)$/);
@@ -49,7 +50,7 @@ export async function openSettings(page: Page) {
       .getByRole('button', {name: 'Profile', exact: true})
       .click({timeout: 1000});
     await page
-      .getByRole('navigation', {name: 'Profile'})
+      .locator('.library-scroll')
       .getByRole('button', {name: 'Settings', exact: true})
       .click({timeout: 1000});
   }).toPass({timeout: 15000});

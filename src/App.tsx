@@ -1,20 +1,11 @@
-import {
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
-  Dumbbell,
-  History,
-  Plus,
-  Settings,
-  User,
-  X,
-} from 'lucide-react';
+import {ChevronDown, ChevronUp, Dumbbell, History, Plus, Settings, User, X} from 'lucide-react';
 import {useEffect, useMemo, useRef, useState} from 'react';
 
 import {AddExercise} from './components/AddExercise';
 import {AppearanceSettings, useAppearance} from './components/AppearanceSettings';
 import {BodyWeightSettings} from './components/BodyWeightSettings';
 import {ElapsedTimer} from './components/ElapsedTimer';
+import {FeedbackSettings} from './components/FeedbackSettings';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
 import {errorBannerClass, noticeClass} from './components/banner';
@@ -32,9 +23,12 @@ import {
 import {Input} from './components/ui/input';
 import {ListLabel} from './components/ui/list-label';
 import {SectionHeading} from './components/ui/section-heading';
+import {Toaster} from './components/ui/sonner';
 import {routineTargets} from './components/workout-targets';
 import {countedSets} from './domain/sets';
 import type {Workout} from './domain/types';
+import {cue} from './feedback';
+import {MOBILE_QUERY, useIsMobile} from './hooks/use-is-mobile';
 import {useBackLayer} from './state/back';
 import {newWorkout, useWorkoutState} from './state/workout';
 import {useSync} from './sync/use-sync';
@@ -46,9 +40,6 @@ import {HistoryView} from './views/HistoryView';
 import {ProfileView} from './views/ProfileView';
 import {TemplatesView} from './views/TemplatesView';
 import {WorkoutView} from './views/WorkoutView';
-
-/** Below the CSS `desk` breakpoint (`--breakpoint-desk: 1000px` in index.css). */
-const MOBILE_QUERY = '(width < 1000px)';
 
 const stickyClass = 'sticky top-0 z-3';
 // The bar is a bottom tab strip below the `desk` breakpoint and a 48px header from it up. It is
@@ -112,13 +103,7 @@ export default function App() {
   const [view, setView] = useState<View>('Workout');
   const [exercise, setExercise] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(true);
-  const [mobile, setMobile] = useState(() => matchMedia(MOBILE_QUERY).matches);
-  useEffect(() => {
-    const media = matchMedia(MOBILE_QUERY);
-    const update = () => setMobile(media.matches);
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
+  const mobile = useIsMobile();
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [deletingSets, setDeletingSets] = useState(false);
@@ -220,6 +205,7 @@ export default function App() {
   const start = (workout: Workout) => {
     if (state.active) setPendingWorkout(workout);
     else {
+      cue('start');
       void setState((s) => ({...s, active: newWorkout(workout)}));
       setView('Workout');
       setExpanded(true);
@@ -322,12 +308,13 @@ export default function App() {
       </>
     );
   };
-  const settingsButton = (
+  const settingsButton = (className?: string) => (
     <Button
       variant='ghost'
       size='icon'
       aria-label='Settings'
       aria-expanded={settingsOpen}
+      className={className}
       onClick={(event) => {
         settingsTrigger.current = event.currentTarget;
         setSettingsOpen((value) => !value);
@@ -351,7 +338,7 @@ export default function App() {
               {errors()}
             </>
           )}
-          {settingsButton}
+          {settingsButton()}
         </div>
       )}
       <main hidden={sync.locked} className='workspace relative m-auto flex h-full max-w-[1480px]'>
@@ -383,10 +370,16 @@ export default function App() {
                 </button>
               ))}
             </nav>
-            <div className='max-desk:hidden desk:ml-auto'>{settingsButton}</div>
+            <div className='max-desk:hidden desk:ml-auto'>{settingsButton()}</div>
           </header>
-          <div className='library-scroll min-h-0 flex-1 overflow-auto px-8 pt-6.5 pb-10 max-desk:px-4.5 max-desk:pt-6 max-desk:pb-7.5'>
-            <h1 className='mb-5'>{title}</h1>
+          <div className='library-scroll min-h-0 flex-1 overflow-auto overscroll-contain px-8 pt-6.5 pb-10 max-desk:px-4.5 max-desk:pt-6 max-desk:pb-7.5'>
+            {/* The title row sits outside the content fieldset, so the Profile cog (the phone entry
+                to Settings; desktop has the header gear) also works while edits are disabled. The
+                negative margins keep the 44px target from growing the 32px title row. */}
+            <div className='mb-5 flex items-center justify-between gap-3'>
+              <h1>{title}</h1>
+              {view === 'Profile' && settingsButton('-my-1.5 -mr-2.5 desk:hidden')}
+            </div>
             {!showSheet && !sync.locked && !settingsOpen && errors()}
             {sync.historyDownload && !sync.locked && !(showSheet && mobile) && !settingsOpen && (
               <div className={cn(noticeClass, 'mb-5')} role='status' aria-label='History download'>
@@ -444,24 +437,6 @@ export default function App() {
                 ))}
               {view === 'Profile' && <ProfileView workouts={allDataset.workouts} />}
             </ContentFieldset>
-            {/* Outside the fieldset: phones reach Settings only here, also while edits are disabled. */}
-            {view === 'Profile' && !sync.locked && (
-              <nav
-                className='profile-links mt-3.5 flex flex-col border border-border bg-card desk:hidden'
-                aria-label='Profile'
-              >
-                <Button
-                  variant='ghost'
-                  className='profile-link min-h-[52px] justify-start gap-3 focus-visible:-outline-offset-2 [&>svg:last-child]:ml-auto [&>svg:last-child]:text-muted-foreground'
-                  onClick={(event) => {
-                    settingsTrigger.current = event.currentTarget;
-                    setSettingsOpen(true);
-                  }}
-                >
-                  <Settings size={18} /> Settings <ChevronRight size={16} />
-                </Button>
-              </nav>
-            )}
           </div>
           {state.active && !showSheet && (
             <Button
@@ -502,7 +477,7 @@ export default function App() {
                   >
                     <ChevronDown size={22} />
                   </Button>
-                  {settingsButton}
+                  {settingsButton()}
                   {showSheet && (
                     <ElapsedTimer start={state.active.date} className='flex-1 text-center' />
                   )}
@@ -598,11 +573,14 @@ export default function App() {
               </Button>
             </DialogClose>
           </SectionHeading>
-          <DialogDescription srOnly>Appearance, body weight and app updates.</DialogDescription>
+          <DialogDescription srOnly>
+            Appearance, feedback, body weight and app updates.
+          </DialogDescription>
           {errors('settings')}
           {feedback('mt-5')}
           <div className='mt-5 space-y-10'>
             <AppearanceSettings settings={appearance} />
+            <FeedbackSettings />
             {/* Personal history: unmounted while sync is locked, like other owned data. */}
             {hydrated && !sync.locked && !recoveryError && (
               <BodyWeightSettings repository={repository} disabled={disabled} />
@@ -652,6 +630,7 @@ export default function App() {
               disabled={disabled}
               onClick={() => {
                 if (!pendingWorkout) return;
+                cue('start');
                 void setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
                 setPendingWorkout(null);
                 setExpanded(true);
@@ -712,6 +691,12 @@ export default function App() {
           <DialogCornerClose label='Close' />
         </DialogContent>
       </Dialog>
+      {/* Mounted once. On phones toasts drop in from the top, under the status bar. */}
+      <Toaster
+        position={mobile ? 'top-center' : 'bottom-right'}
+        offset={mobile ? {top: 'calc(env(safe-area-inset-top) + 16px)'} : undefined}
+        mobileOffset={{top: 'calc(env(safe-area-inset-top) + 16px)'}}
+      />
     </div>
   );
 }

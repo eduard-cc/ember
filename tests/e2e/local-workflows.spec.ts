@@ -3,6 +3,15 @@ import {expect, test} from '@playwright/test';
 import {addExercise, navigate} from '../navigation';
 
 test('templates can be created edited started and deleted', async ({page}) => {
+  // Record haptics: confirming the template over the open draft plays the start cue.
+  await page.addInitScript(() => {
+    const record = window as unknown as {vibrations: number[][]};
+    record.vibrations = [];
+    navigator.vibrate = (pattern) => {
+      record.vibrations.push(typeof pattern === 'number' ? [pattern] : [...pattern]);
+      return true;
+    };
+  });
   await page.goto('/?demo=1');
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template'}).click();
@@ -17,8 +26,12 @@ test('templates can be created edited started and deleted', async ({page}) => {
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await page.getByRole('button', {name: 'Open template Edited session', exact: true}).click();
   await page.getByRole('button', {name: 'Start template Edited session', exact: true}).click();
+  await page.evaluate(() => ((window as unknown as {vibrations: number[][]}).vibrations = []));
   await page.getByRole('button', {name: 'Replace active draft'}).click();
   await expect(page.getByLabel('workout name', {exact: false})).toHaveValue('Edited session');
+  expect(
+    await page.evaluate(() => (window as unknown as {vibrations: number[][]}).vibrations),
+  ).toEqual([[18, 60, 10]]);
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Delete template Edited session'}).click();
   await page.getByRole('button', {name: 'Confirm delete template'}).click();
