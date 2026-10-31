@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import {demoTemplates} from '../../src/domain/demo';
-import {navigate} from '../navigation';
+import {closeCelebration, navigate} from '../navigation';
 import {login, revokeAndLock, syncNow} from './helpers';
 
 test('template preview is unmounted when local trust is revoked', async ({page}) => {
@@ -62,6 +62,7 @@ test('offline finish survives reopen and fresh independent peer sees only comple
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Finish workout', exact: true}).click();
   await page.getByRole('button', {name: 'Save finished workout', exact: true}).click();
+  await closeCelebration(page);
   await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   await page.close();
   await context.setOffline(false);
@@ -111,6 +112,7 @@ test('revoked legacy session retains pending changes and untrusted local data st
   await page.getByRole('button', {name: 'Finish workout', exact: true}).click();
   await page.getByRole('button', {name: 'Save finished workout', exact: true}).click();
   await syncNow(page);
+  await closeCelebration(page);
   await expect(page.locator('.app-shell')).toHaveAttribute(
     'data-sync',
     'Offline or server unavailable · changes pending',

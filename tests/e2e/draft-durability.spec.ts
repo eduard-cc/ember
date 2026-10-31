@@ -1,6 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import {demoTemplates} from '../../src/domain/demo';
+import {closeCelebration} from '../navigation';
 
 const legacy = {
   version: 1,
@@ -81,6 +82,7 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
   await page.getByRole('button', {name: 'Finish workout'}).click();
   await page.getByRole('button', {name: 'Save finished workout'}).click();
   await expect(page.getByRole('alert')).toContainText('Workout was not finished');
+  await expect(page.getByRole('dialog', {name: 'Workout complete'})).toHaveCount(0);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
   const readCounts = () =>
     page.evaluate(async () => {
@@ -104,6 +106,7 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
   expect(await readCounts()).toEqual([1, 0, 1]);
   await page.evaluate(() => (window as unknown as {restoreUUIDTest: () => void}).restoreUUIDTest());
   await page.getByRole('button', {name: 'Save finished workout'}).click();
+  await closeCelebration(page);
   await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   expect(await readCounts()).toEqual([0, 1, 2]);
 });

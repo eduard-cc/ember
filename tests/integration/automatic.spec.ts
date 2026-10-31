@@ -2,6 +2,7 @@ import {type Page, expect, test} from '@playwright/test';
 import {createRequire} from 'node:module';
 
 import {demoTemplates} from '../../src/domain/demo';
+import {closeCelebration} from '../navigation';
 
 const template = {...demoTemplates[0], id: 'automatic-template', name: 'Automatic template'};
 const finished = {
@@ -126,6 +127,7 @@ test('Tailscale reconnect automatically renews an expired session and sends offl
     .click();
   await page.getByRole('button', {name: 'Finish workout', exact: true}).click();
   await page.getByRole('button', {name: 'Save finished workout', exact: true}).click();
+  await closeCelebration(page);
   await expect.poll(async () => (await snapshot(page)).pending.length).toBe(1);
   const local = await snapshot(page);
   expect(local.state.finished).toHaveLength(1);

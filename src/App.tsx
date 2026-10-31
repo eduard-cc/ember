@@ -6,6 +6,7 @@ import {AppearanceSettings, useAppearance} from './components/AppearanceSettings
 import {BodyWeightSettings} from './components/BodyWeightSettings';
 import {ElapsedTimer} from './components/ElapsedTimer';
 import {FeedbackSettings} from './components/FeedbackSettings';
+import {type Celebration, FinishCelebration} from './components/FinishCelebration';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {SyncStatus} from './components/SyncStatus';
 import {errorBannerClass, noticeClass} from './components/banner';
@@ -34,6 +35,7 @@ import {RollingNumber} from './components/ui/rolling-number';
 import {SectionHeading} from './components/ui/section-heading';
 import {Toaster} from './components/ui/sonner';
 import {routineTargets} from './components/workout-targets';
+import {newRecords} from './domain/finish-summary';
 import {countedSets} from './domain/sets';
 import type {Workout} from './domain/types';
 import {cue} from './feedback';
@@ -123,6 +125,9 @@ export default function App() {
   };
   const mobile = useIsMobile();
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
+  // A sync lock hides history, so the celebration ends there rather than replaying on unlock.
+  if (celebration && sync.locked) setCelebration(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [deletingSets, setDeletingSets] = useState(false);
   const [pendingWorkout, setPendingWorkout] = useState<Workout | null>(null);
@@ -247,10 +252,13 @@ export default function App() {
   const finish = async () => {
     if (!completed || deletingSets) return;
     const workout = await finishWorkout();
+    // Only a committed finish celebrates; a failed one keeps the confirmation and its error.
     if (workout) {
       setConfirmFinish(false);
       setFocusedId(workout.id);
       setView('History');
+      setExercise(null);
+      setCelebration({workout, records: newRecords(workout, allDataset)});
     }
   };
   const disabled = !hydrated || readOnly || sync.locked || maintenance || !!recoveryError;
@@ -285,6 +293,7 @@ export default function App() {
   useBackLayer(!!pendingWorkout && !sync.locked, () => setPendingWorkout(null));
   useBackLayer(confirmCancel && !sync.locked, () => setConfirmCancel(false));
   useBackLayer(confirmFinish && !sync.locked, () => setConfirmFinish(false));
+  useBackLayer(!!celebration, () => setCelebration(null));
   // In Settings the banners keep the 20px (and the issue text the 14px) top margin of the panel's
   // old `> .notice`, `> section` and `.dialog-content p` rules.
   const feedback = (className?: string) =>
@@ -764,6 +773,8 @@ export default function App() {
           <ResponsiveDialogCornerClose label='Close' />
         </ResponsiveDialogContent>
       </ResponsiveDialog>
+      {/* Over History, after the finish committed; a sync lock ends it, like other history views. */}
+      <FinishCelebration celebration={celebration} onDone={() => setCelebration(null)} />
       {/* Mounted once. On phones toasts drop in from the top, under the status bar. */}
       <Toaster
         position={mobile ? 'top-center' : 'bottom-right'}

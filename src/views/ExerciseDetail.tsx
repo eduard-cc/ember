@@ -9,11 +9,11 @@ import {TextAction, dataTableClass} from '../components/ui/data-table';
 import {EmptyState} from '../components/ui/empty-state';
 import {ListLabel} from '../components/ui/list-label';
 import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
-import {isTimed} from '../domain/sets';
-import type {Dataset, ExerciseType, SetRecord} from '../domain/types';
+import type {Dataset, SetRecord} from '../domain/types';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
+import {setLabel} from '../utils/set-label';
 import {ExerciseCharts} from './ExerciseCharts';
 
 const tabs = ['About', 'History', 'Charts', 'Records'] as const;
@@ -21,13 +21,6 @@ type Tab = (typeof tabs)[number];
 const kg = (n: number) => `${Number(n.toFixed(1))} kg`;
 const kgReps = (n: number) => `${Number(n.toFixed(1))} kg·reps`;
 const sessionHeadClass = 'text-[12px] font-medium text-muted-foreground';
-
-function setLabel(set: SetRecord, type: ExerciseType) {
-  if (isTimed(type))
-    return `${set.seconds ?? '—'} s${set.distance !== null ? ` · ${set.distance} km` : ''}`;
-  if (type === 'bodyweight' || set.weight === null) return `BW × ${set.reps ?? '—'}`;
-  return `${set.weight} kg${type === 'assisted' ? ' assist.' : ''} × ${set.reps ?? '—'}`;
-}
 
 function Fact({label, value}: {label: string; value: string}) {
   return (

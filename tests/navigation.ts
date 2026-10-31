@@ -85,3 +85,10 @@ export async function deleteSet(page: Page, row: Locator) {
       .click();
   else await row.getByRole('button', {name: /^Delete /}).click();
 }
+
+/** Close the finish celebration with Done, onto History. */
+export async function closeCelebration(page: Page) {
+  const celebration = page.getByRole('dialog', {name: 'Workout complete'});
+  await celebration.getByRole('button', {name: 'Done', exact: true}).click();
+  await expect(celebration).toBeHidden();
+}

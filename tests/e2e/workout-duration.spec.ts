@@ -1,6 +1,6 @@
 import {devices, expect, test} from '@playwright/test';
 
-import {addExercise} from '../navigation';
+import {addExercise, closeCelebration} from '../navigation';
 
 test.use({...devices['Pixel 6']});
 
@@ -18,6 +18,7 @@ test('finishing saves elapsed minutes in history on Pixel 6', async ({page}, tes
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Finish workout'}).click();
   await page.getByRole('button', {name: 'Save finished workout'}).click();
+  await closeCelebration(page);
   const card = page.locator('.history-card', {hasText: 'Synthetic timed workout'});
   await expect(card.locator('.eyebrow')).toContainText('· 45 MIN');
   await expect(card).toContainText('1 completed set');
@@ -45,6 +46,7 @@ test('a workout finished within a minute shows under one minute on Pixel 6', asy
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Finish workout'}).click();
   await page.getByRole('button', {name: 'Save finished workout'}).click();
+  await closeCelebration(page);
   const card = page.locator('.history-card', {hasText: 'Synthetic quick workout'});
   await expect(card.locator('.eyebrow')).toContainText('· <1 MIN');
   await page.reload();
