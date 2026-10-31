@@ -197,7 +197,8 @@ test('the ⋯ menu stays a separate control next to the details button', async (
   await tap(page, b);
   const menu = page.getByRole('menu', {name: 'Exercise options for Seated Row (Cable)'});
   await expect(menu).toBeVisible();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
+  // The menu (a drawer on phones) opens, not the exercise details.
+  await expect(page.locator('.exercise-detail-panel')).toHaveCount(0);
   await menu.getByRole('menuitem', {name: 'Remove exercise'}).click();
   await expect(sheet.locator('.exercise-card h2')).toHaveText(
     demo.filter((name) => name !== 'Seated Row (Cable)'),

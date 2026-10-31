@@ -1,5 +1,7 @@
 import {expect, test} from '@playwright/test';
 
+import {deleteSet} from '../navigation';
+
 test('deleting the only set of a duplicate-named exercise removes exactly that set, without an undo banner', async ({
   page,
 }) => {
@@ -36,14 +38,7 @@ test('deleting the only set of a duplicate-named exercise removes exactly that s
   });
   await page.reload();
   const exercises = page.locator('.exercise-card');
-  await exercises
-    .nth(1)
-    .getByRole('button', {name: /Actions for/})
-    .click();
-  await exercises
-    .nth(1)
-    .getByRole('button', {name: /Delete/})
-    .click();
+  await deleteSet(page, exercises.nth(1).locator('.set-row:not(.set-head)'));
   await exercises
     .first()
     .getByLabel(/Weight/)
@@ -138,12 +133,10 @@ test('mobile ledger reaches first set quickly with wide fields and explicit empt
     'aria-pressed',
     'false',
   );
-  expect(
-    await row
-      .getByRole('button', {name: /Complete/})
-      .locator('svg')
-      .count(),
-  ).toBe(0);
+  // An empty square: the check is not drawn until the set is confirmed.
+  const marker = row.getByRole('button', {name: /Complete/}).locator('.check-box');
+  await expect(marker).not.toHaveAttribute('data-done');
+  await expect(marker.locator('.check-path')).toHaveCSS('stroke-dashoffset', '24px');
   for (const control of await row.locator('button:visible, input').all()) {
     const rect = (await control.boundingBox())!;
     expect(rect.width).toBeGreaterThanOrEqual(44);
@@ -235,11 +228,11 @@ test('set number exposes keyboard-accessible deletion of exactly that set', asyn
   await weights.nth(2).fill('33');
   const action = exercises.nth(1).getByRole('button', {name: /Actions for .* set 1/});
   await action.focus();
+  // Enter opens the set's actions with Delete focused (the drawer's Delete set on phones, the
+  // row's Delete from 1000px); Enter again deletes.
   await page.keyboard.press('Enter');
-  await exercises
-    .nth(1)
-    .getByRole('button', {name: /Delete .* set 1/})
-    .click();
+  await expect(page.locator(':focus')).toHaveText(/^Delete/);
+  await page.keyboard.press('Enter');
   await expect(weights).toHaveCount(2);
   await expect(weights.nth(0)).toHaveValue('22');
   await expect(weights.nth(1)).toHaveValue('33');

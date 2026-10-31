@@ -13,15 +13,24 @@ import {Button} from './components/ui/button';
 import {ContentFieldset} from './components/ui/content-fieldset';
 import {
   Dialog,
-  DialogActions,
   DialogClose,
   DialogContent,
-  DialogCornerClose,
   DialogDescription,
   DialogTitle,
 } from './components/ui/dialog';
 import {Input} from './components/ui/input';
 import {ListLabel} from './components/ui/list-label';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogClose,
+  ResponsiveDialogContent,
+  ResponsiveDialogCornerClose,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from './components/ui/responsive-dialog';
+import {RollingNumber} from './components/ui/rolling-number';
 import {SectionHeading} from './components/ui/section-heading';
 import {Toaster} from './components/ui/sonner';
 import {routineTargets} from './components/workout-targets';
@@ -33,6 +42,7 @@ import {useBackLayer} from './state/back';
 import {newWorkout, useWorkoutState} from './state/workout';
 import {useSync} from './sync/use-sync';
 import {cn} from './utils/cn';
+import {reducedMotion} from './utils/motion';
 import {plural} from './utils/plural';
 import {ExerciseDetail} from './views/ExerciseDetail';
 import {ExercisesView} from './views/ExercisesView';
@@ -42,6 +52,8 @@ import {TemplatesView} from './views/TemplatesView';
 import {WorkoutView} from './views/WorkoutView';
 
 const stickyClass = 'sticky top-0 z-3';
+/** Drawer footers stack the primary action on top, like `DialogActions` on phones. */
+const confirmFooter = 'max-desk:flex-col-reverse max-desk:*:min-h-12';
 // The bar is a bottom tab strip below the `desk` breakpoint and a 48px header from it up. It is
 // hidden while an input is focused on a phone, because the keyboard covers it.
 const appBarClass = [
@@ -102,7 +114,13 @@ export default function App() {
   );
   const [view, setView] = useState<View>('Workout');
   const [exercise, setExercise] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpandedState] = useState(true);
+  const [sheetMotionArmed, armSheetMotion] = useState(false);
+  /** Every expand/minimize is the owner's action, so from here on the sheet slides. */
+  const expand = (next: boolean) => {
+    armSheetMotion(true);
+    setExpandedState(next);
+  };
   const mobile = useIsMobile();
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -198,7 +216,7 @@ export default function App() {
   const source = (id: string) => {
     go('History');
     setFocusedId(id);
-    setExpanded(false);
+    expand(false);
   };
   const updateActive = (update: (active: Workout) => Workout) =>
     setState((s) => (s.active ? {...s, active: update(s.active)} : s));
@@ -208,7 +226,7 @@ export default function App() {
       cue('start');
       void setState((s) => ({...s, active: newWorkout(workout)}));
       setView('Workout');
-      setExpanded(true);
+      expand(true);
     }
   };
   const saveTemplate = async (workout: Workout) => {
@@ -237,9 +255,31 @@ export default function App() {
   };
   const disabled = !hydrated || readOnly || sync.locked || maintenance || !!recoveryError;
   const showSheet = !!state.active && expanded && !sync.locked;
+  // On phones the sheet slides up when the owner opens it and down when it is minimized. Only
+  // user actions animate (`expand`), so a draft restored at launch is simply there. While it
+  // slides down it stays drawn but inert, then hides.
+  const [sheetWasShown, setSheetWasShown] = useState(showSheet);
+  const [sheetClosing, setSheetClosing] = useState(false);
+  if (sheetWasShown !== showSheet) {
+    setSheetWasShown(showSheet);
+    setSheetClosing(
+      !showSheet &&
+        sheetMotionArmed &&
+        !!state.active &&
+        !sync.locked &&
+        mobile &&
+        !reducedMotion(),
+    );
+  }
+  useEffect(() => {
+    if (!sheetClosing) return;
+    const timer = setTimeout(() => setSheetClosing(false), 300);
+    return () => clearTimeout(timer);
+  }, [sheetClosing]);
+  const sheetDrawn = showSheet || (sheetClosing && !!state.active);
   // Back closes the newest layer; on a main tab with nothing open it leaves the app as before.
   // The expanded workout counts only on mobile, where it covers the tabs.
-  useBackLayer(showSheet && mobile, () => setExpanded(false));
+  useBackLayer(showSheet && mobile, () => expand(false));
   useBackLayer(view === 'Exercises' && !!exercise, () => setExercise(null));
   useBackLayer(settingsOpen, () => setSettingsOpen(false));
   useBackLayer(!!pendingWorkout && !sync.locked, () => setPendingWorkout(null));
@@ -443,12 +483,20 @@ export default function App() {
               className='resume-bar group min-h-16 w-full shrink-0 justify-start gap-3 border-0 border-t bg-card px-[18px] py-2.5 text-left text-foreground shadow-[inset_3px_0_0_var(--color-primary)]'
               variant='secondary'
               aria-label={`Resume ${state.active.name}`}
-              onClick={() => setExpanded(true)}
+              onClick={() => expand(true)}
             >
               <ChevronUp size={20} className='text-primary' />
               <div className='min-w-0'>
                 <strong className='block truncate font-semibold'>{state.active.name}</strong>
                 <span className='block text-[12px] text-muted-foreground group-[:hover:not(:disabled)]:text-foreground'>
+                  {/* Live: the workout is still running. */}
+                  <span
+                    className='relative mr-1.5 inline-grid size-2 -translate-y-px place-items-center align-middle'
+                    aria-hidden='true'
+                  >
+                    <span className='live-dot-ping absolute size-2 animate-ping rounded-full bg-primary/60' />
+                    <span className='live-dot size-1.5 rounded-full bg-primary' />
+                  </span>
                   <ElapsedTimer
                     className='text-[12px] group-[:hover:not(:disabled)]:text-foreground'
                     start={state.active.date}
@@ -464,21 +512,25 @@ export default function App() {
           <section
             className='workout-sheet flex h-full w-[500px] shrink-0 flex-col border-l border-border bg-background max-desk:absolute max-desk:inset-0 max-desk:z-5 max-desk:w-full max-desk:border-0'
             aria-label='Active workout'
-            hidden={!showSheet}
+            hidden={!sheetDrawn}
+            inert={!showSheet}
+            aria-hidden={!showSheet || undefined}
+            data-state={showSheet ? 'open' : 'closed'}
+            data-motion={sheetMotionArmed || undefined}
           >
             <div className='flex h-full flex-col'>
-              <header className='workout-top shrink-0 border-b border-border bg-card px-3 pt-2 pb-3 narrow:px-2'>
+              <header className='workout-top relative shrink-0 border-b border-border bg-card px-3 pt-2 pb-3 narrow:px-2'>
                 <div className='flex items-center gap-1.5'>
                   <Button
                     variant='ghost'
                     size='icon'
                     aria-label='Minimize workout'
-                    onClick={() => setExpanded(false)}
+                    onClick={() => expand(false)}
                   >
                     <ChevronDown size={22} />
                   </Button>
                   {settingsButton()}
-                  {showSheet && (
+                  {sheetDrawn && (
                     <ElapsedTimer start={state.active.date} className='flex-1 text-center' />
                   )}
                   <Button
@@ -486,7 +538,10 @@ export default function App() {
                     className='min-w-[88px]'
                     aria-label='Finish workout'
                     disabled={disabled || deletingSets || !completed}
-                    onClick={() => setConfirmFinish(true)}
+                    onClick={() => {
+                      cue('tick');
+                      setConfirmFinish(true);
+                    }}
                   >
                     Finish
                   </Button>
@@ -503,16 +558,23 @@ export default function App() {
                     updateActive((active) => ({...active, name: event.target.value}))
                   }
                 />
-                {showSheet && (
+                {sheetDrawn && (
                   <div className='workout-meta mx-1 mt-1 flex items-center justify-between gap-2 text-[12px] text-muted-foreground tabular-nums'>
                     <span>
                       <strong className='font-medium text-foreground'>
-                        {completed} / {sets.length}
+                        <RollingNumber value={completed} /> / {sets.length}
                       </strong>{' '}
                       {sets.length === 1 ? 'set' : 'sets'} completed
                     </span>
                   </div>
                 )}
+                {/* Progress through the planned sets, over the header's bottom rule. */}
+                <div className='absolute inset-x-0 -bottom-px h-0.5 bg-border' aria-hidden='true'>
+                  <div
+                    className='workout-progress h-full origin-left bg-primary transition-transform duration-300 ease-(--ease-out)'
+                    style={{transform: `scaleX(${sets.length ? completed / sets.length : 0})`}}
+                  />
+                </div>
               </header>
               <div className='workout-scroll min-h-0 flex-1 [scroll-padding:14px_0_30px] overflow-y-auto overscroll-contain'>
                 <h2 className='sr-only'>Your workout</h2>
@@ -605,22 +667,26 @@ export default function App() {
           </div>
         </DialogContent>
       </Dialog>
-      <Dialog
+      {/* Confirmations: bottom drawers on phones, a centred dialog from 1000px. Phones put
+          the primary action on top; the first focus lands on the safe choice. */}
+      <ResponsiveDialog
         open={!!pendingWorkout && !sync.locked}
         onOpenChange={(open) => {
           if (!open) setPendingWorkout(null);
         }}
       >
-        <DialogContent>
-          <DialogTitle className='pr-7'>Replace your active workout?</DialogTitle>
-          <DialogDescription>
-            Your current workout will be discarded. All repeated sets start uncompleted.
-          </DialogDescription>
-          <DialogActions>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader className='pr-14 desk:pr-7'>
+            <ResponsiveDialogTitle>Replace your active workout?</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription className='mt-2'>
+              Your current workout will be discarded. All repeated sets start uncompleted.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter className={confirmFooter}>
             <Button
               onClick={() => {
                 setPendingWorkout(null);
-                setExpanded(true);
+                expand(true);
               }}
             >
               Resume current workout
@@ -633,53 +699,60 @@ export default function App() {
                 cue('start');
                 void setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
                 setPendingWorkout(null);
-                setExpanded(true);
+                expand(true);
               }}
             >
               Replace active draft
             </Button>
-          </DialogActions>
-          <DialogCornerClose label='Cancel replacement' />
-        </DialogContent>
-      </Dialog>
-      <Dialog open={confirmCancel && !sync.locked} onOpenChange={setConfirmCancel}>
-        <DialogContent>
-          <DialogTitle>Cancel this workout?</DialogTitle>
-          <DialogDescription>
-            {plural(sets.length, 'set')} will be discarded. Finished workouts are not affected.
-          </DialogDescription>
-          <DialogActions>
-            <DialogClose asChild>
+          </ResponsiveDialogFooter>
+          <ResponsiveDialogCornerClose label='Cancel replacement' />
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+      <ResponsiveDialog open={confirmCancel && !sync.locked} onOpenChange={setConfirmCancel}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Cancel this workout?</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription className='mt-2'>
+              {plural(sets.length, 'set')} will be discarded. Finished workouts are not affected.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter className={confirmFooter}>
+            <ResponsiveDialogClose asChild>
               <Button>Keep logging</Button>
-            </DialogClose>
+            </ResponsiveDialogClose>
             <Button
               variant='danger'
               disabled={disabled || deletingSets}
               onClick={async () => {
-                if (await setState((s) => ({...s, active: null}))) setConfirmCancel(false);
+                if (await setState((s) => ({...s, active: null}))) {
+                  cue('delete');
+                  setConfirmCancel(false);
+                }
               }}
             >
               Discard workout
             </Button>
-          </DialogActions>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={confirmFinish && !sync.locked} onOpenChange={setConfirmFinish}>
-        <DialogContent>
-          <DialogTitle className='pr-7'>Finish this workout?</DialogTitle>
-          {persistenceError && (
-            <p className='mt-3.5' role='alert'>
-              {persistenceError}
-            </p>
-          )}
-          <DialogDescription>
-            {plural(completed, 'completed set')} will be saved. {sets.length - completed}{' '}
-            uncompleted sets will be excluded.
-          </DialogDescription>
-          <DialogActions>
-            <DialogClose asChild>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+      <ResponsiveDialog open={confirmFinish && !sync.locked} onOpenChange={setConfirmFinish}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader className='pr-14 desk:pr-7'>
+            <ResponsiveDialogTitle>Finish this workout?</ResponsiveDialogTitle>
+            {persistenceError && (
+              <p className='mt-2' role='alert'>
+                {persistenceError}
+              </p>
+            )}
+            <ResponsiveDialogDescription className='mt-2'>
+              {plural(completed, 'completed set')} will be saved. {sets.length - completed}{' '}
+              uncompleted sets will be excluded.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter className={confirmFooter}>
+            <ResponsiveDialogClose asChild>
               <Button>Keep logging</Button>
-            </DialogClose>
+            </ResponsiveDialogClose>
             <Button
               variant='primary'
               disabled={disabled || deletingSets || !completed}
@@ -687,10 +760,10 @@ export default function App() {
             >
               Save finished workout
             </Button>
-          </DialogActions>
-          <DialogCornerClose label='Close' />
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+          <ResponsiveDialogCornerClose label='Close' />
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
       {/* Mounted once. On phones toasts drop in from the top, under the status bar. */}
       <Toaster
         position={mobile ? 'top-center' : 'bottom-right'}

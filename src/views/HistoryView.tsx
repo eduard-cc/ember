@@ -150,6 +150,7 @@ export function HistoryView({
                 </Button>
                 <OptionsMenu
                   label={`Workout options for ${workout.name} ${dateLabel(workout.date)}`}
+                  title={workout.name}
                   ref={(node) => {
                     if (node) menus.current.set(workout.id, node);
                     else menus.current.delete(workout.id);

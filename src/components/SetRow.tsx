@@ -1,8 +1,11 @@
 import {Ellipsis, Trash2} from 'lucide-react';
 import {type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
+import {cue} from '../feedback';
+import {useIsMobile} from '../hooks/use-is-mobile';
 import {cn} from '../utils/cn';
 import {reducedMotion} from '../utils/motion';
+import {ActionSheet} from './action-sheet';
 import {Button} from './ui/button';
 
 /** The five-column set grid, shared by the header row and each row's sliding content. */
@@ -47,7 +50,10 @@ export function SetRow({
   onDelete: () => void;
   onDeletingChange: (deleting: boolean) => void;
 }) {
+  const mobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  // Phones: the set number opens a drawer with Delete set; desktop reveals the swipe action.
+  const [sheet, setSheet] = useState(false);
   const row = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const action = useRef<HTMLButtonElement>(null);
@@ -98,6 +104,7 @@ export function SetRow({
       box = row.current;
     if (removing.current || disabled()) return;
     if (!el || !box) return;
+    cue('delete');
     if (!animate || reducedMotion()) return latestDelete.current();
     removing.current = true;
     latestDeletingChange.current(true);
@@ -162,7 +169,7 @@ export function SetRow({
       ref={row}
       className={cn(
         'set-row set-swipe relative touch-pan-y tabular-nums',
-        completed && 'set-complete bg-primary-tint',
+        completed && 'set-complete',
       )}
       data-open={open || undefined}
       onPointerDown={(event) => {
@@ -279,18 +286,21 @@ export function SetRow({
         if (event.key === 'Escape' && open) settle(false, false);
       }}
     >
-      <div
-        ref={content}
-        className={cn('set-swipe-content', SET_GRID, completed && 'bg-primary-tint')}
-      >
+      <div ref={content} className={cn('set-swipe-content', SET_GRID)}>
         <Button
           size='icon'
           variant='ghost'
           className={cn('set-index gap-0.5', completed && 'font-semibold text-primary')}
           ref={action}
           aria-label={`Actions for ${label}`}
-          aria-expanded={open}
+          aria-haspopup={mobile ? 'menu' : undefined}
+          aria-expanded={open || sheet}
           onClick={(event) => {
+            if (mobile && !open) {
+              cue('tick');
+              return setSheet(true);
+            }
+            if (!open) cue('tick');
             settle(!open, event.detail !== 0);
             if (!open && event.detail === 0) deleteAction.current?.focus({preventScroll: true});
           }}
@@ -304,7 +314,10 @@ export function SetRow({
           variant='ghost'
           className='desktop-remove hidden'
           aria-label={`Remove ${label}`}
-          onClick={onDelete}
+          onClick={() => {
+            cue('delete');
+            onDelete();
+          }}
         >
           <Trash2 size={14} />
         </Button>
@@ -323,6 +336,16 @@ export function SetRow({
           <span>Delete</span>
         </button>
       </div>
+      {mobile && (
+        <ActionSheet
+          open={sheet}
+          onOpenChange={setSheet}
+          title={label}
+          label={`Actions for ${label}`}
+          trigger={action}
+          actions={[{label: 'Delete set', icon: Trash2, danger: true, onSelect: () => remove()}]}
+        />
+      )}
     </div>
   );
 }

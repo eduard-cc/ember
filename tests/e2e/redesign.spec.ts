@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {addExercise, navigate, openSettings} from '../navigation';
+import {addExercise, navigate, openSettings, shownText} from '../navigation';
 import {resolve} from './colour-helpers';
 
 test('workout sheet minimizes to a named resume bar preserving the draft and ledger scroll', async ({
@@ -39,7 +39,14 @@ test('workout sheet minimizes to a named resume bar preserving the draft and led
   await expect(page.getByRole('navigation', {name: 'Main navigation'})).toBeVisible();
   await page.getByRole('button', {name: 'History', exact: true}).click();
   await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
-  await page.getByRole('button', {name: /Resume Upper body A/}).click();
+  const resume = page.getByRole('button', {name: /Resume Upper body A/});
+  await expect(resume.locator('.live-dot')).toBeVisible();
+  await resume.click();
+  if (info.project.name === 'mobile') {
+    // The sheet slides back up over the library and settles flush with the screen.
+    await expect(sheet).toHaveAttribute('data-motion');
+    await expect.poll(async () => (await sheet.boundingBox())!.y).toBe(0);
+  }
   await expect(page.getByLabel(/Weight for .* set 1/).first()).toHaveValue('42.5');
   await expect(page.getByRole('button', {name: /Uncomplete .* set 1/}).first()).toHaveAttribute(
     'aria-pressed',
@@ -200,8 +207,8 @@ test('an unrecorded weight shows the nearest actual lighter and heavier sets wit
   await expect(lighter).toContainText(/60 kg × 9 · \d/);
   await expect(heavier).toContainText(/62\.5 kg × 8 · \d/);
   const view = heavier.getByRole('button', {name: /View source workout/});
-  const box = (await view.boundingBox())!;
-  expect(box.height).toBeGreaterThanOrEqual(44);
+  // Measured once the open animation has settled (it zooms in from 95%).
+  await expect.poll(async () => (await view.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   // Nothing in the sheet may scroll sideways on a phone.
   expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   await dialog.getByRole('button', {name: 'Close previous sets'}).click();
@@ -225,13 +232,42 @@ test('exercise Done survives value edits and reload but a new set needs its own 
 }) => {
   await page.goto('/?demo=1');
   const exercise = page.locator('.exercise-card').first();
-  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText(
-    '0 / 3 sets',
-  );
-  for (let set = 1; set <= 3; set++)
+  const progress = page.locator('.workout-progress');
+  const meta = page.locator('.workout-meta');
+  await expect
+    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .toBe('0 / 3 sets');
+  await expect(progress).toHaveCSS('transform', 'matrix(0, 0, 0, 1, 0, 0)');
+  await expect(exercise.locator('.exercise-badge')).toHaveCSS('opacity', '0');
+  // Count the heading's done flash: it plays once, when the exercise's last set is checked.
+  await page.evaluate(() => {
+    const flashes: string[] = [];
+    (window as unknown as {flashes: string[]}).flashes = flashes;
+    document.addEventListener('animationstart', (event) => flashes.push(event.animationName), true);
+  });
+  for (let set = 1; set <= 3; set++) {
     await exercise.getByRole('button', {name: new RegExp(`^Complete .* set ${set}$`)}).click();
-  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
+    await expect(
+      exercise
+        .locator('.set-row:not(.set-head)')
+        .nth(set - 1)
+        .locator('.check-box'),
+    ).toHaveAttribute('data-done');
+  }
+  await expect
+    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .toBe('Done');
   await expect(exercise.locator('.set-complete')).toHaveCount(3);
+  await expect(exercise.locator('.exercise-badge')).toHaveCSS('opacity', '1');
+  await expect
+    .poll(() => page.evaluate(() => [...(window as unknown as {flashes: string[]}).flashes].sort()))
+    .toEqual(['check-pop', 'check-pop', 'check-pop', 'done-flash']);
+  // The header's progress bar fills by the share of checked sets.
+  const [done, total] = (await shownText(meta)).match(/\d+/g)!.map(Number);
+  expect(done).toBe(3);
+  await expect
+    .poll(() => progress.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a))
+    .toBeCloseTo(3 / total, 3);
   const weight = exercise.getByLabel(/Weight/).first();
   const reps = exercise.getByLabel(/Reps/).first();
   const tick = exercise.getByRole('button', {name: /Uncomplete .* set 1/});
@@ -239,34 +275,40 @@ test('exercise Done survives value edits and reload but a new set needs its own 
   await expect(tick).toHaveAttribute('aria-pressed', 'true');
   await reps.fill('10');
   await expect(tick).toHaveAttribute('aria-pressed', 'true');
-  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
+  await expect
+    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .toBe('Done');
   // A blank or invalid value unticks the set; a valid value afterwards needs a fresh tick.
   await reps.fill('');
   await expect(tick).toHaveCount(0);
-  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText(
-    '2 / 3 sets',
-  );
+  await expect
+    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .toBe('2 / 3 sets');
   await reps.fill('10');
   await expect(exercise.getByRole('button', {name: /^Complete .* set 1$/})).toHaveAttribute(
     'aria-pressed',
     'false',
   );
   await exercise.getByRole('button', {name: /^Complete .* set 1$/}).click();
-  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
+  await expect
+    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .toBe('Done');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
   await expect(weight).toHaveValue('67.5');
   await expect(reps).toHaveValue('10');
-  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText('Done');
+  await expect
+    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .toBe('Done');
   await tick.click();
-  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText(
-    '2 / 3 sets',
-  );
+  await expect
+    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .toBe('2 / 3 sets');
   await exercise.getByRole('button', {name: /^Complete /}).click();
   await exercise.getByRole('button', {name: 'Add set', exact: true}).click();
-  await expect(exercise.getByRole('status', {name: 'Exercise completion'})).toHaveText(
-    '3 / 4 sets',
-  );
+  await expect
+    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .toBe('3 / 4 sets');
   await expect(exercise.getByRole('button', {name: /Complete .* set 4/})).toHaveAttribute(
     'aria-pressed',
     'false',
@@ -443,6 +485,26 @@ test('sounds and haptics start on, play when a workout starts and each switch pe
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   expect(await cues()).toEqual({vibrations: [[18, 60, 10]], audioContexts: 1});
+  // Typing plays nothing; each check climbs, the exercise's last check chimes, an untick drops.
+  await addExercise(page, 'Squat (Barbell)');
+  for (const set of [1, 2, 3]) {
+    await page.getByLabel(`Weight for Squat (Barbell) set ${set}`).fill('100');
+    await page.getByLabel(`Reps for Squat (Barbell) set ${set}`).fill('5');
+  }
+  expect((await cues()).vibrations).toEqual([[18, 60, 10]]);
+  for (const set of [1, 2, 3])
+    await page.getByRole('button', {name: `Complete Squat (Barbell) set ${set}`}).click();
+  await expect
+    .poll(async () => (await cues()).vibrations)
+    .toEqual([[18, 60, 10], [12], [12], [12], [12, 50, 18]]);
+  await page.getByRole('button', {name: 'Uncomplete Squat (Barbell) set 1'}).click();
+  // Opening ⋯ ticks.
+  await page.locator('button[aria-label="Exercise options for Squat (Barbell)"]').click();
+  await expect
+    .poll(async () => (await cues()).vibrations)
+    .toEqual([[18, 60, 10], [12], [12], [12], [12, 50, 18], [6], [6]]);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toHaveCount(0);
 
   await openSettings(page);
   const settings = page.getByRole('dialog', {name: 'Settings', exact: true});
@@ -620,9 +682,9 @@ test('active exercise headers show the name and set completion for every exercis
   await expect(headings).toHaveCount(8);
   for (const heading of await headings.all()) {
     await expect(heading.getByRole('heading')).toHaveText(/\S/);
-    await expect(heading.getByRole('status', {name: 'Exercise completion'})).toHaveText(
-      /^0 \/ \d+ sets?$/,
-    );
+    await expect
+      .poll(() => shownText(heading.getByRole('status', {name: 'Exercise completion'})))
+      .toMatch(/^0 \/ \d+ sets?$/);
   }
 });
 

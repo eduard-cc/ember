@@ -1,5 +1,5 @@
 import {Check, Plus} from 'lucide-react';
-import {type KeyboardEvent, useCallback, useLayoutEffect, useRef, useState} from 'react';
+import {type KeyboardEvent, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 
 import {ExercisePicker} from '../components/AddExercise';
@@ -12,16 +12,18 @@ import {SET_GRID, SetRow} from '../components/SetRow';
 import {Button} from '../components/ui/button';
 import {ContentFieldset} from '../components/ui/content-fieldset';
 import {Dialog, DialogContent, DialogDescription, DialogTitle} from '../components/ui/dialog';
+import {RollingNumber} from '../components/ui/rolling-number';
 import {moveItem} from '../domain/reorder';
 import {countedSets, isTimed, validSet} from '../domain/sets';
 import type {Dataset, ExerciseLog, SetRecord, Workout} from '../domain/types';
+import {cue} from '../feedback';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
 import {ExerciseDetail} from './ExerciseDetail';
 
 const titleClass =
-  'exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.exercise-thumb]:col-1 [&>.exercise-thumb]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere]';
+  'exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.thumb-slot]:col-1 [&>.thumb-slot]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere]';
 /** Ref callback keeping `map` in step with the mounted element for `id`. */
 const register =
   <T,>(map: Map<string, T>, id: string) =>
@@ -116,6 +118,7 @@ export function WorkoutView({
   // (next, else previous), or to Add exercise when the list is empty.
   const list = useRef<HTMLDivElement>(null);
   const removeExercise = (exerciseId: string) => {
+    cue('delete');
     const ids = workout.exercises.map((ex) => identity(ex));
     const at = ids.indexOf(exerciseId);
     const neighbour = ids[at + 1] ?? ids[at - 1];
@@ -251,13 +254,51 @@ export function WorkoutView({
             ),
       ),
     }));
+  /**
+   * An explicit tick or untick. The completion cue climbs one step per checked set in the
+   * workout; finishing an exercise's last set adds the exercise chime just after it.
+   */
+  const toggleSet = (ei: number, si: number) => {
+    const ex = workout.exercises[ei];
+    const completing = !ex.sets[si].completed;
+    edit(ei, si, {completed: completing});
+    if (!completing) return cue('unset');
+    const checkedBefore = workout.exercises.reduce((n, item) => n + countedSets(item).length, 0);
+    cue('set', checkedBefore);
+    const exerciseDone = ex.sets.every(
+      (set, j) => j === si || (set.completed && validSet(set, ex.type)),
+    );
+    if (exerciseDone) window.setTimeout(() => cue('exercise'), 160);
+  };
   /** Enter on a set's last field ticks it when valid, then leaves the field. */
   const completeAndBlur = (event: KeyboardEvent<HTMLInputElement>, ei: number, si: number) => {
     const ex = workout.exercises[ei];
     const set = ex.sets[si];
-    if (!set.completed && validSet(set, ex.type)) edit(ei, si, {completed: true});
+    if (!set.completed && validSet(set, ex.type)) toggleSet(ei, si);
     event.currentTarget.blur();
   };
+  // An exercise whose sets are all checked flashes its heading once, when it becomes done.
+  const wasDone = useRef<Map<string, boolean> | null>(null);
+  useEffect(() => {
+    const before = wasDone.current;
+    const now = new Map<string, boolean>();
+    for (const ex of workout.exercises) {
+      const done = ex.sets.length > 0 && countedSets(ex).length === ex.sets.length;
+      now.set(identity(ex), done);
+      const heading = cards.current
+        .get(identity(ex))
+        ?.querySelector<HTMLElement>('.exercise-heading');
+      // Not on first render (a resumed draft), and not when a replaced or new card mounts done.
+      if (!before || !done || before.get(identity(ex)) !== false || !heading) continue;
+      delete heading.dataset.doneFlash;
+      void heading.offsetWidth;
+      heading.dataset.doneFlash = '';
+      heading.addEventListener('animationend', () => delete heading.dataset.doneFlash, {
+        once: true,
+      });
+    }
+    wasDone.current = now;
+  });
   // While an exercise is held the compact list stands in for the cards. They stay mounted but
   // hidden, so dropping doesn't rebuild every set row (and its history lookup) mid-animation.
   return (
@@ -301,7 +342,18 @@ export function WorkoutView({
         const caption = targetsOnly && loadCaption(ex);
         const title = (
           <>
-            <ExerciseThumb name={ex.name} className='size-10' />
+            <span className='thumb-slot relative'>
+              <ExerciseThumb name={ex.name} className='size-10' />
+              {!targetsOnly && (
+                <span
+                  className='exercise-badge absolute -right-1.5 -bottom-1.5 grid size-5 place-items-center bg-primary text-primary-foreground'
+                  data-shown={done || undefined}
+                  aria-hidden='true'
+                >
+                  <Check size={14} strokeWidth={3.5} />
+                </span>
+              )}
+            </span>
             <span id={`${identity(ex)}-name`}>{ex.name}</span>
           </>
         );
@@ -315,6 +367,8 @@ export function WorkoutView({
             <header
               className='exercise-heading mb-1 grid grid-cols-[40px_minmax(0,1fr)_auto] grid-rows-[minmax(22px,auto)_minmax(22px,auto)] items-center gap-x-2 select-none [-webkit-touch-callout:none]'
               onPointerDown={(event) => {
+                // Presses inside the ⋯ drawer bubble here through React's portal tree.
+                if (!event.currentTarget.contains(event.target as Node)) return;
                 // ⋯ keeps its own press; only the name, drawing and status lift the card.
                 if ((event.target as HTMLElement).closest('.exercise-menu')) return;
                 if (workout.exercises.length < 2) return;
@@ -359,7 +413,9 @@ export function WorkoutView({
                         Done
                       </>
                     ) : (
-                      `${checked} / ${plural(ex.sets.length, 'set')}`
+                      <>
+                        <RollingNumber value={checked} /> / {plural(ex.sets.length, 'set')}
+                      </>
                     )}
                   </span>
                 )}
@@ -470,21 +526,34 @@ export function WorkoutView({
                   ) : (
                     <Button
                       size='icon'
-                      className='set-check h-11 w-11 justify-self-end'
-                      variant={set.completed ? 'primary' : 'secondary'}
+                      className='set-check h-11 w-11 justify-self-end bg-transparent hover:bg-transparent'
+                      variant='ghost'
                       aria-pressed={!!set.completed}
                       aria-label={`${set.completed ? 'Uncomplete' : 'Complete'} ${ex.name} set ${si + 1}`}
                       disabled={!set.completed && !validSet(set, ex.type)}
-                      onClick={() => edit(ei, si, {completed: !set.completed})}
+                      onClick={() => toggleSet(ei, si)}
                     >
-                      {set.completed ? (
-                        <Check size={19} />
-                      ) : (
-                        <span
-                          className='unchecked-marker h-[30px] w-[30px] border-[1.5px] border-muted-foreground bg-card'
-                          aria-hidden='true'
-                        />
-                      )}
+                      <span
+                        className={cn(
+                          'check-box grid h-[30px] w-[30px] place-items-center border-[1.5px]',
+                          set.completed
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'unchecked-marker border-muted-foreground bg-card',
+                        )}
+                        data-done={set.completed || undefined}
+                        aria-hidden='true'
+                      >
+                        <svg
+                          viewBox='0 0 24 24'
+                          className='size-5'
+                          fill='none'
+                          stroke='currentColor'
+                          strokeWidth={3}
+                          strokeLinecap='square'
+                        >
+                          <path className='check-path' d='M5 12.5 10 17.5 19.5 7' />
+                        </svg>
+                      </span>
                     </Button>
                   )}
                 </SetRow>

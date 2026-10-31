@@ -1,9 +1,11 @@
-import {type Page, expect} from '@playwright/test';
+import {type Locator, type Page, expect} from '@playwright/test';
 
 /** Browse the real library without interacting with the covered mobile sheet. */
 export async function navigate(page: Page, name: 'Workouts' | 'History' | 'Exercises') {
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', /^(saving|error|saved)$/);
   await expect(page.locator('main')).toBeVisible();
+  // A closing drawer or animated dialog still hides the page from the accessibility tree.
+  await expect(page.locator('.overlay-motion')).toHaveCount(0);
   if (await page.getByRole('dialog', {name: 'Settings', exact: true}).isVisible())
     await page.getByRole('button', {name: 'Close settings'}).click();
   if (await page.getByRole('button', {name: 'Minimize workout'}).isVisible())
@@ -55,4 +57,31 @@ export async function openSettings(page: Page) {
       .click({timeout: 1000});
   }).toPass({timeout: 15000});
   await expect(page.getByRole('dialog', {name: 'Settings', exact: true})).toBeVisible();
+}
+
+/**
+ * The text a sighted user reads. Rolling counts (NumberFlow) draw every digit column in their
+ * shadow root, which `toHaveText` would read as "0123456789"; this reads their value instead.
+ */
+export function shownText(locator: Locator) {
+  return locator.evaluate((element) => {
+    const clone = element.cloneNode(true) as HTMLElement;
+    for (const count of clone.querySelectorAll('number-flow-react'))
+      count.replaceWith(count.getAttribute('data-value') ?? '');
+    return (clone.textContent ?? '').replace(/\s+/g, ' ').trim();
+  });
+}
+
+/**
+ * Delete one set through its set-number actions: the phone drawer's Delete set below 1000px,
+ * the row's revealed Delete from 1000px.
+ */
+export async function deleteSet(page: Page, row: Locator) {
+  await row.getByRole('button', {name: /^Actions for /}).click();
+  if (page.viewportSize()!.width < 1000)
+    await page
+      .getByRole('menu', {name: /^Actions for /})
+      .getByRole('menuitem', {name: 'Delete set'})
+      .click();
+  else await row.getByRole('button', {name: /^Delete /}).click();
 }

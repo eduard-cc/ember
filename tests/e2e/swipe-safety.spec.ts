@@ -21,7 +21,7 @@ const offset = (row: Locator) =>
 for (const via of ['long swipe', 'Delete tap'])
   test(`a deleted row collapses once and never reappears before removal (${via})`, async ({
     page,
-  }) => {
+  }, info) => {
     await page.goto('/?demo=1');
     const rows = page.locator('.set-row:not(.set-head)');
     const row = rows.nth(1);
@@ -49,7 +49,13 @@ for (const via of ['long swipe', 'Delete tap'])
       await pointer(row, 'pointerup', width * 0.1);
     } else {
       await row.getByRole('button', {name: /Actions for/}).click();
-      await row.getByRole('button', {name: /^Delete /}).click();
+      // Phones choose Delete set from the set's action drawer; desktop reveals the row's Delete.
+      if (info.project.name === 'mobile')
+        await page
+          .getByRole('menu', {name: /^Actions for /})
+          .getByRole('menuitem', {name: 'Delete set'})
+          .click();
+      else await row.getByRole('button', {name: /^Delete /}).click();
     }
     await expect(rows).toHaveCount(count - 1);
     const frames = await page.evaluate(
@@ -185,19 +191,26 @@ for (const end of ['lostpointercapture', 'mouse release', 'window blur'])
 
 test('keyboard actions expose Delete immediately and Escape returns focus to the set number', async ({
   page,
-}) => {
+}, info) => {
   await page.goto('/?demo=1');
   const row = page.locator('.set-row:not(.set-head)').first();
-  const action = row.getByRole('button', {name: /Actions for/});
+  // Located by label: while the phone drawer is open the ledger is hidden from the a11y tree.
+  const action = row.locator('.set-index');
   await action.focus();
   await page.keyboard.press('Enter');
-  const remove = row.getByRole('button', {name: /^Delete /});
-  await expect(remove).toBeFocused();
-  expect(
-    await row
-      .locator('.set-swipe-content')
-      .evaluate((el) => getComputedStyle(el).transitionDuration),
-  ).toBe('0s');
+  if (info.project.name === 'mobile') {
+    const sheet = page.getByRole('menu', {name: /^Actions for .* set 1$/});
+    await expect(sheet.getByRole('menuitem', {name: 'Delete set'})).toBeFocused();
+    await expect(action).toHaveAttribute('aria-expanded', 'true');
+  } else {
+    const remove = row.getByRole('button', {name: /^Delete /});
+    await expect(remove).toBeFocused();
+    expect(
+      await row
+        .locator('.set-swipe-content')
+        .evaluate((el) => getComputedStyle(el).transitionDuration),
+    ).toBe('0s');
+  }
   await page.keyboard.press('Escape');
   await expect(action).toBeFocused();
   await expect(action).toHaveAttribute('aria-expanded', 'false');

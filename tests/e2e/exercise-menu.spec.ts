@@ -18,8 +18,9 @@ async function start(page: Page) {
   return cards;
 }
 
+/** By label, not role: while the phone drawer is open the ledger behind it is aria-hidden. */
 function options(page: Page, name: string) {
-  return page.getByRole('button', {name: `Exercise options for ${name}`, exact: true});
+  return page.locator(`button[aria-label="Exercise options for ${name}"]`);
 }
 
 test('the exercise options menu opens from the ⋯ button and closes with Escape or an outside tap', async ({
@@ -48,10 +49,11 @@ test('the exercise options menu opens from the ⋯ button and closes with Escape
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
 
+  // A real pointer tap at the spot, not a locator click: the closing tap is caught on purpose
+  // (by the backdrop on desktop, by the drawer's scrim on phones).
+  const meta = (await page.locator('.workout-sheet .workout-meta').boundingBox())!;
   await trigger.click();
   await expect(menu).toBeVisible();
-  // A real pointer tap at the spot, not a locator click: the closing tap is caught on purpose.
-  const meta = (await page.locator('.workout-sheet .workout-meta').boundingBox())!;
   await page.mouse.click(meta.x + 8, meta.y + meta.height / 2);
   await expect(menu).toBeHidden();
   await expect(cards).toHaveCount(5);
@@ -209,10 +211,10 @@ async function closingTapDoesNothingElse(page: Page, tap: (x: number, y: number)
   const complete = page.getByRole('button', {name: 'Complete Bench Press (Barbell) set 3'});
   await complete.scrollIntoViewIfNeeded();
   await expect(complete).toBeEnabled();
+  const box = (await complete.boundingBox())!;
   await options(page, 'Bench Press (Barbell)').click();
   const menu = page.getByRole('menu', {name: 'Exercise options for Bench Press (Barbell)'});
   await expect(menu).toBeVisible();
-  const box = (await complete.boundingBox())!;
   await tap(box.x + box.width / 2, box.y + box.height / 2);
   await expect(menu).toBeHidden();
   await expect(complete).toHaveAttribute('aria-pressed', 'false');
@@ -241,6 +243,47 @@ test.describe('on a touch screen', () => {
 for (const viewport of [
   {width: 390, height: 844},
   {width: 412, height: 915},
+]) {
+  test.describe(`at ${viewport.width}x${viewport.height}`, () => {
+    test.use({viewport});
+
+    test('⋯ opens a bottom drawer with every item visible and tappable', async ({page}) => {
+      const cards = await start(page);
+      const last = 'Pull Up (Assisted)';
+      await options(page, last).scrollIntoViewIfNeeded();
+      await options(page, last).click();
+      const menu = page.getByRole('menu', {name: `Exercise options for ${last}`});
+      await expect(menu).toBeVisible();
+      const drawer = page.getByRole('dialog', {name: last});
+      await expect(drawer).toBeVisible();
+      // Once the drawer has settled: anchored to the bottom edge, every row at least 44px.
+      await expect
+        .poll(async () => {
+          const box = (await drawer.boundingBox())!;
+          return Math.round(box.y + box.height);
+        })
+        .toBe(viewport.height);
+      await expect(menu.getByRole('menuitem')).toHaveText([
+        'Replace exercise',
+        'Move up',
+        'Remove exercise',
+      ]);
+      for (const item of await menu.getByRole('menuitem').all()) {
+        const box = (await item.boundingBox())!;
+        expect(box.height).toBeGreaterThanOrEqual(44);
+        expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+      }
+      await menu.getByRole('menuitem', {name: 'Remove exercise'}).click();
+      await expect(cards.locator('h2')).toHaveText(demo.filter((name) => name !== last));
+      await expect(drawer).toHaveCount(0);
+    });
+  });
+}
+
+// The inline menu: from 1000px up (phones get the drawer above).
+for (const viewport of [
+  {width: 1000, height: 640},
+  {width: 1280, height: 720},
 ]) {
   test.describe(`at ${viewport.width}x${viewport.height}`, () => {
     test.use({viewport});
@@ -277,7 +320,8 @@ for (const viewport of [
   });
 }
 
-test('moving focus to another ⋯ button closes the open menu', async ({page}) => {
+test('moving focus to another ⋯ button closes the open menu', async ({page}, info) => {
+  test.skip(info.project.name === 'mobile', 'The phone drawer is modal and keeps focus inside.');
   await start(page);
   await options(page, 'Bench Press (Barbell)').click();
   const first = page.getByRole('menu', {name: 'Exercise options for Bench Press (Barbell)'});
@@ -314,7 +358,8 @@ test('after Remove, focus moves to the next card, the previous one, then Add exe
   await expect(page.getByRole('button', {name: 'Add exercise', exact: true})).toBeFocused();
 });
 
-test('Tab out of the menu continues from the ⋯ button', async ({page}) => {
+test('Tab out of the menu continues from the ⋯ button', async ({page}, info) => {
+  test.skip(info.project.name === 'mobile', 'The phone drawer is modal and keeps focus inside.');
   await start(page);
   const trigger = options(page, 'Seated Row (Cable)');
   const active = () =>

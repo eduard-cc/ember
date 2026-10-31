@@ -353,8 +353,117 @@
   .set-swipe[data-commit] .set-swipe-delete svg {
     transform: scale(1.15);
   }
+  /* Completion, from the prototype: the tint sweeps in from the check (right to left), the box
+     pops and its check draws itself. Unticking wipes the tint back out quickly. Reduced motion
+     keeps only the colour change (the base layer drops every transition and animation). */
+  .set-swipe-content::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: hsl(var(--primary-tint));
+    clip-path: inset(0 0 0 100%);
+    transition: clip-path 140ms var(--ease-out);
+    pointer-events: none;
+  }
+  .set-complete > .set-swipe-content::before {
+    clip-path: inset(0);
+    transition-duration: 320ms;
+  }
+  .check-box {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+  .check-box[data-done] {
+    animation: check-pop 360ms var(--ease-out);
+  }
+  .check-path {
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    transition: stroke-dashoffset 120ms ease-out;
+  }
+  .check-box[data-done] .check-path {
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 240ms var(--ease-out) 60ms;
+  }
+  @keyframes check-pop {
+    0% {
+      transform: scale(0.86);
+    }
+    55% {
+      transform: scale(1.08);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  /* The exercise's last check: a badge on its drawing and one tint flash across the heading. */
+  .exercise-badge {
+    opacity: 0;
+    transform: scale(0.75);
+    transition:
+      opacity 200ms var(--ease-out),
+      transform 200ms var(--ease-out);
+  }
+  .exercise-badge[data-shown] {
+    opacity: 1;
+    transform: none;
+  }
   .exercise-heading {
+    /* How far the done flash bleeds into the card's side padding (half of it, as a shadow). */
+    --bleed: 8px;
     transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @media (width <= 350px) {
+    .exercise-heading {
+      --bleed: 6px;
+    }
+  }
+  @media (width >= 1000px) {
+    .workout-sheet .exercise-heading {
+      --bleed: 12px;
+    }
+  }
+  /* A background plus two spread shadows: it paints under the heading's content without a
+     stacking context, which would trap the desktop ⋯ menu under the set rows. */
+  .exercise-heading[data-done-flash] {
+    animation: done-flash 900ms var(--ease-out);
+  }
+  @keyframes done-flash {
+    from {
+      background-color: hsl(var(--primary-tint));
+      box-shadow:
+        calc(-1 * var(--bleed)) 0 0 var(--bleed) hsl(var(--primary-tint)),
+        var(--bleed) 0 0 var(--bleed) hsl(var(--primary-tint));
+    }
+    to {
+      background-color: hsl(var(--primary-tint) / 0);
+      box-shadow:
+        calc(-1 * var(--bleed)) 0 0 var(--bleed) hsl(var(--primary-tint) / 0),
+        var(--bleed) 0 0 var(--bleed) hsl(var(--primary-tint) / 0);
+    }
+  }
+  /* Phones: the logger slides up like a native sheet (420ms) and down when minimized (300ms).
+     A draft restored at launch (no data-motion) is simply there. The library under it hides
+     only once the sheet has covered it, so nothing blank shows while it rises. */
+  @media (width < 1000px) {
+    .workout-sheet[data-motion] {
+      transition: transform 420ms var(--ease-drawer);
+    }
+    @starting-style {
+      .workout-sheet[data-motion][data-state='open'] {
+        transform: translateY(100%);
+      }
+    }
+    .workout-sheet[data-motion][data-state='closed'] {
+      transform: translateY(100%);
+      transition-duration: 300ms;
+      pointer-events: none;
+    }
+    .sheet-open .library {
+      transition: visibility 0s linear 420ms;
+    }
   }
   /* Held: the heading sinks slowly, so the hold reads as deliberate. Taps never get that far. */
   .exercise-card[data-holding] > .exercise-heading {

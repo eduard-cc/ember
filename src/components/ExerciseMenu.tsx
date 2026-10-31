@@ -9,8 +9,11 @@ import {
   useState,
 } from 'react';
 
+import {cue} from '../feedback';
+import {useIsMobile} from '../hooks/use-is-mobile';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
+import {ActionSheet} from './action-sheet';
 import {Button} from './ui/button';
 
 /** How long the backdrop waits for the click that follows its closing tap. */
@@ -37,7 +40,8 @@ export interface MenuItem {
 }
 
 /**
- * A ⋯ options menu. Rendered inline (not portaled) so it stays inside its card and is
+ * A ⋯ options menu. Below 1000px it is an `ActionSheet` (a bottom drawer). From 1000px it is
+ * rendered inline (not portaled) so it stays inside its card and is
  * hidden with it. It opens below the trigger, or above it when there is no room below.
  * Escape or a tap outside closes it and returns focus to ⋯; Tab continues from ⋯; focus
  * moving anywhere else closes it. A transparent backdrop takes the closing tap, so that tap
@@ -45,8 +49,15 @@ export interface MenuItem {
  */
 export const OptionsMenu = forwardRef<
   HTMLButtonElement,
-  {label: string; items: MenuItem[]; className?: string}
->(({label, items: entries, className = ''}, ref) => {
+  {
+    label: string;
+    items: MenuItem[];
+    className?: string;
+    /** The drawer's visible heading on phones; defaults to the label. */
+    title?: string;
+  }
+>(({label, items: entries, className = '', title}, ref) => {
+  const mobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [upward, setUpward] = useState(false);
   // The backdrop outlives the menu by one tap: it closes on pointerdown, then eats the click.
@@ -59,18 +70,18 @@ export const OptionsMenu = forwardRef<
 
   // Measured before paint: flip upward when the menu doesn't fit below and fits better above.
   useLayoutEffect(() => {
-    if (!open || !menu.current || !trigger.current) return;
+    if (!open || mobile || !menu.current || !trigger.current) return;
     const button = trigger.current.getBoundingClientRect();
     const height = menu.current.offsetHeight + 4;
     const clip = clipBox(trigger.current);
     const below = clip.bottom - button.bottom;
     const above = button.top - clip.top;
     setUpward(below < height && above > below);
-  }, [open]);
+  }, [open, mobile]);
 
   useEffect(() => {
-    if (open) items()[0]?.focus({preventScroll: true});
-  }, [open]);
+    if (open && !mobile) items()[0]?.focus({preventScroll: true});
+  }, [open, mobile]);
 
   useEffect(() => {
     if (!swallowing) return;
@@ -83,7 +94,12 @@ export const OptionsMenu = forwardRef<
     setOpen(false);
     if (refocus) trigger.current?.focus({preventScroll: true});
   };
-  useBackLayer(open, close);
+  // The drawer registers its own back layer.
+  useBackLayer(open && !mobile, close);
+  const toggle = (next: boolean) => {
+    if (next) cue('tick');
+    setOpen(next);
+  };
   const onMenuKey = (event: KeyboardEvent) => {
     const list = items();
     const at = list.indexOf(document.activeElement as HTMLElement);
@@ -114,7 +130,7 @@ export const OptionsMenu = forwardRef<
       className={cn('exercise-menu relative shrink-0', className)}
       onBlur={(event) => {
         // Focus moving outside (another ⋯, a field) closes this menu; only one is ever open.
-        if (open && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+        if (open && !mobile && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
       }}
     >
       <Button
@@ -129,18 +145,28 @@ export const OptionsMenu = forwardRef<
         aria-label={label}
         aria-haspopup='menu'
         aria-expanded={open}
-        aria-controls={open ? id : undefined}
-        onClick={() => setOpen(!open)}
+        aria-controls={open && !mobile ? id : undefined}
+        onClick={() => toggle(!open)}
         onKeyDown={(event) => {
           if (event.key === 'ArrowDown' && !open) {
             event.preventDefault();
-            setOpen(true);
+            toggle(true);
           }
         }}
       >
         <Ellipsis size={18} aria-hidden='true' />
       </Button>
-      {(open || swallowing) && (
+      {mobile && (
+        <ActionSheet
+          open={open}
+          onOpenChange={setOpen}
+          title={title ?? label}
+          label={label}
+          trigger={trigger}
+          actions={entries}
+        />
+      )}
+      {!mobile && (open || swallowing) && (
         <div
           className='exercise-menu-backdrop fixed inset-0 z-[19] [-webkit-tap-highlight-color:transparent]'
           aria-hidden='true'
@@ -158,7 +184,7 @@ export const OptionsMenu = forwardRef<
           }}
         />
       )}
-      {open && (
+      {open && !mobile && (
         <div
           ref={menu}
           id={id}
@@ -209,6 +235,7 @@ export const ExerciseMenu = forwardRef<
     ref={ref}
     className={className}
     label={`Exercise options for ${name}`}
+    title={name}
     items={[
       {label: 'Replace exercise', icon: Replace, onSelect: onReplace},
       ...(onMoveUp ? [{label: 'Move up', icon: ArrowUp, onSelect: onMoveUp}] : []),
