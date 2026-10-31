@@ -34,6 +34,7 @@ cp -p ~/src/ember/server/.env <worktree>/server/          # keep mode 0600
 
 - Missing-element failures that move between tests on each run usually mean host load. Check `uptime`, rerun with `--workers=2`, and only debug failures that repeat.
 - A chain that dies with exit 143 / `Terminated` and no failing test is usually the OOM killer (the jobs slice has `MemoryMax=4G`, see `ops/systemd/ember-jobs.slice`). Confirm with `journalctl --user --since -30min --grep='oom|Out of memory' --no-pager` and `free -h`, then rerun with `--workers=1` rather than debugging code.
+- Every remaining test failing with `net::ERR_CONNECTION_REFUSED` on 5188 means the Vite dev server died mid-run; under heavy host load Node has crashed with `abort: Lazy deopt after a fast API call` in the `[WebServer]` output. It is not the change under test: rerun with `--last-failed` and debug only what still fails.
 - If `--workers=1` is also OOM-killed, stop retrying locally and do not raise the limits: stop task-owned previews, open a feature PR so CI runs the full suite in isolation, and merge only after its exact head is green. Main must then pass its own push CI before `ops/deploy.sh` accepts the release.
 
 ## Writing Playwright tests
