@@ -305,6 +305,24 @@
       transform: scale(0.97);
     }
   }
+  /* The prototype's pressable rows and cards (History and template cards, ActionSheet rows): a
+     smaller press than a button's, and the accent wash on hover. A card's own ⋯ menu presses
+     only itself. */
+  .pressable {
+    transition:
+      background-color 160ms ease,
+      transform 160ms var(--ease-out);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pressable:active:not(:disabled):not(:has(.exercise-menu:active)) {
+      transform: scale(0.985);
+    }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .pressable:hover:not(:disabled):not(:has(.exercise-menu:hover)) {
+      background-color: hsl(var(--accent));
+    }
+  }
 
   /* Swipe rows: the ledger slides over a Delete layer that is always there underneath. */
   .set-row.set-swipe {

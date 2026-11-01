@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
 import type {Workout} from '../src/domain/types';
-import {durationLabel, elapsedMinutes} from '../src/domain/workout-duration';
+import {durationLabel, elapsedMinutes, estimatedMinutes} from '../src/domain/workout-duration';
 import {newWorkout} from '../src/state/workout';
 
 describe('workout elapsed minutes', () => {
@@ -24,13 +24,44 @@ describe('workout elapsed minutes', () => {
 describe('workout duration label', () => {
   it.each([
     ['unknown or zero shows nothing', 0, ''],
-    ['sub-minute in-app session', 0.5, '<1 MIN'],
-    ['one second', 1 / 60, '<1 MIN'],
-    ['imported sub-minute duration', 0.75, '<1 MIN'],
-    ['whole minutes', 45, '45 MIN'],
-    ['imported fractional duration is unchanged', 62.5, '62.5 MIN'],
+    ['sub-minute in-app session', 0.5, '<1 min'],
+    ['one second', 1 / 60, '<1 min'],
+    ['imported sub-minute duration', 0.75, '<1 min'],
+    ['whole minutes', 45, '45 min'],
+    ['imported fractional duration is unchanged', 62.5, '62.5 min'],
   ])('%s', (_label, duration, expected) => {
     expect(durationLabel(duration)).toBe(expected);
+  });
+});
+
+describe('estimated template length', () => {
+  const done = (duration: number, sets: number): Workout => ({
+    ...newWorkout(),
+    duration,
+    exercises: [
+      {
+        name: 'Synthetic',
+        type: 'weighted',
+        sets: Array.from({length: sets}, (_, i) => ({
+          id: `s${i}`,
+          weight: 40,
+          reps: 8,
+          seconds: null,
+          distance: null,
+        })),
+      },
+    ],
+  });
+  it("uses the owner's minutes per set over workouts with a known duration, to 5 minutes", () => {
+    // 60 min over 20 sets and 30 over 10: 3 min a set; unknown and sub-minute ones are skipped.
+    const history = [done(60, 20), done(30, 10), done(0, 50), done(0.5, 40)];
+    expect(estimatedMinutes(15, history)).toBe(45);
+    expect(estimatedMinutes(1, history)).toBe(5);
+    expect(estimatedMinutes(16, history)).toBe(50);
+  });
+  it('makes no estimate without a timed workout or for an empty template', () => {
+    expect(estimatedMinutes(15, [done(0, 20)])).toBeNull();
+    expect(estimatedMinutes(0, [done(60, 20)])).toBeNull();
   });
 });
 

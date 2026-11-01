@@ -154,28 +154,35 @@ test('labels are sentence case', async ({page}) => {
   expect(selected.color).toBe(await resolve(page, 'hsl(var(--foreground))'));
 });
 
-test('templates form one bordered list', async ({page}) => {
+test('templates are separate flat bordered cards', async ({page}) => {
   await page.emulateMedia({colorScheme: 'light'});
   await open(page, false);
   await minimizeIfPossible(page);
   const grid = page.locator('.template-grid');
   await expect(grid).toBeVisible();
-  expect(await grid.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('1px');
-  // nth(2): in two columns the second card sits in the first row and has no top rule.
-  const second = page.locator('.template-card').nth(2);
-  const style = await second.evaluate((el) => {
-    const cs = getComputedStyle(el);
-    return {top: cs.borderTopWidth, shadow: cs.boxShadow};
-  });
-  expect(style.top).toBe('1px');
-  expect(style.shadow).toBe('none');
+  expect(await grid.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px');
+  const cards = page.locator('.template-card');
+  for (const card of await cards.all()) {
+    const style = await card.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return {top: cs.borderTopWidth, left: cs.borderLeftWidth, shadow: cs.boxShadow};
+    });
+    expect(style).toEqual({top: '1px', left: '1px', shadow: 'none'});
+  }
+  const [first, second] = [await cards.nth(0).boundingBox(), await cards.nth(1).boundingBox()];
+  // 12px apart, beside each other in two columns or stacked in one.
+  const gap = Math.max(
+    second!.x - (first!.x + first!.width),
+    second!.y - (first!.y + first!.height),
+  );
+  expect(Math.round(gap)).toBe(12);
 });
 
 test('long template lines wrap to fit their row', async ({page}, info) => {
   test.skip(info.project.name !== 'desktop');
   await open(page, false);
   await minimizeIfPossible(page);
-  const rows = page.locator('.template-open li');
+  const rows = page.locator('.template-card .exercise-line');
   await expect(rows.first()).toBeVisible();
   const result = await rows.evaluateAll((els) =>
     els.map((el) => ({
@@ -315,52 +322,18 @@ test('Settings opened from the Profile cog returns focus to the cog', async ({pa
   }
 });
 
-test('the odd last template spans both desktop columns, with pinned dividers', async ({
-  page,
-}, info) => {
+test('desktop templates use two columns, and one beside the open logger', async ({page}, info) => {
   test.skip(info.project.name !== 'desktop');
   await open(page, false);
+  const grid = page.locator('.template-grid');
+  await expect(grid).toBeVisible();
+  const tracks = () => grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' '));
+  expect(await tracks()).toHaveLength(1);
+  const gridBox = await grid.boundingBox();
+  const lastBox = await page.locator('.template-card').last().boundingBox();
+  expect(Math.abs(lastBox!.width - gridBox!.width)).toBeLessThanOrEqual(1);
   await minimizeIfPossible(page);
-  const grid = page.locator('.template-grid');
-  await expect(grid).toBeVisible();
-  const count = await page.locator('.template-card').count();
-  expect(count % 2).toBe(1);
-  const gridBox = await grid.boundingBox();
-  const lastBox = await page.locator('.template-card').last().boundingBox();
-  // The grid has a 1px border on each side.
-  expect(Math.abs(lastBox!.width - (gridBox!.width - 2))).toBeLessThanOrEqual(1);
-  const second = await page
-    .locator('.template-card')
-    .nth(1)
-    .evaluate((el) => {
-      const cs = getComputedStyle(el);
-      return {left: cs.borderLeftWidth, top: cs.borderTopWidth};
-    });
-  expect(second).toEqual({left: '1px', top: '0px'});
-});
-
-test('with the logger open the odd last template stays in the single column', async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== 'desktop');
-  await open(page, false);
-  const grid = page.locator('.template-grid');
-  await expect(grid).toBeVisible();
-  // One track while the logger is open.
-  const tracks = await grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' '));
-  expect(tracks).toHaveLength(1);
-  // The second card keeps its top rule and has no left rule.
-  const second = await page
-    .locator('.template-card')
-    .nth(1)
-    .evaluate((el) => {
-      const cs = getComputedStyle(el);
-      return {left: cs.borderLeftWidth, top: cs.borderTopWidth};
-    });
-  expect(second).toEqual({left: '0px', top: '1px'});
-  const gridBox = await grid.boundingBox();
-  const lastBox = await page.locator('.template-card').last().boundingBox();
-  expect(Math.abs(lastBox!.width - (gridBox!.width - 2))).toBeLessThanOrEqual(1);
+  await expect.poll(tracks).toHaveLength(2);
 });
 
 test('the empty templates state sits outside the bordered grid', async ({page}) => {
@@ -515,6 +488,7 @@ test('empty states use the shared EmptyState', async ({page}) => {
   await minimizeIfPossible(page);
   await check('No templates yet');
   await navigate(page, 'History');
+  await page.getByRole('button', {name: 'Search history'}).click();
   await page.getByLabel('Search workout history').fill('zzzz');
   await check('No matching workouts');
 });

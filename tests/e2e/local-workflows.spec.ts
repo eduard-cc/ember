@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {addExercise, navigate} from '../navigation';
+import {addExercise, navigate, templateAction} from '../navigation';
 
 test('templates can be created edited started and deleted', async ({page}) => {
   // Record haptics: confirming the template over the open draft plays the start cue.
@@ -20,8 +20,13 @@ test('templates can be created edited started and deleted', async ({page}) => {
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.getByRole('heading', {name: 'My test session'})).toBeVisible();
   const card = page.locator('.template-card', {hasText: 'My test session'});
-  await expect(card.locator('.template-open li')).toHaveText(['3 × Bench Press (Barbell)']);
-  await page.getByRole('button', {name: 'Edit template My test session', exact: true}).click();
+  // The row shows what Start will prefill: Bench Press's latest demo sets.
+  await expect(card.locator('.exercise-line')).toHaveCount(1);
+  await expect(card.locator('.exercise-line')).toContainText('Bench Press (Barbell)');
+  await expect(card.locator('.exercise-line')).toContainText(/\d+ kg/);
+  await expect(card).toContainText('1 exercise');
+  await expect(card).toContainText('Not done yet');
+  await templateAction(page, 'Edit template', 'My test session');
   await page.getByLabel('Template name').fill('Edited session');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await page.getByRole('button', {name: 'Open template Edited session', exact: true}).click();
@@ -33,7 +38,10 @@ test('templates can be created edited started and deleted', async ({page}) => {
     await page.evaluate(() => (window as unknown as {vibrations: number[][]}).vibrations),
   ).toEqual([[18, 60, 10]]);
   await navigate(page, 'Workouts');
-  await page.getByRole('button', {name: 'Delete template Edited session'}).click();
+  await templateAction(page, 'Delete template', 'Edited session');
+  await expect(page.getByRole('dialog', {name: 'Delete this template?'})).toContainText(
+    'Your workout history is kept.',
+  );
   await page.getByRole('button', {name: 'Confirm delete template'}).click();
   await expect(page.getByRole('heading', {name: 'Edited session'})).toHaveCount(0);
 });
@@ -49,7 +57,8 @@ test('a failed template commit never announces that it was saved', async ({page}
       return add.apply(this, args);
     };
   });
-  await page.getByRole('button', {name: 'Save as template'}).first().click();
+  await page.locator('.history-card button').first().click();
+  await page.getByRole('button', {name: 'Save as template'}).click();
   await expect(page.getByRole('alert')).toContainText('Could not save on this device');
   await expect(page.getByText('Workout saved as an editable template.', {exact: true})).toHaveCount(
     0,

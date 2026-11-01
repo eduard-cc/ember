@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {navigate, templateAction} from '../navigation';
 
 const demo = [
   'Bench Press (Barbell)',
@@ -222,7 +222,12 @@ test('a source workout link inside the details minimizes the workout and keeps t
     .click();
   await expect(dialog).toBeHidden();
   await expect(sheet).toBeHidden();
-  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
+  // History opens with the source workout's drawer over it.
+  await expect(page.locator('.library-scroll h1')).toHaveText('History');
+  const drawer = page.locator('.workout-drawer');
+  await expect(drawer.locator('.recorded-sets').first()).toBeVisible();
+  await drawer.getByRole('button', {name: 'Close workout'}).click();
+  await expect(drawer).toBeHidden();
   await page.getByRole('button', {name: /Resume Upper body A/}).click();
   await expect(sheet).toBeVisible();
   await expect(page.getByLabel('Weight for Bench Press (Barbell) set 2')).toHaveValue('66');
@@ -252,7 +257,7 @@ for (const width of [1000, 1440, 1920, 2560]) {
 test('template editing keeps plain exercise headings without a details button', async ({page}) => {
   await start(page);
   await navigate(page, 'Workouts');
-  await page.getByRole('button', {name: 'Edit template Upper body A', exact: true}).click();
+  await templateAction(page, 'Edit template', 'Upper body A');
   await expect(page.getByLabel('Template name')).toBeVisible();
   await expect(page.locator('.library .exercise-card h2').first()).toHaveText(demo[0]);
   await expect(

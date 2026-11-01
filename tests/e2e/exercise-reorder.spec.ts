@@ -1,5 +1,7 @@
 import {type Page, expect, test} from '@playwright/test';
 
+import {templateAction} from '../navigation';
+
 const demo = [
   'Bench Press (Barbell)',
   'Seated Row (Cable)',
@@ -340,10 +342,7 @@ test('the template editor reorders exercises the same way', async ({page}) => {
     .getByRole('navigation', {name: 'Main navigation'})
     .getByRole('button', {name: 'Workout', exact: true})
     .click();
-  await page
-    .getByRole('button', {name: /^Edit template /})
-    .first()
-    .click();
+  await templateAction(page, 'Edit template');
   const editor = page.locator('.template-editor');
   const names = await editor.locator('.exercise-card h2').allTextContents();
   expect(names.length).toBeGreaterThan(1);

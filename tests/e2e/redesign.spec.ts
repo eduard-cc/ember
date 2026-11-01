@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {addExercise, navigate, openSettings, shownText} from '../navigation';
+import {addExercise, navigate, openSettings, openWorkout, shownText} from '../navigation';
 import {resolve} from './colour-helpers';
 
 test('workout sheet minimizes to a named resume bar preserving the draft and ledger scroll', async ({
@@ -178,10 +178,13 @@ test('five-column Previous opens evidence for the selected set weight and source
     .getByRole('button', {name: /View source workout/})
     .first()
     .click();
-  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
-  await expect(page.locator('.focused-history .recorded-sets').first()).toContainText(
-    '60 kg × 9 reps',
-  );
+  // The source workout opens in its drawer over History.
+  await expect(page.locator('.library-scroll h1')).toHaveText('History');
+  const drawer = page.locator('.workout-drawer');
+  await expect(drawer.locator('.recorded-sets').first()).toContainText('60 kg × 9');
+  await drawer.getByRole('button', {name: 'Close workout'}).click();
+  await expect(drawer).toBeHidden();
+  await expect(page.locator('.focused-history button')).toBeFocused();
   await page.getByRole('button', {name: /Resume Upper body A/}).click();
   await second.getByLabel(/Weight/).fill('61');
   await second.getByRole('button', {name: /Previous for .* set 2/}).click();
@@ -221,10 +224,8 @@ test('an unrecorded weight shows the nearest actual lighter and heavier sets wit
   await second.getByLabel(/Weight/).fill('61');
   await second.getByRole('button', {name: /Previous for .* set 2/}).click();
   await view.click();
-  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
-  await expect(page.locator('.focused-history .recorded-sets').first()).toContainText(
-    '62.5 kg × 8 reps',
-  );
+  await expect(page.locator('.library-scroll h1')).toHaveText('History');
+  await expect(page.locator('.workout-drawer .recorded-sets').first()).toContainText('62.5 kg × 8');
 });
 
 test('exercise Done survives value edits and reload but a new set needs its own tick', async ({
@@ -415,6 +416,7 @@ test('added exercises reuse matching history unchecked and unlogged catalog exer
   }
   await page.getByRole('button', {name: 'Minimize workout'}).click();
   await page.getByRole('button', {name: 'History', exact: true}).click();
+  await openWorkout(page, 'Exact older session');
   await page.getByRole('button', {name: /Repeat workout Exact older session/}).click();
   await page.getByRole('button', {name: 'Replace active draft'}).click();
   await expect(page.getByLabel('Weight for Synthetic Press set 1')).toHaveValue('30');

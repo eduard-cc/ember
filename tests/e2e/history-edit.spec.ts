@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {navigate, openWorkout, workoutAction, workoutCard} from '../navigation';
 
 // Synthetic fixture only.
 const set = (id: string, weight: number, reps: number) => ({
@@ -46,13 +46,10 @@ const open = async (page: Page, value = seeded) => {
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await navigate(page, 'History');
 };
-const menu = (page: Page, name: string) =>
-  page.getByRole('button', {name: new RegExp(`Workout options for ${name}`)});
 
 test('a history workout can be edited and the edit survives a reload', async ({page}) => {
   await open(page);
-  await menu(page, 'Push day').click();
-  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+  await workoutAction(page, 'Push day', 'Edit workout');
   const editor = page.getByRole('dialog', {name: 'Edit workout'});
   await expect(editor.getByRole('button', {name: 'Save changes'})).toBeDisabled();
   await editor.getByLabel('Workout name').fill('Heavy push');
@@ -65,24 +62,21 @@ test('a history workout can be edited and the edit survives a reload', async ({p
   await editor.getByLabel('Weight for Synthetic Press set 1').fill('52.5');
   await editor.getByRole('button', {name: 'Save changes'}).click();
   await expect(editor).toBeHidden();
-  await expect(menu(page, 'Heavy push')).toBeFocused();
+  await expect(workoutCard(page, 'Heavy push')).toBeFocused();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
 
   await page.reload();
   await navigate(page, 'History');
   await expect(page.getByRole('heading', {name: 'Heavy push'})).toBeVisible();
-  await page
-    .getByRole('button', {name: /View sets for Heavy push/})
-    .first()
-    .click();
-  await expect(page.locator('.workout-details').first()).toContainText('52.5 kg × 6');
-  await expect(page.locator('.history-card').first()).toContainText('55');
+  await expect(page.locator('.history-card').first()).toContainText('55 min');
+  const drawer = await openWorkout(page, 'Heavy push');
+  await expect(drawer.locator('.recorded-sets')).toContainText('52.5 kg × 6');
+  await expect(drawer).toContainText('55 min');
 });
 
 test('cancelling an edited workout asks before discarding', async ({page}) => {
   await open(page);
-  await menu(page, 'Pull day').click();
-  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+  await workoutAction(page, 'Pull day', 'Edit workout');
   const editor = page.getByRole('dialog', {name: 'Edit workout'});
   await editor.getByLabel('Workout name').fill('Changed');
   await page.keyboard.press('Escape');
@@ -106,8 +100,7 @@ for (const dismissal of ['close button', 'Escape']) {
       sets: Array.from({length: 4}, (_, j) => set(`long-${i}-${j}`, 40, 8)),
     }));
     await open(page, long);
-    await menu(page, 'Push day').click();
-    await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+    await workoutAction(page, 'Push day', 'Edit workout');
     const editor = page.getByRole('dialog', {name: 'Edit workout'});
     await editor.getByLabel('Workout name').fill('Unsaved name');
     if (dismissal === 'Escape') await page.keyboard.press('Escape');
@@ -139,15 +132,14 @@ for (const dismissal of ['close button', 'Escape']) {
 
 test('a history workout can be deleted after confirmation', async ({page}) => {
   await open(page);
-  await menu(page, 'Pull day').click();
-  await page.getByRole('menuitem', {name: 'Delete workout'}).click();
+  await workoutAction(page, 'Pull day', 'Delete workout');
   const confirm = page.getByRole('dialog', {name: 'Delete this workout?'});
   await expect(confirm).toContainText('Pull day on 1 Jan 2026 and its 1 set');
   await confirm.getByRole('button', {name: 'Keep workout'}).click();
-  await expect(page.getByRole('heading', {name: 'Pull day'})).toBeVisible();
+  await expect(confirm).toBeHidden();
+  await expect(workoutCard(page, 'Pull day')).toBeFocused();
 
-  await menu(page, 'Pull day').click();
-  await page.getByRole('menuitem', {name: 'Delete workout'}).click();
+  await workoutAction(page, 'Pull day', 'Delete workout');
   await confirm.getByRole('button', {name: 'Delete workout'}).click();
   await expect(confirm).toBeHidden();
   await expect(page.getByRole('heading', {name: 'Pull day'})).toHaveCount(0);

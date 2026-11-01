@@ -24,6 +24,14 @@ async function start(page: Page) {
 
 const sheet = (page: Page) => page.getByRole('region', {name: 'Active workout'});
 
+/** Open the newest History workout's drawer, then Edit workout from its ⋯ menu. */
+async function editNewestWorkout(page: Page) {
+  await expect(page.locator('.overlay-motion')).toHaveCount(0);
+  await page.locator('.history-card button').first().click();
+  await page.getByRole('button', {name: /^Workout options for /}).click();
+  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+}
+
 test('back closes exercise details in the library, then a main tab has nothing left to close', async ({
   page,
 }) => {
@@ -42,7 +50,7 @@ test('back closes exercise details in the library, then a main tab has nothing l
   await expect.poll(() => depth(page)).toBe(0);
 });
 
-test('back closes Settings and the template preview', async ({page}) => {
+test('back closes Settings, the template preview and a History workout', async ({page}) => {
   await start(page);
   await navigate(page, 'Workouts');
   await openSettings(page);
@@ -57,6 +65,14 @@ test('back closes Settings and the template preview', async ({page}) => {
   await expect(preview).toBeVisible();
   await back(page);
   await expect(preview).toBeHidden();
+  await expect.poll(() => depth(page)).toBe(0);
+  await navigate(page, 'History');
+  await page.locator('.history-card button').first().click();
+  const drawer = page.locator('.workout-drawer');
+  await expect(drawer).toBeVisible();
+  await expect.poll(() => depth(page)).toBe(1);
+  await back(page);
+  await expect(drawer).toBeHidden();
   await expect.poll(() => depth(page)).toBe(0);
 });
 
@@ -113,11 +129,7 @@ test('a refused back keeps the next back inside the app', async ({page}) => {
   };
   await start(page);
   await navigate(page, 'History');
-  await page
-    .getByRole('button', {name: /^Workout options for /})
-    .first()
-    .click();
-  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+  await editNewestWorkout(page);
   const editor = page.getByRole('dialog', {name: 'Edit workout'});
   await editor.getByLabel('Workout name').fill('Kept through two backs');
   for (let i = 0; i < 2; i++) {
@@ -174,11 +186,7 @@ test('a reload with nothing open trims its leftover entry on the first tap', asy
 test('back on an edited history workout asks before discarding', async ({page}) => {
   await start(page);
   await navigate(page, 'History');
-  await page
-    .getByRole('button', {name: /^Workout options for /})
-    .first()
-    .click();
-  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+  await editNewestWorkout(page);
   const editor = page.getByRole('dialog', {name: 'Edit workout'});
   await editor.getByLabel('Workout name').fill('Renamed by back test');
   await back(page);
@@ -191,11 +199,7 @@ test('back on an edited history workout asks before discarding', async ({page}) 
   await expect(editor).toBeHidden();
   await expect.poll(() => depth(page)).toBe(0);
   // Without changes, back simply closes it.
-  await page
-    .getByRole('button', {name: /^Workout options for /})
-    .first()
-    .click();
-  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+  await editNewestWorkout(page);
   await expect(editor).toBeVisible();
   await back(page);
   await expect(editor).toBeHidden();

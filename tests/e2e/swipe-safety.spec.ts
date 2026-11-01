@@ -1,6 +1,6 @@
 import {type Locator, expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {navigate, templateAction} from '../navigation';
 
 async function pointer(target: Locator, type: string, x: number, id = 1) {
   await target.dispatchEvent(type, {
@@ -120,10 +120,7 @@ for (const phase of ['before swipe', 'during exit'])
 test('canceling the template editor cancels its pending row deletion', async ({page}) => {
   await page.goto('/?demo=1');
   await navigate(page, 'Workouts');
-  await page
-    .getByRole('button', {name: /Edit template/})
-    .first()
-    .click();
+  await templateAction(page, 'Edit template');
   const editor = page.locator('.template-editor');
   const row = editor.locator('.set-row:not(.set-head)').first();
   const width = (await row.boundingBox())!.width;
@@ -140,10 +137,7 @@ test('canceling the template editor cancels its pending row deletion', async ({p
   await animation.evaluate((animation) => animation.finish());
   await expect(editor).toHaveCount(0);
   await expect(page.locator('.template-grid')).toBeVisible();
-  await page
-    .getByRole('button', {name: /Edit template/})
-    .first()
-    .click();
+  await templateAction(page, 'Edit template');
   await expect(editor.getByRole('button', {name: 'Save template', exact: true})).toBeEnabled();
 });
 
@@ -220,10 +214,7 @@ test('keyboard actions expose Delete immediately and Escape returns focus to the
 test('template-editor swipe rows use the containing surface background', async ({page}) => {
   await page.goto('/?demo=1');
   await navigate(page, 'Workouts');
-  await page
-    .getByRole('button', {name: /Edit template/})
-    .first()
-    .click();
+  await templateAction(page, 'Edit template');
   const editor = page.locator('.template-editor');
   const background = await editor.evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(
@@ -250,10 +241,7 @@ for (const completion of ['staggered', 'together'])
   test(`Save waits for every pending template-set deletion (${completion})`, async ({page}) => {
     await page.goto('/?demo=1');
     await navigate(page, 'Workouts');
-    await page
-      .getByRole('button', {name: /Edit template/})
-      .first()
-      .click();
+    await templateAction(page, 'Edit template');
     const editor = page.locator('.template-editor');
     const name = await editor.getByLabel('Template name').inputValue();
     const rows = editor.locator('.set-row:not(.set-head)');
@@ -280,15 +268,9 @@ for (const completion of ['staggered', 'together'])
     await expect(save).toBeEnabled();
     await save.click();
     await expect(editor).toHaveCount(0);
-    const card = page
-      .locator('.template-card')
-      .filter({has: page.getByRole('heading', {name, exact: true})});
-    const targetCount = await card
-      .locator('.template-open li')
-      .evaluateAll((rows) =>
-        rows.reduce((sum, row) => sum + Number(row.textContent?.split(' × ')[0]), 0),
-      );
-    expect(targetCount).toBe(count - 2);
+    // The preview counts the saved template's sets.
+    await page.getByRole('button', {name: `Open template ${name}`, exact: true}).click();
+    await expect(page.getByRole('dialog', {name, exact: true})).toContainText(`${count - 2} sets`);
   });
 
 test('Finish waits for an active workout row to complete its deletion', async ({page}) => {

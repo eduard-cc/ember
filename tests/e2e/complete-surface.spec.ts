@@ -28,8 +28,14 @@ test('assistance progress excludes resistance estimates and source link opens se
     .getByRole('button', {name: /View source workout/})
     .first()
     .click();
-  await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
-  await expect(page.getByText(/Set 1:.*assistance/).first()).toBeVisible();
+  // The source workout opens over History, its assisted sets under an Assistance heading.
+  await expect(page.locator('.library-scroll h1')).toHaveText('History');
+  const assisted = page
+    .locator('.workout-drawer section')
+    .filter({has: page.getByRole('heading', {name: 'Pull Up (Assisted)'})});
+  await expect(assisted.getByRole('columnheader')).toHaveText(['Set', 'Assistance × reps']);
+  await expect(assisted.locator('.sr-only').first()).toContainText('kg assistance ×');
+  await expect(assisted).not.toContainText('Est. 1RM');
 });
 test('all navigation screens fit their viewport without horizontal overflow', async ({
   page,

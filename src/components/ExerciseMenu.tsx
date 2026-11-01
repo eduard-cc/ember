@@ -55,8 +55,12 @@ export const OptionsMenu = forwardRef<
     className?: string;
     /** The drawer's visible heading on phones; defaults to the label. */
     title?: string;
+    /** For a menu portaled outside the disabled content fieldset (the workout drawer). */
+    disabled?: boolean;
+    /** The ⋯ button's look: bare in cards and headings, outlined in a button row. */
+    variant?: 'ghost' | 'secondary';
   }
->(({label, items: entries, className = '', title}, ref) => {
+>(({label, items: entries, className = '', title, disabled, variant = 'ghost'}, ref) => {
   const mobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [upward, setUpward] = useState(false);
@@ -140,9 +144,10 @@ export const OptionsMenu = forwardRef<
           else if (ref) ref.current = node;
         }}
         size='icon'
-        variant='ghost'
+        variant={variant}
         className='aria-expanded:bg-accent aria-expanded:text-foreground'
         aria-label={label}
+        disabled={disabled}
         aria-haspopup='menu'
         aria-expanded={open}
         aria-controls={open && !mobile ? id : undefined}

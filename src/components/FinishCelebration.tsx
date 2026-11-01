@@ -2,20 +2,17 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {Trophy} from 'lucide-react';
 import {type CSSProperties, useEffect, useState} from 'react';
 
-import {bodyPartOf} from '../catalog/catalog';
 import {
   type PersonalRecord,
   type RecordKind,
+  recordKindLabel,
   recordKinds,
-  topSet,
   workoutVolume,
 } from '../domain/finish-summary';
 import type {Workout} from '../domain/types';
 import {cue} from '../feedback';
 import {reducedMotion} from '../utils/motion';
-import {plural} from '../utils/plural';
-import {setLabel} from '../utils/set-label';
-import {ExerciseThumb} from './ExerciseThumb';
+import {ExerciseLine} from './exercise-line';
 import {Button} from './ui/button';
 import {RollingNumber} from './ui/rolling-number';
 
@@ -81,13 +78,6 @@ function LitHeart({still}: {still: boolean}) {
   );
 }
 
-const kindLabel: Record<RecordKind, string> = {
-  weight: 'Heaviest\u00a0weight',
-  reps: 'Most\u00a0reps',
-  volume: 'Session\u00a0volume',
-  // Non-breaking, so a wrapped list never strands "1RM (Epley)" on its own line.
-  e1rm: 'Est.\u00a01RM\u00a0(Epley)',
-};
 const recordValue = (kind: RecordKind, n: number) =>
   kind === 'reps'
     ? `${n} reps`
@@ -114,7 +104,7 @@ function RecordRow({records, delay}: {records: PersonalRecord[]; delay: number})
           {lead.exercise}
         </p>
         <p className='text-[12px] text-pretty text-muted-foreground'>
-          {sorted.map((record) => kindLabel[record.kind]).join(' · ')}
+          {sorted.map((record) => recordKindLabel[record.kind]).join(' · ')}
         </p>
       </div>
       <div className='shrink-0 text-right'>
@@ -284,39 +274,10 @@ function CelebrationContent({celebration: {workout, records}}: {celebration: Cel
             >
               Exercises
             </h2>
-            <ul className='grid'>
-              {workout.exercises.map((exercise, i) => {
-                const top = topSet(exercise);
-                return (
-                  <li key={i} className='flex min-h-15 items-center gap-3 py-1.5'>
-                    <ExerciseThumb name={exercise.name} />
-                    <div className='min-w-0 flex-1'>
-                      <p className='line-clamp-2 text-sm leading-snug font-medium [overflow-wrap:anywhere] text-foreground'>
-                        {exercise.name}
-                      </p>
-                      <p className='text-[12px] text-muted-foreground'>
-                        {bodyPartOf(exercise.name)}
-                      </p>
-                    </div>
-                    <div className='shrink-0 text-right'>
-                      <p className='flex items-center justify-end gap-1 text-sm font-semibold text-foreground tabular-nums'>
-                        {prNames.has(exercise.name) && (
-                          <Trophy
-                            size={14}
-                            className='text-primary'
-                            aria-label='Personal record'
-                            role='img'
-                          />
-                        )}
-                        {top && setLabel(top, exercise.type)}
-                      </p>
-                      <p className='text-[12px] text-muted-foreground tabular-nums'>
-                        {plural(exercise.sets.length, 'set')}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
+            <ul className='grid gap-0.5'>
+              {workout.exercises.map((exercise, i) => (
+                <ExerciseLine key={i} exercise={exercise} record={prNames.has(exercise.name)} />
+              ))}
             </ul>
           </section>
         </div>

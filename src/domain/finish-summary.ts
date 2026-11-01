@@ -51,6 +51,24 @@ export function newRecords(workout: Workout, history: Dataset): PersonalRecord[]
   return found;
 }
 
+/**
+ * The records a past workout set when it happened: `newRecords` against only the workouts before
+ * it, so a record later beaten still shows on the day it was set.
+ */
+export const recordsAt = (workout: Workout, history: Dataset) =>
+  newRecords(workout, {
+    ...history,
+    workouts: history.workouts.filter((other) => other.date < workout.date),
+  });
+
+/** Record names; non-breaking, so a wrapped list never strands "1RM (Epley)" on its own line. */
+export const recordKindLabel: Record<RecordKind, string> = {
+  weight: 'Heaviest\u00a0weight',
+  reps: 'Most\u00a0reps',
+  volume: 'Session\u00a0volume',
+  e1rm: 'Est.\u00a01RM\u00a0(Epley)',
+};
+
 /** Recorded load × reps over a workout's weighted sets, as in the Records tab. */
 export const workoutVolume = (workout: Workout) =>
   workout.exercises.reduce(

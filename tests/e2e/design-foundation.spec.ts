@@ -52,7 +52,7 @@ for (const scheme of ['light', 'dark'] as const) {
         .getByRole('navigation', {name: 'Main navigation'})
         .getByRole('button', {name: 'Workout', exact: true})
         .click();
-      const card = page.locator('.template-grid');
+      const card = page.locator('.template-card').first();
       await expect(card).toBeVisible();
       const cardBackground = await card.evaluate((el) => getComputedStyle(el).backgroundColor);
       expect(cardBackground).toBe(
@@ -130,7 +130,10 @@ test('type follows the type scale', async ({page}) => {
       return {size: cs.fontSize, weight: cs.fontWeight, tracking: cs.letterSpacing};
     });
   expect(h1).toEqual({size: '24px', weight: '600', tracking: '-0.6px'});
-  await expect(page.locator('.library .template-open ul').first()).toHaveCSS('font-size', '14px');
+  await expect(page.locator('.library .template-card .exercise-line p').first()).toHaveCSS(
+    'font-size',
+    '14px',
+  );
   await expect(page.locator('.library .button').first()).toHaveCSS('font-weight', '500');
 
   // Chart text, the tab bar, list labels and session-set headers stay out of PR 1.

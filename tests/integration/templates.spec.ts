@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {addExercise, navigate} from '../navigation';
+import {addExercise, navigate, templateAction} from '../navigation';
 import {login, syncNow} from './helpers';
 
 async function templates(page: Page) {
@@ -28,7 +28,7 @@ test('lost real API acknowledgement retries identical operation once and offline
   await addExercise(page, 'Bench Press (Barbell)');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  await page.getByRole('button', {name: 'Edit template Offline template', exact: true}).click();
+  await templateAction(page, 'Edit template', 'Offline template');
   await page.getByLabel('Template name').fill('Offline template edited');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
@@ -72,9 +72,7 @@ test('lost real API acknowledgement retries identical operation once and offline
     response.changes.filter((c: any) => c.entityId === id).map((c: any) => c.revision),
   ).toEqual([1, 2]);
   await navigate(fresh, 'Workouts');
-  await fresh
-    .getByRole('button', {name: 'Delete template Offline template edited', exact: true})
-    .click();
+  await templateAction(fresh, 'Delete template', 'Offline template edited');
   await fresh.getByRole('button', {name: 'Confirm delete template', exact: true}).click();
   await syncNow(fresh);
   await expect(fresh.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
@@ -101,7 +99,7 @@ test('stale offline template edit preserves both local edits and peer winner ins
   await context.setOffline(true);
   const edit = async (target: Page, from: string, to: string) => {
     await navigate(target, 'Workouts');
-    await target.getByRole('button', {name: 'Edit template ' + from, exact: true}).click();
+    await templateAction(target, 'Edit template', from);
     await target.getByLabel('Template name').fill(to);
     await target.getByRole('button', {name: 'Save template', exact: true}).click();
     await expect(target.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
@@ -180,7 +178,7 @@ test('rename from retained UI rejects a hidden actual API peer set-value revisio
   await syncNow(page);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const original = (await templates(page)).templates[0];
-  await page.getByRole('button', {name: 'Edit template Displayed base', exact: true}).click();
+  await templateAction(page, 'Edit template', 'Displayed base');
   await page.getByLabel('Template name').fill('Retained rename');
   const peer = await browser.newContext();
   const fresh = await peer.newPage();
@@ -261,7 +259,7 @@ test('retained editor rejects peer changes after ordinary Sync now UI refresh', 
   await syncNow(page);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   const original = (await templates(page)).templates[0];
-  await page.getByRole('button', {name: 'Edit template Displayed base', exact: true}).click();
+  await templateAction(page, 'Edit template', 'Displayed base');
   await page.getByLabel('Template name').fill('Retained rename');
   const peer = await browser.newContext();
   const fresh = await peer.newPage();

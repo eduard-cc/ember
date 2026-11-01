@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import {demoTemplates} from '../../src/domain/demo';
-import {closeCelebration, navigate} from '../navigation';
+import {closeCelebration, navigate, openWorkout} from '../navigation';
 import {login, revokeAndLock, syncNow} from './helpers';
 
 test('template preview is unmounted when local trust is revoked', async ({page}) => {
@@ -76,9 +76,9 @@ test('offline finish survives reopen and fresh independent peer sees only comple
   await expect(fresh.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await navigate(fresh, 'History');
   await expect(fresh.getByText('Offline finished', {exact: true}).first()).toBeVisible();
-  await expect(
-    fresh.locator('.history-card', {hasText: 'Offline finished'}).locator('.eyebrow'),
-  ).toContainText('· 45 MIN');
+  await expect(fresh.locator('.history-card', {hasText: 'Offline finished'})).toContainText(
+    '45 min',
+  );
   await navigate(fresh, 'Workouts');
   await expect(fresh.getByRole('heading', {name: 'Quick start', exact: true})).toBeVisible();
   await peer.close();
@@ -183,4 +183,55 @@ test('an open Previous evidence dialog closes when local trust is revoked mid-wo
   await expect(page.locator('main')).toBeHidden();
   // Portaled dialogs escape <main hidden>; locked history must not stay on screen.
   await expect(evidence).toHaveCount(0);
+});
+test('an open History workout drawer is gone the moment local trust is revoked', async ({page}) => {
+  const workout = {
+    id: 'drawer-' + crypto.randomUUID(),
+    name: 'Drawer while locked',
+    date: '2026-01-10T12:00:00',
+    duration: 30,
+    exercises: [
+      {
+        name: 'Bench Press (Barbell)',
+        type: 'weighted',
+        sets: [{id: crypto.randomUUID(), weight: 40, reps: 8, seconds: null, distance: null}],
+      },
+    ],
+  };
+  await page.addInitScript(
+    (workout) =>
+      localStorage.setItem(
+        'ember:v1',
+        JSON.stringify({
+          version: 1,
+          dataset: {
+            sourceLabel: 'Synthetic',
+            workouts: [workout],
+            warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
+          },
+          active: null,
+          finished: [],
+          templates: [],
+        }),
+      ),
+    workout,
+  );
+  await page.goto('/');
+  await login(page);
+  await navigate(page, 'History');
+  const drawer = await openWorkout(page, workout.name);
+  await expect(drawer).toContainText('40 kg × 8');
+  await revokeAndLock(page);
+  // Not even a closing drawer may stay drawn once <main> is hidden.
+  const drawnWhileLocked = await page.evaluate(
+    () =>
+      new Promise<boolean>((resolve) => {
+        const check = () =>
+          document.querySelector('main')?.hidden
+            ? resolve(!!document.querySelector('.workout-drawer'))
+            : requestAnimationFrame(check);
+        check();
+      }),
+  );
+  expect(drawnWhileLocked).toBe(false);
 });

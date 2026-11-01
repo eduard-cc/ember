@@ -20,14 +20,14 @@ test('finishing saves elapsed minutes in history on Pixel 6', async ({page}, tes
   await page.getByRole('button', {name: 'Save finished workout'}).click();
   await closeCelebration(page);
   const card = page.locator('.history-card', {hasText: 'Synthetic timed workout'});
-  await expect(card.locator('.eyebrow')).toContainText('· 45 MIN');
-  await expect(card).toContainText('1 completed set');
+  await expect(card).toContainText('45 min');
+  await expect(card.locator('.exercise-line')).toContainText('30 kg × 8');
   await page.reload();
   await page
     .getByRole('navigation', {name: 'Main navigation'})
     .getByRole('button', {name: 'History', exact: true})
     .click();
-  await expect(card.locator('.eyebrow')).toContainText('· 45 MIN');
+  await expect(card).toContainText('45 min');
 });
 
 test('a workout finished within a minute shows under one minute on Pixel 6', async ({
@@ -48,11 +48,11 @@ test('a workout finished within a minute shows under one minute on Pixel 6', asy
   await page.getByRole('button', {name: 'Save finished workout'}).click();
   await closeCelebration(page);
   const card = page.locator('.history-card', {hasText: 'Synthetic quick workout'});
-  await expect(card.locator('.eyebrow')).toContainText('· <1 MIN');
+  await expect(card).toContainText('<1 min');
   await page.reload();
   await page
     .getByRole('navigation', {name: 'Main navigation'})
     .getByRole('button', {name: 'History', exact: true})
     .click();
-  await expect(card.locator('.eyebrow')).toContainText('· <1 MIN');
+  await expect(card).toContainText('<1 min');
 });

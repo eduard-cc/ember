@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import type {Workout} from '../../src/domain/types';
-import {navigate} from '../navigation';
+import {navigate, openWorkout, workoutAction} from '../navigation';
 import {login, syncNow} from './helpers';
 
 const workout: Workout = {
@@ -44,8 +44,7 @@ test('history edits and deletion reach a second device through the real API', as
     await expect(fresh.getByRole('heading', {name: workout.name, exact: true})).toBeVisible();
 
     await navigate(page, 'History');
-    await page.getByRole('button', {name: /Workout options for Synthetic session/}).click();
-    await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+    await workoutAction(page, 'Synthetic session', 'Edit workout');
     const editor = page.getByRole('dialog', {name: 'Edit workout'});
     await editor.getByLabel('Workout name').fill('Corrected session');
     await editor.getByLabel('Duration (min)').fill('45');
@@ -57,12 +56,11 @@ test('history edits and deletion reach a second device through the real API', as
     await expect(
       fresh.getByRole('heading', {name: 'Corrected session', exact: true}),
     ).toBeVisible();
-    await fresh.getByRole('button', {name: /View sets for Corrected session/}).click();
-    await expect(fresh.locator('.workout-details')).toContainText('40 kg × 10');
-    await expect(fresh.locator('.history-card')).toContainText('45 MIN');
+    await expect(fresh.locator('.history-card')).toContainText('45 min');
+    const drawer = await openWorkout(fresh, 'Corrected session');
+    await expect(drawer.locator('.recorded-sets')).toContainText('40 kg × 10');
 
-    await page.getByRole('button', {name: /Workout options for Corrected session/}).click();
-    await page.getByRole('menuitem', {name: 'Delete workout'}).click();
+    await workoutAction(page, 'Corrected session', 'Delete workout');
     const confirmation = page.getByRole('dialog', {name: 'Delete this workout?'});
     await confirmation.getByRole('button', {name: 'Delete workout'}).click();
     await expect(confirmation).toBeHidden();

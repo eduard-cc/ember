@@ -1,33 +1,66 @@
-import {ClipboardList, Pencil, Plus, Trash2, X} from 'lucide-react';
-import {useState} from 'react';
+import {ClipboardList, Clock, Layers, Pencil, Play, Plus, Trash2, X} from 'lucide-react';
+import {useMemo, useRef, useState} from 'react';
 
-import {bodyPartOf} from '../catalog/catalog';
 import {AddExercise} from '../components/AddExercise';
-import {ExerciseThumb} from '../components/ExerciseThumb';
-import {ExerciseRowText, exerciseRowClass} from '../components/exercise-row';
+import {OptionsMenu} from '../components/ExerciseMenu';
+import {ExerciseLine, Stat} from '../components/exercise-line';
 import {Button} from '../components/ui/button';
 import {Card} from '../components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogCornerClose,
-  DialogDescription,
-  DialogTitle,
-} from '../components/ui/dialog';
+import {DialogActions} from '../components/ui/dialog';
 import {EmptyState} from '../components/ui/empty-state';
 import {fieldLabelClass} from '../components/ui/field-label';
 import {Input} from '../components/ui/input';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogClose,
+  ResponsiveDialogContent,
+  ResponsiveDialogCornerClose,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '../components/ui/responsive-dialog';
 import {SectionHeading} from '../components/ui/section-heading';
+import {routineTargets} from '../components/workout-targets';
 import type {Dataset, Workout} from '../domain/types';
+import {estimatedMinutes} from '../domain/workout-duration';
+import {cue} from '../feedback';
 import {useBackLayer} from '../state/back';
 import {newWorkout} from '../state/workout';
-import {dateLabel} from '../utils/date';
+import {relativeDay} from '../utils/date';
 import {plural} from '../utils/plural';
 import {WorkoutView} from './WorkoutView';
+
+const CARD_LINES = 4;
 
 /** Latest finished session with the template's exact name, if any. */
 function lastPerformed(dataset: Dataset, name: string): string | undefined {
   return dataset.workouts.find((w) => w.name === name)?.date;
+}
+
+const setsIn = (workout: Workout) =>
+  workout.exercises.reduce((n, exercise) => n + exercise.sets.length, 0);
+
+/** "4 exercises", "~45 min" from the owner's own pace, and when it was last done. */
+function TemplateStats({template, dataset}: {template: Workout; dataset: Dataset}) {
+  const last = lastPerformed(dataset, template.name);
+  const minutes = estimatedMinutes(setsIn(template), dataset.workouts);
+  return (
+    <>
+      <p className='mt-1 flex flex-wrap gap-x-3 gap-y-1'>
+        <Stat icon={Layers}>{plural(template.exercises.length, 'exercise')}</Stat>
+        {minutes !== null && (
+          <Stat icon={Clock}>
+            <span aria-hidden='true'>~{minutes} min</span>
+            <span className='sr-only'>about {minutes} minutes</span>
+          </Stat>
+        )}
+      </p>
+      <p className='mt-0.5 text-[12px]'>
+        {last ? `Last done ${relativeDay(last)}` : 'Not done yet'}
+      </p>
+    </>
+  );
 }
 
 export function TemplatesView({
@@ -44,14 +77,40 @@ export function TemplatesView({
   const [editing, setEditing] = useState<Workout | null>(null);
   const [deletingSets, setDeletingSets] = useState(false);
   const [editingBase, setEditingBase] = useState<Workout | undefined>();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [preview, setPreview] = useState<Workout | null>(null);
+  const [deleting, setDeleting] = useState<Workout | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  // The template's current revision, so a peer's edit shows and starts; gone if deleted.
+  const preview = (previewId && templates.find((t) => t.id === previewId)) || null;
+  // The preview keeps its template while it slides away.
+  const [shown, setShown] = useState<Workout | null>(null);
+  if (preview && preview !== shown) setShown(preview);
+  const drawn = preview ?? shown;
   useBackLayer(!!editing, () => setEditing(null));
-  useBackLayer(!!preview, () => setPreview(null));
+  useBackLayer(!!preview, () => setPreviewId(null));
+  useBackLayer(!!deleting, () => setDeleting(null));
+  // What Start will prefill: the latest matching history, else the template's own values.
+  const targets = useMemo(
+    () => new Map(templates.map((t) => [t.id, routineTargets(t, dataset)])),
+    [templates, dataset],
+  );
+  const planFor = (template: Workout) => targets.get(template.id) ?? template;
+  const cards = useRef(new Map<string, HTMLButtonElement>());
+  const returnTo = useRef<string | null>(null);
+  const started = useRef(false);
+  const focusCard = (event: Event) => {
+    event.preventDefault();
+    const id = returnTo.current;
+    returnTo.current = null;
+    if (id) cards.current.get(id)?.focus({preventScroll: true});
+  };
+  const edit = (template: Workout) => {
+    setEditingBase(structuredClone(template));
+    setEditing(structuredClone(template));
+  };
   return (
     <div className='templates-view'>
       <SectionHeading className='templates-heading mt-7'>
-        <h2>My templates</h2>
+        <h2>Templates</h2>
         <Button
           variant='ghost'
           size='icon'
@@ -140,84 +199,63 @@ export function TemplatesView({
       ) : (
         <>
           {!!templates.length && (
-            <div className='template-grid grid grid-cols-1 gap-0 border border-border bg-card desk:grid-cols-2 desk:logger-open:grid-cols-1'>
+            <ul className='template-grid grid grid-cols-1 gap-3 desk:grid-cols-2 desk:logger-open:grid-cols-1'>
               {templates.map((template) => {
-                const last = lastPerformed(dataset, template.name);
+                const plan = planFor(template);
                 return (
-                  <article
-                    className='template-card flex min-w-0 flex-col self-stretch border-0 border-t border-border first:border-t-0 desk:last:odd:col-span-full desk:even:border-l desk:nth-2:border-t-0 desk:logger-open:last:odd:col-auto desk:logger-open:even:border-l-0 desk:logger-open:nth-2:border-t'
+                  <li
+                    className='template-card pressable relative flex min-w-0 flex-col border border-border bg-card hover:bg-accent/60 has-[.template-open:focus-visible]:outline-2 has-[.template-open:focus-visible]:outline-offset-2 has-[.template-open:focus-visible]:outline-ring'
                     key={template.id}
                   >
-                    <header className='flex items-center gap-0.5 pt-1.5 pr-1.5 pl-4'>
-                      <h3 className='min-w-0 flex-1 truncate text-[16px] font-semibold'>
-                        {template.name}
-                      </h3>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        aria-label={`Edit template ${template.name}`}
-                        onClick={() => {
-                          setEditingBase(structuredClone(template));
-                          setEditing(structuredClone(template));
-                        }}
-                      >
-                        <Pencil size={16} />
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        aria-label={`Delete template ${template.name}`}
-                        onClick={() => setDeleteId(template.id)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </header>
+                    {/* The whole card opens the preview; the rows stay readable under it. */}
                     <button
-                      className='template-open min-h-11 border-0 bg-transparent px-4 pt-1 pb-3.5 text-left text-inherit [font:inherit]'
+                      type='button'
+                      ref={(node) => {
+                        if (node) cards.current.set(template.id, node);
+                        else cards.current.delete(template.id);
+                      }}
+                      className='template-open absolute inset-0 focus-visible:outline-none'
                       aria-label={`Open template ${template.name}`}
-                      onClick={() => setPreview(template)}
-                    >
-                      <ul className='mb-2 list-none p-0 text-[14px] leading-[1.6] text-muted-foreground'>
-                        {template.exercises.slice(0, 6).map((ex, i) => (
-                          <li className='[overflow-wrap:anywhere]' key={`${ex.name}-${i}`}>
-                            {ex.sets.length} × {ex.name}
-                          </li>
-                        ))}
-                        {template.exercises.length > 6 && (
-                          <li className='[overflow-wrap:anywhere]'>
-                            + {plural(template.exercises.length - 6, 'more exercise')}
-                          </li>
-                        )}
-                      </ul>
-                      <small className='text-[12px] text-muted-foreground'>
-                        {last ? `Last performed ${dateLabel(last)}` : 'Not performed yet'}
-                      </small>
-                    </button>
-                    {deleteId === template.id && (
-                      <div className='inline-confirm mt-4 border-t border-border px-4 pb-3.5'>
-                        <p className='mb-2.5'>
-                          Delete this template? Your workout history is kept.
-                        </p>
-                        <Button className='mr-2' onClick={() => setDeleteId(null)}>
-                          Cancel
-                        </Button>
-                        <Button
-                          variant='danger'
-                          className='mr-2'
-                          aria-label='Confirm delete template'
-                          onClick={() => {
-                            void onChange(templates.filter((t) => t.id !== template.id));
-                            setDeleteId(null);
-                          }}
-                        >
-                          Delete template
-                        </Button>
-                      </div>
-                    )}
-                  </article>
+                      onClick={() => {
+                        cue('tick');
+                        setPreviewId(template.id);
+                      }}
+                    />
+                    <div className='p-4 pr-14 pb-0'>
+                      <h3 className='text-card-title [overflow-wrap:anywhere]'>{template.name}</h3>
+                      <TemplateStats template={template} dataset={dataset} />
+                    </div>
+                    <ul className='mx-4 mt-3 grid gap-0.5 border-t border-border pt-2 pb-3'>
+                      {plan.exercises.slice(0, CARD_LINES).map((exercise, i) => (
+                        <ExerciseLine key={i} exercise={exercise} planned />
+                      ))}
+                      {plan.exercises.length > CARD_LINES && (
+                        <li className='pl-[52px] text-[12px] text-muted-foreground tabular-nums'>
+                          + {plan.exercises.length - CARD_LINES} more
+                        </li>
+                      )}
+                    </ul>
+                    <OptionsMenu
+                      className='absolute top-1.5 right-0 z-10'
+                      label={`Template options for ${template.name}`}
+                      title={template.name}
+                      items={[
+                        {label: 'Edit template', icon: Pencil, onSelect: () => edit(template)},
+                        {
+                          label: 'Delete template',
+                          icon: Trash2,
+                          danger: true,
+                          onSelect: () => {
+                            returnTo.current = template.id;
+                            setDeleting(template);
+                          },
+                        },
+                      ]}
+                    />
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
           {!templates.length && (
             <EmptyState
@@ -228,39 +266,97 @@ export function TemplatesView({
           )}
         </>
       )}
-      <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
-        <DialogContent className='template-preview'>
-          <DialogTitle className='pr-7'>{preview?.name}</DialogTitle>
-          <DialogDescription>
-            {preview && lastPerformed(dataset, preview.name)
-              ? `Last performed ${dateLabel(lastPerformed(dataset, preview.name)!)}`
-              : 'Not performed yet'}
-          </DialogDescription>
-          <ul className='mt-3.5 mb-4.5'>
-            {preview?.exercises.map((ex, i) => (
-              <li key={`${ex.name}-${i}`} className={exerciseRowClass}>
-                <ExerciseThumb name={ex.name} />
-                <ExerciseRowText
-                  title={`${ex.sets.length} × ${ex.name}`}
-                  subtitle={bodyPartOf(ex.name)}
-                />
-              </li>
-            ))}
-          </ul>
-          <Button
-            variant='primary'
-            className='min-h-12 w-full'
-            aria-label={`Start template ${preview?.name ?? ''}`}
-            onClick={() => {
-              if (preview) onStart(preview);
-              setPreview(null);
-            }}
-          >
-            Start workout
-          </Button>
-          <DialogCornerClose label='Close' />
-        </DialogContent>
-      </Dialog>
+
+      <ResponsiveDialog open={!!preview} onOpenChange={(open) => !open && setPreviewId(null)}>
+        <ResponsiveDialogContent
+          className='template-preview max-desk:max-h-[calc(100dvh-2.5rem)] desk:flex desk:flex-col'
+          onCloseAutoFocus={(event: Event) => {
+            event.preventDefault();
+            // Start hands focus to the logger; otherwise it returns to the card.
+            if (started.current) started.current = false;
+            else if (drawn) cards.current.get(drawn.id)?.focus({preventScroll: true});
+          }}
+        >
+          {drawn && (
+            <>
+              <ResponsiveDialogHeader className='shrink-0 pr-14 text-left desk:pr-7'>
+                <ResponsiveDialogTitle className='[overflow-wrap:anywhere]'>
+                  {drawn.name}
+                </ResponsiveDialogTitle>
+                <ResponsiveDialogDescription className='desk:mt-0'>
+                  {(() => {
+                    const minutes = estimatedMinutes(setsIn(drawn), dataset.workouts);
+                    const last = lastPerformed(dataset, drawn.name);
+                    return (
+                      <>
+                        {plural(drawn.exercises.length, 'exercise')} ·{' '}
+                        {plural(setsIn(drawn), 'set')}
+                        {minutes !== null && ` · ~${minutes} min`}
+                        <br />
+                        {last
+                          ? `Last done ${relativeDay(last)}; targets come from your latest sets.`
+                          : 'Not done yet.'}
+                      </>
+                    );
+                  })()}
+                </ResponsiveDialogDescription>
+              </ResponsiveDialogHeader>
+              <ResponsiveDialogBody className='min-h-0 flex-1 overflow-y-auto overscroll-contain'>
+                <ul className='grid gap-0.5 border-t border-border pt-2'>
+                  {planFor(drawn).exercises.map((exercise, i) => (
+                    <ExerciseLine key={i} exercise={exercise} planned />
+                  ))}
+                </ul>
+              </ResponsiveDialogBody>
+              <div className='shrink-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] desk:px-0 desk:pt-5 desk:pb-0'>
+                <Button
+                  variant='primary'
+                  className='min-h-12 w-full text-base'
+                  aria-label={`Start template ${drawn.name}`}
+                  disabled={!preview}
+                  onClick={() => {
+                    if (!preview) return;
+                    started.current = true;
+                    setPreviewId(null);
+                    onStart(preview);
+                  }}
+                >
+                  <Play size={16} className='fill-current' /> Start workout
+                </Button>
+              </div>
+              <ResponsiveDialogCornerClose label='Close' />
+            </>
+          )}
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+
+      <ResponsiveDialog open={!!deleting} onOpenChange={(open) => !open && setDeleting(null)}>
+        <ResponsiveDialogContent className='delete-template' onCloseAutoFocus={focusCard}>
+          <ResponsiveDialogHeader className='text-left'>
+            <ResponsiveDialogTitle>Delete this template?</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              {deleting?.name} will be removed. Your workout history is kept.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className='pb-[calc(1rem+env(safe-area-inset-bottom))] desk:pb-0'>
+            <DialogActions>
+              <ResponsiveDialogClose asChild>
+                <Button>Keep template</Button>
+              </ResponsiveDialogClose>
+              <Button
+                variant='danger'
+                aria-label='Confirm delete template'
+                onClick={() => {
+                  if (deleting) void onChange(templates.filter((t) => t.id !== deleting.id));
+                  setDeleting(null);
+                }}
+              >
+                Delete template
+              </Button>
+            </DialogActions>
+          </ResponsiveDialogBody>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

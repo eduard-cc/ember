@@ -6,10 +6,8 @@ test('historical workouts repeat as editable uncompleted targets', async ({page}
   await page.goto('/?demo=1');
   await navigate(page, 'History');
   await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
-  await page
-    .getByRole('button', {name: /Repeat workout/})
-    .first()
-    .click();
+  await page.locator('.history-card button').first().click();
+  await page.getByRole('button', {name: /^Repeat workout /}).click();
   await page.getByRole('button', {name: 'Replace active draft'}).click();
   await expect(page.getByRole('heading', {name: 'Your workout'})).toBeVisible();
   await expect(page.getByRole('button', {name: 'Finish workout'})).toBeDisabled();

@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {newRecords, topSet, workoutVolume} from '../src/domain/finish-summary';
+import {newRecords, recordsAt, topSet, workoutVolume} from '../src/domain/finish-summary';
 import {getRecords, getTrend, workoutsPerWeek} from '../src/domain/model';
 import type {Dataset, ExerciseType, SetRecord, Workout} from '../src/domain/types';
 
@@ -169,6 +169,17 @@ describe('personal records set by a finished workout', () => {
     expect(newRecords(twice, dataset([twice, ...earlier]))).toEqual([
       {exercise: 'Press', kind: 'volume', value: 1080, previous: 960},
     ]);
+  });
+  it('credits a past workout with the records it set then, even ones later beaten', () => {
+    const later = session('l', '2026-03-22T10:00:00', 'weighted', [set('l1', 80, 3)]);
+    const history = dataset([later, ...earlier]);
+    // b's 70 kg beat a's 60 kg on the day, though l's 80 kg has beaten it since.
+    expect(recordsAt(earlier[1], history).map((r) => [r.kind, r.value, r.previous])).toEqual([
+      ['weight', 70, 60],
+      ['e1rm', 77, 76],
+    ]);
+    expect(recordsAt(earlier[0], history)).toEqual([]);
+    expect(newRecords(earlier[1], history)).toEqual([]);
   });
 });
 

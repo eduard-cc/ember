@@ -175,7 +175,8 @@ test('the template editor offers the same Replace and Remove menu', async ({page
   await page.getByRole('menuitem', {name: 'Remove exercise'}).click();
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   const card = page.locator('.template-card', {hasText: 'Menu template'});
-  await expect(card.locator('.template-open li')).toHaveText([/× Bench Press \(Barbell\)$/]);
+  await expect(card.locator('.exercise-line')).toHaveCount(1);
+  await expect(card.locator('.exercise-line')).toContainText('Bench Press (Barbell)');
 });
 
 test('replacing with another exercise already in the workout keeps both cards unchanged', async ({

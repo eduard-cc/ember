@@ -1,4 +1,14 @@
-import {ChevronDown, ChevronUp, Dumbbell, History, Plus, Settings, User, X} from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Dumbbell,
+  History,
+  Plus,
+  Search,
+  Settings,
+  User,
+  X,
+} from 'lucide-react';
 import {useEffect, useMemo, useRef, useState} from 'react';
 
 import {AddExercise} from './components/AddExercise';
@@ -131,7 +141,9 @@ export default function App() {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [deletingSets, setDeletingSets] = useState(false);
   const [pendingWorkout, setPendingWorkout] = useState<Workout | null>(null);
-  const [focusedId, setFocusedId] = useState<string | null>(null);
+  // The History workout to mark (a finish) or open (a source link).
+  const [focus, setFocus] = useState<{id: string; open: boolean} | null>(null);
+  const [historySearch, setHistorySearch] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const transitioning = useRef(false);
   // App-shell updates pause editing and sync around a saved, draft-free transition.
@@ -214,13 +226,14 @@ export default function App() {
   const go = (next: View) => {
     setView(next);
     setExercise(null);
-    setFocusedId(null);
+    setFocus(null);
+    setHistorySearch(false);
     setPendingWorkout(null);
     setNotice('');
   };
   const source = (id: string) => {
     go('History');
-    setFocusedId(id);
+    setFocus({id, open: true});
     expand(false);
   };
   const updateActive = (update: (active: Workout) => Workout) =>
@@ -255,7 +268,8 @@ export default function App() {
     // Only a committed finish celebrates; a failed one keeps the confirmation and its error.
     if (workout) {
       setConfirmFinish(false);
-      setFocusedId(workout.id);
+      setFocus({id: workout.id, open: false});
+      setHistorySearch(false);
       setView('History');
       setExercise(null);
       setCelebration({workout, records: newRecords(workout, allDataset)});
@@ -428,6 +442,18 @@ export default function App() {
             <div className='mb-5 flex items-center justify-between gap-3'>
               <h1>{title}</h1>
               {view === 'Profile' && settingsButton('-my-1.5 -mr-2.5 desk:hidden')}
+              {view === 'History' && (
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='-my-1.5 -mr-2.5'
+                  aria-label={historySearch ? 'Close search' : 'Search history'}
+                  aria-expanded={historySearch}
+                  onClick={() => setHistorySearch((value) => !value)}
+                >
+                  {historySearch ? <X size={20} /> : <Search size={20} />}
+                </Button>
+              )}
             </div>
             {!showSheet && !sync.locked && !settingsOpen && errors()}
             {sync.historyDownload && !sync.locked && !(showSheet && mobile) && !settingsOpen && (
@@ -464,7 +490,9 @@ export default function App() {
               {view === 'History' && (
                 <HistoryView
                   dataset={allDataset}
-                  focusedId={focusedId}
+                  focus={focus}
+                  searching={historySearch}
+                  onSearchingChange={setHistorySearch}
                   onRepeat={start}
                   onTemplate={saveTemplate}
                   onChange={changeHistoryWorkout}

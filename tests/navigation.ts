@@ -86,6 +86,47 @@ export async function deleteSet(page: Page, row: Locator) {
   else await row.getByRole('button', {name: /^Delete /}).click();
 }
 
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** A History card's button, named for the workout and its date ("Push day, 1 Feb 2026"). */
+export const workoutCard = (page: Page, name: string) =>
+  page.getByRole('button', {name: new RegExp(`^${escape(name)}, \\d`)}).first();
+
+/** Open a History workout's drawer (a centred dialog from 1000px) from its card. */
+export async function openWorkout(page: Page, name: string) {
+  // A drawer that is still closing keeps the page out of the accessibility tree.
+  await expect(page.locator('.overlay-motion')).toHaveCount(0);
+  await workoutCard(page, name).click();
+  const drawer = page.locator('.workout-drawer');
+  await expect(drawer).toBeVisible();
+  return drawer;
+}
+
+/** Choose Edit workout or Delete workout from an open workout drawer's ⋯ menu. */
+export async function workoutAction(page: Page, name: string, action: string) {
+  const drawer = await openWorkout(page, name);
+  await drawer
+    .getByRole('button', {name: new RegExp(`^Workout options for ${escape(name)}`)})
+    .click();
+  await page.getByRole('menuitem', {name: action}).click();
+  await expect(drawer).toBeHidden();
+}
+
+/** Choose Edit template or Delete template from a template card's ⋯ menu (the first card's without a name). */
+export async function templateAction(page: Page, action: string, name?: string) {
+  await page
+    .getByRole('button', {
+      name: name ? `Template options for ${name}` : /^Template options for /,
+      exact: !!name,
+    })
+    .first()
+    .click();
+  await page.getByRole('menuitem', {name: action}).click();
+  // On phones the action runs once the menu's drawer has gone.
+  if (action === 'Edit template') await expect(page.locator('.template-editor')).toBeVisible();
+  else await expect(page.getByRole('dialog', {name: 'Delete this template?'})).toBeVisible();
+}
+
 /** Close the finish celebration with Done, onto History. */
 export async function closeCelebration(page: Page) {
   const celebration = page.getByRole('dialog', {name: 'Workout complete'});

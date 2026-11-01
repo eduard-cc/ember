@@ -143,5 +143,6 @@ test('the template editor adds exercises through the same picker', async ({page}
   await expect(page.locator('.template-editor .exercise-card')).toHaveCount(1);
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   const card = page.locator('.template-card', {hasText: 'Picker template'});
-  await expect(card.locator('.template-open li')).toHaveText(['3 × Squat (Barbell)']);
+  await expect(card.locator('.exercise-line')).toHaveCount(1);
+  await expect(card.locator('.exercise-line')).toContainText('Squat (Barbell)');
 });
