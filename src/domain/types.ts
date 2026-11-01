@@ -41,6 +41,11 @@ export interface TrendPoint {
   workoutId: string;
   date: string;
   value: number;
+  /** Actual metric-winning set; volume uses the heaviest source set. */
+  best: SetRecord;
+  type: ExerciseType;
+  /** Strict improvement over earlier workouts; the first workout is not a PR. */
+  pr: boolean;
 }
 export interface Comparable {
   set: SetRecord;

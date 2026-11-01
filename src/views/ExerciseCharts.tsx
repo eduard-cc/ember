@@ -1,36 +1,34 @@
-import {ArrowUpRight, LineChart} from 'lucide-react';
+import {ChevronRight, LineChart, Trophy} from 'lucide-react';
 import {useMemo, useState} from 'react';
 
-import {Button} from '../components/ui/button';
-import {cardClass} from '../components/ui/card';
-import {
-  EmptyChart,
-  MetricExplanation,
-  trendChartClass,
-  useElementWidth,
-} from '../components/ui/chart';
-import {TextAction, dataTableClass} from '../components/ui/data-table';
+import {SegmentToggle} from '../components/segment-toggle';
+import {TrendArea} from '../components/trend-area';
+import {EmptyChart, MetricExplanation} from '../components/ui/chart';
 import {EmptyState} from '../components/ui/empty-state';
+import {chartNumber} from '../domain/chart-scale';
 import {getHistory, getTrend} from '../domain/model';
-import type {Dataset, Metric} from '../domain/types';
-import {dateLabel} from '../utils/date';
+import type {Dataset, Metric, TrendPoint} from '../domain/types';
+import {cn} from '../utils/cn';
+import {dateLabel, localDay} from '../utils/date';
 import {plural} from '../utils/plural';
+import {setText} from '../utils/set-label';
 
 const labels: Record<Metric, string> = {
-  load: 'Best load',
+  load: 'Heaviest weight',
   reps: 'Best reps',
-  e1rm: 'Estimated 1RM',
-  volume: 'Session volume',
+  volume: 'Volume',
+  e1rm: 'Est. 1RM',
 };
+const ranges = [
+  {value: '30', label: '1M'},
+  {value: '90', label: '3M'},
+  {value: '180', label: '6M'},
+  {value: '365', label: '1Y'},
+  {value: 'all', label: 'All'},
+];
+type Point = TrendPoint & {t: number};
 
-/** UTC day `days` ago, the first day a ranged chart shows. */
-function since(days: string) {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - Number(days));
-  return cutoff.toISOString().slice(0, 10);
-}
-
-/** Per-session trend for one exercise. Every point is listed with its source workout. */
+/** Per-session trend with the original metric definitions and every source workout. */
 export function ExerciseCharts({
   dataset,
   name,
@@ -40,40 +38,41 @@ export function ExerciseCharts({
   dataset: Dataset;
   name: string;
   onSource: (id: string) => void;
-  /** False inside a dialog, which already is a surface. */
   framed?: boolean;
 }) {
-  const [containerRef, chartWidth] = useElementWidth(750);
-  const plotLeft = 54;
-  const plotRight = chartWidth - 46;
-  // The library stays mounted beside the logger: rescan history only when it changes.
   const history = useMemo(() => getHistory(dataset, name), [dataset, name]);
   const type = history[0]?.type;
-  const applicable =
+  const applicable: Metric[] =
     type === 'weighted'
-      ? (['reps', 'load', 'volume', 'e1rm'] as Metric[])
+      ? ['load', 'reps', 'volume', 'e1rm']
       : type === 'assisted'
-        ? (['reps', 'load'] as Metric[])
-        : (['reps'] as Metric[]);
+        ? ['load', 'reps']
+        : ['reps'];
   const [metric, setMetric] = useState<Metric>(applicable[0]);
   const [range, setRange] = useState('all');
+  const [inspected, setInspected] = useState<Point | null>(null);
   const activeMetric = applicable.includes(metric) ? metric : applicable[0];
   const trend = useMemo(() => getTrend(dataset, name, activeMetric), [dataset, name, activeMetric]);
-  const first = range === 'all' ? null : since(range);
-  const points = first ? trend.filter((p) => p.date.slice(0, 10) >= first) : trend;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - Number(range));
+  const firstDay = range === 'all' ? null : localDay(cutoff);
+  const data = useMemo(
+    () =>
+      trend
+        .filter((p) => !firstDay || p.date.slice(0, 10) >= firstDay)
+        .map((p) => ({...p, t: new Date(p.date).getTime()})),
+    [trend, firstDay],
+  );
+  const hover = inspected && data.includes(inspected) ? inspected : null;
+  const first = data[0];
+  const last = data.at(-1);
+  const shown = hover ?? last;
+  const delta = first && last ? last.value - first.value : 0;
+  const lower = activeMetric === 'load' && type === 'assisted';
+  const better = lower ? delta < 0 : delta > 0;
   const unit = activeMetric === 'reps' ? 'reps' : activeMetric === 'volume' ? 'kg·reps' : 'kg';
-  const metricLabel =
-    activeMetric === 'load' && type === 'assisted' ? 'Least assistance' : labels[activeMetric];
-  const values = points.map((p) => p.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const spread = max - min || max * 0.15 || 1;
-  const timestamps = points.map((point) => new Date(point.date).getTime());
-  const firstTime = timestamps[0] ?? 0;
-  const timeSpan = (timestamps.at(-1) ?? firstTime) - firstTime;
-  const x = (i: number) =>
-    plotLeft + (timeSpan ? (timestamps[i] - firstTime) / timeSpan : 0.5) * (plotRight - plotLeft);
-  const y = (value: number) => 195 - ((value - min) / spread) * 135;
+  const metricLabel = lower ? 'Least assistance' : labels[activeMetric];
+  const best = shown ? setText(shown.best, shown.type) : null;
   if (!history.length)
     return (
       <EmptyState
@@ -84,133 +83,139 @@ export function ExerciseCharts({
       />
     );
   return (
-    <section className={cardClass} ref={containerRef}>
-      {/* `[align-items:start]` matches main's computed `start`; `items-start` computes `flex-start`. */}
-      <div className='flex [align-items:start] justify-between gap-4 max-desk:flex-wrap'>
-        <div
-          className='mt-5 flex flex-wrap gap-[5px] border-b border-border pb-4'
-          aria-label='Chart metric'
-        >
-          {applicable.map((m) => (
-            <Button
-              key={m}
-              variant={m === activeMetric ? 'primary' : 'ghost'}
-              className='px-2.5 text-[12px] leading-normal'
-              aria-pressed={m === activeMetric}
-              onClick={() => setMetric(m)}
-            >
-              {m === 'load' && type === 'assisted' ? 'Assistance (less is better)' : labels[m]}
-            </Button>
-          ))}
-        </div>
-        <select
-          className='min-h-11 w-[130px] min-w-0 shrink-0 rounded-none border border-border bg-card px-3 py-[9px] text-[16px]'
-          aria-label='Time range'
-          value={range}
-          onChange={(e) => setRange(e.target.value)}
-        >
-          <option value='30'>Last 30 days</option>
-          <option value='90'>Last 90 days</option>
-          <option value='365'>Last year</option>
-          <option value='all'>All time</option>
-        </select>
+    <section className='exercise-charts grid min-w-0 gap-4'>
+      <SegmentToggle
+        value={activeMetric}
+        onChange={(m) => {
+          setInspected(null);
+          setMetric(m);
+        }}
+        label='Chart metric'
+        items={applicable.map((m) => ({
+          value: m,
+          label: m === 'load' && type === 'assisted' ? 'Least assistance' : labels[m],
+        }))}
+        className='min-w-0 justify-start overflow-x-auto pb-1'
+        itemClassName='px-2.5'
+      />
+      <div className='chart-headline min-h-[4.25rem]'>
+        {shown ? (
+          <>
+            <p className='flex flex-wrap items-baseline gap-1.5 text-foreground'>
+              <span className='numeric text-stat'>{chartNumber(shown.value)}</span>
+              <span className='text-sm font-medium text-muted-foreground'>{unit}</span>
+              {shown.pr && (
+                <span className='ml-1 inline-flex items-center gap-1 self-center bg-primary-tint px-1.5 py-0.5 text-label text-primary'>
+                  <Trophy className='size-3' /> PR
+                </span>
+              )}
+            </p>
+            <p className='mt-1 text-label font-normal text-muted-foreground'>
+              {hover ? (
+                <>
+                  <span className='text-foreground'>{dateLabel(hover.date)}</span> · best set{' '}
+                  <span aria-label={best?.spoken}>{best?.text}</span>
+                </>
+              ) : delta === 0 || data.length < 2 ? (
+                `Latest, ${dateLabel(last!.date)}`
+              ) : (
+                <>
+                  <span
+                    className={cn(
+                      'numeric font-medium',
+                      better ? 'text-success' : 'text-foreground',
+                    )}
+                  >
+                    {delta > 0 ? '+' : '−'}
+                    {chartNumber(Math.abs(delta))} {unit}
+                  </span>{' '}
+                  since {dateLabel(first.date)}
+                </>
+              )}
+            </p>
+          </>
+        ) : (
+          <p>No eligible sets in this time range.</p>
+        )}
       </div>
-      <div className='mt-3 mb-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1'>
-        <strong className='text-[14px]'>{metricLabel}</strong>
-        <span className='text-[12px] text-muted-foreground'>
-          {unit} per session{activeMetric !== 'volume' ? ' · best eligible set' : ''}
-        </span>
-      </div>
-      {points.length ? (
-        <svg
-          className={trendChartClass}
-          viewBox={`0 0 ${chartWidth} 235`}
-          role='img'
-          aria-label={`${metricLabel} for ${name}. ${plural(points.length, 'session')}. Exact values in the table below.`}
-        >
-          <title>{metricLabel} over time</title>
-          {[0, 0.5, 1].map((f, i) => {
-            const value = min + spread * f;
-            return (
-              <g key={i}>
-                <line
-                  x1={plotLeft}
-                  x2={plotRight}
-                  y1={y(value)}
-                  y2={y(value)}
-                  strokeDasharray='4 5'
-                />
-                <text x='40' y={y(value) + 4} textAnchor='end'>
-                  {Number(value.toFixed(1))}
-                </text>
-              </g>
-            );
-          })}
-          <polyline
-            points={points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ')}
-            fill='none'
-            strokeWidth='2.5'
-            strokeLinejoin='round'
-          />
-          {points.map((p, i) => (
-            <circle key={`${p.workoutId}-${i}`} cx={x(i)} cy={y(p.value)} r='4'>
-              <title>
-                {dateLabel(p.date)}: {Number(p.value.toFixed(2))} {unit}
-              </title>
-            </circle>
-          ))}
-          <text x={plotLeft} y='226'>
-            {dateLabel(points[0].date)}
-          </text>
-          <text x={plotRight} y='226' textAnchor='end'>
-            {dateLabel(points.at(-1)!.date)}
-          </text>
-        </svg>
+      {data.length ? (
+        <TrendArea
+          key={`${name}-${activeMetric}-${range}`}
+          data={data}
+          onInspect={setInspected}
+          label={`${metricLabel} for ${name}. ${plural(data.length, 'session')}. Every session and its exact values are listed below.`}
+        />
       ) : (
         <EmptyChart>
           <p>No eligible sets in this time range.</p>
         </EmptyChart>
       )}
+      <div className='flex flex-wrap items-center justify-between gap-2'>
+        <SegmentToggle
+          value={range}
+          onChange={(r) => {
+            setInspected(null);
+            setRange(r);
+          }}
+          label='Time range'
+          items={ranges}
+          itemClassName='px-2.5'
+        />
+        <span className='flex items-center gap-1 text-caption text-muted-foreground'>
+          <span className='size-2 rounded-full bg-primary' /> PR
+        </span>
+      </div>
       <MetricExplanation>
         {activeMetric === 'e1rm'
           ? 'Epley estimate = weight × (1 + reps / 30), for 1–10 reps. One rep uses recorded weight. This is an estimate, not a tested maximum.'
           : activeMetric === 'volume'
             ? 'Recorded load × reps, summed per session. Not a measure of hypertrophy. Dumbbell load is per dumbbell.'
-            : activeMetric === 'load' && type === 'assisted'
+            : lower
               ? 'Lowest recorded assistance per session. Lower assistance means less help; no estimated strength or volume formula is applied.'
               : activeMetric === 'load'
                 ? 'Highest recorded load per session; reps may differ. Machine loads are not comparable across different machines or gyms.'
-                : 'Highest recorded reps in a set per session. Weights may differ: compare the exact source sets.'}
+                : 'Highest recorded reps in a set per session. Weights may differ: compare the exact source sets.'}{' '}
+        Hold and slide on the chart to inspect a session. PR marks a strict metric improvement over
+        earlier workouts, not a tested strength gain.
       </MetricExplanation>
-      <div className='mt-5 max-h-[340px] w-full overflow-auto'>
-        <table className={dataTableClass} aria-label='Exact trend values'>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>{metricLabel}</th>
-              <th>Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...points].reverse().map((point, i) => (
-              <tr key={`${point.workoutId}-${i}`}>
-                <td>{dateLabel(point.date)}</td>
-                <td>
-                  {Number(point.value.toFixed(2))} {unit}
-                </td>
-                <td>
-                  <TextAction
-                    aria-label={`View source workout ${dateLabel(point.date)}`}
-                    onClick={() => onSource(point.workoutId)}
-                  >
-                    View sets <ArrowUpRight size={13} />
-                  </TextAction>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <section>
+        <h3 className='mb-1 text-label text-muted-foreground'>Sessions</h3>
+        <ul
+          aria-label='Sessions'
+          className='max-h-[340px] divide-y divide-border overflow-auto border-y border-border'
+        >
+          {[...data].reverse().map((point, i) => {
+            const source = setText(point.best, point.type);
+            return (
+              <li key={`${point.workoutId}-${i}`}>
+                <button
+                  className='pressable grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto_16px] items-center gap-2 py-2 text-left hover:bg-accent focus-visible:-outline-offset-2'
+                  aria-label={`View source workout ${dateLabel(point.date)}, ${source.spoken ?? source.text}, ${metricLabel} ${chartNumber(point.value)} ${unit}${point.pr ? ', personal record' : ''}`}
+                  onClick={() => onSource(point.workoutId)}
+                >
+                  <span className='flex min-w-0 flex-col gap-0.5 numeric text-sm text-muted-foreground min-[480px]:flex-row min-[480px]:gap-4'>
+                    <span>{dateLabel(point.date)}</span>
+                    <span aria-label={source.spoken}>{source.text}</span>
+                  </span>
+                  <span className='flex shrink-0 items-center gap-1.5 text-right numeric text-sm font-semibold'>
+                    {point.pr && (
+                      <Trophy
+                        aria-label='Personal record'
+                        className='size-3.5 shrink-0 text-primary'
+                      />
+                    )}
+                    <span>
+                      {chartNumber(point.value)}{' '}
+                      <span className='font-normal text-muted-foreground'>{unit}</span>
+                    </span>
+                  </span>
+                  <ChevronRight aria-hidden className='size-4 text-muted-foreground' />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     </section>
   );
 }

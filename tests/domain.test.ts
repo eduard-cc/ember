@@ -61,8 +61,13 @@ describe('inspectable exercise history', () => {
     const data = history([
       ['2026-01-05', 'Pull Up (Assisted)', 'assisted', 30, 8],
       ['2026-01-05', 'Pull Up (Assisted)', 'assisted', 20, 8],
+      ['2026-01-12', 'Pull Up (Assisted)', 'assisted', 15, 6],
+      ['2026-01-19', 'Pull Up (Assisted)', 'assisted', 15, 10],
     ]);
-    expect(getTrend(data, 'Pull Up (Assisted)', 'load')[0].value).toBe(20);
+    const trend = getTrend(data, 'Pull Up (Assisted)', 'load');
+    expect(trend.map((p) => p.value)).toEqual([20, 15, 15]);
+    expect(trend.map((p) => p.best.reps)).toEqual([8, 6, 10]);
+    expect(trend.map((p) => p.pr)).toEqual([false, true, false]);
     expect(getTrend(data, 'Pull Up (Assisted)', 'e1rm')).toEqual([]);
     expect(getTrend(data, 'Pull Up (Assisted)', 'volume')).toEqual([]);
   });
@@ -81,6 +86,9 @@ describe('inspectable exercise history', () => {
     ]);
     const trend = getTrend(data, 'Bench Press (Barbell)', 'load');
     expect(trend.map((p) => p.value)).toEqual([60, 60, 65]);
+    expect(trend.map((p) => p.best?.weight)).toEqual([60, 60, 65]);
+    expect(trend.map((p) => p.best?.reps)).toEqual([8, 10, 8]);
+    expect(trend.map((p) => p.pr)).toEqual([false, false, true]);
     expect(trend.every((p) => data.workouts.some((w) => w.id === p.workoutId))).toBe(true);
     const best = bestComparable(data, 'Bench Press (Barbell)', 'weighted', 60);
     expect(best?.set.reps).toBe(10);

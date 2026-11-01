@@ -180,6 +180,15 @@ function haptic(cue: Cue) {
   });
 }
 
+/** A silent selection tick while scrubbing, using the same optional haptic path as controls. */
+export function selectionHaptic() {
+  try {
+    if (feedbackPreferences().haptics) haptic('tick');
+  } catch {
+    /* Feedback must never break inspection. */
+  }
+}
+
 /** Fire a cue: sound and haptic, each respecting its own setting. Never throws. */
 export function cue(name: Cue, step = 0) {
   let preferences;

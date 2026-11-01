@@ -74,41 +74,78 @@ export function getHistory(dataset: Dataset, name: string): ExerciseSession[] {
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 export function getTrend(dataset: Dataset, name: string, metric: Metric): TrendPoint[] {
-  const points = getHistory(dataset, name)
+  const points: TrendPoint[] = getHistory(dataset, name)
     .flatMap((session) => {
-      const values = session.sets
-        .map((set) =>
+      const candidates = session.sets.flatMap((set) => {
+        const value =
           metric === 'e1rm'
             ? estimate1RM(set, session.type)
             : metric === 'volume'
               ? setVolume(set, session.type)
               : metric === 'reps'
                 ? set.reps
-                : set.weight,
-        )
-        .filter((value): value is number => value !== null && Number.isFinite(value) && value >= 0);
-      if (!values.length) return [];
+                : set.weight;
+        return value !== null && Number.isFinite(value) && value >= 0 ? [{set, value}] : [];
+      });
+      if (!candidates.length) return [];
+      const lower = metric === 'load' && session.type === 'assisted';
+      candidates.sort((a, b) =>
+        metric === 'volume'
+          ? (b.set.weight ?? 0) - (a.set.weight ?? 0) || (b.set.reps ?? 0) - (a.set.reps ?? 0)
+          : (lower ? a.value - b.value : b.value - a.value) ||
+            (b.set.reps ?? 0) - (a.set.reps ?? 0),
+      );
       return [
         {
           workoutId: session.workoutId,
           date: session.date,
+          type: session.type,
+          best: candidates[0].set,
+          pr: false,
           value:
             metric === 'volume'
-              ? values.reduce((total, value) => total + value, 0)
-              : metric === 'load' && session.type === 'assisted'
-                ? Math.min(...values)
-                : Math.max(...values),
+              ? candidates.reduce((sum, c) => sum + c.value, 0)
+              : candidates[0].value,
         },
       ];
     })
     .sort((a, b) => a.date.localeCompare(b.date));
-  if (metric !== 'volume') return points;
-  const sessions = new Map<string, TrendPoint>();
+  const grouped = new Map<string, TrendPoint[]>();
   for (const point of points) {
-    const existing = sessions.get(point.workoutId);
-    sessions.set(point.workoutId, {...point, value: (existing?.value ?? 0) + point.value});
+    const group = grouped.get(point.workoutId) ?? [];
+    group.push(point);
+    grouped.set(point.workoutId, group);
   }
-  return [...sessions.values()];
+  // Repeated imported blocks stay distinct, except volume which is per workout.
+  // Compare every block with earlier workouts, never another block of the same workout.
+  const result: TrendPoint[] = [];
+  let previous: number | null = null;
+  for (const group of grouped.values()) {
+    const lower = metric === 'load' && group[0].type === 'assisted';
+    const better = (a: number, b: number) => (lower ? a < b : a > b);
+    const sessionPoints =
+      metric === 'volume'
+        ? [
+            {
+              ...group[0],
+              value: group.reduce((sum, p) => sum + p.value, 0),
+              best: [...group].sort(
+                (a, b) =>
+                  (b.best.weight ?? 0) - (a.best.weight ?? 0) ||
+                  (b.best.reps ?? 0) - (a.best.reps ?? 0),
+              )[0].best,
+            },
+          ]
+        : group;
+    for (const point of sessionPoints)
+      result.push({...point, pr: previous !== null && better(point.value, previous)});
+    const best = sessionPoints.reduce(
+      (a, p) => (better(p.value, a) ? p.value : a),
+      sessionPoints[0].value,
+    );
+    if (previous === null || better(best, previous)) previous = best;
+  }
+  return result;
 }
 /** Counted sets with reps, linked to their source workout. */
 function repEvidence(sessions: ExerciseSession[]): Comparable[] {
@@ -305,19 +342,27 @@ export function workoutsPerWeek(
   workouts: Workout[],
   weeks: number,
   now = new Date(),
-): {start: string; count: number}[] {
+): {start: string; count: number; volume: number; time: number}[] {
   const current = weekStart(now);
   const buckets = Array.from({length: weeks}, (_, i) => {
     const start = new Date(current);
     start.setDate(start.getDate() - 7 * (weeks - 1 - i));
-    return {start: localDay(start), count: 0};
+    return {start: localDay(start), count: 0, volume: 0, time: 0};
   });
   const index = new Map(buckets.map((bucket, i) => [bucket.start, i]));
   for (const workout of workouts) {
     const [y, m, d] = workout.date.slice(0, 10).split('-').map(Number);
     if (!y || !m || !d) continue;
     const i = index.get(localDay(weekStart(new Date(y, m - 1, d))));
-    if (i !== undefined) buckets[i].count++;
+    if (i !== undefined) {
+      buckets[i].count++;
+      buckets[i].time += workout.duration;
+      buckets[i].volume += workout.exercises.reduce(
+        (total, exercise) =>
+          total + exercise.sets.reduce((sum, set) => sum + (setVolume(set, exercise.type) ?? 0), 0),
+        0,
+      );
+    }
   }
   return buckets;
 }

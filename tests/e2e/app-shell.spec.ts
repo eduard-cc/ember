@@ -207,11 +207,29 @@ async function openProfile(page: import('@playwright/test').Page, scheme: 'light
     .click();
 }
 
-test('Profile states totals in one line', async ({page}) => {
+test('Profile shows totals and selectable weekly metrics', async ({page}) => {
   await openProfile(page, 'light');
   const totals = page.locator('.profile-totals');
   await expect(totals).toHaveText(/^\d+ workouts? · \d+ sets? · \d+ this week$/);
   expect(await totals.evaluate((el) => el.tagName)).toBe('P');
+  await expect(page.getByRole('heading', {name: 'Every week'})).toBeVisible();
+  const headline = page.locator('.weekly-headline');
+  for (const [label, unit] of [
+    ['Workouts', 'workouts'],
+    ['Volume', 'kg'],
+    ['Time', 'min'],
+  ]) {
+    await page.getByRole('radio', {name: label, exact: true}).click();
+    await expect(headline).toContainText('This week');
+    await expect(headline).toContainText('before this week');
+    await expect(headline).toContainText(unit);
+    const chart = page.getByRole('img', {name: new RegExp(`${label} per week`)});
+    await expect(chart).toBeVisible();
+    await chart.locator('.recharts-surface').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(headline).toContainText('Week of');
+    await page.mouse.move(0, 0);
+  }
 });
 
 for (const [scheme, token] of [
@@ -220,7 +238,7 @@ for (const [scheme, token] of [
 ] as const) {
   test(`the week chart is neutral except the current week (${scheme})`, async ({page}) => {
     await openProfile(page, scheme);
-    const neutral = page.locator('.week-chart rect:not(.current-week)');
+    const neutral = page.locator('.week-chart .recharts-bar-rectangle path:not(.current-week)');
     await expect(neutral).not.toHaveCount(0);
     const fills = await neutral.evaluateAll((els) => els.map((el) => getComputedStyle(el).fill));
     expect(fills.length).toBeGreaterThan(1);
@@ -228,7 +246,7 @@ for (const [scheme, token] of [
     const edges = await neutral.evaluateAll((els) =>
       els.map((el) => {
         const cs = getComputedStyle(el);
-        return {stroke: cs.stroke, rx: cs.rx};
+        return {stroke: cs.stroke, path: el.getAttribute('d')};
       }),
     );
     // The light edge carries the 3:1 contrast, so it must not fall back to the fill.
@@ -236,8 +254,8 @@ for (const [scheme, token] of [
       const edge = await resolve(page, 'hsl(37 12% 48%)');
       for (const e of edges) expect(e.stroke).toBe(edge);
     }
-    for (const e of edges) expect(e.rx).toMatch(/^0(px)?$/);
-    const current = page.locator('.week-chart rect.current-week');
+    for (const e of edges) expect(e.path).toMatch(/^M .* h .* v .* h .* Z$/);
+    const current = page.locator('.week-chart .recharts-bar-rectangle path.current-week');
     await expect(current).toHaveCount(1);
     expect(await current.evaluate((el) => getComputedStyle(el).fill)).toBe(
       await resolve(page, 'hsl(var(--primary))'),
@@ -254,7 +272,7 @@ test('trend lines are Ink, not Amber', async ({page}) => {
   await page.getByLabel('Search exercises').fill('Bench');
   await page.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).first().click();
   await page.getByRole('tab', {name: 'Charts', exact: true}).click();
-  const line = page.locator('.trend-chart polyline').first();
+  const line = page.locator('.trend-chart .recharts-area-curve').first();
   await expect(line).toBeVisible();
   expect(await line.evaluate((el) => getComputedStyle(el).stroke)).toBe(
     await resolve(page, 'hsl(270 7% 30%)'),

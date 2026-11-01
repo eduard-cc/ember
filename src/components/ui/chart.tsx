@@ -1,7 +1,8 @@
 import * as React from 'react';
-import {type ReactNode, useCallback, useState} from 'react';
+import {type ReactNode} from 'react';
 import * as RechartsPrimitive from 'recharts';
 
+import {selectionHaptic} from '../../feedback';
 import {useChartTouch} from '../../hooks/use-chart-touch';
 import {cn} from '../../utils/cn';
 
@@ -104,7 +105,7 @@ function ChartTooltip(props: React.ComponentProps<typeof RechartsPrimitive.Toolt
     }
     if (label !== undefined && label !== lastLabel.current) {
       lastLabel.current = label;
-      navigator.vibrate?.(8);
+      selectionHaptic();
     }
   }, [inspecting, label]);
 
@@ -119,27 +120,6 @@ function ChartTooltip(props: React.ComponentProps<typeof RechartsPrimitive.Toolt
 }
 
 export {ChartContainer, ChartStyle, ChartTooltip};
-
-/**
- * Width of the element given the returned ref, so a chart draws one SVG unit per CSS pixel and
- * keeps labels at their declared size. Re-measured when the element resizes, not just the window.
- */
-export function useElementWidth(initial: number) {
-  const [width, setWidth] = useState(initial);
-  const ref = useCallback((node: HTMLElement | null) => {
-    if (!node) return;
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry.contentRect.width > 0) setWidth(entry.contentRect.width);
-    });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-  return [ref, width] as const;
-}
-
-/** Classes for a trend-chart svg: axis text, grid lines, the trend line and its points. */
-export const trendChartClass =
-  'trend-chart mt-[15px] block h-auto w-full [&_circle]:fill-chart-primary [&_line]:stroke-border [&_polyline]:stroke-chart-primary [&_text]:fill-muted-foreground [&_text]:text-[11px]';
 
 /** The shaded note under a chart or record list that says what the number does and does not mean. */
 export function MetricExplanation({children}: {children: ReactNode}) {

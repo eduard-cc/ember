@@ -78,8 +78,12 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   // The chart shows the whole history, oldest entry included.
   const chart = section.getByRole('img', {name: /Body weight over time/});
   await expect(chart.locator('circle')).toHaveCount(3);
-  await expect(chart.locator('polyline')).toHaveCount(1);
-  await expect(chart).toContainText('5 Jan 2019');
+  await expect(chart.locator('.recharts-area-curve')).toHaveCount(1);
+  await expect(chart).toHaveAttribute('aria-label', /5 Jan 2019/);
+  await chart.locator('.recharts-surface').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(section.locator('.weight-chart-value')).toContainText('69.9 kg');
+  await expect(section.locator('.weight-chart-value')).toContainText('10 Jun 2023');
 
   // Correct an entry, including moving it in time.
   await section.getByRole('button', {name: /Edit entry 10 Jun 2023 07:30, 69.9 kg/}).click();
@@ -178,11 +182,12 @@ test('close two-decimal weights have distinct, contained axis labels', async ({p
   await add(section, '100.02', '2024-07-02T08:00');
   await page.evaluate(() => document.fonts.ready);
   const chart = section.getByRole('img', {name: /Body weight over time/});
-  const labels = chart.locator('g text');
-  await expect(labels).toHaveCount(3);
-  await expect.poll(async () => new Set(await labels.allTextContents()).size).toBe(3);
+  const labels = chart.locator('.recharts-yAxis-tick-labels text');
+  await expect.poll(() => labels.count()).toBeGreaterThanOrEqual(3);
   const values = (await labels.allTextContents()).map(Number);
-  expect(values).toEqual([100.01, 100.015, 100.02]);
+  expect(new Set(values).size).toBe(values.length);
+  expect(values[0]).toBeLessThan(100.01);
+  expect(values.at(-1)).toBeGreaterThan(100.02);
   expect(
     await chart.evaluate((svg) => {
       const bounds = svg.getBoundingClientRect();

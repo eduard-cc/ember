@@ -42,8 +42,14 @@ describe('exercise records', () => {
   it('reports one volume trend point for all matching blocks in a workout', () => {
     const twice = session('w', '2026-03-01T10:00:00', 'weighted', [set('w1', 20, 10)]);
     twice.exercises.push({name: 'Press', type: 'weighted', sets: [set('w2', 20, 10)]});
-    expect(getTrend(dataset([twice]), 'Press', 'volume')).toEqual([
-      {workoutId: 'w', date: twice.date, value: 400},
+    expect(getTrend(dataset([twice]), 'Press', 'volume')).toMatchObject([
+      {
+        workoutId: 'w',
+        date: twice.date,
+        value: 400,
+        best: {id: 'w1', weight: 20, reps: 10},
+        pr: false,
+      },
     ]);
     expect(twice.exercises).toHaveLength(2);
   });
@@ -89,22 +95,22 @@ describe('exercise records', () => {
 });
 
 describe('workouts per week', () => {
-  it('counts sessions in local Monday-based weeks, oldest first, including empty weeks', () => {
+  it('totals workouts, volume and minutes in local Monday weeks across DST, including empty weeks', () => {
     const weeks = workoutsPerWeek(
       [
-        session('a', '2026-09-28T07:00:00', 'weighted', []),
-        session('b', '2026-10-04T23:30:00', 'weighted', []),
-        session('c', '2026-10-05T06:00:00', 'weighted', []),
-        session('d', '2026-09-14T12:00:00', 'weighted', []),
+        {...session('a', '2026-10-19T07:00:00', 'weighted', [set('a1', 60, 10)]), duration: 40},
+        {...session('b', '2026-10-25T23:30:00', 'weighted', [set('b1', 70, 8)]), duration: 50},
+        {...session('c', '2026-10-26T06:00:00', 'assisted', [set('c1', 20, 10)]), duration: 30},
+        session('d', '2026-10-05T12:00:00', 'weighted', []),
       ],
       4,
-      new Date(2026, 9, 7, 12),
+      new Date(2026, 10, 1, 12),
     );
     expect(weeks).toEqual([
-      {start: '2026-09-14', count: 1},
-      {start: '2026-09-21', count: 0},
-      {start: '2026-09-28', count: 2},
-      {start: '2026-10-05', count: 1},
+      {start: '2026-10-05', count: 1, volume: 0, time: 0},
+      {start: '2026-10-12', count: 0, volume: 0, time: 0},
+      {start: '2026-10-19', count: 2, volume: 1160, time: 90},
+      {start: '2026-10-26', count: 1, volume: 0, time: 30},
     ]);
   });
 });

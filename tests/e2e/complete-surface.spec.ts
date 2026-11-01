@@ -22,8 +22,8 @@ test('assistance progress excludes resistance estimates and source link opens se
   await page.getByLabel('Search exercises').fill('Assisted');
   await page.getByRole('button', {name: 'Pull Up (Assisted)', exact: true}).click();
   await page.getByRole('tab', {name: 'Charts', exact: true}).click();
-  await page.getByRole('button', {name: 'Assistance (less is better)', exact: true}).click();
-  await expect(page.getByRole('button', {name: 'Estimated 1RM', exact: true})).toHaveCount(0);
+  await page.getByRole('radio', {name: 'Least assistance', exact: true}).click();
+  await expect(page.getByRole('radio', {name: 'Est. 1RM', exact: true})).toHaveCount(0);
   await page
     .getByRole('button', {name: /View source workout/})
     .first()

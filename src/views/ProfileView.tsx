@@ -1,99 +1,153 @@
-import {useMemo} from 'react';
+import {useMemo, useState} from 'react';
+import {Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis} from 'recharts';
 
+import {SegmentToggle} from '../components/segment-toggle';
+import {ChartInspection} from '../components/trend-area';
 import {Card} from '../components/ui/card';
-import {SectionHeading} from '../components/ui/section-heading';
+import {ChartContainer, ChartTooltip} from '../components/ui/chart';
+import {chartDomain, chartNumber, compactTick} from '../domain/chart-scale';
 import {workoutsPerWeek} from '../domain/model';
 import {setCount} from '../domain/sets';
 import type {Workout} from '../domain/types';
+import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
 
 const WEEKS = 12;
+type Week = ReturnType<typeof workoutsPerWeek>[number];
+type WeekMetric = 'count' | 'volume' | 'time';
+const metrics: {value: WeekMetric; label: string}[] = [
+  {value: 'count', label: 'Workouts'},
+  {value: 'volume', label: 'Volume'},
+  {value: 'time', label: 'Time'},
+];
 
-/** Strong-style dashboard: totals and workouts per week, nothing estimated. */
+/** Weekly actual totals. The average always excludes the current partial week. */
 export function ProfileView({workouts}: {workouts: Workout[]}) {
   const weeks = useMemo(() => workoutsPerWeek(workouts, WEEKS), [workouts]);
-  const max = Math.max(3, ...weeks.map((w) => w.count));
   const sets = useMemo(() => workouts.reduce((n, w) => n + setCount(w), 0), [workouts]);
+  const [metric, setMetric] = useState<WeekMetric>('count');
+  const [hover, setHover] = useState<Week | null>(null);
+  const shown = hover && weeks.includes(hover) ? hover : weeks.at(-1)!;
+  const current = weeks.at(-1)!;
   const first = workouts.at(-1)?.date.slice(0, 4);
-  const thisWeek = weeks.at(-1)?.count ?? 0;
-  const average = weeks.slice(0, -1).reduce((n, w) => n + w.count, 0) / (WEEKS - 1);
-  const barWidth = 640 / WEEKS;
+  const average = weeks.slice(0, -1).reduce((n, w) => n + w[metric], 0) / (WEEKS - 1);
+  const {domain, ticks} = chartDomain([
+    0,
+    Math.max(metric === 'count' ? 3 : 1, ...weeks.map((w) => w[metric])),
+  ]);
+  const axisWidth = Math.max(42, ...ticks.map((tick) => compactTick(tick).length * 7 + 10));
+  const label = metrics.find((m) => m.value === metric)!.label;
+  const unit =
+    metric === 'count'
+      ? shown.count === 1
+        ? 'workout'
+        : 'workouts'
+      : metric === 'volume'
+        ? 'kg'
+        : 'min';
   return (
-    <div className='profile-view'>
-      <Card as='section'>
-        <SectionHeading>
-          <h2>Workouts per week</h2>
-          <span>Last {WEEKS} weeks</span>
-        </SectionHeading>
-        <p className='profile-totals mt-1'>
-          <span className='numeric'>{workouts.length}</span>
-          {workouts.length === 1 ? ' workout' : ' workouts'} ·{' '}
-          <span className='numeric'>{sets}</span>
-          {sets === 1 ? ' set' : ' sets'} · <span className='numeric'>{thisWeek}</span> this week
-        </p>
-        <svg
-          className='week-chart my-2 h-auto w-full'
-          viewBox='0 0 700 190'
+    <div className='profile-view grid gap-5'>
+      <p className='profile-totals -mt-2'>
+        <span className='numeric'>{workouts.length}</span>
+        {workouts.length === 1 ? ' workout' : ' workouts'} · <span className='numeric'>{sets}</span>
+        {sets === 1 ? ' set' : ' sets'} · <span className='numeric'>{current.count}</span> this week
+      </p>
+      <Card as='section' className='grid gap-4'>
+        <header className='flex flex-wrap items-center justify-between gap-2'>
+          <h2 className='text-card-title'>Every week</h2>
+          <SegmentToggle
+            value={metric}
+            onChange={(m) => {
+              setHover(null);
+              setMetric(m);
+            }}
+            label='Show per week'
+            items={metrics}
+            itemClassName='px-2.5'
+          />
+        </header>
+        <div className='weekly-headline'>
+          <p className='flex items-baseline gap-1.5 text-foreground'>
+            <span className='numeric text-stat'>{chartNumber(shown[metric])}</span>
+            <span className='text-sm font-medium text-muted-foreground'>{unit}</span>
+          </p>
+          <p className='mt-1 text-label font-normal text-muted-foreground'>
+            {shown.start === current.start ? 'This week' : `Week of ${dateLabel(shown.start)}`} ·
+            average {chartNumber(Number(average.toFixed(1)))}{' '}
+            {metric === 'count' ? 'workouts' : unit} before this week
+            {first ? ` · logging since ${first}` : ''}.
+          </p>
+        </div>
+        <ChartContainer
+          key={metric}
+          className='week-chart -mx-1 aspect-auto h-44'
+          config={{value: {color: 'hsl(var(--chart-secondary))'}}}
           role='img'
-          aria-label={`Workouts per week for the last ${WEEKS} weeks. ${weeks
-            .map((w) => `${w.start}: ${w.count}`)
-            .join(', ')}.`}
+          aria-label={`${label} per week for the last ${WEEKS} weeks. ${weeks.map((w) => `${w.start}: ${chartNumber(w[metric])} ${metric === 'count' ? 'workouts' : unit}`).join(', ')}.`}
         >
-          {[0, max / 2, max].map((v) => (
-            <g key={v}>
-              <line
-                className='stroke-border'
-                x1='40'
-                x2='690'
-                y1={160 - (v / max) * 140}
-                y2={160 - (v / max) * 140}
-              />
-              <text
-                className='fill-muted-foreground text-[13px]'
-                x='30'
-                y={164 - (v / max) * 140}
-                textAnchor='end'
-              >
-                {Number(v.toFixed(1))}
-              </text>
-            </g>
-          ))}
-          {weeks.map((week, i) => {
-            const height = (week.count / max) * 140;
-            return (
-              <g key={week.start}>
-                <rect
-                  x={48 + i * barWidth + barWidth * 0.18}
-                  y={160 - height}
-                  width={barWidth * 0.64}
-                  height={height}
-                  className={
-                    i === weeks.length - 1
-                      ? 'current-week fill-primary stroke-none [rx:0]'
-                      : 'fill-[hsl(var(--chart-secondary))] stroke-[hsl(var(--chart-secondary-edge))] stroke-1 [rx:0]'
+          <BarChart
+            data={weeks}
+            margin={{left: 4, right: 8, top: 10, bottom: 4}}
+            accessibilityLayer
+          >
+            <CartesianGrid vertical={false} stroke='hsl(var(--border))' />
+            <XAxis
+              dataKey='start'
+              tickLine={false}
+              axisLine={false}
+              height={24}
+              tick={{fontSize: 11}}
+              ticks={weeks.filter((_, i) => (11 - i) % 4 === 0).map((w) => w.start)}
+              tickFormatter={(v: string) =>
+                v === current.start
+                  ? 'This wk'
+                  : new Date(`${v}T12:00:00`).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                    })
+              }
+            />
+            <YAxis
+              orientation='right'
+              width={axisWidth}
+              tickLine={false}
+              axisLine={false}
+              allowDecimals={metric !== 'count'}
+              tick={{fontSize: 11, className: 'numeric'}}
+              tickFormatter={compactTick}
+              domain={domain}
+              ticks={ticks}
+            />
+            <ChartTooltip
+              cursor={{fill: 'hsl(var(--accent))'}}
+              content={(props) => (
+                <ChartInspection<Week> {...(props as object)} data={weeks} onChange={setHover} />
+              )}
+            />
+            <Bar dataKey={metric} isAnimationActive={false}>
+              {weeks.map((w) => (
+                <Cell
+                  key={w.start}
+                  className={w.start === current.start ? 'current-week' : undefined}
+                  fill={
+                    w.start === current.start
+                      ? 'hsl(var(--primary))'
+                      : 'hsl(var(--chart-secondary))'
                   }
-                >
-                  <title>
-                    Week of {week.start}: {plural(week.count, 'workout')}
-                  </title>
-                </rect>
-                {i % 3 === WEEKS % 3 && (
-                  <text
-                    className='fill-muted-foreground text-[13px]'
-                    x={48 + i * barWidth + barWidth / 2}
-                    y='182'
-                    textAnchor='middle'
-                  >
-                    {week.start.slice(5).replace('-', '/')}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </svg>
-        <p className='text-[12px] text-muted-foreground'>
-          {Number(average.toFixed(1))} per week on average before this week
-          {first ? ` · logging since ${first}` : ''}.
+                  stroke={w.start === current.start ? 'none' : 'hsl(var(--chart-secondary-edge))'}
+                  strokeWidth={1}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ChartContainer>
+        <p className='text-label font-normal text-muted-foreground'>
+          Last {WEEKS} weeks. Hold and slide to inspect.
+          {metric === 'volume'
+            ? ' Recorded load × reps, not a measure of hypertrophy; dumbbell load is per dumbbell.'
+            : metric === 'time'
+              ? ' Recorded workout minutes; unknown durations contribute no time.'
+              : ` ${plural(current.count, 'workout')} this week.`}
         </p>
       </Card>
     </div>

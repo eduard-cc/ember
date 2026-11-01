@@ -1,6 +1,6 @@
 import {liveQuery} from 'dexie';
 import {ChartLine, ChevronRight, Plus, Scale} from 'lucide-react';
-import {type FormEvent, useEffect, useRef, useState} from 'react';
+import {type FormEvent, useEffect, useMemo, useRef, useState} from 'react';
 
 import type {BodyWeight} from '../../shared/contracts';
 import {
@@ -17,9 +17,9 @@ import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
 import {noticeClass} from './banner';
 import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
+import {TrendArea} from './trend-area';
 import {Button} from './ui/button';
 import {Card} from './ui/card';
-import {trendChartClass, useElementWidth} from './ui/chart';
 import {ContentFieldset} from './ui/content-fieldset';
 import {EmptyState} from './ui/empty-state';
 import {fieldLabelClass} from './ui/field-label';
@@ -29,61 +29,29 @@ import {Input} from './ui/input';
 const time = (date: string) => date.slice(11, 16);
 const describe = (m: BodyWeight) => `${dateLabel(m.date)} ${time(m.date)}, ${formatKg(m.kg)} kg`;
 
-/** Exact-value list is the accessible alternative; the chart only draws real entries. */
+type WeightPoint = BodyWeight & {t: number; value: number};
+
+/** Exact entries remain below; inspection never implies that a weight change is good or bad. */
 function WeightChart({entries}: {entries: BodyWeight[]}) {
-  const [containerRef, width] = useElementWidth(480);
-  const points = [...entries].reverse();
-  const values = points.map((p) => p.kg);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const spread = max - min || max * 0.05 || 1;
-  const ticks = [min, min + spread / 2, min + spread];
-  // Hundredth-kg entries can put the midpoint at a half-hundredth. Keep all three
-  // labels distinct instead of rounding a small real change into a flat-looking axis.
-  const precision =
-    [1, 2, 3].find((digits) => new Set(ticks.map((v) => v.toFixed(digits))).size === 3) ?? 3;
-  const labels = ticks.map((v) => String(Number(v.toFixed(precision))));
-  const plotLeft = Math.max(54, ...labels.map((label) => label.length * 7 + 14));
-  const plotRight = width - 46;
-  const times = points.map((p) => new Date(p.date).getTime());
-  const span = times.at(-1)! - times[0];
-  const x = (i: number) =>
-    plotLeft + (span ? (times[i] - times[0]) / span : 0.5) * (plotRight - plotLeft);
-  const y = (kg: number) => 195 - ((kg - min) / spread) * 135;
+  const data = useMemo(
+    () => [...entries].reverse().map((p) => ({...p, t: new Date(p.date).getTime(), value: p.kg})),
+    [entries],
+  );
+  const [hover, setHover] = useState<WeightPoint | null>(null);
+  const shown = hover && data.includes(hover) ? hover : data.at(-1)!;
   return (
-    <div ref={containerRef}>
-      <svg
-        className={trendChartClass}
-        viewBox={`0 0 ${width} 235`}
-        role='img'
-        aria-label={`Body weight over time. ${points.length} entries from ${dateLabel(points[0].date)} to ${dateLabel(points.at(-1)!.date)}. Exact values in the list below.`}
-      >
-        {ticks.map((value, i) => (
-          <g key={i}>
-            <line x1={plotLeft} x2={plotRight} y1={y(value)} y2={y(value)} strokeDasharray='4 5' />
-            <text x={plotLeft - 14} y={y(value) + 4} textAnchor='end'>
-              {labels[i]}
-            </text>
-          </g>
-        ))}
-        <polyline
-          points={points.map((p, i) => `${x(i)},${y(p.kg)}`).join(' ')}
-          fill='none'
-          strokeWidth='2.5'
-          strokeLinejoin='round'
-        />
-        {points.map((p, i) => (
-          <circle key={p.id} cx={x(i)} cy={y(p.kg)} r='4'>
-            <title>{describe(p)}</title>
-          </circle>
-        ))}
-        <text x={plotLeft} y='226'>
-          {dateLabel(points[0].date)}
-        </text>
-        <text x={plotRight} y='226' textAnchor='end'>
-          {dateLabel(points.at(-1)!.date)}
-        </text>
-      </svg>
+    <div className='mt-3 grid gap-3'>
+      <p className='weight-chart-value numeric text-label font-normal text-muted-foreground'>
+        {formatKg(shown.kg)} kg · {dateLabel(shown.date)} {time(shown.date)}
+      </p>
+      <TrendArea
+        data={data}
+        onInspect={setHover}
+        label={`Body weight over time. ${data.length} entries from ${dateLabel(data[0].date)} to ${dateLabel(data.at(-1)!.date)}. Exact values in the list below.`}
+      />
+      <p className='text-label font-normal text-muted-foreground'>
+        Hold and slide to inspect an entry.
+      </p>
     </div>
   );
 }
