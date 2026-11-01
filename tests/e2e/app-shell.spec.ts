@@ -398,16 +398,16 @@ test('the brand stays on one line at 1000px with the logger open', async ({page}
   expect(box!.height).toBeLessThanOrEqual(24);
 });
 
-test('the tab bar hides while a library input is focused', async ({page}, info) => {
+test('the tab bar hides while editing a template name', async ({page}, info) => {
   test.skip(info.project.name !== 'mobile');
   await open(page, true);
-  await navigate(page, 'Exercises');
   const bar = page.locator('.app-bar');
   await expect(bar).toHaveCSS('visibility', 'visible');
-  const search = page.getByLabel('Search exercises');
-  await search.focus();
+  await page.getByRole('button', {name: 'Create template'}).click();
+  const name = page.getByLabel('Template name');
+  await name.focus();
   await expect(bar).toHaveCSS('visibility', 'hidden');
-  await search.blur();
+  await name.blur();
   await expect(bar).toHaveCSS('visibility', 'visible');
 });
 

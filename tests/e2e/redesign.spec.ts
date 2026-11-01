@@ -518,6 +518,9 @@ test('sounds and haptics start on, play when a workout starts and each switch pe
   await expect(sounds).toHaveAttribute('aria-checked', 'true');
   await expect(sounds).toHaveAccessibleDescription('Short, quiet cues. They mix with your music.');
   await expect(haptics).toHaveAttribute('aria-checked', 'true');
+  await expect(haptics).toHaveAccessibleDescription(
+    'Physical feedback when you log sets and finish workouts.',
+  );
   for (const control of [sounds, haptics])
     expect((await control.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await haptics.click();

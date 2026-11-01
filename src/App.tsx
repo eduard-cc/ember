@@ -68,11 +68,11 @@ const stickyClass = 'sticky top-0 z-3';
 /** Drawer footers stack the primary action on top, like `DialogActions` on phones. */
 const confirmFooter = 'max-desk:flex-col-reverse max-desk:*:min-h-12';
 // The bar is a bottom tab strip below the `desk` breakpoint and a 48px header from it up. It is
-// hidden while an input is focused on a phone, because the keyboard covers it.
+// hidden while an editing input is focused on a phone. Search keeps the tabs available.
 const appBarClass = [
   'app-bar shrink-0',
   'max-desk:order-1 max-desk:border-t max-desk:border-t-border max-desk:bg-card',
-  'max-desk:[.app-shell:has(input:focus)_&]:invisible',
+  'max-desk:[.app-shell:has(input:focus:not([type=search]))_&]:invisible',
   'desk:-order-1 desk:flex desk:h-12 desk:items-center desk:gap-6 desk:border-b desk:border-b-border desk:bg-background desk:px-7',
 ].join(' ');
 // Tab: icon over label on a phone (2px top rule when active), text link with a 2px underline from

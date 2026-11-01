@@ -121,6 +121,7 @@ export function ExerciseList({
           className='pointer-events-none absolute left-[13px] text-muted-foreground'
         />
         <Input
+          type='search'
           className='pl-[38px]'
           aria-label='Search exercises'
           placeholder='Search exercises'

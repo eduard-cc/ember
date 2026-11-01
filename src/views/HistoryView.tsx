@@ -193,7 +193,6 @@ export function HistoryView({
   locked: boolean;
 }) {
   const mobile = useIsMobile();
-  const searchRef = useRef<HTMLInputElement>(null);
 
   const workouts = dataset.workouts;
   const [editing, setEditing] = useState<Workout | null>(null);
@@ -214,7 +213,7 @@ export function HistoryView({
   const [wasSearching, setWasSearching] = useState(searching);
   if (wasSearching !== searching) {
     setWasSearching(searching);
-    if (searching || !mobile) setSearch('');
+    setSearch('');
     setLimit(PAGE);
   }
   // A source link opens its workout; a new focus opens it even while History is showing.
@@ -254,7 +253,7 @@ export function HistoryView({
     setOpenId(null);
   };
 
-  const query = searching || mobile ? search.trim().toLowerCase() : '';
+  const query = searching ? search.trim().toLowerCase() : '';
   const filtered = useMemo(
     () =>
       workouts.filter(
@@ -301,8 +300,8 @@ export function HistoryView({
         aria-hidden
       />
       <Input
-        autoFocus={!mobile}
-        ref={searchRef}
+        type='search'
+        autoFocus
         aria-label='Search workout history'
         placeholder='Workouts, exercises or months'
         className='pl-9'
@@ -322,56 +321,7 @@ export function HistoryView({
   );
   return (
     <div className='history-list flex flex-col gap-3'>
-      {searching && !mobile && searchField}
-      {mobile && query && !searching && (
-        <div className='flex items-center justify-between gap-2'>
-          <p className='min-w-0 text-sm [overflow-wrap:anywhere]'>Results for “{search.trim()}”</p>
-          <Button
-            variant='ghost'
-            className='shrink-0'
-            aria-label='Clear history search'
-            onClick={() => setSearch('')}
-          >
-            Clear
-          </Button>
-        </div>
-      )}
-      {mobile && !locked && (
-        <ResponsiveDialog
-          open={searching}
-          onOpenChange={(next) => {
-            if (!next) cancelSearch();
-          }}
-        >
-          <ResponsiveDialogContent
-            className='history-search dialog-content'
-            onOpenAutoFocus={(event) => {
-              event.preventDefault();
-              searchRef.current?.focus();
-            }}
-            onCloseAutoFocus={(event) => {
-              event.preventDefault();
-              document.querySelector<HTMLButtonElement>('.history-search-trigger')?.focus();
-            }}
-          >
-            <ResponsiveDialogHeader className='text-left'>
-              <ResponsiveDialogTitle>Search history</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Find a workout, exercise or month.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
-            <ResponsiveDialogBody className='pb-[calc(1rem+env(safe-area-inset-bottom))]'>
-              {searchField}
-              <DialogActions>
-                <Button onClick={cancelSearch}>Cancel</Button>
-                <Button variant='primary' onClick={() => onSearchingChange(false)}>
-                  Show {plural(filtered.length, 'workout')}
-                </Button>
-              </DialogActions>
-            </ResponsiveDialogBody>
-          </ResponsiveDialogContent>
-        </ResponsiveDialog>
-      )}
+      {searching && searchField}
       {groups.map((group) => (
         <section key={group.key} aria-labelledby={`month-${group.key}`}>
           {/* Sticky and solid, so cards pass under it. The negative top cancels the scroller's

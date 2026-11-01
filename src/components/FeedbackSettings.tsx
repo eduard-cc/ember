@@ -16,7 +16,7 @@ const options = [
   {
     key: 'haptics',
     label: 'Haptics',
-    description: 'Vibration on Android, taps on iPhone.',
+    description: 'Physical feedback when you log sets and finish workouts.',
     icon: Vibrate,
   },
 ] as const;
