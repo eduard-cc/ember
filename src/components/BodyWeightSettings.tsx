@@ -25,6 +25,14 @@ import {EmptyState} from './ui/empty-state';
 import {fieldLabelClass} from './ui/field-label';
 import {InlineError} from './ui/inline-error';
 import {Input} from './ui/input';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from './ui/responsive-dialog';
 
 const time = (date: string) => date.slice(11, 16);
 const describe = (m: BodyWeight) => `${dateLabel(m.date)} ${time(m.date)}, ${formatKg(m.kg)} kg`;
@@ -76,6 +84,8 @@ export function BodyWeightSettings({
 }) {
   const [stored, setStored] = useState<BodyWeight[] | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
+  const [shown, setShown] = useState<Editing | null>(null);
+  if (editing && editing !== shown) setShown(editing);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [undo, setUndo] = useState<BodyWeight | null>(null);
@@ -95,7 +105,6 @@ export function BodyWeightSettings({
       returnFocus.current = false;
       addRef.current?.focus();
     }
-    if (editing) kgRef.current?.focus();
     // Focus on form transitions or Undo dismissal, not on every keystroke.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [!!editing, editing?.base?.id, !!undo]);
@@ -178,9 +187,9 @@ export function BodyWeightSettings({
       Add weight
     </Button>
   );
-  const form = editing && (
-    <form onSubmit={submit} aria-label={editing.base ? 'Edit entry' : 'New entry'}>
-      <ContentFieldset disabled={disabled || saving}>
+  const form = shown && (
+    <form onSubmit={submit} aria-label={shown.base ? 'Edit entry' : 'New entry'}>
+      <ContentFieldset disabled={disabled || saving || !editing}>
         {/* Phones give the native date and time picker a full-width row under kg. */}
         <div className='grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2.5 max-[480px]:grid-cols-1'>
           <label>
@@ -190,8 +199,8 @@ export function BodyWeightSettings({
               aria-label='Weight in kg'
               inputMode='decimal'
               autoComplete='off'
-              value={editing.kg}
-              onChange={(e) => setEditing({...editing, kg: e.target.value})}
+              value={shown.kg}
+              onChange={(e) => setEditing({...shown, kg: e.target.value})}
             />
           </label>
           <label>
@@ -199,8 +208,8 @@ export function BodyWeightSettings({
             <Input
               aria-label='Date and time'
               type='datetime-local'
-              value={editing.when}
-              onChange={(e) => setEditing({...editing, when: e.target.value})}
+              value={shown.when}
+              onChange={(e) => setEditing({...shown, when: e.target.value})}
             />
           </label>
         </div>
@@ -209,14 +218,14 @@ export function BodyWeightSettings({
             {error}
           </InlineError>
         )}
-        <div className='mt-3.5 flex flex-wrap gap-2'>
+        <div className='mt-5 flex flex-wrap gap-2 max-desk:*:min-h-12 max-desk:*:flex-1'>
           <Button type='submit' variant='primary'>
             Save entry
           </Button>
           <Button type='button' onClick={close}>
             Cancel
           </Button>
-          {editing.base && (
+          {shown.base && (
             <Button
               type='button'
               className='ml-auto text-destructive'
@@ -247,12 +256,10 @@ export function BodyWeightSettings({
             </Button>
           </div>
         )}
-        {/* The form and the chart share one card; with no entries the empty state stands alone. */}
-        {stored !== null && (editing || entries.length > 0) && (
+        {stored !== null && entries.length > 0 && (
           <Card className='body-weight-chart'>
-            {form}
             {entries.length > 0 && (
-              <div className={cn(editing && 'mt-5 border-t border-border pt-5')}>
+              <div>
                 <h4>Weight (kg)</h4>
                 {entries.length >= 2 ? (
                   <WeightChart entries={entries} />
@@ -313,6 +320,36 @@ export function BodyWeightSettings({
           </SettingsList>
         )}
       </div>
+      <ResponsiveDialog
+        open={!!editing}
+        onOpenChange={(open) => {
+          if (!open && !saving) close();
+        }}
+      >
+        <ResponsiveDialogContent
+          className='body-weight-editor dialog-content'
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            kgRef.current?.focus();
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            addRef.current?.focus();
+          }}
+        >
+          <ResponsiveDialogHeader className='text-left'>
+            <ResponsiveDialogTitle>
+              {shown?.base ? 'Edit body weight entry' : 'New body weight entry'}
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Weight in kg, with the date and time it was measured.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className='pb-[calc(1rem+env(safe-area-inset-bottom))] desk:mt-5 desk:pb-0'>
+            {form}
+          </ResponsiveDialogBody>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </SettingsGroup>
   );
 }

@@ -7,6 +7,16 @@ test('real app-update control confirms activation without reload and defers upda
   page,
   context,
 }) => {
+  // Hold one real session request to exercise cancellation while sync temporarily disables update.
+  let holdSync = false;
+  let releaseSync: () => void = () => undefined;
+  await page.route('**/api/v1/session', async (route) => {
+    if (holdSync)
+      await new Promise<void>((resolve) => {
+        releaseSync = resolve;
+      });
+    await route.fulfill({status: 503, json: {message: 'Synthetic unavailable sync'}});
+  });
   await page.goto('/');
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));
   await page.reload();
@@ -23,16 +33,39 @@ test('real app-update control confirms activation without reload and defers upda
       )
       .toBe(true);
     await expect(page.getByRole('button', {name: 'Apply shell update'})).toBeVisible();
-    page.once('dialog', (dialog) => dialog.dismiss());
     await page.getByRole('button', {name: 'Apply shell update'}).click();
+    const confirmation = page.getByRole('dialog', {name: 'Apply the new app shell?', exact: true});
+    await expect(confirmation).toBeVisible();
+    await expect(
+      confirmation.getByRole('button', {name: 'Apply update', exact: true}),
+    ).toBeEnabled();
+    holdSync = true;
+    const sessionRequest = page.waitForRequest('**/api/v1/session');
+    await page.evaluate(() => dispatchEvent(new Event('online')));
+    await sessionRequest;
+    await expect(
+      confirmation.getByRole('button', {name: 'Apply update', exact: true}),
+    ).toBeDisabled();
+    await confirmation.getByRole('button', {name: 'Not now', exact: true}).click();
+    await expect(confirmation).toBeHidden();
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
+    holdSync = false;
+    releaseSync();
+    await expect(page.getByRole('button', {name: 'Apply shell update', exact: true})).toBeFocused();
     expect(
       await page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.waiting),
     ).toBe(true);
     await page.evaluate(() => {
       (window as unknown as {marker: string}).marker = 'old page remains';
     });
-    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', {name: 'Apply shell update'}).click();
+    await confirmation.getByRole('button', {name: 'Apply update', exact: true}).click();
+    await expect(confirmation).toBeHidden();
     await expect(
       page.getByText(
         'Update activation requested. Close all Ember tabs and reopen when convenient; this page will not refresh.',
@@ -71,6 +104,7 @@ test('real app-update control confirms activation without reload and defers upda
     ).toBe(true);
     await follower.close();
   } finally {
+    releaseSync();
     await writeFile(file, original);
   }
 });

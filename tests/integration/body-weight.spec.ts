@@ -20,9 +20,9 @@ test('body-weight create, correction and delete sync between two isolated instal
   await login(page);
   let mine = await section(page);
   await mine.getByRole('button', {name: 'Add weight', exact: true}).click();
-  await mine.getByLabel('Weight in kg', {exact: true}).fill('82.4');
-  await mine.getByLabel('Date and time', {exact: true}).fill('2021-05-06T07:08');
-  await mine.getByRole('button', {name: 'Save entry', exact: true}).click();
+  await mine.page().getByLabel('Weight in kg', {exact: true}).fill('82.4');
+  await mine.page().getByLabel('Date and time', {exact: true}).fill('2021-05-06T07:08');
+  await mine.page().getByRole('button', {name: 'Save entry', exact: true}).click();
   await expect(rows(mine)).toHaveCount(1);
   await syncNow(page);
 
@@ -36,8 +36,8 @@ test('body-weight create, correction and delete sync between two isolated instal
 
   // The peer corrects it; the first installation receives the correction.
   await theirs.getByRole('button', {name: /Edit entry 6 May 2021/}).click();
-  await theirs.getByLabel('Weight in kg', {exact: true}).fill('81.95');
-  await theirs.getByRole('button', {name: 'Save entry', exact: true}).click();
+  await theirs.page().getByLabel('Weight in kg', {exact: true}).fill('81.95');
+  await theirs.page().getByRole('button', {name: 'Save entry', exact: true}).click();
   await expect(rows(theirs).first()).toContainText('81.95');
   await syncNow(peer);
   await syncNow(page);
@@ -46,7 +46,7 @@ test('body-weight create, correction and delete sync between two isolated instal
 
   // The first installation deletes it; the peer loses it too.
   await mine.getByRole('button', {name: /Edit entry 6 May 2021/}).click();
-  await mine.getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await mine.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(rows(mine)).toHaveCount(0);
   await syncNow(page);
   await syncNow(peer);

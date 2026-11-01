@@ -4,14 +4,13 @@ import {createPortal} from 'react-dom';
 
 import {ExercisePicker} from '../components/AddExercise';
 import {ExerciseMenu} from '../components/ExerciseMenu';
+import {ExercisePage} from '../components/ExercisePage';
 import {ReorderList, type ReorderStart, scrollParent, useHold} from '../components/ExerciseReorder';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
 import {ReplaceInput} from '../components/ReplaceInput';
 import {SET_GRID, SetRow} from '../components/SetRow';
 import {Button} from '../components/ui/button';
-import {ContentFieldset} from '../components/ui/content-fieldset';
-import {Dialog, DialogContent, DialogDescription, DialogTitle} from '../components/ui/dialog';
 import {RollingNumber} from '../components/ui/rolling-number';
 import {moveItem} from '../domain/reorder';
 import {countedSets, isTimed, validSet} from '../domain/sets';
@@ -20,7 +19,6 @@ import {cue} from '../feedback';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
-import {ExerciseDetail} from './ExerciseDetail';
 
 const titleClass =
   'exercise-title-button col-[1/3] row-[1/3] grid min-h-11 min-w-0 grid-cols-subgrid grid-rows-subgrid items-center self-stretch border-0 bg-transparent p-0 text-left [&>.thumb-slot]:col-1 [&>.thumb-slot]:row-[1/3] [&>span:last-child]:col-2 [&>span:last-child]:row-1 [&>span:last-child]:self-end [&>span:last-child]:[overflow-wrap:anywhere]';
@@ -613,47 +611,23 @@ export function WorkoutView({
         }}
       />
       {showDetails && (
-        <Dialog
-          open={details !== null}
-          onOpenChange={(open) => {
-            if (!open) setDetails(null);
+        <ExercisePage
+          name={details?.name ?? null}
+          dataset={dataset}
+          workout
+          disabled={disabled}
+          onClose={() => setDetails(null)}
+          onSource={(id) => {
+            setDetails(null);
+            onSource(id);
           }}
-        >
-          <DialogContent
-            variant='workout'
-            onCloseAutoFocus={(event) => {
-              // Return focus to the name button without scrolling the logger.
-              event.preventDefault();
-              const target = detailsReturn.current;
-              detailsReturn.current = null;
-              if (target) detailButtons.current.get(target)?.focus({preventScroll: true});
-            }}
-          >
-            <DialogDescription srOnly>
-              About, history, charts and records from finished workouts. Your workout stays as you
-              left it.
-            </DialogDescription>
-            {/* Only finished history is passed in, so the draft never counts as history. */}
-            {details && (
-              <ContentFieldset disabled={disabled}>
-                <ExerciseDetail
-                  key={details.name}
-                  dataset={dataset}
-                  name={details.name}
-                  backLabel='Back to workout'
-                  onBack={() => setDetails(null)}
-                  onSource={(id) => {
-                    // Like Previous evidence: minimizes the logger and opens History; draft kept.
-                    setDetails(null);
-                    onSource(id);
-                  }}
-                  emptyFramed={false}
-                  renderTitle={(heading) => <DialogTitle asChild>{heading}</DialogTitle>}
-                />
-              </ContentFieldset>
-            )}
-          </DialogContent>
-        </Dialog>
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const target = detailsReturn.current;
+            detailsReturn.current = null;
+            if (target) detailButtons.current.get(target)?.focus({preventScroll: true});
+          }}
+        />
       )}
     </div>
   );

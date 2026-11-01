@@ -12,10 +12,10 @@ async function open(page: Page) {
 }
 async function add(section: Locator, kg: string, when?: string) {
   await section.getByRole('button', {name: 'Add weight', exact: true}).click();
-  await section.getByLabel('Weight in kg', {exact: true}).fill(kg);
-  if (when) await section.getByLabel('Date and time', {exact: true}).fill(when);
-  await section.getByRole('button', {name: 'Save entry', exact: true}).click();
-  await expect(section.getByLabel('Weight in kg', {exact: true})).toHaveCount(0);
+  await section.page().getByLabel('Weight in kg', {exact: true}).fill(kg);
+  if (when) await section.page().getByLabel('Date and time', {exact: true}).fill(when);
+  await section.page().getByRole('button', {name: 'Save entry', exact: true}).click();
+  await expect(section.page().getByLabel('Weight in kg', {exact: true})).toBeHidden();
 }
 const rows = (section: Locator) =>
   section.getByRole('list', {name: 'Body weight history'}).getByRole('listitem');
@@ -44,19 +44,24 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
 
   // A new entry defaults to now.
   await section.getByRole('button', {name: 'Add weight', exact: true}).click();
+  const editor = page.getByRole('dialog', {name: 'New body weight entry', exact: true});
+  await expect(editor).toBeVisible();
+  if (page.viewportSize()!.width < 1000)
+    await expect(editor).toHaveAttribute('data-vaul-drawer', '');
+  await expect(editor.getByLabel('Weight in kg')).toBeFocused();
   const now = await page.evaluate(() => {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   });
-  const defaulted = await section.getByLabel('Date and time', {exact: true}).inputValue();
+  const defaulted = await section.page().getByLabel('Date and time', {exact: true}).inputValue();
   expect(Math.abs(Date.parse(defaulted) - Date.parse(now))).toBeLessThanOrEqual(60_000);
   // Invalid weights are refused with a visible reason and nothing is saved.
-  await section.getByLabel('Weight in kg', {exact: true}).fill('0');
-  await section.getByRole('button', {name: 'Save entry', exact: true}).click();
-  await expect(section.getByRole('alert')).toContainText('kg');
-  await section.getByLabel('Weight in kg', {exact: true}).fill('70,4');
-  await section.getByRole('button', {name: 'Save entry', exact: true}).click();
+  await section.page().getByLabel('Weight in kg', {exact: true}).fill('0');
+  await section.page().getByRole('button', {name: 'Save entry', exact: true}).click();
+  await expect(editor.getByRole('alert')).toContainText('kg');
+  await section.page().getByLabel('Weight in kg', {exact: true}).fill('70,4');
+  await section.page().getByRole('button', {name: 'Save entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(1);
   // One point: honest single-entry state, no line.
   await expect(
@@ -77,30 +82,32 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
 
   // The chart shows the whole history, oldest entry included.
   const chart = section.getByRole('img', {name: /Body weight over time/});
-  await expect(chart.locator('circle')).toHaveCount(3);
+  await expect(chart.locator('.recharts-area-dots circle')).toHaveCount(3);
   await expect(chart.locator('.recharts-area-curve')).toHaveCount(1);
   await expect(chart).toHaveAttribute('aria-label', /5 Jan 2019/);
+  await page.mouse.move(0, 0);
   await chart.locator('.recharts-surface').focus();
+  await expect(section.locator('.weight-chart-value')).toContainText('71.25 kg');
   await page.keyboard.press('ArrowRight');
   await expect(section.locator('.weight-chart-value')).toContainText('69.9 kg');
   await expect(section.locator('.weight-chart-value')).toContainText('10 Jun 2023');
 
   // Correct an entry, including moving it in time.
   await section.getByRole('button', {name: /Edit entry 10 Jun 2023 07:30, 69.9 kg/}).click();
-  await section.getByLabel('Weight in kg', {exact: true}).fill('68.75');
-  await section.getByLabel('Date and time', {exact: true}).fill('2018-12-31T23:45');
-  await section.getByRole('button', {name: 'Save entry', exact: true}).click();
+  await section.page().getByLabel('Weight in kg', {exact: true}).fill('68.75');
+  await section.page().getByLabel('Date and time', {exact: true}).fill('2018-12-31T23:45');
+  await section.page().getByRole('button', {name: 'Save entry', exact: true}).click();
   await expect(rows(section).nth(2)).toContainText('31 Dec 2018');
   await expect(rows(section).nth(2)).toContainText('68.75');
 
   // Delete is reversible with Undo, then deleted for real.
   await section.getByRole('button', {name: /Edit entry 5 Jan 2019/}).click();
-  await section.getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(2);
   await section.getByRole('button', {name: 'Undo', exact: true}).click();
   await expect(rows(section)).toHaveCount(3);
   await section.getByRole('button', {name: /Edit entry 5 Jan 2019/}).click();
-  await section.getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(2);
 
   await page.reload();
@@ -163,7 +170,7 @@ test('fits the phone and desktop without clipping, with 44px targets, readable l
   const addButton = section.getByRole('button', {name: 'Add weight', exact: true});
   await addButton.focus();
   await page.keyboard.press('Enter');
-  const kg = section.getByLabel('Weight in kg', {exact: true});
+  const kg = section.page().getByLabel('Weight in kg', {exact: true});
   await expect(kg).toBeFocused();
   await page.keyboard.type('98');
   await page.keyboard.press('Enter');
@@ -205,7 +212,7 @@ test('keyboard Undo returns focus to Add weight after restoring the entry', asyn
   await add(section, '75.25', '2024-07-01T08:00');
   await section.getByRole('button', {name: /Edit entry/}).focus();
   await page.keyboard.press('Enter');
-  await section.getByRole('button', {name: 'Delete entry', exact: true}).focus();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).focus();
   await page.keyboard.press('Enter');
   const addButton = section.getByRole('button', {name: 'Add weight', exact: true});
   await expect(addButton).toBeFocused();
@@ -223,7 +230,7 @@ test('stale Undo explains the conflict without overwriting the newer entry', asy
   const section = await open(page);
   await add(section, '75.25', '2024-07-01T08:00');
   await section.getByRole('button', {name: /Edit entry/}).click();
-  await section.getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(0);
   // Model a newer entry arriving from another device while the Undo notice is open.
   await page.evaluate(async () => {
@@ -270,22 +277,22 @@ test('Undo covers one deletion until another edit starts or Settings closes', as
   await add(section, '75.25', '2024-07-01T08:00');
   await add(section, '75.5', '2024-07-02T08:00');
   await section.getByRole('button', {name: /Edit entry 1 Jul 2024/}).click();
-  await section.getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(section.getByRole('button', {name: 'Undo', exact: true})).toBeVisible();
 
   // Starting another action consumes the previous Undo, even when that edit is cancelled.
   await section.getByRole('button', {name: /Edit entry 2 Jul 2024/}).click();
   await expect(section.getByRole('button', {name: 'Undo', exact: true})).toHaveCount(0);
-  await section.getByRole('button', {name: 'Cancel', exact: true}).click();
+  await section.page().getByRole('button', {name: 'Cancel', exact: true}).click();
   await expect(rows(section)).toHaveCount(1);
   await section.getByRole('button', {name: /Edit entry 2 Jul 2024/}).click();
-  await section.getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await section.getByRole('button', {name: 'Undo', exact: true}).click();
   await expect(rows(section)).toHaveCount(1);
   await expect(rows(section)).toContainText('2 Jul 2024');
 
   await section.getByRole('button', {name: /Edit entry/}).click();
-  await section.getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await page.getByRole('button', {name: 'Close settings'}).click();
   section = await open(page);
   await expect(section.getByRole('button', {name: 'Undo', exact: true})).toHaveCount(0);
@@ -299,11 +306,26 @@ test('phone editors give the native date and time a full-width row', async ({pag
     await page.goto('/');
     const section = await open(page);
     await section.getByRole('button', {name: 'Add weight', exact: true}).click();
-    const kg = (await section.getByLabel('Weight in kg', {exact: true}).boundingBox())!;
-    const when = (await section.getByLabel('Date and time', {exact: true}).boundingBox())!;
+    await page.locator('.body-weight-editor').evaluate(async (el) => {
+      await Promise.all(el.getAnimations().map((a) => a.finished));
+    });
+    const kg = (await section.page().getByLabel('Weight in kg', {exact: true}).boundingBox())!;
+    const when = (await section.page().getByLabel('Date and time', {exact: true}).boundingBox())!;
     expect(when.y).toBeGreaterThanOrEqual(kg.y + kg.height);
     expect(Math.abs(when.x - kg.x)).toBeLessThan(1);
     expect(Math.abs(when.width - kg.width)).toBeLessThan(1);
+    await page.setViewportSize({width, height: 390});
+    const field = page.getByLabel('Weight in kg', {exact: true});
+    await field.focus();
+    await expect
+      .poll(async () => {
+        const r = (await field.boundingBox())!;
+        return r.y >= 14 && r.y + r.height <= 376;
+      })
+      .toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.body-weight-editor')).toBeHidden();
+    await expect(section.getByRole('button', {name: 'Add weight', exact: true})).toBeFocused();
   }
 });
 

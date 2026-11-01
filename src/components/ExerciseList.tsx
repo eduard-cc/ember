@@ -9,6 +9,7 @@ import {
   sortExerciseNames,
 } from '../domain/model';
 import type {Dataset} from '../domain/types';
+import {cue} from '../feedback';
 import {plural} from '../utils/plural';
 import {ExerciseThumb} from './ExerciseThumb';
 import {ExerciseRowText, exerciseRowClass} from './exercise-row';
@@ -58,7 +59,10 @@ function ExerciseRow({
         className={exerciseRowClass}
         aria-label={name}
         aria-describedby={sessions ? id : undefined}
-        onClick={() => onSelect(name)}
+        onClick={() => {
+          cue('tick');
+          onSelect(name);
+        }}
       >
         <ExerciseThumb name={name} />
         <ExerciseRowText title={name} subtitle={bodyPartOf(name)} />
@@ -126,7 +130,14 @@ export function ExerciseList({
       </div>
       <ChipRow role='group' aria-label='Body part'>
         {(['All', ...parts] as const).map((value) => (
-          <Chip key={value} aria-pressed={part === value} onClick={() => setPart(value)}>
+          <Chip
+            key={value}
+            aria-pressed={part === value}
+            onClick={() => {
+              cue('tick');
+              setPart(value);
+            }}
+          >
             {value}
           </Chip>
         ))}
@@ -140,9 +151,12 @@ export function ExerciseList({
           {sortOptions.map(([value, label]) => (
             <button
               key={value}
-              className='min-h-11 min-w-16 border-0 bg-transparent px-4 text-[14px] font-medium text-muted-foreground not-first:border-l not-first:border-l-border aria-pressed:bg-primary-tint aria-pressed:font-semibold aria-pressed:text-primary aria-pressed:shadow-[inset_0_0_0_1px_hsl(var(--primary))]'
+              className='min-h-11 min-w-16 border-0 bg-transparent px-3 text-xs font-medium text-muted-foreground not-first:border-l not-first:border-l-border hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground'
               aria-pressed={sort === value}
-              onClick={() => setSort(value)}
+              onClick={() => {
+                cue('tick');
+                setSort(value);
+              }}
             >
               {label}
             </button>

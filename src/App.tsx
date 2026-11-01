@@ -15,6 +15,7 @@ import {AddExercise} from './components/AddExercise';
 import {AppearanceSettings, useAppearance} from './components/AppearanceSettings';
 import {BodyWeightSettings} from './components/BodyWeightSettings';
 import {ElapsedTimer} from './components/ElapsedTimer';
+import {ExercisePage} from './components/ExercisePage';
 import {FeedbackSettings} from './components/FeedbackSettings';
 import {type Celebration, FinishCelebration} from './components/FinishCelebration';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
@@ -77,7 +78,7 @@ const appBarClass = [
 // Tab: icon over label on a phone (2px top rule when active), text link with a 2px underline from
 // `desk` up. Landscape phones switch to a row with a smaller min-height at any width.
 const navItemClass = [
-  'nav-item flex min-h-14 min-w-19 flex-1 flex-col items-center justify-center gap-1 bg-transparent px-3 py-1 text-[11px]',
+  'nav-item flex min-h-14 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-1 bg-transparent px-1 py-1 text-[11px] desk:px-3',
   'focus-visible:-outline-offset-2',
   'max-desk:border-t-2',
   'desk:min-h-12 desk:min-w-auto desk:flex-none desk:flex-row desk:border-b-2 desk:py-0 desk:text-[14px] desk:font-medium desk:[&_svg]:hidden',
@@ -98,6 +99,8 @@ type View = (typeof navigation)[number]['name'];
 export default function App() {
   const appearance = useAppearance();
   const settingsTrigger = useRef<HTMLButtonElement | null>(null);
+  const resetTrigger = useRef<HTMLButtonElement | null>(null);
+  const exerciseTrigger = useRef<HTMLElement | null>(null);
   const {
     repository,
     refresh,
@@ -145,6 +148,8 @@ export default function App() {
   const [focus, setFocus] = useState<{id: string; open: boolean} | null>(null);
   const [historySearch, setHistorySearch] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  useBackLayer(confirmReset, () => setConfirmReset(false));
   const transitioning = useRef(false);
   // App-shell updates pause editing and sync around a saved, draft-free transition.
   const endTransition = (safeToResume = true) => {
@@ -302,7 +307,7 @@ export default function App() {
   // Back closes the newest layer; on a main tab with nothing open it leaves the app as before.
   // The expanded workout counts only on mobile, where it covers the tabs.
   useBackLayer(showSheet && mobile, () => expand(false));
-  useBackLayer(view === 'Exercises' && !!exercise, () => setExercise(null));
+  useBackLayer(view === 'Exercises' && !!exercise && !sync.locked, () => setExercise(null));
   useBackLayer(settingsOpen, () => setSettingsOpen(false));
   useBackLayer(!!pendingWorkout && !sync.locked, () => setPendingWorkout(null));
   useBackLayer(confirmCancel && !sync.locked, () => setConfirmCancel(false));
@@ -343,7 +348,10 @@ export default function App() {
               <Button
                 variant='secondary'
                 className='text-destructive'
-                onClick={resetUnreadableStorage}
+                onClick={(event) => {
+                  resetTrigger.current = event.currentTarget;
+                  setConfirmReset(true);
+                }}
               >
                 Reset unreadable saved data
               </Button>
@@ -446,7 +454,7 @@ export default function App() {
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='-my-1.5 -mr-2.5'
+                  className='history-search-trigger -my-1.5 -mr-2.5'
                   aria-label={historySearch ? 'Close search' : 'Search history'}
                   aria-expanded={historySearch}
                   onClick={() => setHistorySearch((value) => !value)}
@@ -501,7 +509,7 @@ export default function App() {
                 />
               )}
               {view === 'Exercises' &&
-                (exercise ? (
+                (exercise && !mobile ? (
                   <ExerciseDetail
                     key={exercise}
                     dataset={allDataset}
@@ -510,7 +518,13 @@ export default function App() {
                     onSource={source}
                   />
                 ) : (
-                  <ExercisesView dataset={allDataset} onOpen={setExercise} />
+                  <ExercisesView
+                    dataset={allDataset}
+                    onOpen={(name) => {
+                      exerciseTrigger.current = document.activeElement as HTMLElement;
+                      setExercise(name);
+                    }}
+                  />
                 ))}
               {view === 'Profile' && <ProfileView workouts={allDataset.workouts} />}
             </ContentFieldset>
@@ -525,7 +539,7 @@ export default function App() {
               <ChevronUp size={20} className='text-primary' />
               <div className='min-w-0'>
                 <strong className='block truncate font-semibold'>{state.active.name}</strong>
-                <span className='block text-[12px] text-muted-foreground group-[:hover:not(:disabled)]:text-foreground'>
+                <span className='block text-[12px] text-muted-foreground group-hover:not-group-disabled:text-foreground'>
                   {/* Live: the workout is still running. */}
                   <span
                     className='relative mr-1.5 inline-grid size-2 -translate-y-px place-items-center align-middle'
@@ -535,7 +549,7 @@ export default function App() {
                     <span className='live-dot size-1.5 rounded-full bg-primary' />
                   </span>
                   <ElapsedTimer
-                    className='text-[12px] group-[:hover:not(:disabled)]:text-foreground'
+                    className='text-[12px] group-hover:not-group-disabled:text-foreground'
                     start={state.active.date}
                   />{' '}
                   · {completed} / {sets.length} sets
@@ -656,6 +670,22 @@ export default function App() {
           </section>
         )}
       </main>
+      {mobile && view === 'Exercises' && !sync.locked && (
+        <ExercisePage
+          name={exercise}
+          dataset={allDataset}
+          onClose={() => setExercise(null)}
+          onSource={(id) => {
+            setExercise(null);
+            source(id);
+          }}
+          disabled={disabled}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            exerciseTrigger.current?.focus({preventScroll: true});
+          }}
+        />
+      )}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent
           variant='panel'
@@ -704,6 +734,36 @@ export default function App() {
           </div>
         </DialogContent>
       </Dialog>
+      <ResponsiveDialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <ResponsiveDialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            resetTrigger.current?.focus();
+          }}
+        >
+          <ResponsiveDialogHeader className='text-left'>
+            <ResponsiveDialogTitle>Reset unreadable saved data?</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Its original bytes will remain retained for recovery. This resets only unreadable
+              device-local state, not server history.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter className={confirmFooter}>
+            <ResponsiveDialogClose asChild>
+              <Button>Keep saved data</Button>
+            </ResponsiveDialogClose>
+            <Button
+              variant='danger'
+              onClick={async () => {
+                setConfirmReset(false);
+                await resetUnreadableStorage();
+              }}
+            >
+              Reset saved data
+            </Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
       {/* Confirmations: bottom drawers on phones, a centred dialog from 1000px. Phones put
           the primary action on top; the first focus lands on the safe choice. */}
       <ResponsiveDialog

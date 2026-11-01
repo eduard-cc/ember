@@ -131,6 +131,17 @@ test('History search opens from the title, filters by exercise and closes empty'
   await expect(search).toHaveCount(0);
   await page.getByRole('button', {name: 'Search history'}).click();
   await expect(search).toBeFocused();
+  if (page.viewportSize()!.width < 1000) {
+    const drawer = page.getByRole('dialog', {name: 'Search history', exact: true});
+    await expect(drawer).toHaveAttribute('data-vaul-drawer', '');
+    await search.fill('synthetic dip');
+    await drawer.getByRole('button', {name: 'Show 1 workout', exact: true}).click();
+    await expect(drawer).toBeHidden();
+    await expect(page.locator('.history-card')).toHaveCount(1);
+    await page.getByRole('button', {name: 'Clear history search'}).click();
+    await expect(page.locator('.history-card')).toHaveCount(20);
+    await page.getByRole('button', {name: 'Search history', exact: true}).click();
+  }
   await search.fill('synthetic dip');
   await expect(page.locator('.history-card')).toHaveCount(1);
   await expect(page.locator('.month-label')).toHaveText('September 20261 workout');
@@ -143,7 +154,12 @@ test('History search opens from the title, filters by exercise and closes empty'
   await expect(page.locator('.history-card')).toHaveCount(20);
   await page.getByRole('button', {name: 'Search history'}).click();
   await expect(search).toHaveValue('');
-  await page.getByRole('button', {name: 'Close search'}).click();
+  if (page.viewportSize()!.width < 1000)
+    await page
+      .getByRole('dialog', {name: 'Search history', exact: true})
+      .getByRole('button', {name: 'Cancel', exact: true})
+      .click();
+  else await page.getByRole('button', {name: 'Close search'}).click();
   await expect(search).toHaveCount(0);
 });
 
@@ -211,6 +227,11 @@ test('a logger source link closes History search and opens an older workout on i
   await navigate(page, 'History');
   await page.getByRole('button', {name: 'Search history'}).click();
   await page.getByLabel('Search workout history').fill('october');
+  if (page.viewportSize()!.width < 1000) {
+    const searchDrawer = page.getByRole('dialog', {name: 'Search history', exact: true});
+    await searchDrawer.getByRole('button', {name: 'Show 22 workouts'}).click();
+    await expect(searchDrawer).toBeHidden();
+  }
   await expect(page.locator('.history-card')).toHaveCount(20);
   const resume = page.getByRole('button', {name: /^Resume /});
   if (await resume.isVisible()) await resume.click();

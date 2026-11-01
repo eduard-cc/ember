@@ -290,12 +290,7 @@ export function useWorkoutState() {
   );
   const resetUnreadableStorage = async () => {
     if (!writable.current) return;
-    if (
-      !window.confirm(
-        'Reset unreadable saved data? Its original bytes will remain retained for recovery.',
-      )
-    )
-      return;
+    // The app's responsive confirmation owns explicit consent; original bytes stay retained.
     try {
       await repository.db.meta.put({key: 'legacy-migration', value: 'explicit-reset'});
       await repository.db.importSources.put({

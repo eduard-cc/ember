@@ -39,13 +39,45 @@ test('back closes exercise details in the library, then a main tab has nothing l
   await navigate(page, 'Exercises');
   await page.getByRole('button', {name: /^Bench Press \(Barbell\)/}).click();
   await expect(page.getByRole('button', {name: 'Back to exercises'})).toBeVisible();
+  if (page.viewportSize()!.width < 1000) {
+    const panel = page.getByRole('dialog', {name: 'Bench Press (Barbell)', exact: true});
+    await expect(panel).toBeVisible();
+    expect(await panel.evaluate((el) => getComputedStyle(el).animationDuration)).toBe('0.34s');
+    await expect.poll(async () => Math.round((await panel.boundingBox())!.x)).toBe(0);
+    const bounds = (await panel.boundingBox())!;
+    expect(bounds.width).toBe(page.viewportSize()!.width);
+    expect(bounds.height).toBe(page.viewportSize()!.height);
+    await expect(panel.getByRole('tab', {name: 'Charts', exact: true})).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await panel.getByRole('tab', {name: 'History', exact: true}).click();
+    const underline = panel.locator('.tab-underline');
+    await expect
+      .poll(async () => Math.round((await underline.boundingBox())!.x))
+      .toBe(
+        Math.round((await panel.getByRole('tab', {name: 'History', exact: true}).boundingBox())!.x),
+      );
+    await page.keyboard.press('ArrowRight');
+    await expect(panel.getByRole('tab', {name: 'Records', exact: true})).toBeFocused();
+    expect(await underline.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  }
   await expect.poll(() => depth(page)).toBe(1);
   await back(page);
   await expect(page.getByRole('button', {name: 'Back to exercises'})).toBeHidden();
   await expect(page.getByLabel('Search exercises')).toBeVisible();
   await expect.poll(() => depth(page)).toBe(0);
-  // Closing with the on-screen arrow gives the entry back too, so back then leaves the app.
-  await page.getByRole('button', {name: /^Bench Press \(Barbell\)/}).click();
+  // Keyboard activation opens the page immediately; the on-screen arrow returns its entry too.
+  await page
+    .getByRole('region', {name: 'All exercises'})
+    .getByRole('button', {name: 'Bench Press (Barbell)', exact: true})
+    .focus();
+  await page.keyboard.press('Enter');
+  if (page.viewportSize()!.width < 1000) {
+    expect(
+      await page.locator('.pushed-page').evaluate((el) => getComputedStyle(el).animationName),
+    ).toBe('none');
+  }
   await page.getByRole('button', {name: 'Back to exercises'}).click();
   await expect.poll(() => depth(page)).toBe(0);
 });

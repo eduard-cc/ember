@@ -15,11 +15,21 @@ for (const raw of ['{broken-json', JSON.stringify({version: 2, finished: []})]) 
     expect(await page.evaluate(() => localStorage.getItem('ember:v1'))).toBe(raw);
     await page.reload();
     await expect(page.getByRole('alert')).toContainText('Saved data could not be read');
-    page.once('dialog', (dialog) => dialog.dismiss());
-    await page.getByRole('button', {name: 'Reset unreadable saved data'}).click();
+    await page.getByRole('button', {name: 'Reset unreadable saved data', exact: true}).click();
+    const confirmation = page.getByRole('dialog', {
+      name: 'Reset unreadable saved data?',
+      exact: true,
+    });
+    await expect(confirmation).toBeVisible();
+    await confirmation.getByRole('button', {name: 'Keep saved data'}).click();
+    await expect(confirmation).toBeHidden();
+    await expect(
+      page.getByRole('button', {name: 'Reset unreadable saved data', exact: true}),
+    ).toBeFocused();
     await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
-    page.once('dialog', (dialog) => dialog.accept());
-    await page.getByRole('button', {name: 'Reset unreadable saved data'}).click();
+    expect(await page.evaluate(() => localStorage.getItem('ember:v1'))).toBe(raw);
+    await page.getByRole('button', {name: 'Reset unreadable saved data', exact: true}).click();
+    await confirmation.getByRole('button', {name: 'Reset saved data', exact: true}).click();
     await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
     expect(await page.evaluate(() => localStorage.getItem('ember:v1'))).toBe(raw);
     await page.reload();

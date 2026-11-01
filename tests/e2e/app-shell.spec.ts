@@ -54,6 +54,16 @@ for (const width of [320, 390, 412]) {
     const bounds = await bar.boundingBox();
     expect(bounds!.y + bounds!.height).toBe(page.viewportSize()!.height);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = '150%';
+    });
+    for (const tab of await nav.getByRole('button').all()) {
+      const box = (await tab.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(width);
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(await tab.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    }
   });
 }
 
@@ -150,7 +160,9 @@ test('labels are sentence case', async ({page}) => {
     expect(s.size).toBe('14px');
   }
   const selected = styles.find((s) => s.selected)!;
-  expect(selected.border).toBe(await resolve(page, AMBER));
+  expect(
+    await page.locator('.tab-underline').evaluate((el) => getComputedStyle(el).backgroundColor),
+  ).toBe(await resolve(page, AMBER));
   expect(selected.color).toBe(await resolve(page, 'hsl(var(--foreground))'));
 });
 
@@ -229,6 +241,20 @@ test('Profile shows totals and selectable weekly metrics', async ({page}) => {
     await page.keyboard.press('ArrowRight');
     await expect(headline).toContainText('Week of');
     await page.mouse.move(0, 0);
+  }
+  await page.setViewportSize({width: 320, height: 915});
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '150%';
+  });
+  expect(
+    await page.locator('.library-scroll').evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
+  for (const segment of await page
+    .getByRole('radiogroup', {name: 'Show per week'})
+    .getByRole('radio')
+    .all()) {
+    const box = (await segment.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
   }
 });
 
@@ -413,10 +439,10 @@ test('Delete entry is an outline action with destructive text', async ({page}) =
   await openSettings(page);
   const section = page.getByRole('region', {name: 'Body weight', exact: true});
   await section.getByRole('button', {name: 'Add weight', exact: true}).click();
-  await section.getByLabel('Weight in kg', {exact: true}).fill('70');
-  await section.getByRole('button', {name: 'Save entry', exact: true}).click();
+  await page.getByLabel('Weight in kg', {exact: true}).fill('70');
+  await page.getByRole('button', {name: 'Save entry', exact: true}).click();
   await section.getByRole('button', {name: /Edit entry/}).click();
-  const del = section.getByRole('button', {name: 'Delete entry', exact: true});
+  const del = page.getByRole('button', {name: 'Delete entry', exact: true});
   await expect(del).toBeVisible();
   const style = await del.evaluate((el) => {
     const cs = getComputedStyle(el);
@@ -584,8 +610,8 @@ test('Settings sections are h3 groups under the h2 dialog title; Body weight emp
   await expect(section.locator('.body-weight-chart')).toHaveCount(0);
   // One entry: the chart card holds an unframed EmptyState.
   await section.getByRole('button', {name: 'Add weight', exact: true}).click();
-  await section.getByLabel('Weight in kg', {exact: true}).fill('70');
-  await section.getByRole('button', {name: 'Save entry', exact: true}).click();
+  await page.getByLabel('Weight in kg', {exact: true}).fill('70');
+  await page.getByRole('button', {name: 'Save entry', exact: true}).click();
   const one = section.locator('.body-weight-chart .empty-state', {hasText: 'One entry so far'});
   await expect(one).toBeVisible();
   await expect(one.locator('h4')).toHaveText('One entry so far');

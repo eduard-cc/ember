@@ -42,6 +42,7 @@ import {setCount} from '../domain/sets';
 import type {Dataset, ExerciseType, Workout} from '../domain/types';
 import {durationLabel} from '../domain/workout-duration';
 import {cue} from '../feedback';
+import {useIsMobile} from '../hooks/use-is-mobile';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
 import {dateLabel, fullDateTime, monthLabel, weekdayLabel} from '../utils/date';
@@ -191,6 +192,9 @@ export function HistoryView({
   /** Sync is locked: portaled dialogs escape <main hidden>, so they must unmount. */
   locked: boolean;
 }) {
+  const mobile = useIsMobile();
+  const searchRef = useRef<HTMLInputElement>(null);
+
   const workouts = dataset.workouts;
   const [editing, setEditing] = useState<Workout | null>(null);
   const [deleting, setDeleting] = useState<Workout | null>(null);
@@ -199,13 +203,18 @@ export function HistoryView({
   const pagesFor = (id: string | undefined) =>
     Math.max(PAGE, Math.ceil((workouts.findIndex((w) => w.id === id) + 1) / PAGE) * PAGE);
   const [search, setSearch] = useState('');
+  const cancelSearch = () => {
+    setSearch('');
+    onSearchingChange(false);
+  };
+  useBackLayer(searching && mobile && !locked, cancelSearch);
   const [limit, setLimit] = useState(() => (focus?.open ? pagesFor(focus.id) : PAGE));
   // Closing or reopening search starts it empty, on the first page. This runs before the focus
   // check below, so a source link that also closes search keeps the page its workout is on.
   const [wasSearching, setWasSearching] = useState(searching);
   if (wasSearching !== searching) {
     setWasSearching(searching);
-    setSearch('');
+    if (searching || !mobile) setSearch('');
     setLimit(PAGE);
   }
   // A source link opens its workout; a new focus opens it even while History is showing.
@@ -214,6 +223,7 @@ export function HistoryView({
   if (focus !== seenFocus) {
     setSeenFocus(focus);
     if (focus?.open) {
+      setSearch('');
       setOpenId(focus.id);
       setLimit((n) => Math.max(n, pagesFor(focus.id)));
     }
@@ -244,7 +254,7 @@ export function HistoryView({
     setOpenId(null);
   };
 
-  const query = searching ? search.trim().toLowerCase() : '';
+  const query = searching || mobile ? search.trim().toLowerCase() : '';
   const filtered = useMemo(
     () =>
       workouts.filter(
@@ -283,33 +293,84 @@ export function HistoryView({
     groups.at(-1)!.items.push(w);
   }
 
+  const searchField = (
+    <label className='relative block'>
+      <Search
+        size={16}
+        className='pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground'
+        aria-hidden
+      />
+      <Input
+        autoFocus={!mobile}
+        ref={searchRef}
+        aria-label='Search workout history'
+        placeholder='Workouts, exercises or months'
+        className='pl-9'
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setLimit(PAGE);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            cancelSearch();
+          }
+        }}
+      />
+    </label>
+  );
   return (
     <div className='history-list flex flex-col gap-3'>
-      {searching && (
-        <label className='relative block'>
-          <Search
-            size={16}
-            className='pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground'
-            aria-hidden
-          />
-          <Input
-            autoFocus
-            aria-label='Search workout history'
-            placeholder='Workouts, exercises or months'
-            className='pl-9'
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setLimit(PAGE);
+      {searching && !mobile && searchField}
+      {mobile && query && !searching && (
+        <div className='flex items-center justify-between gap-2'>
+          <p className='min-w-0 text-sm [overflow-wrap:anywhere]'>Results for “{search.trim()}”</p>
+          <Button
+            variant='ghost'
+            className='shrink-0'
+            aria-label='Clear history search'
+            onClick={() => setSearch('')}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
+      {mobile && !locked && (
+        <ResponsiveDialog
+          open={searching}
+          onOpenChange={(next) => {
+            if (!next) cancelSearch();
+          }}
+        >
+          <ResponsiveDialogContent
+            className='history-search dialog-content'
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              searchRef.current?.focus();
             }}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                e.preventDefault();
-                onSearchingChange(false);
-              }
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              document.querySelector<HTMLButtonElement>('.history-search-trigger')?.focus();
             }}
-          />
-        </label>
+          >
+            <ResponsiveDialogHeader className='text-left'>
+              <ResponsiveDialogTitle>Search history</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Find a workout, exercise or month.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogBody className='pb-[calc(1rem+env(safe-area-inset-bottom))]'>
+              {searchField}
+              <DialogActions>
+                <Button onClick={cancelSearch}>Cancel</Button>
+                <Button variant='primary' onClick={() => onSearchingChange(false)}>
+                  Show {plural(filtered.length, 'workout')}
+                </Button>
+              </DialogActions>
+            </ResponsiveDialogBody>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
       )}
       {groups.map((group) => (
         <section key={group.key} aria-labelledby={`month-${group.key}`}>

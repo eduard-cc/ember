@@ -66,15 +66,21 @@ const contentMotion = `${overlayMotion} data-[state=closed]:zoom-out-95 data-[st
 export function DialogContent({
   variant,
   motion = false,
+  pushed = false,
   className,
   ...props
 }: ComponentPropsWithoutRef<typeof DialogPrimitive.Content> &
-  VariantProps<typeof dialogContentVariants> & {motion?: boolean}) {
+  VariantProps<typeof dialogContentVariants> & {motion?: boolean; pushed?: boolean}) {
   return (
     <DialogPrimitive.Portal>
-      <DialogOverlay className={motion ? overlayMotion : undefined} />
+      <DialogOverlay className={pushed ? 'page-overlay' : motion ? overlayMotion : undefined} />
       <DialogPrimitive.Content
-        className={cn(dialogContentVariants({variant}), motion && contentMotion, className)}
+        className={cn(
+          dialogContentVariants({variant}),
+          motion && contentMotion,
+          pushed && 'pushed-page',
+          className,
+        )}
         {...props}
       />
     </DialogPrimitive.Portal>

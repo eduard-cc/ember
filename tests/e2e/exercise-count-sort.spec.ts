@@ -130,6 +130,19 @@ test('body-part filter combined with Most done keeps the count order within that
     page.getByRole('group', {name: 'Sort exercises'}).getByRole('button', {name: 'Most done'}),
   ).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('group', {name: 'Body part'}).getByRole('button', {name: 'Back'}).click();
+  const selected = page
+    .getByRole('group', {name: 'Body part'})
+    .getByRole('button', {name: 'Back', exact: true});
+  expect(
+    await selected.evaluate((el) => {
+      const sample = document.createElement('span');
+      sample.style.backgroundColor = 'hsl(var(--secondary))';
+      document.body.appendChild(sample);
+      const expected = getComputedStyle(sample).backgroundColor;
+      sample.remove();
+      return getComputedStyle(el).backgroundColor === expected;
+    }),
+  ).toBe(true);
   await expect(page.getByRole('region', {name: 'Recent exercises'})).toHaveCount(0);
   const rows = await readRows(all);
   expect(rows.length).toBeGreaterThan(2);

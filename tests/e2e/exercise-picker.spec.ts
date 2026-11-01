@@ -21,6 +21,19 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
   const picker = await openPicker(page);
   // Same list as the Exercises tab: search, body-part chips, Recent and All sections.
   await expect(picker.getByLabel('Search exercises')).toBeVisible();
+  if (info.project.name === 'mobile') {
+    const search = picker.getByLabel('Search exercises');
+    await search.focus();
+    await page.setViewportSize({width: 412, height: 390});
+    await expect
+      .poll(async () => {
+        const r = (await search.boundingBox())!;
+        return r.y >= 14 && r.y + r.height <= 376;
+      })
+      .toBe(true);
+    await page.setViewportSize({width: 412, height: 915});
+    await search.blur();
+  }
   // Only body parts that hold exercises; every demo name is in the catalog, so no Other.
   await expect(picker.getByRole('group', {name: 'Body part'}).getByRole('button')).toHaveText([
     'All',
@@ -82,6 +95,13 @@ test('closing the exercise picker keeps the active workout unchanged', async ({p
   await page.keyboard.press('Escape');
   await expect(picker).toBeHidden();
   await expect(cards).toHaveCount(before);
+  await openPicker(page);
+  const cdp = await page.context().newCDPSession(page);
+  const {currentIndex, entries} = await cdp.send('Page.getNavigationHistory');
+  await cdp.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
+  await expect(picker).toBeHidden();
+  await expect(cards).toHaveCount(before);
+  await expect(page.getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
 });
 test('adding an exercise already in the workout explains why and keeps the draft unchanged', async ({
   page,

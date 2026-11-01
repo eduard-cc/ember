@@ -63,6 +63,7 @@ export function ProfileView({workouts}: {workouts: Workout[]}) {
             }}
             label='Show per week'
             items={metrics}
+            className='max-w-full min-w-0 flex-wrap justify-start'
             itemClassName='px-2.5'
           />
         </header>

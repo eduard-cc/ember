@@ -292,6 +292,45 @@
     --tw-animation-duration: 180ms;
     --tw-ease: var(--ease-out);
   }
+  .overlay-motion[data-state='closed'] {
+    --tw-animation-duration: 140ms;
+  }
+  @media (width < 1000px) {
+    .pushed-page[data-state='open'] {
+      animation: page-push 340ms var(--ease-drawer);
+    }
+    .pushed-page[data-state='closed'] {
+      animation: page-pop 240ms var(--ease-drawer);
+      pointer-events: none;
+    }
+    .page-overlay[data-state='open'] {
+      animation: celebrate-fade 340ms var(--ease-drawer);
+    }
+    .page-overlay[data-state='closed'] {
+      animation: celebrate-fade 240ms var(--ease-drawer) reverse;
+    }
+    /* Focus-visible follows the activation modality: keyboard entry/exit is immediate. */
+    .pushed-page:has(:focus-visible),
+    body:has(.pushed-page :focus-visible) .page-overlay {
+      animation: none;
+    }
+    @keyframes page-push {
+      from {
+        transform: translateX(100%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
+    @keyframes page-pop {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(100%);
+      }
+    }
+  }
   /* Press feedback: pressed controls sink slightly on touch screens. */
   .press-feedback {
     transition:
@@ -301,7 +340,7 @@
       transform 160ms var(--ease-out);
   }
   @media (prefers-reduced-motion: no-preference) and (pointer: coarse) {
-    .press-feedback:active:not(:disabled):not([aria-disabled='true']) {
+    .press-feedback:active:not(:focus-visible):not(:disabled):not([aria-disabled='true']) {
       transform: scale(0.97);
     }
   }
@@ -314,7 +353,7 @@
       transform 160ms var(--ease-out);
   }
   @media (prefers-reduced-motion: no-preference) {
-    .pressable:active:not(:disabled):not(:has(.exercise-menu:active)) {
+    .pressable:active:not(:focus-visible):not(:disabled):not(:has(.exercise-menu:active)) {
       transform: scale(0.985);
     }
   }
@@ -615,4 +654,9 @@
   transition-duration: 250ms;
   animation-timing-function: var(--ease-drawer);
   transition-timing-function: var(--ease-drawer);
+}
+[data-vaul-drawer].overlay-motion[data-state='closed'],
+[data-vaul-overlay].overlay-motion[data-state='closed'] {
+  animation-duration: 180ms;
+  transition-duration: 180ms;
 }

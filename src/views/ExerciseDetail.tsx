@@ -10,13 +10,14 @@ import {EmptyState} from '../components/ui/empty-state';
 import {ListLabel} from '../components/ui/list-label';
 import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
 import type {Dataset, SetRecord} from '../domain/types';
+import {cue} from '../feedback';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
 import {setLabel} from '../utils/set-label';
 import {ExerciseCharts} from './ExerciseCharts';
 
-const tabs = ['About', 'History', 'Charts', 'Records'] as const;
+const tabs = ['Charts', 'History', 'Records', 'About'] as const;
 type Tab = (typeof tabs)[number];
 const kg = (n: number) => `${Number(n.toFixed(1))} kg`;
 const kgReps = (n: number) => `${Number(n.toFixed(1))} kg·reps`;
@@ -276,7 +277,8 @@ export function ExerciseDetail({
 }) {
   // Unique workouts, matching the Exercises list; History/Charts/Records stay per exercise block.
   const workouts = useMemo(() => exerciseWorkoutCount(dataset, name), [dataset, name]);
-  const [tab, setTab] = useState<Tab>(workouts ? 'History' : 'About');
+  const [tab, setTab] = useState<Tab>(workouts ? 'Charts' : 'About');
+  const [tabMotion, setTabMotion] = useState(false);
   // The library and the workout can both show details at once; ids must stay unique.
   const id = useId();
   return (
@@ -294,7 +296,7 @@ export function ExerciseDetail({
         </div>
       </header>
       <div
-        className='sticky -top-6 z-1 -mx-1 mb-[18px] flex border-b border-border bg-background [.exercise-detail-panel_&]:max-desk:-top-[18px]'
+        className='exercise-tabs sticky -top-6 z-1 -mx-1 mb-[18px] flex border-b border-border bg-background [.exercise-detail-panel_&]:max-desk:-top-[18px]'
         role='tablist'
         aria-label='Exercise sections'
       >
@@ -305,12 +307,43 @@ export function ExerciseDetail({
             id={`${id}-tab-${value}`}
             aria-selected={tab === value}
             aria-controls={`${id}-panel`}
-            className='min-h-[46px] flex-1 border-0 border-b-2 border-b-transparent bg-transparent text-[14px] font-medium text-muted-foreground focus-visible:-outline-offset-2 aria-selected:border-b-primary aria-selected:text-foreground'
-            onClick={() => setTab(value)}
+            tabIndex={tab === value ? 0 : -1}
+            className='min-h-[46px] min-w-0 flex-1 border-0 bg-transparent text-[14px] font-medium text-muted-foreground focus-visible:-outline-offset-2 aria-selected:text-foreground'
+            onClick={(event) => {
+              setTabMotion(event.detail > 0);
+              cue('tick');
+              setTab(value);
+            }}
+            onKeyDown={(event) => {
+              const index = tabs.indexOf(value);
+              const next =
+                event.key === 'ArrowRight'
+                  ? (index + 1) % tabs.length
+                  : event.key === 'ArrowLeft'
+                    ? (index + tabs.length - 1) % tabs.length
+                    : event.key === 'Home'
+                      ? 0
+                      : event.key === 'End'
+                        ? tabs.length - 1
+                        : null;
+              if (next === null) return;
+              event.preventDefault();
+              setTabMotion(false);
+              setTab(tabs[next]);
+              document.getElementById(`${id}-tab-${tabs[next]}`)?.focus();
+            }}
           >
             {value}
           </button>
         ))}
+        <span
+          aria-hidden='true'
+          className={cn(
+            'tab-underline pointer-events-none absolute -bottom-px left-0 h-0.5 w-1/4 bg-primary',
+            tabMotion && 'transition-transform duration-200 ease-(--ease-out)',
+          )}
+          style={{transform: `translateX(${tabs.indexOf(tab) * 100}%)`}}
+        />
       </div>
       <div role='tabpanel' id={`${id}-panel`} aria-labelledby={`${id}-tab-${tab}`}>
         {tab === 'About' && <About name={name} framed={emptyFramed} />}

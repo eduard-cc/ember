@@ -61,10 +61,13 @@ test('tapping an exercise name or thumbnail opens its details with finished-work
   await expect(
     dialog.getByRole('heading', {name: 'Seated Row (Cable)', exact: true}),
   ).toBeVisible();
-  await expect(dialog.getByRole('tab', {name: 'History', exact: true})).toHaveAttribute(
+  await expect(dialog.getByRole('tab')).toHaveText(['Charts', 'History', 'Records', 'About']);
+  await expect(dialog.getByRole('tab', {name: 'Charts', exact: true})).toHaveAttribute(
     'aria-selected',
     'true',
   );
+  await expect(dialog.getByRole('img', {name: /^Heaviest weight for/})).toBeVisible();
+  await dialog.getByRole('tab', {name: 'History', exact: true}).click();
   // Demo history has Seated Row in two routines for eight weeks each; the draft adds nothing.
   await expect(dialog.getByText('Back · 16 workouts')).toBeVisible();
   await expect(dialog.locator('.session-card').first()).toBeVisible();

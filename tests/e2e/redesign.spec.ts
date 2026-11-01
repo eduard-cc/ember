@@ -487,24 +487,26 @@ test('sounds and haptics start on, play when a workout starts and each switch pe
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   expect(await cues()).toEqual({vibrations: [[18, 60, 10]], audioContexts: 1});
-  // Typing plays nothing; each check climbs, the exercise's last check chimes, an untick drops.
+  // Selecting an exercise ticks; typing stays silent.
   await addExercise(page, 'Squat (Barbell)');
+  expect((await cues()).vibrations).toEqual([[18, 60, 10], [6]]);
   for (const set of [1, 2, 3]) {
     await page.getByLabel(`Weight for Squat (Barbell) set ${set}`).fill('100');
     await page.getByLabel(`Reps for Squat (Barbell) set ${set}`).fill('5');
   }
-  expect((await cues()).vibrations).toEqual([[18, 60, 10]]);
+  expect((await cues()).vibrations).toEqual([[18, 60, 10], [6]]);
+  // Each check climbs, the exercise's last check chimes, an untick drops.
   for (const set of [1, 2, 3])
     await page.getByRole('button', {name: `Complete Squat (Barbell) set ${set}`}).click();
   await expect
     .poll(async () => (await cues()).vibrations)
-    .toEqual([[18, 60, 10], [12], [12], [12], [12, 50, 18]]);
+    .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18]]);
   await page.getByRole('button', {name: 'Uncomplete Squat (Barbell) set 1'}).click();
   // Opening ⋯ ticks.
   await page.locator('button[aria-label="Exercise options for Squat (Barbell)"]').click();
   await expect
     .poll(async () => (await cues()).vibrations)
-    .toEqual([[18, 60, 10], [12], [12], [12], [12, 50, 18], [6], [6]]);
+    .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18], [6], [6]]);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('menu')).toHaveCount(0);
 

@@ -19,7 +19,7 @@ const Chip = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElemen
     <button
       ref={ref}
       className={cn(
-        'min-h-11 shrink-0 rounded-none border border-border bg-card px-3.5 text-[14px] font-medium text-muted-foreground aria-pressed:border-primary aria-pressed:bg-primary-tint aria-pressed:font-semibold aria-pressed:text-primary',
+        'min-h-11 min-w-11 shrink-0 rounded-none border border-border bg-transparent px-3 text-xs font-medium text-muted-foreground hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground',
         className,
       )}
       {...props}

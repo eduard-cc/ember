@@ -1,9 +1,19 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 import {requestShellUpdate} from '../pwa/register';
+import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {SettingsGroup, SettingsList, SettingsRow} from './settings-group';
 import {Button} from './ui/button';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogClose,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from './ui/responsive-dialog';
 
 interface Props {
   repository: WorkoutRepository;
@@ -17,6 +27,15 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [confirming, setConfirming] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const focusPending = useRef(false);
+  useEffect(() => {
+    if (!available || busy || !focusPending.current) return;
+    focusPending.current = false;
+    trigger.current?.focus();
+  }, [available, busy]);
+  useBackLayer(confirming, () => setConfirming(false));
   useEffect(() => {
     if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
     let cancelled = false;
@@ -36,12 +55,7 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
   }, []);
   async function apply() {
     if (!available || busy || !registration || registration.waiting !== waiting) return;
-    if (
-      !window.confirm(
-        'Apply the new app shell? No draft may be active in any tab. This page will stay open; close all Ember tabs and reopen later to use the update.',
-      )
-    )
-      return;
+    setConfirming(false);
     setBusy(true);
     setMessage('');
     let begun = false;
@@ -78,7 +92,11 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
             label='A new app shell is ready'
             value='Finish active workouts first, including in other tabs. Applying never refreshes this page.'
             action={
-              <Button disabled={!available || busy} onClick={() => void apply()}>
+              <Button
+                ref={trigger}
+                disabled={!available || busy}
+                onClick={() => setConfirming(true)}
+              >
                 Apply shell update
               </Button>
             }
@@ -90,6 +108,33 @@ export function ShellUpdatePanel({repository, available, begin, end}: Props) {
           {message}
         </p>
       )}
+      <ResponsiveDialog open={confirming} onOpenChange={setConfirming}>
+        <ResponsiveDialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            // A sync attempt can disable the opener while the confirmation is open.
+            // Restore immediately when possible, otherwise on the first eligible render.
+            if (trigger.current?.disabled) focusPending.current = true;
+            else trigger.current?.focus();
+          }}
+        >
+          <ResponsiveDialogHeader className='text-left'>
+            <ResponsiveDialogTitle>Apply the new app shell?</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              No draft may be active in any tab. This page will stay open; close all Ember tabs and
+              reopen later to use the update.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter className='max-desk:flex-col-reverse max-desk:*:min-h-12'>
+            <ResponsiveDialogClose asChild>
+              <Button>Not now</Button>
+            </ResponsiveDialogClose>
+            <Button variant='primary' disabled={!available || busy} onClick={() => void apply()}>
+              Apply update
+            </Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </SettingsGroup>
   );
 }

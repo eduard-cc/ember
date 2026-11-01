@@ -40,6 +40,7 @@ interface ResponsiveDialogProps extends BaseProps {
   'data-testid'?: string;
   /** Ember: where focus goes when a dialog without a trigger closes. */
   onCloseAutoFocus?: (event: Event) => void;
+  onOpenAutoFocus?: (event: Event) => void;
 }
 
 const ResponsiveDialogContext = React.createContext<{isDesktop: boolean}>({
