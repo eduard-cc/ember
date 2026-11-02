@@ -34,6 +34,10 @@ The nightly off-device backup dumps `ember` through that socket and skips the da
 
 The image is pinned to an exact minor (`postgres:17.N-bookworm`) in `ops/compose.local.yml`, `ops/backup.sh`, `ops/restore-check.sh` and CI; `tests/postgres-image.test.ts` keeps them equal. A monthly Hermes cron job runs `ops/postgres-update-check.sh` from this checkout and queues an "Ember: bump PostgreSQL" card when a newer 17.x minor ships. Minor updates keep the data directory. Back up and restore-check with the old scripts, push the new pin, then recreate the container at once with `ops/docker.sh compose -f ops/compose.local.yml up -d --wait`. Until then `ops/backup.sh` and deploys that add migrations refuse, because the pin no longer matches the container. To go back, pin the previous minor and recreate again.
 
+## npm dependencies and Node
+
+The lockfiles pin every npm package, and CI and `ops/deploy.sh` install them with `npm ci`. A monthly Hermes cron job runs `ops/dependency-check.sh` from this checkout. It queues an "Ember: dependency and Node updates" card when `npm audit --omit=dev` reports a high or critical advisory in the app or server, when the Node that `ember.service` runs (`~/.local/bin/node`) is behind a security release in its major, or when that major differs from `.nvmrc`, which CI uses. It ignores moderate advisories and dev-only packages, and the same findings never queue a second card. Fix advisories with in-major updates, never `npm audit fix --force`. `ops/test-dependency-check.sh` checks its decisions with fake npm, node, curl and hermes; it is local-only.
+
 ## Resource limits
 
 Installed by `ops/install.sh`, units in `ops/systemd/`:
