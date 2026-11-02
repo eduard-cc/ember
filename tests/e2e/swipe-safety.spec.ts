@@ -132,7 +132,7 @@ test('canceling the template editor cancels its pending row deletion', async ({p
     animation.pause();
     return animation;
   });
-  await page.getByRole('button', {name: 'Cancel template editing'}).click();
+  await page.getByRole('button', {name: 'Close template editor'}).click();
   // Completing a detached row's exit must not reopen the editor with stale data.
   await animation.evaluate((animation) => animation.finish());
   await expect(editor).toHaveCount(0);

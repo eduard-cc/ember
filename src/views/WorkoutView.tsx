@@ -335,6 +335,13 @@ export function WorkoutView({
       {/* eslint-disable-next-line react-hooks/refs -- identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use. */}
       {workout.exercises.map((ex, ei) => {
         const timed = isTimed(ex.type);
+        const singleTarget = targetsOnly && (ex.type === 'bodyweight' || ex.type === 'duration');
+        const gridClass = targetsOnly
+          ? cn(
+              'relative grid min-h-14 grid-cols-[44px_minmax(0,1fr)_minmax(0,1fr)] items-center gap-3 tabular-nums',
+              singleTarget && 'grid-cols-[44px_minmax(0,1fr)]',
+            )
+          : SET_GRID;
         const checked = countedSets(ex).length;
         const done = ex.sets.length > 0 && checked === ex.sets.length;
         const caption = targetsOnly && loadCaption(ex);
@@ -439,19 +446,24 @@ export function WorkoutView({
             <div className='set-table'>
               <div
                 className={cn(
-                  SET_GRID,
+                  gridClass,
                   'set-row set-head min-h-[30px] text-center text-[11px] text-muted-foreground',
                 )}
               >
                 <span>Set</span>
-                <span>Previous</span>
-                <span>{timed ? 'Seconds' : ex.type === 'assisted' ? 'Assist. kg' : 'kg'}</span>
-                <span>{ex.type === 'duration' ? '' : timed ? 'km' : 'Reps'}</span>
-                <span />
+                {!targetsOnly && <span>Previous</span>}
+                {!(targetsOnly && ex.type === 'bodyweight') && (
+                  <span>{timed ? 'Seconds' : ex.type === 'assisted' ? 'Assist. kg' : 'kg'}</span>
+                )}
+                {!(targetsOnly && ex.type === 'duration') && (
+                  <span>{ex.type === 'duration' ? '' : timed ? 'km' : 'Reps'}</span>
+                )}
+                {!targetsOnly && <span />}
                 <span className='desktop-remove hidden' />
               </div>
               {ex.sets.map((set, si) => (
                 <SetRow
+                  gridClass={gridClass}
                   completed={set.completed}
                   key={set.id}
                   number={si + 1}
@@ -459,9 +471,7 @@ export function WorkoutView({
                   onDelete={() => removeSet(ex, si)}
                   onDeletingChange={(deleting) => setDeleting(set.id, deleting)}
                 >
-                  {targetsOnly ? (
-                    <span />
-                  ) : (
+                  {!targetsOnly && (
                     <PreviousSet
                       dataset={dataset}
                       exercise={ex}
@@ -470,33 +480,39 @@ export function WorkoutView({
                       onSource={onSource}
                     />
                   )}
-                  <ReplaceInput
-                    type='number'
-                    className={setInput(set.completed)}
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Enter' || targetsOnly) return;
-                      event.preventDefault();
-                      if (ex.type === 'duration') completeAndBlur(event, ei, si);
-                      else {
-                        const row = event.currentTarget.closest('.set-row');
-                        row?.querySelectorAll('input')[1]?.focus();
+                  {!(targetsOnly && ex.type === 'bodyweight') && (
+                    <ReplaceInput
+                      type='number'
+                      className={setInput(set.completed)}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter') return;
+                        event.preventDefault();
+                        if (ex.type === 'duration') {
+                          if (targetsOnly) event.currentTarget.blur();
+                          else completeAndBlur(event, ei, si);
+                        } else {
+                          const row = event.currentTarget.closest('.set-row');
+                          row?.querySelectorAll('input')[1]?.focus();
+                        }
+                      }}
+                      inputMode={timed ? 'numeric' : 'decimal'}
+                      min={timed ? 1 : 0}
+                      max={timed ? 86400 : 2000}
+                      step={timed ? 1 : 0.5}
+                      disabled={ex.type === 'bodyweight'}
+                      aria-label={`${timed ? 'Seconds' : 'Weight'} for ${ex.name} set ${si + 1}`}
+                      value={(timed ? set.seconds : set.weight) ?? ''}
+                      onValueChange={(value) =>
+                        edit(ei, si, {
+                          [timed ? 'seconds' : 'weight']: value === '' ? null : Number(value),
+                        })
                       }
-                    }}
-                    inputMode={timed ? 'numeric' : 'decimal'}
-                    min={timed ? 1 : 0}
-                    max={timed ? 86400 : 2000}
-                    step={timed ? 1 : 0.5}
-                    disabled={ex.type === 'bodyweight'}
-                    aria-label={`${timed ? 'Seconds' : 'Weight'} for ${ex.name} set ${si + 1}`}
-                    value={(timed ? set.seconds : set.weight) ?? ''}
-                    onValueChange={(value) =>
-                      edit(ei, si, {
-                        [timed ? 'seconds' : 'weight']: value === '' ? null : Number(value),
-                      })
-                    }
-                  />
+                    />
+                  )}
                   {ex.type === 'duration' ? (
-                    <span className='text-center text-[12px] text-muted-foreground'>seconds</span>
+                    !targetsOnly && (
+                      <span className='text-center text-[12px] text-muted-foreground'>seconds</span>
+                    )
                   ) : (
                     <ReplaceInput
                       type='number'
@@ -519,9 +535,7 @@ export function WorkoutView({
                       }
                     />
                   )}
-                  {targetsOnly ? (
-                    <span />
-                  ) : (
+                  {!targetsOnly && (
                     <Button
                       size='icon'
                       className='set-check h-11 w-11 justify-self-end bg-transparent hover:bg-transparent'

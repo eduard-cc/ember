@@ -72,7 +72,7 @@ const confirmFooter = 'max-desk:flex-col-reverse max-desk:*:min-h-12';
 const appBarClass = [
   'app-bar shrink-0',
   'max-desk:order-1 max-desk:border-t max-desk:border-t-border max-desk:bg-card',
-  'max-desk:[.app-shell:has(input:focus:not([type=search]))_&]:invisible',
+  'max-desk:[body:has(input:focus:not([type=search]))_&]:invisible',
   'desk:-order-1 desk:flex desk:h-12 desk:items-center desk:gap-6 desk:border-b desk:border-b-border desk:bg-background desk:px-7',
 ].join(' ');
 // Tab: icon over label on a phone (2px top rule when active), text link with a 2px underline from
@@ -186,7 +186,7 @@ export default function App() {
           bottom = top + (viewport?.height ?? window.innerHeight);
         const rect = field.getBoundingClientRect();
         const scroller = field.closest(
-          '.workout-scroll, .settings-panel, .library-scroll, .dialog-content',
+          '.editor-scroll, .workout-scroll, .settings-panel, .library-scroll, .dialog-content',
         );
         const bounds = scroller?.getBoundingClientRect();
         const visibleTop = Math.max(top, bounds?.top ?? top);
@@ -489,6 +489,8 @@ export default function App() {
                   </section>
                   <TemplatesView
                     templates={templates}
+                    disabled={disabled}
+                    locked={sync.locked}
                     dataset={allDataset}
                     onChange={(templates, base) => setState((s) => ({...s, templates}), base)}
                     onStart={(workout) => start(routineTargets(workout, allDataset))}

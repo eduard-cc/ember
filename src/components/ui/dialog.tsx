@@ -1,7 +1,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {type VariantProps, cva} from 'class-variance-authority';
 import {X} from 'lucide-react';
-import type {ComponentPropsWithoutRef, HTMLAttributes} from 'react';
+import type {ComponentPropsWithRef, ComponentPropsWithoutRef, HTMLAttributes} from 'react';
 
 import {cn} from '../../utils/cn';
 import {Button} from './button';
@@ -69,7 +69,7 @@ export function DialogContent({
   pushed = false,
   className,
   ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Content> &
+}: ComponentPropsWithRef<typeof DialogPrimitive.Content> &
   VariantProps<typeof dialogContentVariants> & {motion?: boolean; pushed?: boolean}) {
   return (
     <DialogPrimitive.Portal>
@@ -91,7 +91,7 @@ export function DialogContent({
  * An `h2` (18px from the base layer). It has no padding of its own: a title that shares its row
  * with a `DialogCornerClose` passes `pr-7` so the X never covers it.
  */
-export function DialogTitle(props: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+export function DialogTitle(props: ComponentPropsWithRef<typeof DialogPrimitive.Title>) {
   return <DialogPrimitive.Title {...props} />;
 }
 

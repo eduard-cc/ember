@@ -1,15 +1,12 @@
-import {ClipboardList, Clock, Layers, Pencil, Play, Plus, Trash2, X} from 'lucide-react';
+import {ClipboardList, Clock, Layers, Pencil, Play, Plus, Trash2} from 'lucide-react';
 import {useMemo, useRef, useState} from 'react';
 
-import {AddExercise} from '../components/AddExercise';
 import {OptionsMenu} from '../components/ExerciseMenu';
+import {TemplateEditor} from '../components/TemplateEditor';
 import {ExerciseLine, Stat} from '../components/exercise-line';
 import {Button} from '../components/ui/button';
-import {Card} from '../components/ui/card';
 import {DialogActions} from '../components/ui/dialog';
 import {EmptyState} from '../components/ui/empty-state';
-import {fieldLabelClass} from '../components/ui/field-label';
-import {Input} from '../components/ui/input';
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -29,7 +26,6 @@ import {useBackLayer} from '../state/back';
 import {newWorkout} from '../state/workout';
 import {relativeDay} from '../utils/date';
 import {plural} from '../utils/plural';
-import {WorkoutView} from './WorkoutView';
 
 const CARD_LINES = 4;
 
@@ -68,14 +64,17 @@ export function TemplatesView({
   dataset,
   onChange,
   onStart,
+  disabled,
+  locked,
 }: {
+  disabled: boolean;
+  locked: boolean;
   templates: Workout[];
   dataset: Dataset;
   onChange: (templates: Workout[], base?: Workout) => Promise<boolean>;
   onStart: (workout: Workout) => void;
 }) {
   const [editing, setEditing] = useState<Workout | null>(null);
-  const [deletingSets, setDeletingSets] = useState(false);
   const [editingBase, setEditingBase] = useState<Workout | undefined>();
   const [deleting, setDeleting] = useState<Workout | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -85,7 +84,6 @@ export function TemplatesView({
   const [shown, setShown] = useState<Workout | null>(null);
   if (preview && preview !== shown) setShown(preview);
   const drawn = preview ?? shown;
-  useBackLayer(!!editing, () => setEditing(null));
   useBackLayer(!!preview, () => setPreviewId(null));
   useBackLayer(!!deleting, () => setDeleting(null));
   // What Start will prefill: the latest matching history, else the template's own values.
@@ -97,13 +95,16 @@ export function TemplatesView({
   const cards = useRef(new Map<string, HTMLButtonElement>());
   const returnTo = useRef<string | null>(null);
   const started = useRef(false);
+  const createButton = useRef<HTMLButtonElement>(null);
   const focusCard = (event: Event) => {
     event.preventDefault();
     const id = returnTo.current;
     returnTo.current = null;
     if (id) cards.current.get(id)?.focus({preventScroll: true});
+    else createButton.current?.focus({preventScroll: true});
   };
   const edit = (template: Workout) => {
+    returnTo.current = template.id;
     setEditingBase(structuredClone(template));
     setEditing(structuredClone(template));
   };
@@ -114,6 +115,7 @@ export function TemplatesView({
         <Button
           variant='ghost'
           size='icon'
+          ref={createButton}
           aria-label='Create template'
           onClick={() => {
             setEditingBase(undefined);
@@ -123,80 +125,7 @@ export function TemplatesView({
           <Plus size={20} />
         </Button>
       </SectionHeading>
-      {editing ? (
-        <Card as='section' className='template-editor'>
-          <SectionHeading>
-            <h2>
-              {templates.some((t) => t.id === editing.id) ? 'Edit template' : 'Create a template'}
-            </h2>
-            <Button
-              size='icon'
-              variant='ghost'
-              aria-label='Cancel template editing'
-              onClick={() => setEditing(null)}
-            >
-              <X size={18} />
-            </Button>
-          </SectionHeading>
-          <label className={fieldLabelClass} htmlFor='template-name'>
-            Template name
-          </label>
-          <Input
-            id='template-name'
-            value={editing.name === 'Untitled workout' ? '' : editing.name}
-            onChange={(e) => setEditing({...editing, name: e.target.value})}
-            placeholder='e.g. Upper body B'
-          />
-          <AddExercise
-            dataset={dataset}
-            existingNames={editing.exercises.map((exercise) => exercise.name)}
-            onAdd={(exercise) =>
-              setEditing(
-                (current) => current && {...current, exercises: [...current.exercises, exercise]},
-              )
-            }
-          />
-          <WorkoutView
-            targetsOnly
-            workout={editing}
-            dataset={dataset}
-            onChange={(update) => setEditing((current) => current && update(current))}
-            onDeletingChange={setDeletingSets}
-            onSource={() => {}}
-          />
-          <div className='mt-[18px] flex flex-wrap justify-end gap-2.5 border-t border-border pt-5'>
-            <Button onClick={() => setEditing(null)}>Cancel</Button>
-            <Button
-              variant='primary'
-              disabled={
-                deletingSets ||
-                !editing.name.trim() ||
-                editing.name === 'Untitled workout' ||
-                !editing.exercises.length
-              }
-              onClick={async () => {
-                if (deletingSets) return;
-                const clean = {
-                  ...editing,
-                  exercises: editing.exercises.map((ex) => ({
-                    ...ex,
-                    sets: ex.sets.map((s) => ({...s, completed: false})),
-                  })),
-                };
-                const saved = await onChange(
-                  templates.some((t) => t.id === clean.id)
-                    ? templates.map((t) => (t.id === clean.id ? clean : t))
-                    : [...templates, clean],
-                  editingBase,
-                );
-                if (saved) setEditing(null);
-              }}
-            >
-              Save template
-            </Button>
-          </div>
-        </Card>
-      ) : (
+      {!editing && (
         <>
           {!!templates.length && (
             <ul className='template-grid grid grid-cols-1 gap-3 desk:grid-cols-2 desk:logger-open:grid-cols-1'>
@@ -265,6 +194,25 @@ export function TemplatesView({
             />
           )}
         </>
+      )}
+
+      {editing && !locked && (
+        <TemplateEditor
+          workout={editing}
+          dataset={dataset}
+          existing={!!editingBase}
+          disabled={disabled}
+          onClose={() => setEditing(null)}
+          onCloseAutoFocus={focusCard}
+          onSave={(clean) =>
+            onChange(
+              templates.some((t) => t.id === clean.id)
+                ? templates.map((t) => (t.id === clean.id ? clean : t))
+                : [...templates, clean],
+              editingBase,
+            )
+          }
+        />
       )}
 
       <ResponsiveDialog open={!!preview} onOpenChange={(open) => !open && setPreviewId(null)}>

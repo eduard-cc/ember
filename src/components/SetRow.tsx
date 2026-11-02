@@ -37,6 +37,7 @@ type Gesture = {
  */
 export function SetRow({
   children,
+  gridClass = SET_GRID,
   completed,
   number,
   label,
@@ -44,6 +45,7 @@ export function SetRow({
   onDeletingChange,
 }: {
   children: ReactNode;
+  gridClass?: string;
   completed?: boolean;
   number: number;
   label: string;
@@ -286,7 +288,7 @@ export function SetRow({
         if (event.key === 'Escape' && open) settle(false, false);
       }}
     >
-      <div ref={content} className={cn('set-swipe-content', SET_GRID)}>
+      <div ref={content} className={cn('set-swipe-content', gridClass)}>
         <Button
           size='icon'
           variant='ghost'

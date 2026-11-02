@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {navigate, templateAction} from '../navigation';
 
 const demo = [
   'Bench Press (Barbell)',
@@ -157,6 +157,13 @@ test('the template editor offers the same Replace and Remove menu', async ({page
       .click();
     await expect(add).toBeHidden();
   }
+  const editor = page.locator('.template-editor');
+  await options(page, 'Squat (Barbell)').click();
+  await page.keyboard.press('Escape');
+  await expect(editor).toBeVisible();
+  await expect(page.getByRole('menuitem', {name: 'Replace exercise'})).toBeHidden();
+  expect(await editor.getByRole('group', {name: 'Discard changes?'}).count()).toBe(0);
+  await expect(options(page, 'Squat (Barbell)')).toBeFocused();
   await options(page, 'Squat (Barbell)').click();
   await page.getByRole('menuitem', {name: 'Replace exercise'}).click();
   const picker = page.getByRole('dialog', {name: 'Replace exercise', exact: true});
@@ -177,6 +184,15 @@ test('the template editor offers the same Replace and Remove menu', async ({page
   const card = page.locator('.template-card', {hasText: 'Menu template'});
   await expect(card.locator('.exercise-line')).toHaveCount(1);
   await expect(card.locator('.exercise-line')).toContainText('Bench Press (Barbell)');
+  await templateAction(page, 'Edit template', 'Menu template');
+  await editor
+    .getByRole('button', {name: 'Exercise options for Bench Press (Barbell)', exact: true})
+    .click();
+  await page.keyboard.press('Escape');
+  await expect(editor).toBeVisible();
+  await expect(page.getByRole('menuitem', {name: 'Replace exercise'})).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(editor).toBeHidden();
 });
 
 test('replacing with another exercise already in the workout keeps both cards unchanged', async ({

@@ -262,8 +262,7 @@ test('template editing keeps plain exercise headings without a details button', 
   await navigate(page, 'Workouts');
   await templateAction(page, 'Edit template', 'Upper body A');
   await expect(page.getByLabel('Template name')).toBeVisible();
-  await expect(page.locator('.library .exercise-card h2').first()).toHaveText(demo[0]);
-  await expect(
-    page.locator('.library').getByRole('button', {name: /^Show details for /}),
-  ).toHaveCount(0);
+  const editor = page.getByRole('dialog', {name: 'Edit template', exact: true});
+  await expect(editor.locator('.exercise-card h2').first()).toHaveText(demo[0]);
+  await expect(editor.getByRole('button', {name: /^Show details for /})).toHaveCount(0);
 });

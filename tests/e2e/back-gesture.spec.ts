@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate, openSettings} from '../navigation';
+import {addExercise, navigate, openSettings, templateAction} from '../navigation';
 
 // Android's back gesture is the browser's Back: it closes the newest open layer and stays in the
 // app; only a main tab with nothing open leaves. Synthetic demo data only.
@@ -219,6 +219,84 @@ test('a reload with nothing open trims its leftover entry on the first tap', asy
   await expect(sheet(page)).toHaveCount(0);
   await page.getByRole('heading', {name: 'Workout', level: 1}).click();
   await expect.poll(() => depth(page)).toBe(0);
+});
+
+test('changed templates keep their draft through dismissal and discard writes nothing', async ({
+  page,
+}, info) => {
+  if (info.project.name === 'mobile') await page.setViewportSize({width: 412, height: 915});
+  await start(page);
+  await navigate(page, 'Workouts');
+  const stored = () =>
+    page.evaluate(async () => {
+      const path = '/src/storage/repository.ts';
+      const {WorkoutRepository} = await import(path);
+      const repository = new WorkoutRepository();
+      try {
+        return {
+          templates: (await repository.readState()).templates,
+          outbox: await repository.db.outbox.toArray(),
+        };
+      } finally {
+        repository.close();
+      }
+    });
+  const before = await stored();
+  const cdp = await page.context().newCDPSession(page);
+  for (const existing of [false, true]) {
+    if (existing) await templateAction(page, 'Edit template', 'Upper body A');
+    else await page.getByRole('button', {name: 'Create template', exact: true}).click();
+    const editor = page.locator('.template-editor');
+    await editor.getByLabel('Template name').fill('Kept template draft');
+    if (!existing) await addExercise(page, 'Bench Press (Barbell)');
+    const weight = editor.getByLabel('Weight for Bench Press (Barbell) set 1');
+    await weight.fill('63.5');
+    const prompt = editor.getByRole('group', {name: 'Discard changes?'});
+    await editor.getByRole('button', {name: 'Add exercise', exact: true}).click();
+    const picker = page.getByRole('dialog', {name: 'Add exercise', exact: true});
+    await picker.getByLabel('Search exercises').fill('Plank');
+    await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+    await editor.getByRole('button', {name: 'Close template editor'}).click();
+    await prompt.getByRole('button', {name: 'Keep editing'}).click();
+    await expect(weight).toBeFocused();
+    for (const method of ['close', 'cancel', 'escape', 'back', 'back']) {
+      await weight.focus();
+      if (method === 'close')
+        await editor.getByRole('button', {name: 'Close template editor'}).click();
+      else if (method === 'cancel')
+        await editor.getByRole('button', {name: 'Cancel', exact: true}).click();
+      else if (method === 'escape') await page.keyboard.press('Escape');
+      else {
+        const {currentIndex, entries} = await cdp.send('Page.getNavigationHistory');
+        await cdp.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
+      }
+      await expect(editor).toBeVisible();
+      await expect(prompt).toBeFocused();
+      await expect(weight).toHaveValue('63.5');
+      await expect(editor.getByLabel('Template name')).toHaveValue('Kept template draft');
+      await expect.poll(() => depth(page)).toBe(1);
+      // A second dismissal must bring an already-open prompt back to focus.
+      await weight.focus();
+      await page.keyboard.press('Escape');
+      await expect(prompt).toBeFocused();
+      await prompt.getByRole('button', {name: 'Keep editing'}).click();
+      await expect(weight).toBeFocused();
+    }
+    await page.keyboard.press('Escape');
+    await prompt.getByRole('button', {name: 'Discard changes', exact: true}).click();
+    await expect(editor).toBeHidden();
+    await expect.poll(() => depth(page)).toBe(0);
+    expect(await stored()).toEqual(before);
+    if (existing)
+      await expect(
+        page.getByRole('button', {name: 'Open template Upper body A', exact: true}),
+      ).toBeFocused();
+    else
+      await expect(page.getByRole('button', {name: 'Create template', exact: true})).toBeFocused();
+  }
+  await templateAction(page, 'Edit template', 'Upper body A');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.template-editor')).toBeHidden();
 });
 
 test('back on an edited history workout asks before discarding', async ({page}) => {

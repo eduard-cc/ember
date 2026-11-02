@@ -148,6 +148,8 @@ test('API refresh never erases an unsaved in-memory template after IndexedDB rej
   });
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
+  await page.getByRole('button', {name: 'Close template editor'}).click();
+  await page.getByRole('button', {name: 'Discard changes', exact: true}).click();
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
@@ -157,7 +159,6 @@ test('API refresh never erases an unsaved in-memory template after IndexedDB rej
     'data-sync',
     'Not saved locally · unsaved changes are not synchronized',
   );
-  await page.getByRole('button', {name: 'Cancel template editing'}).click();
   await expect(page.getByRole('heading', {name: 'Kept in memory', exact: true})).toBeVisible();
 });
 test('rename from retained UI rejects a hidden actual API peer set-value revision without overwriting it', async ({
@@ -311,6 +312,8 @@ test('retained editor rejects peer changes after ordinary Sync now UI refresh', 
   expect((await templates(page)).outbox).toEqual([]);
   await syncNow(page);
   await expect(page.getByLabel('Template name')).toHaveValue('Retained rename');
+  await page.getByRole('button', {name: 'Close template editor'}).click();
+  await page.getByRole('button', {name: 'Discard changes', exact: true}).click();
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');

@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate} from '../navigation';
+import {addExercise, navigate} from '../navigation';
 
 async function openPicker(page: Page) {
   await page.getByRole('button', {name: 'Add exercise', exact: true}).click();
@@ -161,8 +161,30 @@ test('the template editor adds exercises through the same picker', async ({page}
   await expect(picker.getByRole('alert')).toHaveText('Squat (Barbell) is already in this workout.');
   await picker.getByRole('button', {name: 'Close exercise picker'}).click();
   await expect(page.locator('.template-editor .exercise-card')).toHaveCount(1);
+  for (const name of ['Pull Up', 'Plank', 'Rowing (Machine)', 'Pull Up (Assisted)'])
+    await addExercise(page, name);
+  const editor = page.locator('.template-editor');
+  for (const [name, headers] of [
+    ['Pull Up', ['Set', 'Reps']],
+    ['Plank', ['Set', 'Seconds']],
+    ['Rowing (Machine)', ['Set', 'Seconds', 'km']],
+    ['Pull Up (Assisted)', ['Set', 'Assist. kg', 'Reps']],
+  ] as const) {
+    await expect(
+      editor
+        .locator('.exercise-card')
+        .filter({has: page.getByRole('heading', {name, exact: true})})
+        .locator('.set-head > span:not(.desktop-remove)'),
+    ).toHaveText([...headers]);
+  }
+  await expect(editor.getByLabel('Reps for Pull Up set 1', {exact: true})).toHaveValue('9');
+  await expect(editor.getByLabel('Seconds for Plank set 1')).toHaveValue('60');
+  await expect(editor.getByLabel('Distance in km for Rowing (Machine) set 1')).toHaveValue('1');
+  await editor.getByLabel('Reps for Pull Up set 1', {exact: true}).fill('');
+  // A template may keep blank targets; it does not invent completed sets.
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   const card = page.locator('.template-card', {hasText: 'Picker template'});
-  await expect(card.locator('.exercise-line')).toHaveCount(1);
-  await expect(card.locator('.exercise-line')).toContainText('Squat (Barbell)');
+  await expect(card.locator('.exercise-line')).toHaveCount(4);
+  await expect(card).toContainText('+ 1 more');
+  await expect(card.locator('.exercise-line').first()).toContainText('Squat (Barbell)');
 });
