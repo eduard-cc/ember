@@ -258,37 +258,90 @@ test('Profile shows totals and selectable weekly metrics', async ({page}) => {
   }
 });
 
-for (const [scheme, token] of [
-  ['light', 'hsl(37 16% 74%)'],
-  ['dark', 'hsl(36 6% 48%)'],
-] as const) {
-  test(`the week chart is neutral except the current week (${scheme})`, async ({page}) => {
-    await openProfile(page, scheme);
-    const neutral = page.locator('.week-chart .recharts-bar-rectangle path:not(.current-week)');
-    await expect(neutral).not.toHaveCount(0);
-    const fills = await neutral.evaluateAll((els) => els.map((el) => getComputedStyle(el).fill));
-    expect(fills.length).toBeGreaterThan(1);
-    for (const fill of fills) expect(fill).toBe(await resolve(page, token));
-    const edges = await neutral.evaluateAll((els) =>
-      els.map((el) => {
-        const cs = getComputedStyle(el);
-        return {stroke: cs.stroke, path: el.getAttribute('d')};
-      }),
-    );
-    // The light edge carries the 3:1 contrast, so it must not fall back to the fill.
-    if (scheme === 'light') {
-      const edge = await resolve(page, 'hsl(37 12% 48%)');
-      for (const e of edges) expect(e.stroke).toBe(edge);
-    }
-    for (const e of edges) expect(e.path).toMatch(/^M .* h .* v .* h .* Z$/);
-    const current = page.locator('.week-chart .recharts-bar-rectangle path.current-week');
-    await expect(current).toHaveCount(1);
-    expect(await current.evaluate((el) => getComputedStyle(el).fill)).toBe(
-      await resolve(page, 'hsl(var(--primary))'),
-    );
-    expect(await current.evaluate((el) => getComputedStyle(el).stroke)).toBe('none');
-  });
-}
+for (const [weekday, today] of [
+  ['Monday', '2026-11-02'],
+  ['Sunday', '2026-11-08'],
+] as const)
+  for (const [scheme, token] of [
+    ['light', 'hsl(37 16% 74%)'],
+    ['dark', 'hsl(36 6% 48%)'],
+  ] as const) {
+    test(`the week chart is neutral except the current week (${scheme}, ${weekday})`, async ({
+      page,
+    }) => {
+      await page.clock.setFixedTime(new Date(`${today}T20:00:00`));
+      await page.emulateMedia({colorScheme: scheme});
+      await page.addInitScript(() => {
+        // Both clock dates share the week starting Nov 2; the other sessions fill past weeks.
+        const workouts = ['2026-11-02', '2026-10-26', '2026-10-19', '2026-10-12'].map((date) => ({
+          id: `synthetic-week-${date}`,
+          name: 'Synthetic weekly workout',
+          date: `${date}T18:00:00`,
+          duration: 45,
+          exercises: [
+            {
+              name: 'Bench Press (Barbell)',
+              type: 'weighted',
+              sets: [
+                {
+                  id: `set-${date}`,
+                  weight: 60,
+                  reps: 8,
+                  seconds: null,
+                  distance: null,
+                  completed: true,
+                },
+              ],
+            },
+          ],
+        }));
+        localStorage.setItem(
+          'ember:v1',
+          JSON.stringify({
+            version: 1,
+            dataset: {
+              sourceLabel: 'Synthetic weekly chart fixture',
+              workouts,
+              warnings: {duplicateRows: 0, duplicateKeys: 0, unparsedRows: 0},
+            },
+            active: null,
+            finished: [],
+            templates: [],
+          }),
+        );
+      });
+      await page.goto('/');
+      await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+      await page
+        .getByRole('navigation', {name: 'Main navigation'})
+        .getByRole('button', {name: 'Profile', exact: true})
+        .click();
+      await expect(page.locator('.profile-totals')).toHaveText('4 workouts · 4 sets · 1 this week');
+      const neutral = page.locator('.week-chart .recharts-bar-rectangle path:not(.current-week)');
+      await expect(neutral).not.toHaveCount(0);
+      const fills = await neutral.evaluateAll((els) => els.map((el) => getComputedStyle(el).fill));
+      expect(fills.length).toBeGreaterThan(1);
+      for (const fill of fills) expect(fill).toBe(await resolve(page, token));
+      const edges = await neutral.evaluateAll((els) =>
+        els.map((el) => {
+          const cs = getComputedStyle(el);
+          return {stroke: cs.stroke, path: el.getAttribute('d')};
+        }),
+      );
+      // The light edge carries the 3:1 contrast, so it must not fall back to the fill.
+      if (scheme === 'light') {
+        const edge = await resolve(page, 'hsl(37 12% 48%)');
+        for (const e of edges) expect(e.stroke).toBe(edge);
+      }
+      for (const e of edges) expect(e.path).toMatch(/^M .* h .* v .* h .* Z$/);
+      const current = page.locator('.week-chart .recharts-bar-rectangle path.current-week');
+      await expect(current).toHaveCount(1);
+      expect(await current.evaluate((el) => getComputedStyle(el).fill)).toBe(
+        await resolve(page, 'hsl(var(--primary))'),
+      );
+      expect(await current.evaluate((el) => getComputedStyle(el).stroke)).toBe('none');
+    });
+  }
 
 test('trend lines are Ink, not Amber', async ({page}) => {
   await page.emulateMedia({colorScheme: 'light'});
