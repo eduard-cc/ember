@@ -166,7 +166,9 @@ test('a refused back keeps the next back inside the app', async ({page}) => {
   await editor.getByLabel('Workout name').fill('Kept through two backs');
   for (let i = 0; i < 2; i++) {
     await browserBack();
-    await expect(editor.getByRole('group', {name: 'Discard changes?'})).toBeVisible();
+    const prompt = editor.getByRole('group', {name: 'Discard changes?'});
+    await expect(prompt).toBeInViewport({ratio: 1});
+    await expect(prompt).toBeFocused();
     await expect.poll(() => depth(page)).toBe(1);
   }
   await expect(editor.getByLabel('Workout name')).toHaveValue('Kept through two backs');

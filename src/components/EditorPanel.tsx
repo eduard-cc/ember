@@ -12,6 +12,7 @@ export function EditorPanel({
   className,
   children,
   footer,
+  closeLabel = 'Close template editor',
   onClose,
   onCloseAutoFocus,
   busy,
@@ -21,6 +22,7 @@ export function EditorPanel({
   className?: string;
   children: ReactNode;
   footer: ReactNode;
+  closeLabel?: string;
   onClose: () => void;
   onCloseAutoFocus: (event: Event) => void;
   busy: boolean;
@@ -71,7 +73,7 @@ export function EditorPanel({
           <Button
             size='icon'
             variant='ghost'
-            aria-label='Close template editor'
+            aria-label={closeLabel}
             disabled={busy}
             onClick={onClose}
           >

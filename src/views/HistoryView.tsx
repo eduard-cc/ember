@@ -518,9 +518,10 @@ export function HistoryView({
           dataset={dataset}
           disabled={disabled}
           onSave={onChange}
-          onClose={() => {
-            setEditing(null);
-            requestAnimationFrame(focusCard);
+          onClose={() => setEditing(null)}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            focusCard();
           }}
         />
       )}

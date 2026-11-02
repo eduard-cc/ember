@@ -1,35 +1,32 @@
-import {X} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 
 import {editableCopy, editedHistory} from '../domain/history-edit';
 import type {Dataset, Workout} from '../domain/types';
 import {useBackLayer} from '../state/back';
+import {plural} from '../utils/plural';
 import {WorkoutView} from '../views/WorkoutView';
 import {AddExercise} from './AddExercise';
+import {EditorPanel} from './EditorPanel';
 import {Button} from './ui/button';
 import {ContentFieldset} from './ui/content-fieldset';
-import {Dialog, DialogContent, DialogDescription, DialogTitle} from './ui/dialog';
 import {fieldLabelClass} from './ui/field-label';
 import {Input} from './ui/input';
-import {SectionHeading} from './ui/section-heading';
 
-/**
- * Edit a finished or imported workout, Strong-style: name, start time, duration, exercises
- * and set values. Rows are targets-only (no completion toggles); everything saved stays
- * completed history. Unsaved changes are never dropped by a stray Escape or outside tap.
- */
+/** Edit finished history with its original identity and evidence, never completion toggles. */
 export function HistoryEditor({
   workout,
   dataset,
   disabled,
   onSave,
   onClose,
+  onCloseAutoFocus,
 }: {
   workout: Workout;
   dataset: Dataset;
   disabled: boolean;
   onSave: (base: Workout, next: Workout) => Promise<boolean>;
   onClose: () => void;
+  onCloseAutoFocus: (event: Event) => void;
 }) {
   const [draft, setDraft] = useState(() => editableCopy(workout));
   const [initial] = useState(() => JSON.stringify(draft));
@@ -37,46 +34,120 @@ export function HistoryEditor({
   const [discardRequest, setDiscardRequest] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const discardPrompt = useRef<HTMLDivElement>(null);
+  const saveError = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
-    if (!discardRequest) return;
-    // Every close attempt, including while the prompt is already open, brings it back into
-    // view. Focus its group so Tab starts at the safe "Keep editing" choice.
-    discardPrompt.current?.scrollIntoView({block: 'nearest'});
-    discardPrompt.current?.focus({preventScroll: true});
+    if (error) saveError.current?.focus({preventScroll: true});
+  }, [error]);
+  const discardPrompt = useRef<HTMLDivElement>(null);
+  const lastField = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (discardRequest) discardPrompt.current?.focus({preventScroll: true});
   }, [discardRequest]);
   const dirty = JSON.stringify(draft) !== initial;
   const {workout: next, problem} = editedHistory(workout, draft);
-  const close = () => (dirty ? setDiscardRequest((n) => n + 1) : onClose());
-  // Unsaved changes stay open behind the discard prompt, like the close button.
+  const close = () => {
+    if (saving) return;
+    if (dirty) setDiscardRequest((n) => n + 1);
+    else onClose();
+  };
   useBackLayer(true, close);
   return (
-    <Dialog open onOpenChange={(open) => !open && close()}>
-      <DialogContent
-        variant='panel'
-        className='history-editor [--row-bg:hsl(var(--card))]'
-        onInteractOutside={(event) => event.preventDefault()}
+    <EditorPanel
+      title='Edit workout'
+      description='Change the name, start time, duration, exercises and sets of this finished workout.'
+      className='history-editor [--row-bg:hsl(var(--card))]'
+      closeLabel='Close workout editor'
+      onClose={close}
+      onCloseAutoFocus={onCloseAutoFocus}
+      busy={saving}
+      footer={
+        discardRequest ? (
+          <div
+            ref={discardPrompt}
+            tabIndex={-1}
+            role='group'
+            aria-label='Discard changes?'
+            className='focus-visible:outline-none'
+          >
+            <p className='mb-2'>Discard your changes to this workout?</p>
+            <div className='flex flex-wrap gap-2.5'>
+              <Button
+                onClick={() => {
+                  setDiscardRequest(0);
+                  lastField.current?.focus({preventScroll: true});
+                }}
+              >
+                Keep editing
+              </Button>
+              <Button variant='danger' onClick={onClose}>
+                Discard changes
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {(error || (dirty && problem)) && (
+              <p
+                ref={saveError}
+                tabIndex={-1}
+                className='mb-2 text-[14px] text-destructive'
+                role='alert'
+              >
+                {error || problem}
+              </p>
+            )}
+            <div className='flex gap-2.5'>
+              <Button disabled={saving} onClick={close}>
+                Cancel
+              </Button>
+              <Button
+                className='min-h-12 flex-1'
+                variant='primary'
+                disabled={disabled || saving || !dirty || !!problem || deletingSets}
+                onClick={async () => {
+                  if (disabled || saving || deletingSets || problem) return;
+                  setSaving(true);
+                  setError('');
+                  const saved = await onSave(workout, next);
+                  setSaving(false);
+                  if (saved) onClose();
+                  else
+                    setError(
+                      'Workout not saved. Retry, or close and reopen if it changed on another device.',
+                    );
+                }}
+              >
+                {saving ? 'Saving…' : 'Save changes'}
+              </Button>
+            </div>
+          </>
+        )
+      }
+    >
+      <ContentFieldset
+        disabled={disabled || saving}
+        onFocusCapture={(event) => {
+          if (
+            event.target instanceof HTMLInputElement &&
+            event.currentTarget.contains(event.target)
+          )
+            lastField.current = event.target;
+        }}
       >
-        <SectionHeading className='mb-6'>
-          <DialogTitle>Edit workout</DialogTitle>
-          <Button aria-label='Close workout editor' variant='ghost' size='icon' onClick={close}>
-            <X size={20} />
-          </Button>
-        </SectionHeading>
-        <DialogDescription srOnly>
-          Change the name, start time, duration, exercises and sets of this finished workout.
-        </DialogDescription>
-        <ContentFieldset disabled={disabled || saving}>
-          <div className='mb-5 grid gap-2'>
-            <label className={fieldLabelClass} htmlFor='history-workout-name'>
-              Workout name
-            </label>
-            <Input
-              id='history-workout-name'
-              value={draft.name}
-              onChange={(e) => setDraft({...draft, name: e.target.value})}
-            />
-            <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,8rem)] gap-3'>
+        <section className='mb-5 border-b border-border pb-5' aria-label='Finished workout'>
+          <p className='mb-3 text-[12px] font-medium'>Finished workout</p>
+          <div className='grid gap-3'>
+            <div className='grid gap-2'>
+              <label className={fieldLabelClass} htmlFor='history-workout-name'>
+                Workout name
+              </label>
+              <Input
+                id='history-workout-name'
+                value={draft.name}
+                onChange={(e) => setDraft({...draft, name: e.target.value})}
+              />
+            </div>
+            <div className='grid gap-3 min-[480px]:grid-cols-[minmax(0,1fr)_8rem]'>
               <div className='grid min-w-0 gap-2'>
                 <label className={fieldLabelClass} htmlFor='history-workout-start'>
                   Start
@@ -89,7 +160,7 @@ export function HistoryEditor({
                   onChange={(e) =>
                     setDraft({
                       ...draft,
-                      // Seconds are kept when unchanged; a picked time has whole minutes.
+                      // Untouched seconds stay exact; a picked time has whole minutes.
                       date: e.target.value.length === 16 ? e.target.value + ':00' : e.target.value,
                     })
                   }
@@ -116,14 +187,24 @@ export function HistoryEditor({
               </div>
             </div>
           </div>
-          <WorkoutView
-            targetsOnly
-            workout={draft}
-            dataset={dataset}
-            onChange={setDraft}
-            onDeletingChange={setDeletingSets}
-            onSource={() => {}}
-          />
+        </section>
+        <p className='mb-3 text-[12px] tabular-nums'>
+          {plural(draft.exercises.length, 'exercise')} ·{' '}
+          {plural(
+            draft.exercises.reduce((n, ex) => n + ex.sets.length, 0),
+            'set',
+          )}
+        </p>
+        <WorkoutView
+          targetsOnly
+          workout={draft}
+          dataset={dataset}
+          disabled={disabled || saving}
+          onChange={setDraft}
+          onDeletingChange={setDeletingSets}
+          onSource={() => {}}
+        />
+        <div className='mt-4'>
           <AddExercise
             dataset={dataset}
             existingNames={draft.exercises.map((exercise) => exercise.name)}
@@ -131,52 +212,8 @@ export function HistoryEditor({
               setDraft((current) => ({...current, exercises: [...current.exercises, exercise]}))
             }
           />
-          {(error || (dirty && problem)) && (
-            <p className='mt-4 text-[14px] text-destructive' role='alert'>
-              {error || problem}
-            </p>
-          )}
-          {discardRequest ? (
-            <div
-              ref={discardPrompt}
-              tabIndex={-1}
-              className='inline-confirm mt-4 border-t border-border pt-4'
-              role='group'
-              aria-label='Discard changes?'
-            >
-              <p className='mb-2.5'>Discard your changes to this workout?</p>
-              <Button className='mr-2' onClick={() => setDiscardRequest(0)}>
-                Keep editing
-              </Button>
-              <Button variant='danger' className='mr-2' onClick={onClose}>
-                Discard changes
-              </Button>
-            </div>
-          ) : (
-            <div className='mt-[18px] flex flex-wrap justify-end gap-2.5 border-t border-border pt-5'>
-              <Button onClick={close}>Cancel</Button>
-              <Button
-                variant='primary'
-                disabled={!dirty || !!problem || deletingSets}
-                onClick={async () => {
-                  if (deletingSets || problem) return;
-                  setSaving(true);
-                  setError('');
-                  const saved = await onSave(workout, next);
-                  setSaving(false);
-                  if (saved) onClose();
-                  else
-                    setError(
-                      'Not saved. The workout may have changed on another device; close and reopen it.',
-                    );
-                }}
-              >
-                Save changes
-              </Button>
-            </div>
-          )}
-        </ContentFieldset>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </ContentFieldset>
+    </EditorPanel>
   );
 }
