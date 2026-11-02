@@ -93,13 +93,35 @@ test('holding an exercise header collapses the workout and dragging moves the wh
         .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m42),
     )
     .toBeLessThan(-40);
+  // Observe before release: the tint can finish while the runner checks the order.
+  const highlight = await bench.evaluateHandle((card) => {
+    const observed = {attribute: null as string | null, animationName: '', animationDuration: ''};
+    const observer = new MutationObserver(() => {
+      if (!card.hasAttribute('data-dropped')) return;
+      const style = getComputedStyle(card);
+      observed.attribute = card.getAttribute('data-dropped');
+      observed.animationName = style.animationName;
+      observed.animationDuration = style.animationDuration;
+      observer.disconnect();
+    });
+    observer.observe(card, {attributes: true, attributeFilter: ['data-dropped']});
+    return observed;
+  });
   await page.mouse.up();
 
   const order = [demo[1], demo[2], demo[0], demo[3], demo[4]];
   await expect(sheet.locator('.exercise-card h2')).toHaveText(order);
   const moved = sheet.locator('.exercise-card').nth(2);
-  // A brief tint marks where it landed.
-  await expect(moved).toHaveAttribute('data-dropped', '');
+  // A brief tint marks where it landed, then clears when the animation finishes.
+  await expect
+    .poll(() => highlight.jsonValue())
+    .toEqual({
+      attribute: '',
+      animationName: 'dropped-card',
+      animationDuration: '0.9s',
+    });
+  await highlight.dispose();
+  await expect(moved).not.toHaveAttribute('data-dropped', '');
   await expect(
     moved.getByRole('button', {name: 'Uncomplete Bench Press (Barbell) set 1'}),
   ).toHaveAttribute('aria-pressed', 'true');
