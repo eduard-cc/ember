@@ -536,7 +536,7 @@ export function HistoryView({
               <ResponsiveDialogTitle>Delete this workout?</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
                 {deleting &&
-                  `${deleting.name} on ${dateLabel(deleting.date)} and its ${plural(setCount(deleting), 'set')} will be removed from history, records and charts on every device.`}
+                  `${deleting.name} on ${dateLabel(deleting.date)} and its ${plural(setCount(deleting), 'set')} will be removed from history.`}
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
             <ResponsiveDialogBody className='pb-[calc(1rem+env(safe-area-inset-bottom))] desk:pb-0'>

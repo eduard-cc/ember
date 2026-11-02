@@ -335,7 +335,7 @@ export function TemplatesView({
           <ResponsiveDialogHeader className='text-left'>
             <ResponsiveDialogTitle>Delete this template?</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
-              {deleting?.name} will be removed. Your workout history is kept.
+              {deleting?.name} will be removed.
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           <ResponsiveDialogBody className='pb-[calc(1rem+env(safe-area-inset-bottom))] desk:pb-0'>

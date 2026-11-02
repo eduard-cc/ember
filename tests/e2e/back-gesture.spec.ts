@@ -203,7 +203,13 @@ test('a reload with nothing open trims its leftover entry on the first tap', asy
   await start(page);
   // Discard the demo workout so nothing reopens as a layer after the reload.
   await page.getByRole('button', {name: 'Cancel workout', exact: true}).click();
-  await page.getByRole('button', {name: 'Discard workout', exact: true}).click();
+  const confirmation = page.getByRole('dialog', {name: 'Cancel this workout?'});
+  await expect(confirmation).toHaveAccessibleDescription('15 sets will be discarded.');
+  await confirmation.getByRole('button', {name: 'Keep logging', exact: true}).click();
+  await expect(confirmation).toBeHidden();
+  await expect(sheet(page)).toBeVisible();
+  await page.getByRole('button', {name: 'Cancel workout', exact: true}).click();
+  await confirmation.getByRole('button', {name: 'Discard workout', exact: true}).click();
   await expect(sheet(page)).toHaveCount(0);
   await navigate(page, 'Exercises');
   await page.getByRole('button', {name: /^Bench Press \(Barbell\)/}).click();

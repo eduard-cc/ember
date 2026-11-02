@@ -134,7 +134,9 @@ test('a history workout can be deleted after confirmation', async ({page}) => {
   await open(page);
   await workoutAction(page, 'Pull day', 'Delete workout');
   const confirm = page.getByRole('dialog', {name: 'Delete this workout?'});
-  await expect(confirm).toContainText('Pull day on 1 Jan 2026 and its 1 set');
+  await expect(confirm).toHaveAccessibleDescription(
+    'Pull day on 1 Jan 2026 and its 1 set will be removed from history.',
+  );
   await confirm.getByRole('button', {name: 'Keep workout'}).click();
   await expect(confirm).toBeHidden();
   await expect(workoutCard(page, 'Pull day')).toBeFocused();

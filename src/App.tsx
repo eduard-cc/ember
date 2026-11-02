@@ -810,7 +810,7 @@ export default function App() {
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Cancel this workout?</ResponsiveDialogTitle>
             <ResponsiveDialogDescription className='mt-2'>
-              {plural(sets.length, 'set')} will be discarded. Finished workouts are not affected.
+              {plural(sets.length, 'set')} will be discarded.
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           <ResponsiveDialogFooter className={confirmFooter}>

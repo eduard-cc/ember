@@ -39,9 +39,9 @@ test('templates can be created edited started and deleted', async ({page}) => {
   ).toEqual([[18, 60, 10]]);
   await navigate(page, 'Workouts');
   await templateAction(page, 'Delete template', 'Edited session');
-  await expect(page.getByRole('dialog', {name: 'Delete this template?'})).toContainText(
-    'Your workout history is kept.',
-  );
+  await expect(
+    page.getByRole('dialog', {name: 'Delete this template?'}),
+  ).toHaveAccessibleDescription('Edited session will be removed.');
   await page.getByRole('button', {name: 'Confirm delete template'}).click();
   await expect(page.getByRole('heading', {name: 'Edited session'})).toHaveCount(0);
 });
