@@ -3,7 +3,7 @@
 # from the docker.io package and the deploy checkout. Run as that account, from a reviewed
 # copy (its own clone does not exist yet). Idempotent.
 #
-#   sudo systemd-run --user -M ember@ --wait --pipe --collect -- \
+#   sudo /usr/local/sbin/ember-run -- \
 #       bash -s -- <origin-url> <node-version> <ops/host/setup-service-user.sh
 set -Eeuo pipefail
 (($# == 2)) || {

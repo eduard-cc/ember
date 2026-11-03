@@ -108,5 +108,8 @@ systemctl enable "ember-egress-$account.service"
 # Reload, not restart: restarting would restart the user manager that requires it.
 systemctl reload-or-restart "ember-egress-$account.service"
 nft list table inet "$table" >/dev/null
+if [[ $account == ember ]]; then
+	install -o root -g root -m 755 "$here/ember-run" /usr/local/sbin/ember-run
+fi
 loginctl enable-linger -- "$account"
 echo "setup-account: $account (uid $uid) ready; egress table $table loaded"

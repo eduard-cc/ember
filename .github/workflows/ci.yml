@@ -42,6 +42,7 @@ jobs:
       # Synthetic install/notification and deploy decisions, with no live units or services.
       - run: shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh ops/notify.sh ops/test-install.sh
       - run: bash ops/test-install.sh && bash ops/test-auto-deploy.sh && bash ops/test-dependency-check.sh
+      - run: python3 -B ops/test-ember-run.py
       - run: npm run test:run
       # The web build typechecks the root first. The server build runs in server-e2e.
       - run: npm run build

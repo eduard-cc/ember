@@ -7,7 +7,7 @@
 # check fails.
 #
 #   ops/isolation-check.sh <owner-home> [host:port ...]
-#   sudo systemd-run --user -M ember@ --wait --pipe --collect -- \
+#   sudo /usr/local/sbin/ember-run -- \
 #       bash -s -- /home/owner 127.0.0.1:<port> <ops/isolation-check.sh
 set -Euo pipefail
 (($# >= 1)) || {
@@ -75,9 +75,19 @@ fi
 # Probe both the primary uid and a delegated uid. Fail closed on probe setup errors.
 ipc_probe='
 import errno, os, socket, sys
+from pathlib import Path
 if sys.argv[1] == "delegated": os.setuid(1)
 paths = ["/run/tailscale/tailscaled.sock", "/run/docker.sock", "/run/dbus/system_bus_socket",
          "/run/cups/cups.sock", "/var/snap/cups/common/run/cups.sock", "/tmp/.s.PGSQL.5432"]
+# Same-uid processes outside this mount namespace can expose their filesystem
+# through /proc/PID/root, including short-lived administrative transports.
+direct_paths = tuple(paths)
+for process in Path("/proc").iterdir():
+    if not process.name.isdigit(): continue
+    try:
+        if process.stat().st_uid == os.getuid():
+            paths.extend(str(process / "root") + path for path in direct_paths)
+    except FileNotFoundError: pass  # A process may exit while enumerating.
 failed = False
 for path in paths:
     s = socket.socket(socket.AF_UNIX); s.settimeout(3)

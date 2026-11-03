@@ -1,0 +1,56 @@
+#!/usr/bin/python3 -I
+"""Root-only, local entry to Ember's protected user manager."""
+import fcntl
+import os
+import pwd
+import subprocess
+import sys
+
+
+def main(argv):
+    if os.geteuid() != 0:
+        raise PermissionError('ember-run requires root; it grants no sudo access')
+    if '--' not in argv or argv.index('--') == len(argv) - 1:
+        raise ValueError('usage: ember-run [--unit=NAME] [--slice=NAME] -- COMMAND [ARG ...]')
+    if any(not arg.startswith(('--unit=', '--slice=')) for arg in argv[:argv.index('--')]):
+        raise ValueError('only local --unit= and --slice= options are supported')
+
+    account = pwd.getpwnam('ember')
+    if account.pw_uid == 0:
+        raise RuntimeError('ember must be an unprivileged account')
+    query = ['/usr/bin/systemctl', 'show', f'user@{account.pw_uid}.service',
+             '--property=MainPID', '--value']
+    pid = subprocess.check_output(query, text=True).strip()
+    if not pid.isascii() or not pid.isdecimal() or pid == '0':
+        raise RuntimeError('protected Ember user manager is not running')
+    # Pin the namespace before rechecking the root manager's MainPID. Never enter
+    # a subsequently recycled PID, and never run app-controlled code as root.
+    namespace = os.open(f'/proc/{pid}/ns/mnt', os.O_RDONLY)
+    if subprocess.check_output(query, text=True).strip() != pid:
+        raise RuntimeError('Ember user manager changed; retry after it settles')
+    # Root must not execute even setpriv inside an app-owned mount namespace.
+    owner = fcntl.ioctl(namespace, 0xB701)  # NS_GET_USERNS, linux/nsfs.h
+    try:
+        if (not os.path.samefile(owner, '/proc/self/ns/user') or
+                os.path.samefile(namespace, '/proc/self/ns/mnt')):
+            raise RuntimeError('manager namespace must be private and root-owned')
+    finally:
+        os.close(owner)
+    os.set_inheritable(namespace, True)
+    command = [
+        '/usr/bin/nsenter', f'--mount=/proc/self/fd/{namespace}', f'--wd={account.pw_dir}',
+        '/usr/bin/setpriv', f'--reuid={account.pw_uid}', f'--regid={account.pw_gid}',
+        '--clear-groups', '--reset-env', '/usr/bin/env',
+        f'XDG_RUNTIME_DIR=/run/user/{account.pw_uid}',
+        f'DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{account.pw_uid}/bus',
+        '/usr/bin/systemd-run', '--user', '--wait', '--pipe', '--collect', '--quiet',
+        *argv,
+    ]
+    os.execv(command[0], command)
+
+
+if __name__ == '__main__':
+    try:
+        main(sys.argv[1:])
+    except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
+        sys.exit(f'ember-run: {error}')
