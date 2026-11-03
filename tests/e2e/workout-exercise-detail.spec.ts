@@ -217,23 +217,26 @@ test('a source workout link inside the details minimizes the workout and keeps t
 }) => {
   const sheet = await start(page);
   await page.getByLabel('Weight for Bench Press (Barbell) set 2').fill('66');
-  await details(page, 'Bench Press (Barbell)').click();
-  const dialog = detailDialog(page, 'Bench Press (Barbell)');
-  await dialog
-    .getByRole('button', {name: /View source workout/})
-    .first()
-    .click();
-  await expect(dialog).toBeHidden();
-  await expect(sheet).toBeHidden();
-  // History opens with the source workout's drawer over it.
-  await expect(page.locator('.library-scroll h1')).toHaveText('History');
-  const drawer = page.locator('.workout-drawer');
-  await expect(drawer.locator('.recorded-sets').first()).toBeVisible();
-  await drawer.getByRole('button', {name: 'Close workout'}).click();
-  await expect(drawer).toBeHidden();
-  await page.getByRole('button', {name: /Resume Upper body A/}).click();
-  await expect(sheet).toBeVisible();
-  await expect(page.getByLabel('Weight for Bench Press (Barbell) set 2')).toHaveValue('66');
+  for (const tab of ['Charts', 'History', 'Records']) {
+    await details(page, 'Bench Press (Barbell)').click();
+    const dialog = detailDialog(page, 'Bench Press (Barbell)');
+    await dialog.getByRole('tab', {name: tab, exact: true}).click();
+    await dialog
+      .getByRole('button', {name: /View source workout/})
+      .first()
+      .click();
+    await expect(dialog).toBeHidden();
+    await expect(sheet).toBeHidden();
+    // History opens with the source workout's drawer over it.
+    await expect(page.locator('.library-scroll h1')).toHaveText('History');
+    const drawer = page.locator('.workout-drawer');
+    await expect(drawer.locator('.recorded-sets').first()).toBeVisible();
+    await drawer.getByRole('button', {name: 'Close workout'}).click();
+    await expect(drawer).toBeHidden();
+    await page.getByRole('button', {name: /Resume Upper body A/}).click();
+    await expect(sheet).toBeVisible();
+    await expect(page.getByLabel('Weight for Bench Press (Barbell) set 2')).toHaveValue('66');
+  }
 });
 
 for (const width of [1000, 1440, 1920, 2560]) {

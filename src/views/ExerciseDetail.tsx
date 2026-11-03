@@ -3,18 +3,17 @@ import {type ReactElement, type ReactNode, useId, useMemo, useState} from 'react
 
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
+import {Spoken} from '../components/exercise-line';
 import {Button} from '../components/ui/button';
 import {MetricExplanation} from '../components/ui/chart';
-import {TextAction, dataTableClass} from '../components/ui/data-table';
 import {EmptyState} from '../components/ui/empty-state';
-import {ListLabel} from '../components/ui/list-label';
 import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
 import type {Dataset, SetRecord} from '../domain/types';
 import {cue} from '../feedback';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
-import {setLabel} from '../utils/set-label';
+import {setText} from '../utils/set-label';
 import {ExerciseCharts} from './ExerciseCharts';
 
 const tabs = ['Charts', 'History', 'Records', 'About'] as const;
@@ -27,7 +26,7 @@ function Fact({label, value}: {label: string; value: string}) {
   return (
     <div>
       <dt className='text-[12px] text-muted-foreground'>{label}</dt>
-      <dd className='mt-0.5 font-medium'>{value}</dd>
+      <dd className='mt-1 text-[14px] font-medium wrap-anywhere'>{value}</dd>
     </div>
   );
 }
@@ -44,9 +43,12 @@ function About({name, framed}: {name: string; framed: boolean}) {
       />
     );
   return (
-    <div className='about'>
+    <div className='about space-y-7'>
       {entry.images.length > 0 && (
-        <div className='about-drawings mb-4 grid grid-cols-2 gap-2.5'>
+        <div
+          className='about-drawings mx-auto grid max-w-[480px] grid-cols-2 gap-2.5'
+          aria-hidden='true'
+        >
           {entry.images.map((image) => (
             <Drawing
               key={image.file}
@@ -60,16 +62,31 @@ function About({name, framed}: {name: string; framed: boolean}) {
           ))}
         </div>
       )}
-      <dl className='mb-1.5 grid grid-cols-[1fr_1fr] gap-x-4 gap-y-3'>
-        <Fact label='Body part' value={entry.bodyPart} />
-        <Fact label='Equipment' value={entry.equipment} />
-        {entry.primaryMuscles.length > 0 && (
-          <Fact label='Primary' value={entry.primaryMuscles.join(', ')} />
-        )}
-        {entry.secondaryMuscles.length > 0 && (
-          <Fact label='Secondary' value={entry.secondaryMuscles.join(', ')} />
-        )}
-      </dl>
+      {entry.images.length === 0 && (
+        <p className='border border-border bg-card p-4 text-[14px] text-muted-foreground'>
+          No drawing available.
+        </p>
+      )}
+      <section>
+        <h3 className='mb-3 text-[16px] font-semibold'>Exercise details</h3>
+        <dl className='grid grid-cols-2 gap-4 border-t border-border pt-3'>
+          <Fact label='Body part' value={entry.bodyPart} />
+          <Fact label='Equipment' value={entry.equipment} />
+        </dl>
+      </section>
+      {(entry.primaryMuscles.length > 0 || entry.secondaryMuscles.length > 0) && (
+        <section>
+          <h3 className='mb-3 text-[16px] font-semibold'>Muscles</h3>
+          <dl className='grid gap-4 border-t border-border pt-3'>
+            {entry.primaryMuscles.length > 0 && (
+              <Fact label='Primary muscles' value={entry.primaryMuscles.join(', ')} />
+            )}
+            {entry.secondaryMuscles.length > 0 && (
+              <Fact label='Secondary muscles' value={entry.secondaryMuscles.join(', ')} />
+            )}
+          </dl>
+        </section>
+      )}
     </div>
   );
 }
@@ -100,45 +117,60 @@ function HistoryTab({
     <div className='flex flex-col gap-3'>
       {history.slice(0, limit).map((session, i) => (
         <article
-          className='session-card border border-border bg-card pt-1 pr-1.5 pb-3 pl-4'
+          className='session-card min-w-0 border border-border bg-card'
           key={`${session.workoutId}-${i}`}
         >
-          <header className='flex items-center justify-between gap-2'>
-            <div>
-              <h3 className='mt-2 text-[16px] font-semibold'>{session.workoutName}</h3>
-              <p className='text-[12px] text-muted-foreground'>{dateLabel(session.date)}</p>
-            </div>
+          <header>
             <Button
-              size='icon'
               variant='ghost'
+              className='w-full justify-between gap-3 px-4 py-3 text-left text-foreground'
               aria-label={`View source workout ${session.workoutName} ${dateLabel(session.date)}`}
               onClick={() => onSource(session.workoutId)}
             >
-              <ArrowUpRight size={16} />
+              <span className='min-w-0'>
+                <span
+                  role='heading'
+                  aria-level={3}
+                  className='block text-[16px] font-semibold tabular-nums'
+                >
+                  {dateLabel(session.date)}
+                </span>
+                <span className='mt-0.5 block text-[12px] font-normal wrap-anywhere text-muted-foreground'>
+                  {session.workoutName} · {plural(session.sets.length, 'set')}
+                </span>
+              </span>
+              <ArrowUpRight size={16} className='shrink-0 text-muted-foreground' />
             </Button>
           </header>
-          <div
-            className={cn(
-              'mt-1.5 grid items-center gap-x-3 gap-y-1 pr-2.5 text-[14px] tabular-nums',
-              session.type === 'weighted' ? 'grid-cols-[1fr_auto]' : 'grid-cols-[1fr]',
-            )}
-          >
-            <span className={sessionHeadClass}>Sets performed</span>
-            {session.type === 'weighted' && <span className={sessionHeadClass}>Est. 1RM</span>}
-            {session.sets.map((set, j) => {
-              const e1rm = estimate1RM(set, session.type);
-              return (
-                <div key={set.id} className='session-set contents'>
-                  <span>
-                    <b className='inline-block min-w-[22px] font-semibold text-muted-foreground'>
-                      {j + 1}
-                    </b>
-                    {setLabel(set, session.type)}
-                  </span>
-                  {session.type === 'weighted' && <span>{e1rm === null ? '—' : kg(e1rm)}</span>}
-                </div>
-              );
-            })}
+          <div className='border-t border-border px-4 pb-2'>
+            <div className='flex justify-between gap-3 py-2'>
+              <span className={sessionHeadClass}>Sets performed</span>
+              {session.type === 'weighted' && (
+                <span className={cn(sessionHeadClass, 'text-right')}>Epley est. 1RM</span>
+              )}
+            </div>
+            <ol aria-label='Sets performed' className='m-0 list-none p-0'>
+              {session.sets.map((set, j) => {
+                const e1rm = estimate1RM(set, session.type);
+                const actual = setText(set, session.type);
+                return (
+                  <li
+                    key={set.id}
+                    className='session-set flex min-h-10 items-baseline gap-3 py-2 tabular-nums'
+                  >
+                    <span className='w-5 shrink-0 text-[12px] text-muted-foreground'>{j + 1} </span>
+                    <span className='min-w-0 flex-1 text-[16px] font-medium wrap-anywhere'>
+                      <Spoken value={actual} />{' '}
+                    </span>
+                    {session.type === 'weighted' && (
+                      <span className='max-w-[35%] text-right text-[12px] wrap-anywhere text-muted-foreground'>
+                        {e1rm === null ? '—' : kg(e1rm)}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         </article>
       ))}
@@ -161,28 +193,61 @@ function RecordsTab({
   framed: boolean;
 }) {
   const records = useMemo(() => getRecords(dataset, name), [dataset, name]);
-  const type = useMemo(() => getHistory(dataset, name)[0]?.type, [dataset, name]);
-  const rows: {label: string; value: string; detail: string; workoutId: string}[] = [];
-  const add = (
-    label: string,
-    entry: {value: number; set?: SetRecord; workoutId: string; date: string} | null,
-    format: (n: number) => string,
-  ) => {
-    if (entry)
-      rows.push({
-        label,
-        value: format(entry.value),
-        detail: `${entry.set && type ? setLabel(entry.set, type) + ' · ' : ''}${dateLabel(entry.date)}`,
-        workoutId: entry.workoutId,
-      });
+  const history = useMemo(() => getHistory(dataset, name), [dataset, name]);
+  type Entry = {
+    value: number;
+    set?: SetRecord;
+    workoutId: string;
+    workoutName: string;
+    date: string;
   };
-  add('Estimated 1RM (Epley)', records.estimated, kg);
-  add('Heaviest weight', records.heaviest, kg);
-  add('Best set volume', records.bestSetVolume, kgReps);
-  add('Best session volume', records.sessionVolume, kgReps);
-  add('Least assistance', records.leastAssistance, kg);
-  add('Most reps in a set', records.mostReps, (n) => `${n} reps`);
-  if (!rows.length)
+  const row = (
+    label: string,
+    entry: Entry | null,
+    format: (value: number) => string,
+    showSet = true,
+  ) => {
+    if (!entry) return null;
+    const value = format(entry.value);
+    const set = entry.set;
+    const type = set && history.find((session) => session.sets.includes(set))?.type;
+    const actual = set && type ? setText(set, type) : null;
+    return (
+      <li key={label}>
+        <Button
+          variant='ghost'
+          className='w-full justify-between gap-3 px-0 py-3 text-left text-foreground'
+          aria-label={`View source workout for ${label}: ${value}${showSet && actual ? `, ${actual.spoken ?? actual.text}` : ''}, ${dateLabel(entry.date)}, ${entry.workoutName}`}
+          onClick={() => onSource(entry.workoutId)}
+        >
+          <span className='min-w-0 flex-1'>
+            <span className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1'>
+              <span className='text-[14px] font-medium'>{label}</span>
+              <strong className='text-[18px] font-semibold tabular-nums'>{value}</strong>
+            </span>
+            {showSet && actual && (
+              <span className='mt-1 block text-[14px] font-normal tabular-nums'>
+                <Spoken value={actual} />
+              </span>
+            )}
+            <span className='mt-1 block text-[12px] font-normal wrap-anywhere text-muted-foreground'>
+              <span className='tabular-nums'>{dateLabel(entry.date)}</span> · {entry.workoutName}
+            </span>
+          </span>
+          <ArrowUpRight size={16} className='shrink-0 text-muted-foreground' />
+        </Button>
+      </li>
+    );
+  };
+  if (
+    !records.heaviest &&
+    !records.leastAssistance &&
+    !records.mostReps &&
+    !records.bestSetVolume &&
+    !records.sessionVolume &&
+    !records.estimated &&
+    !records.repBests.length
+  )
     return (
       <EmptyState
         icon={Trophy}
@@ -191,71 +256,68 @@ function RecordsTab({
         framed={framed}
       />
     );
+  const actualRecords = [
+    row('Heaviest weight', records.heaviest, kg),
+    row('Least assistance', records.leastAssistance, kg),
+  ].filter(Boolean);
+  const otherRecords = [
+    row('Most reps in a set', records.mostReps, (value) => `${value} reps`),
+    row('Best set volume', records.bestSetVolume, kgReps),
+    row('Best session volume', records.sessionVolume, kgReps),
+  ].filter(Boolean);
   return (
-    <div className='records'>
-      <ul className='m-0 list-none p-0'>
-        {rows.map((row) => (
-          <li
-            key={row.label}
-            className='flex min-h-[60px] items-center gap-2.5 border-b border-border'
+    <div className='records min-w-0 space-y-7'>
+      {actualRecords.length > 0 && (
+        <section>
+          <h3 className='mb-1 text-[16px] font-semibold'>Recorded performance</h3>
+          <ul
+            className='m-0 list-none divide-y divide-border p-0'
+            aria-label='Recorded performance'
           >
-            <div className='flex min-w-0 flex-1 flex-col'>
-              <span>{row.label}</span>
-              <small className='text-[12px] text-muted-foreground'>{row.detail}</small>
-            </div>
-            <strong className='tabular-nums'>{row.value}</strong>
-            <Button
-              size='icon'
-              variant='ghost'
-              aria-label={`View source workout for ${row.label}`}
-              onClick={() => onSource(row.workoutId)}
-            >
-              <ArrowUpRight size={16} />
-            </Button>
-          </li>
-        ))}
-      </ul>
-      {records.estimated && (
-        <MetricExplanation>
-          Estimated 1RM uses Epley, weight × (1 + reps / 30), on weighted sets of 1–10 reps. It is
-          an estimate, not a tested maximum. Assisted and bodyweight work get no estimate.
-        </MetricExplanation>
+            {actualRecords}
+          </ul>
+        </section>
       )}
       {records.repBests.length > 0 && (
-        <>
-          <ListLabel>Heaviest weight by reps</ListLabel>
-          <table className={dataTableClass} aria-label='Heaviest weight by reps'>
-            <thead>
-              <tr>
-                <th>Reps</th>
-                <th>Best performance</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.repBests.map((best) => (
-                <tr key={best.reps}>
-                  <td>{best.reps}</td>
-                  <td>{kg(best.value)}</td>
-                  <td>
-                    <TextAction
-                      aria-label={`View source workout ${best.reps} reps ${dateLabel(best.date)}`}
-                      onClick={() => onSource(best.workoutId)}
-                    >
-                      {dateLabel(best.date)} <ArrowUpRight size={13} />
-                    </TextAction>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
+        <section>
+          <h3 className='mb-1 text-[16px] font-semibold'>Heaviest weight by reps</h3>
+          <ul
+            className='m-0 list-none divide-y divide-border p-0'
+            aria-label='Heaviest weight by reps'
+          >
+            {records.repBests.map((best) =>
+              row(plural(best.reps, 'rep'), best, () => setText(best.set, 'weighted').text, false),
+            )}
+          </ul>
+        </section>
+      )}
+      {otherRecords.length > 0 && (
+        <section>
+          <h3 className='mb-1 text-[16px] font-semibold'>
+            {actualRecords.length ? 'Other records' : 'Recorded performance'}
+          </h3>
+          <ul className='m-0 list-none divide-y divide-border p-0' aria-label='Other records'>
+            {otherRecords}
+          </ul>
+        </section>
+      )}
+      {records.estimated && (
+        <section>
+          <h3 className='mb-1 text-[16px] font-semibold'>Estimated strength</h3>
+          <ul className='m-0 list-none p-0'>
+            {row('Estimated 1RM (Epley)', records.estimated, kg)}
+          </ul>
+          <MetricExplanation>
+            Epley estimate: weight × (1 + reps / 30), for weighted sets of 1–10 reps. One rep uses
+            recorded weight. An estimate, not a tested maximum.
+          </MetricExplanation>
+        </section>
       )}
     </div>
   );
 }
 
-/** Strong-style exercise screen: About / History / Charts / Records, all traceable to sets. */
+/** Exercise evidence: Charts / History / Records / About, traceable to recorded sets. */
 export function ExerciseDetail({
   dataset,
   name,
@@ -289,7 +351,7 @@ export function ExerciseDetail({
         </Button>
         <ExerciseThumb name={name} />
         <div className='min-w-0'>
-          {renderTitle(<h2 className='text-[18px]'>{name}</h2>)}
+          {renderTitle(<h2 className='text-[18px] wrap-anywhere'>{name}</h2>)}
           <p className='mt-0.5 text-[12px] text-muted-foreground'>
             {bodyPartOf(name)} · {plural(workouts, 'workout')}
           </p>
