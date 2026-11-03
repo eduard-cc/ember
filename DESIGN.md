@@ -184,6 +184,12 @@ Only a successful finished-workout commit opens the full-screen “Workout compl
 
 Records use the same domain definitions as Records against earlier history: heaviest weight, session volume, bounded Epley estimate for weighted work; reps for bodyweight. No first-session record, ties, assisted/timed records, streaks or milestone counts. One row per exercise names every record kind, its headline value and gain; record rows play pr as they arrive, finish plays on open and Done ticks. Reduced motion keeps fades only. Done/Escape/back closes and focuses the new History card.
 
+## Save and connection states
+
+Titled notices share the existing neutral/destructive banner tokens: read-only access, unavailable saved data, failed local writes, retained sync issues and connection/download guidance. Healthy background sync and brief pending work stay quiet. An unavailable server gets neutral guidance and the real pending-change count when present; automatic reconnect remains the only retry path. Partial first downloads stay labelled in the page, logger or Settings, never silently presented as an empty history. Revoked trust keeps owned content and its portals unmounted; Settings remains reachable. Unsupported Web Locks gives browser guidance, not a reload action that cannot fix it.
+
+The logger shows “Saving…” only while its real local write is pending. Finish keeps its confirmation open and disables submission/dismissal during saving; failure stays in that dialog and success celebrates only after the atomic commit. Global failed-save guidance is not repeated beside the owning editor's error. Notice live text is portaled outside the logger/editor and announced only while its visual surface is accessible; covered background notices do not repeat modal feedback. Exercise completion is an inspectable labelled group, not an always-live ancestor inside the logger.
+
 ## Settings, body weight and shell updates
 
 On phones the Settings entry is the cog at Profile's top right, outside the disabled content fieldset so read-only/maintenance states can open it. Desktop keeps its header gear; logger and locked states keep their own gears. No Profile Settings row. Closing restores the entry trigger.

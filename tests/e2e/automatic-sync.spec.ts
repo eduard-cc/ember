@@ -36,11 +36,14 @@ test('fresh installation connects automatically, keeps its storage and says hist
   });
   let bootstraps = 0;
   let serverUp = true;
+  let releaseSession!: () => void;
+  const sessionHeld = new Promise<void>((resolve) => (releaseSession = resolve));
   let releaseFeed!: () => void;
   const feedHeld = new Promise<void>((resolve) => (releaseFeed = resolve));
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
     if (request.url().endsWith('/session')) {
+      await sessionHeld;
       if (request.method() === 'GET' && !bootstraps) return route.fulfill({status: 401, json: {}});
       if (request.method() === 'POST') {
         expect(request.postDataJSON()).toEqual({});
@@ -48,6 +51,22 @@ test('fresh installation connects automatically, keeps its storage and says hist
         bootstraps++;
       }
       return route.fulfill({json: {ownerId: 'owner', csrfToken: 'synthetic-csrf'}});
+    }
+    if (request.method() === 'POST') {
+      if (!serverUp) return route.abort('failed');
+      return route.fulfill({
+        json: {
+          results: request
+            .postDataJSON()
+            .operations.map((operation: {operationId: string; entityId: string}) => ({
+              operationId: operation.operationId,
+              entityId: operation.entityId,
+              status: 'accepted',
+              revision: 1,
+              changeSeq: 3,
+            })),
+        },
+      });
     }
     if (request.url().includes('after=0')) {
       await feedHeld;
@@ -60,6 +79,9 @@ test('fresh installation connects automatically, keeps its storage and says hist
     return route.fulfill({json: {changes: [], nextCursor: 2, hasMore: false}});
   });
   await page.goto('/');
+  await expect(page.getByRole('button', {name: 'Start empty workout', exact: true})).toBeEnabled();
+  await expect(page.getByRole('region', {name: 'Connecting…', exact: true})).toBeVisible();
+  releaseSession();
   const download = page.getByRole('status', {name: 'History download'});
   await expect(download).toHaveText('Downloading your workout history from your server…');
   await expect
@@ -77,8 +99,19 @@ test('fresh installation connects automatically, keeps its storage and says hist
   await expect(download).toHaveText(
     'Your workout history has not finished downloading. It continues when your server is reachable.',
   );
+  await page.getByRole('button', {name: 'Create template', exact: true}).click();
+  await page.getByLabel('Template name').fill('Queued during download');
+  await addExercise(page, 'Bench Press (Barbell)');
+  await page.getByRole('button', {name: 'Save template', exact: true}).click();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await expect(page.getByRole('region', {name: 'History download'})).toContainText(
+    '1 change waiting to sync',
+  );
   await page.reload();
   await expect(download).toBeVisible();
+  await expect(page.getByRole('region', {name: 'History download'})).toContainText(
+    '1 change waiting to sync',
+  );
   serverUp = true;
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
@@ -184,6 +217,9 @@ test('unavailable server keeps trusted local drafts and pending edits across reo
     'data-sync',
     'Offline or server unavailable · changes pending',
   );
+  await expect(page.getByRole('region', {name: 'Server unavailable'})).toContainText(
+    '1 change waiting to sync',
+  );
   await navigate(page, 'Workouts');
   await expect(
     page.getByRole('heading', {name: 'Offline retained template', exact: true}),
@@ -259,6 +295,9 @@ for (const status of ['conflict', 'rejected'] as const) {
     await expect(page.locator('.app-shell')).toHaveAttribute(
       'data-sync',
       /Sync conflict or rejection/,
+    );
+    await expect(page.getByRole('region', {name: 'Changes not synced'})).toContainText(
+      'REVISION_CONFLICT',
     );
     const completedFeeds = feeds;
     await page.waitForTimeout(1000);

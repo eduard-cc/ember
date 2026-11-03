@@ -183,6 +183,7 @@ test('template editor retains a failed save and closes after a successful retry'
     (window as unknown as {releaseTemplateCommit: () => void}).releaseTemplateCommit(),
   );
   await expect(editor.getByRole('alert')).toContainText('Template not saved.');
+  await expect(page.getByRole('alert')).toHaveCount(1);
   await expect(editor.getByLabel('Template name')).toHaveValue('Retry template');
   await expect(editor.getByRole('button', {name: 'Save template', exact: true})).toBeEnabled();
   await editor.getByRole('button', {name: 'Save template', exact: true}).click();

@@ -31,6 +31,8 @@ interface BaseProps {
 interface RootResponsiveDialogProps extends BaseProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Ember: stop the phone drawer's drag-to-dismiss while saving. */
+  dismissible?: boolean;
 }
 
 interface ResponsiveDialogProps extends BaseProps {
@@ -57,13 +59,13 @@ const useResponsiveDialogContext = () => {
   return context;
 };
 
-const ResponsiveDialog = ({children, ...props}: RootResponsiveDialogProps) => {
+const ResponsiveDialog = ({children, dismissible = true, ...props}: RootResponsiveDialogProps) => {
   const isDesktop = !useIsMobile();
   const ResponsiveDialog = isDesktop ? Dialog : Drawer;
 
   return (
     <ResponsiveDialogContext.Provider value={{isDesktop}}>
-      <ResponsiveDialog {...props} {...(!isDesktop && {autoFocus: true})}>
+      <ResponsiveDialog {...props} {...(!isDesktop && {autoFocus: true, dismissible})}>
         {children}
       </ResponsiveDialog>
     </ResponsiveDialogContext.Provider>

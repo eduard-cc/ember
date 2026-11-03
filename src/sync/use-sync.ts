@@ -98,7 +98,7 @@ export function useSync(
     if (paused.current || running.current || !ready || !enabled) return;
     running.current = true;
     setSyncing(true);
-    setStatus('Syncing…');
+    setStatus(current.current ? 'Syncing…' : 'Connecting…');
     const job = (async () => {
       try {
         await repository.flush();
@@ -226,6 +226,8 @@ export function useSync(
     pause,
     resume,
     syncing,
+    pending,
+    lastAttemptFailed,
     historyDownload:
       !enabled || !historyIncomplete
         ? null

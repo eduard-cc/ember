@@ -37,6 +37,7 @@ test('Saving stays visible until the real IndexedDB transaction can commit', asy
   });
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Commit boundary');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saving');
+  await expect(page.getByText('Saving…', {exact: true})).toBeVisible();
   await page.evaluate(() =>
     (window as unknown as {releaseStorageTest: () => void}).releaseStorageTest(),
   );
@@ -44,7 +45,9 @@ test('Saving stays visible until the real IndexedDB transaction can commit', asy
   await page.reload();
   await expect(page.getByLabel('WORKOUT NAME', {exact: true})).toHaveValue('Commit boundary');
 });
-test('failed outbox insert rolls back finish in the browser and allows retry', async ({page}) => {
+test('failed outbox insert rolls back finish in the browser and allows retry', async ({
+  page,
+}, info) => {
   await page.goto('/?demo=1');
   await page
     .getByRole('button', {name: /Complete .* set 1/})
@@ -82,6 +85,16 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
   await page.getByRole('button', {name: 'Finish workout'}).click();
   await page.getByRole('button', {name: 'Save finished workout'}).click();
   await expect(page.getByRole('alert')).toContainText('Workout was not finished');
+  const confirmation = page.getByRole('dialog', {name: 'Finish this workout?', exact: true});
+  await expect(confirmation.getByRole('region', {name: 'Workout not saved'})).toBeVisible();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toHaveCount(0);
+  expect(
+    await page
+      .locator(
+        '.workout-sheet [role=alert], .workout-sheet [role=status], .workout-sheet [aria-live]',
+      )
+      .count(),
+  ).toBe(0);
   await expect(page.getByRole('dialog', {name: 'Workout complete'})).toHaveCount(0);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
   const readCounts = () =>
@@ -105,7 +118,63 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
     });
   expect(await readCounts()).toEqual([1, 0, 1]);
   await page.evaluate(() => (window as unknown as {restoreUUIDTest: () => void}).restoreUUIDTest());
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const request = indexedDB.open('ember');
+      request.onsuccess = () => resolve(request.result);
+    });
+    const transaction = db.transaction('workouts', 'readwrite');
+    let hold = true;
+    Object.assign(window, {
+      releaseFinishStorage: () => {
+        hold = false;
+      },
+    });
+    const cycle = () => {
+      transaction.objectStore('workouts').get('pending').onsuccess = () => {
+        if (hold) cycle();
+      };
+    };
+    cycle();
+    transaction.oncomplete = () => db.close();
+  });
   await page.getByRole('button', {name: 'Save finished workout'}).click();
+  await expect(confirmation.getByRole('button', {name: 'Saving…', exact: true})).toBeDisabled();
+  await expect(confirmation.getByRole('button', {name: 'Keep logging'})).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await expect(confirmation).toBeVisible();
+  const navigation = await page.context().newCDPSession(page);
+  if (info.project.name === 'mobile') {
+    await navigation.send('Emulation.setTouchEmulationEnabled', {enabled: true});
+    const beforeSwipe = (await confirmation.boundingBox())!;
+    const x = beforeSwipe.x + beforeSwipe.width / 2;
+    const y = beforeSwipe.y + 20;
+    await navigation.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{x, y}],
+    });
+    for (let step = 1; step <= 8; step++) {
+      await navigation.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{x, y: y + step * 20}],
+      });
+    }
+    await navigation.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+    await expect
+      .poll(async () => (await confirmation.boundingBox())!.y)
+      .toBeCloseTo(beforeSwipe.y, 0);
+    await expect(confirmation.getByRole('button', {name: 'Saving…', exact: true})).toBeInViewport();
+  }
+  const {entries, currentIndex} = await navigation.send('Page.getNavigationHistory');
+  await navigation.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
+  await expect(confirmation).toBeVisible();
+  await expect
+    .poll(async () => (await navigation.send('Page.getNavigationHistory')).currentIndex)
+    .toBe(currentIndex);
+  await expect(page.getByRole('dialog', {name: 'Workout complete'})).toHaveCount(0);
+  await page.evaluate(() =>
+    (window as unknown as {releaseFinishStorage: () => void}).releaseFinishStorage(),
+  );
   await closeCelebration(page);
   await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   expect(await readCounts()).toEqual([0, 1, 2]);

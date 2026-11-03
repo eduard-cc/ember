@@ -19,8 +19,8 @@ import {ExercisePage} from './components/ExercisePage';
 import {FeedbackSettings} from './components/FeedbackSettings';
 import {type Celebration, FinishCelebration} from './components/FinishCelebration';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
+import {StateNotice} from './components/StateNotice';
 import {SyncStatus} from './components/SyncStatus';
-import {errorBannerClass, noticeClass} from './components/banner';
 import {Button} from './components/ui/button';
 import {ContentFieldset} from './components/ui/content-fieldset';
 import {
@@ -325,14 +325,17 @@ export default function App() {
   useBackLayer(settingsOpen, () => setSettingsOpen(false));
   useBackLayer(!!pendingWorkout && !sync.locked, () => setPendingWorkout(null));
   useBackLayer(confirmCancel && !sync.locked, () => setConfirmCancel(false));
-  useBackLayer(confirmFinish && !sync.locked, () => setConfirmFinish(false));
+  useBackLayer(confirmFinish && !sync.locked, () => {
+    if (saveStatus !== 'saving') setConfirmFinish(false);
+  });
   useBackLayer(!!celebration, () => setCelebration(null));
   // In Settings the banners keep the 20px (and the issue text the 14px) top margin of the panel's
   // old `> .notice`, `> section` and `.dialog-content p` rules.
   const feedback = (className?: string) =>
-    notice && (
-      <div className={cn(noticeClass, 'mb-5', className)} role='status'>
-        {notice}
+    notice &&
+    !persistenceError && (
+      <StateNotice title='Template' announcement={notice} className={cn('mb-5', className)}>
+        <p className='text-inherit'>{notice}</p>
         <Button
           variant='ghost'
           size='icon'
@@ -341,23 +344,37 @@ export default function App() {
         >
           <X size={15} />
         </Button>
-      </div>
+      </StateNotice>
     );
   // Sync is silent. Only states that need the owner surface here. In the logger the banners stay
   // on screen while a long workout scrolls.
   const errors = (where: 'page' | 'logger' | 'settings' = 'page') => {
-    const banner = cn(errorBannerClass, where === 'logger' && stickyClass);
+    const banner = cn('mb-5', where === 'logger' && stickyClass);
     return (
       <>
         {ownershipError && (
-          <div className={banner} role='alert'>
-            {ownershipError}
-            <Button onClick={() => location.reload()}>Reload to enable editing</Button>
-          </div>
+          <StateNotice
+            title='Read-only tab'
+            announcement={ownershipError}
+            problem
+            className={banner}
+          >
+            <p className='text-inherit'>{ownershipError}</p>
+            {typeof navigator.locks?.request === 'function' && (
+              <Button className='self-start' onClick={() => location.reload()}>
+                Reload to enable editing
+              </Button>
+            )}
+          </StateNotice>
         )}
         {persistenceError && (
-          <div className={banner} role='alert'>
-            {persistenceError}
+          <StateNotice
+            title={recoveryError ? 'Saved data unavailable' : 'Changes not saved'}
+            announcement={persistenceError}
+            problem
+            className={banner}
+          >
+            <p className='text-inherit'>{persistenceError}</p>
             {recoveryError && (
               <Button
                 variant='secondary'
@@ -370,14 +387,16 @@ export default function App() {
                 Reset unreadable saved data
               </Button>
             )}
-          </div>
+          </StateNotice>
         )}
         {!sync.locked && sync.issues.length > 0 && (
-          <section
-            aria-label='Sync problems'
-            className={cn(banner, where === 'settings' && 'mt-5')}
+          <StateNotice
+            title='Changes not synced'
+            announcement={`${plural(sync.issues.length, 'change')} could not sync. Later edits to the same item wait until this is resolved.`}
+            problem
+            className={banner}
           >
-            <p className={cn('text-inherit', where === 'settings' && 'mt-3.5')}>
+            <p className='text-inherit'>
               {plural(sync.issues.length, 'change')} could not sync. Later edits to the same item
               wait until this is resolved.
             </p>
@@ -388,8 +407,9 @@ export default function App() {
                 </li>
               ))}
             </ul>
-          </section>
+          </StateNotice>
         )}
+        {!ownershipError && !persistenceError && <SyncStatus sync={sync} />}
       </>
     );
   };
@@ -416,14 +436,9 @@ export default function App() {
       data-sync={sync.status}
     >
       {sync.locked && (
-        <div className='flex items-center justify-between gap-3 px-[18px] py-3.5'>
-          {!settingsOpen && (
-            <>
-              <SyncStatus sync={sync} />
-              {errors()}
-            </>
-          )}
-          {settingsButton()}
+        <div className='flex max-h-full flex-col overflow-auto px-[18px] py-3.5'>
+          <div className='mb-3 flex justify-end'>{settingsButton()}</div>
+          {!settingsOpen && errors()}
         </div>
       )}
       <main hidden={sync.locked} className='workspace relative m-auto flex h-full max-w-[1480px]'>
@@ -478,13 +493,6 @@ export default function App() {
               )}
             </div>
             {!showSheet && !sync.locked && !settingsOpen && errors()}
-            {sync.historyDownload && !sync.locked && !(showSheet && mobile) && !settingsOpen && (
-              <div className={cn(noticeClass, 'mb-5')} role='status' aria-label='History download'>
-                {sync.historyDownload === 'waiting'
-                  ? 'Your workout history has not finished downloading. It continues when your server is reachable.'
-                  : 'Downloading your workout history from your server…'}
-              </div>
-            )}
             <ContentFieldset disabled={disabled}>
               {!showSheet && !settingsOpen && feedback()}
               {view === 'Workout' && !sync.locked && (
@@ -650,6 +658,7 @@ export default function App() {
                       </strong>{' '}
                       {sets.length === 1 ? 'set' : 'sets'} completed
                     </span>
+                    {saveStatus === 'saving' && <span>Saving…</span>}
                   </div>
                 )}
                 {/* Progress through the planned sets, over the header's bottom rule. */}
@@ -662,7 +671,7 @@ export default function App() {
               </header>
               <div className='workout-scroll min-h-0 flex-1 [scroll-padding:14px_0_30px] overflow-y-auto overscroll-contain'>
                 <h2 className='sr-only'>Your workout</h2>
-                {showSheet && !settingsOpen && (
+                {showSheet && !settingsOpen && !confirmFinish && !confirmCancel && (
                   <>
                     {errors('logger')}
                     {feedback()}
@@ -843,6 +852,16 @@ export default function App() {
         <ResponsiveDialogContent>
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Cancel this workout?</ResponsiveDialogTitle>
+            {persistenceError && (
+              <StateNotice
+                title='Changes not saved'
+                announcement={persistenceError}
+                problem
+                className='mt-2'
+              >
+                <p className='text-inherit'>{persistenceError}</p>
+              </StateNotice>
+            )}
             <ResponsiveDialogDescription className='mt-2'>
               {plural(sets.length, 'set')} will be discarded.
             </ResponsiveDialogDescription>
@@ -866,14 +885,25 @@ export default function App() {
           </ResponsiveDialogFooter>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
-      <ResponsiveDialog open={confirmFinish && !sync.locked} onOpenChange={setConfirmFinish}>
+      <ResponsiveDialog
+        open={confirmFinish && !sync.locked}
+        dismissible={saveStatus !== 'saving'}
+        onOpenChange={(open) => {
+          if (saveStatus !== 'saving') setConfirmFinish(open);
+        }}
+      >
         <ResponsiveDialogContent>
           <ResponsiveDialogHeader className='pr-14 desk:pr-7'>
             <ResponsiveDialogTitle>Finish this workout?</ResponsiveDialogTitle>
             {persistenceError && (
-              <p className='mt-2' role='alert'>
-                {persistenceError}
-              </p>
+              <StateNotice
+                title='Workout not saved'
+                announcement={persistenceError}
+                problem
+                className='mt-2'
+              >
+                <p className='text-inherit'>{persistenceError}</p>
+              </StateNotice>
             )}
             <ResponsiveDialogDescription className='mt-2'>
               {plural(completed, 'completed set')} will be saved. {sets.length - completed}{' '}
@@ -882,17 +912,17 @@ export default function App() {
           </ResponsiveDialogHeader>
           <ResponsiveDialogFooter className={confirmFooter}>
             <ResponsiveDialogClose asChild>
-              <Button>Keep logging</Button>
+              <Button disabled={saveStatus === 'saving'}>Keep logging</Button>
             </ResponsiveDialogClose>
             <Button
               variant='primary'
-              disabled={disabled || deletingSets || !completed}
+              disabled={disabled || deletingSets || !completed || saveStatus === 'saving'}
               onClick={finish}
             >
-              Save finished workout
+              {saveStatus === 'saving' ? 'Saving…' : 'Save finished workout'}
             </Button>
           </ResponsiveDialogFooter>
-          <ResponsiveDialogCornerClose label='Close' />
+          {saveStatus !== 'saving' && <ResponsiveDialogCornerClose label='Close' />}
         </ResponsiveDialogContent>
       </ResponsiveDialog>
       {/* Over History, after the finish committed; a sync lock ends it, like other history views. */}

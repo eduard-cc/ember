@@ -236,7 +236,7 @@ test('exercise Done survives value edits and reload but a new set needs its own 
   const progress = page.locator('.workout-progress');
   const meta = page.locator('.workout-meta');
   await expect
-    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('0 / 3 sets');
   await expect(progress).toHaveCSS('transform', 'matrix(0, 0, 0, 1, 0, 0)');
   await expect(exercise.locator('.exercise-badge')).toHaveCSS('opacity', '0');
@@ -256,7 +256,7 @@ test('exercise Done survives value edits and reload but a new set needs its own 
     ).toHaveAttribute('data-done');
   }
   await expect
-    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('Done');
   await expect(exercise.locator('.set-complete')).toHaveCount(3);
   await expect(exercise.locator('.exercise-badge')).toHaveCSS('opacity', '1');
@@ -277,13 +277,13 @@ test('exercise Done survives value edits and reload but a new set needs its own 
   await reps.fill('10');
   await expect(tick).toHaveAttribute('aria-pressed', 'true');
   await expect
-    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('Done');
   // A blank or invalid value unticks the set; a valid value afterwards needs a fresh tick.
   await reps.fill('');
   await expect(tick).toHaveCount(0);
   await expect
-    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('2 / 3 sets');
   await reps.fill('10');
   await expect(exercise.getByRole('button', {name: /^Complete .* set 1$/})).toHaveAttribute(
@@ -292,23 +292,23 @@ test('exercise Done survives value edits and reload but a new set needs its own 
   );
   await exercise.getByRole('button', {name: /^Complete .* set 1$/}).click();
   await expect
-    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('Done');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.reload();
   await expect(weight).toHaveValue('67.5');
   await expect(reps).toHaveValue('10');
   await expect
-    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('Done');
   await tick.click();
   await expect
-    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('2 / 3 sets');
   await exercise.getByRole('button', {name: /^Complete /}).click();
   await exercise.getByRole('button', {name: 'Add set', exact: true}).click();
   await expect
-    .poll(() => shownText(exercise.getByRole('status', {name: 'Exercise completion'})))
+    .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('3 / 4 sets');
   await expect(exercise.getByRole('button', {name: /Complete .* set 4/})).toHaveAttribute(
     'aria-pressed',
@@ -561,6 +561,15 @@ test('a read-only writer follower can minimize and reach settings and recovery g
   await expect(follower.getByRole('dialog', {name: 'Settings'})).toBeVisible();
   await expect(follower.getByRole('button', {name: 'Add weight'})).toBeDisabled();
   await expect(follower.getByRole('button', {name: 'Reload to enable editing'})).toBeEnabled();
+  await expect(follower.getByRole('region', {name: 'Active workout'})).toHaveCount(0);
+  await expect(follower.getByRole('region', {name: 'Read-only tab'})).toBeVisible();
+  expect(
+    await follower
+      .locator(
+        '.workout-sheet [role=alert], .workout-sheet [role=status], .workout-sheet [aria-live]',
+      )
+      .count(),
+  ).toBe(0);
   await follower.getByRole('button', {name: 'Close settings'}).click();
   await follower.getByRole('button', {name: 'Minimize workout'}).click();
   await expect(follower.getByRole('navigation', {name: 'Main navigation'})).toBeVisible();
@@ -690,7 +699,7 @@ test('active exercise headers show the name and set completion for every exercis
   for (const heading of await headings.all()) {
     await expect(heading.getByRole('heading')).toHaveText(/\S/);
     await expect
-      .poll(() => shownText(heading.getByRole('status', {name: 'Exercise completion'})))
+      .poll(() => shownText(heading.getByRole('group', {name: 'Exercise completion'})))
       .toMatch(/^0 \/ \d+ sets?$/);
   }
 });

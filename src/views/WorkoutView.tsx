@@ -406,7 +406,7 @@ export function WorkoutView({
               <div className='exercise-meta pointer-events-none col-2 row-2 min-w-0 self-start'>
                 {!targetsOnly && (
                   <span
-                    role='status'
+                    role='group'
                     aria-label='Exercise completion'
                     className={
                       done
