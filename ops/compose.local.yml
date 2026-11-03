@@ -8,7 +8,9 @@ services:
     restart: unless-stopped
     env_file: ../server/.postgres.env
     ports:
-      - '127.0.0.1:55439:5432'
+      # 55439 on the owner's development daemon; 55438 for the live database in the
+      # service account's daemon (docs/operations.md).
+      - '127.0.0.1:${EMBER_PG_PORT:-55439}:5432'
     volumes:
       - ember-data:/var/lib/postgresql/data
     healthcheck:

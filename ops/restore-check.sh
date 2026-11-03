@@ -10,7 +10,9 @@ archive=$1; target=$2
 source "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/docker-host.sh"
 container=ember-postgres
 actual=$(docker inspect --format '{{.Config.Image}} {{.State.Health.Status}} {{range (index .NetworkSettings.Ports "5432/tcp")}}{{.HostIp}}:{{.HostPort}}{{end}}' "$container")
-[[ "$actual" == 'postgres:17.11-bookworm healthy 127.0.0.1:55439' ]] || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
+# 55439 on the owner's development daemon, 55438 in the service account's (live) daemon.
+expected='postgres:17.11-bookworm healthy 127.0.0.1'
+[[ "$actual" == "$expected:55439" || "$actual" == "$expected:55438" ]] || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
 # Preflight never mutates an existing target; validation and creation both fail closed.
 exists=$(docker exec "$container" sh -c 'psql -U "$POSTGRES_USER" -d postgres -Atc "SELECT count(*) FROM pg_database WHERE datname='\''$1'\''"' sh "$target")
 [[ "$exists" == 0 ]] || { printf '%s\n' 'Refusing existing database; restore checks require a fresh target.' >&2; exit 1; }

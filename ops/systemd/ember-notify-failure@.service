@@ -1,8 +1,9 @@
 # User-level equivalent of the root notify-failure@ unit: user units cannot
-# trigger system units through OnFailure=.
+# trigger system units through OnFailure=. The helper is a reviewed installed copy,
+# never a script from the checkout (the owner's development daemon uses this unit too).
 [Unit]
 Description=Send a Hermes Discord message when %i fails
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/bin/hermes send --quiet --to discord --subject "[%H]" "%i failed. Details: journalctl --user -u %i -n 50"
+ExecStart=%h/.local/lib/ember/notify.sh "[%H]" "%i failed. Details: journalctl --user -u %i -n 50"

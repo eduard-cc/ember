@@ -1,6 +1,10 @@
 import 'dotenv/config';
 import {z} from 'zod';
 
+// Development and test databases live on 55439. The live database may also run on 55438, in
+// the Ember service account's own Docker daemon (docs/operations.md), and only as `ember`.
+const LIVE_ONLY_PORT = '55438';
+
 export function validateDatabaseUrl(url: string) {
 	const db = new URL(url);
 	// pg interprets URL query parameters as connection options, including host
@@ -11,7 +15,7 @@ export function validateDatabaseUrl(url: string) {
 		db.href.includes('#') ||
 		!['postgres:', 'postgresql:'].includes(db.protocol) ||
 		db.hostname !== '127.0.0.1' ||
-		db.port !== '55439' ||
+		!(db.port === '55439' || (db.port === LIVE_ONLY_PORT && db.pathname === '/ember')) ||
 		!/^\/ember(?:_[a-z0-9_]+)?$/.test(db.pathname)
 	)
 		throw new Error('This local API requires the isolated Ember PostgreSQL endpoint');

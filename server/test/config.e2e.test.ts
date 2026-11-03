@@ -2,7 +2,7 @@ import 'dotenv/config';
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 
-import {config} from '../src/config';
+import {config, validateDatabaseUrl} from '../src/config';
 
 test('startup rejects query overrides and fragments on otherwise isolated database URLs', () => {
 	const synthetic = {
@@ -40,14 +40,21 @@ test('startup rejects query overrides and fragments on otherwise isolated databa
 		}
 	}
 });
-test('startup rejects external or non-PostgreSQL database endpoints', () => {
-	const original = process.env.EMBER_DATABASE_URL;
-	try {
-		for (const url of ['postgresql://synthetic@external.invalid:55439/ember', 'http://127.0.0.1:55439/ember']) {
-			process.env.EMBER_DATABASE_URL = url;
-			assert.throws(() => config());
-		}
-	} finally {
-		process.env.EMBER_DATABASE_URL = original;
+test('startup accepts only the isolated development and live database endpoints', () => {
+	for (const url of [
+		'postgresql://synthetic@127.0.0.1:55439/ember',
+		'postgresql://synthetic@127.0.0.1:55439/ember_dev',
+		'postgresql://synthetic@127.0.0.1:55438/ember',
+	]) {
+		assert.equal(validateDatabaseUrl(url), url);
+	}
+	for (const url of [
+		'postgresql://synthetic@external.invalid:55439/ember',
+		'http://127.0.0.1:55439/ember',
+		'postgresql://synthetic@127.0.0.1:55438/ember_dev',
+		'postgresql://synthetic@127.0.0.1:55438/ember_test_review',
+		'postgresql://synthetic@127.0.0.1:55437/ember',
+	]) {
+		assert.throws(() => validateDatabaseUrl(url), /isolated Ember PostgreSQL endpoint/, url);
 	}
 });

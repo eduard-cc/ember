@@ -1,0 +1,38 @@
+#!/usr/sbin/nft -f
+# Rendered by ops/host/setup-account.sh into /etc/ember/egress-@ACCOUNT@.nft and loaded by
+# ember-egress-@ACCOUNT@.service. Do not edit the rendered copy; rerun the setup script.
+#
+# The Ember service account (uid @UID@, and the subordinate uids @SUBUIDS@ it can switch to
+# inside its own user namespaces, e.g. `rootlesskit --net=host`) runs code from main and npm. Unix permissions
+# keep it out of other accounts' files, but every local user can reach loopback services
+# (browser debugging ports, Hermes, other databases), this host's own tailnet address and
+# Docker bridge networks. So the account may reach the internet (GitHub, npm, Docker Hub,
+# Tailscale, Discord), DNS, its own loopback ports, HTTPS on its own tailnet device (the
+# deploy checks the app through Serve), and nothing
+# else on this host, the LAN or the tailnet. Replies on connections other users
+# opened to it are allowed. Other accounts are not affected.
+table inet @TABLE@
+delete table inet @TABLE@
+table inet @TABLE@ {
+	chain output {
+		type filter hook output priority filter - 5; policy accept;
+		meta skuid != { @UID@, @SUBUIDS@ } accept
+		ct state established,related accept
+		# This host's own addresses, LAN and tailnet ones included, leave through lo.
+		oifname "lo" jump loopback
+		ip daddr 100.64.0.0/10 jump tailnet
+		ip6 daddr fd7a:115c:a1e0::/48 jump tailnet
+		ip daddr { 0.0.0.0/8, 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16, 224.0.0.0/4, 255.255.255.255 } counter reject
+		ip6 daddr { ::1, fc00::/7, fe80::/10, ff00::/8 } counter reject
+	}
+	chain loopback {
+		ip daddr { 127.0.0.53, 127.0.0.54 } meta l4proto { tcp, udp } th dport 53 accept
+		ip daddr 127.0.0.1 tcp dport { @LOOPBACK_PORTS@ } accept
+		counter reject
+	}
+	chain tailnet {
+		ip daddr { @TAILNET_IPV4@ } tcp dport 443 accept
+		ip6 daddr { @TAILNET_IPV6@ } tcp dport 443 accept
+		counter reject
+	}
+}

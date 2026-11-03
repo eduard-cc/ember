@@ -31,7 +31,14 @@ cat >"$sandbox/bin/hermes" <<EOF
 #!/usr/bin/env bash
 echo "\${@: -1}" >>"$alerts"
 EOF
-chmod +x "$sandbox/bin/gh" "$sandbox/bin/hermes"
+# curl records its arguments, the URL from its --config file and the posted body.
+cat >"$sandbox/bin/curl" <<EOF
+#!/usr/bin/env bash
+echo "\$*" >"$sandbox/curl-args"
+while ((\$#)); do [[ \$1 != --config ]] || cat -- "\$2" >"$sandbox/curl-config"; shift; done
+cat >"$sandbox/curl-body"
+EOF
+chmod +x "$sandbox/bin/gh" "$sandbox/bin/hermes" "$sandbox/bin/curl"
 export PATH=$sandbox/bin:$PATH
 
 git init --quiet --bare --initial-branch=main "$sandbox/origin.git"
@@ -49,7 +56,7 @@ git clone --quiet "$sandbox/origin.git" "$sandbox/checkout"
 # The scripts under test live in the checkout, as on the host; deploy.sh is a stub that
 # records the commit and switches `current` unless told to fail with a given exit code.
 mkdir -p "$sandbox/checkout/ops"
-cp -- "$SCRIPT_DIR/auto-deploy.sh" "$SCRIPT_DIR/lib.sh" "$sandbox/checkout/ops/"
+cp -- "$SCRIPT_DIR/auto-deploy.sh" "$SCRIPT_DIR/lib.sh" "$SCRIPT_DIR/notify.sh" "$sandbox/checkout/ops/"
 # Told "killed", it terminates auto-deploy mid-deploy, as a systemd timeout would. Like
 # the real one it takes the deploy lock first, which it inherits from auto-deploy.
 cat >"$sandbox/checkout/ops/deploy.sh" <<EOF
@@ -179,5 +186,22 @@ run 'checkout on a branch'
 [[ $(git -C "$sandbox/checkout" rev-parse HEAD) == "$c5" && $(deploy_count) == 9 && $(held_sha) == "$c6" ]] ||
 	fail 'a checkout off main must not be merged or deployed'
 grep -q 'not a main checkout' "$alerts" || fail 'a checkout off main should alert'
+
+# With a webhook configured (the service account), alerts go there instead of through
+# Hermes, mention nobody, and the webhook URL never appears on a command line.
+git -C "$sandbox/checkout" switch --quiet main
+webhook=https://discord.example.invalid/api/webhooks/1/synthetic-token
+mkdir -p "$HOME/.config/ember"
+echo "$webhook" >"$HOME/.config/ember/discord-webhook"
+c7=$(commit app.txt)
+echo "$c7 completed failure" >>"$ci"
+before=$(alert_count)
+run 'red CI with a webhook'
+[[ $(held_sha) == "$c7" && $(alert_count) == "$before" ]] || fail 'a webhook alert must not go through Hermes'
+[[ $(cat -- "$sandbox/curl-config") == "url = \"$webhook\"" ]] || fail 'the alert should be posted to the webhook'
+jq -e --arg sha "${c7:0:12}" \
+	'(.content | startswith("[ember] CI failed on main at " + $sha)) and .allowed_mentions.parse == []' \
+	"$sandbox/curl-body" >/dev/null || fail 'the webhook alert should carry the message without mentions'
+! grep -q synthetic-token "$sandbox/curl-args" || fail 'the webhook URL must not be on the command line'
 
 echo 'auto-deploy checks passed'

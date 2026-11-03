@@ -26,7 +26,7 @@ die() {
 	log "ERROR: $*" >&2
 	exit 1
 }
-notify() { hermes send --quiet --to discord --subject '[ember]' "$1" || log 'could not send the Discord alert' >&2; }
+notify() { "$SCRIPT_DIR/notify.sh" '[ember]' "$1" || log 'could not send the Discord alert' >&2; }
 
 # ops/auto-deploy.sh takes the lock and runs ops/deploy.sh with it on fd 9, which this
 # reuses: flock on the same open file succeeds, and reopening would release it.

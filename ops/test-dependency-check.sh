@@ -11,9 +11,10 @@ fail() {
 	exit 1
 }
 
+# The cron runs an installed copy outside the checkout and points it at the checkout.
 repo=$sandbox/repo
-mkdir -p "$repo/ops" "$repo/server" "$sandbox/bin"
-cp -- "$SCRIPT_DIR/dependency-check.sh" "$repo/ops/"
+mkdir -p "$repo/server" "$sandbox/bin" "$sandbox/installed"
+cp -- "$SCRIPT_DIR/dependency-check.sh" "$sandbox/installed/"
 echo 26 >"$repo/.nvmrc"
 clean='{"vulnerabilities":{},"metadata":{"vulnerabilities":{"high":0,"critical":0}}}'
 echo "$clean" >"$repo/audit.json"
@@ -48,13 +49,14 @@ if grep -qxF -- "\$key" "$sandbox/keys" 2>/dev/null; then
 	echo '{"created_at": 1}'
 else
 	echo "\$key" >>"$sandbox/keys"
+	echo "\$*" >"$sandbox/args"
 	cat >"$sandbox/body"
 	echo "{\"created_at\": \$(date +%s)}"
 fi
 EOF
 chmod +x "$sandbox/bin/"*
-export PATH=$sandbox/bin:$PATH EMBER_NODE=$sandbox/bin/node
-run() { "$repo/ops/dependency-check.sh" 2>"$sandbox/err"; }
+export PATH=$sandbox/bin:$PATH EMBER_NODE=$sandbox/bin/node EMBER_REPO=$repo
+run() { "$sandbox/installed/dependency-check.sh" 2>"$sandbox/err"; }
 
 # Clean dependencies on the newest security release of the .nvmrc major: silence, no card.
 out=$(run) && [[ -z $out && ! -e $sandbox/keys ]] || fail "clean run: $out"
@@ -66,6 +68,7 @@ out=$(run) || fail "findings run: $(cat "$sandbox/err")"
 [[ $out == *'found 2 issue(s)'* ]] || fail "findings output: $out"
 grep -qF 'npm (server): qs has a high advisory' "$sandbox/body" || fail 'advisory missing from card'
 grep -qF 'security release 26.12.1 is out' "$sandbox/body" || fail 'Node release missing from card'
+grep -qF -- "--workspace worktree:$repo" "$sandbox/args" || fail 'card not anchored to the checkout'
 ! grep -qF 'x has' "$sandbox/body" || fail 'moderate advisory on card'
 
 # The same findings next month, after a non-security Node release: the existing card is
