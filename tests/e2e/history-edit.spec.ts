@@ -239,6 +239,12 @@ test('history editing saves added, replaced and reordered exercises with their o
   await expect(editor.getByRole('group', {name: 'Discard changes?'})).toHaveCount(0);
   await editor.getByRole('button', {name: 'Add exercise', exact: true}).click();
   const add = page.getByRole('dialog', {name: 'Add exercise', exact: true});
+  await expect(add.getByText('To: Push day', {exact: true})).toBeVisible();
+  await add.getByLabel('Search exercises').fill('Synthetic Press');
+  const existing = add.getByRole('button', {name: 'Synthetic Press', exact: true});
+  await expect(existing).toContainText('Already in workout');
+  await existing.click();
+  await expect(add.getByRole('alert')).toHaveText('Synthetic Press is already in this workout.');
   await add.getByLabel('Search exercises').fill('Plank');
   await add
     .getByRole('region', {name: 'All exercises'})
@@ -252,6 +258,13 @@ test('history editing saves added, replaced and reordered exercises with their o
   await options('Synthetic Press').click();
   await page.getByRole('menuitem', {name: 'Replace exercise', exact: true}).click();
   const replace = page.getByRole('dialog', {name: 'Replace exercise', exact: true});
+  await expect(replace.getByText('Replacing: Synthetic Press', {exact: true})).toBeVisible();
+  await replace.getByLabel('Search exercises').fill('Plank');
+  await expect(replace.getByRole('button', {name: 'Plank', exact: true})).toContainText(
+    'Already in workout',
+  );
+  await replace.getByRole('button', {name: 'Plank', exact: true}).click();
+  await expect(replace.getByRole('alert')).toHaveText('Plank is already in this workout.');
   await replace.getByLabel('Search exercises').fill('Synthetic Row');
   await replace
     .getByRole('region', {name: 'All exercises'})

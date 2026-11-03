@@ -101,6 +101,7 @@ export default function App() {
   const settingsTrigger = useRef<HTMLButtonElement | null>(null);
   const resetTrigger = useRef<HTMLButtonElement | null>(null);
   const exerciseTrigger = useRef<HTMLElement | null>(null);
+  const exerciseScroll = useRef(0);
   const {
     repository,
     refresh,
@@ -137,6 +138,16 @@ export default function App() {
     setExpandedState(next);
   };
   const mobile = useIsMobile();
+  const closeDesktopExercise = () => {
+    setExercise(null);
+    requestAnimationFrame(() => {
+      const trigger = exerciseTrigger.current;
+      const scroller = trigger?.closest('.library-scroll');
+      if (scroller) scroller.scrollTop = exerciseScroll.current;
+      trigger?.focus({preventScroll: true});
+    });
+  };
+
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
   // A sync lock hides history, so the celebration ends there rather than replaying on unlock.
@@ -307,7 +318,10 @@ export default function App() {
   // Back closes the newest layer; on a main tab with nothing open it leaves the app as before.
   // The expanded workout counts only on mobile, where it covers the tabs.
   useBackLayer(showSheet && mobile, () => expand(false));
-  useBackLayer(view === 'Exercises' && !!exercise && !sync.locked, () => setExercise(null));
+  useBackLayer(view === 'Exercises' && !!exercise && !sync.locked, () => {
+    if (mobile) setExercise(null);
+    else closeDesktopExercise();
+  });
   useBackLayer(settingsOpen, () => setSettingsOpen(false));
   useBackLayer(!!pendingWorkout && !sync.locked, () => setPendingWorkout(null));
   useBackLayer(confirmCancel && !sync.locked, () => setConfirmCancel(false));
@@ -510,24 +524,41 @@ export default function App() {
                   locked={sync.locked}
                 />
               )}
-              {view === 'Exercises' &&
-                (exercise && !mobile ? (
-                  <ExerciseDetail
-                    key={exercise}
-                    dataset={allDataset}
-                    name={exercise}
-                    onBack={() => setExercise(null)}
-                    onSource={source}
-                  />
-                ) : (
-                  <ExercisesView
-                    dataset={allDataset}
-                    onOpen={(name) => {
-                      exerciseTrigger.current = document.activeElement as HTMLElement;
-                      setExercise(name);
-                    }}
-                  />
-                ))}
+              {view === 'Exercises' && (
+                <>
+                  <div hidden={!!exercise && !mobile}>
+                    <ExercisesView
+                      dataset={allDataset}
+                      onOpen={(name) => {
+                        exerciseTrigger.current = document.activeElement as HTMLElement;
+                        const scroller = exerciseTrigger.current.closest('.library-scroll');
+                        exerciseScroll.current = scroller?.scrollTop ?? 0;
+                        setExercise(name);
+                        if (!mobile)
+                          requestAnimationFrame(() => {
+                            if (scroller) {
+                              scroller.scrollTop = 0;
+                              scroller
+                                .querySelector<HTMLButtonElement>(
+                                  'button[aria-label="Back to exercises"]',
+                                )
+                                ?.focus({preventScroll: true});
+                            }
+                          });
+                      }}
+                    />
+                  </div>
+                  {exercise && !mobile && (
+                    <ExerciseDetail
+                      key={exercise}
+                      dataset={allDataset}
+                      name={exercise}
+                      onBack={closeDesktopExercise}
+                      onSource={source}
+                    />
+                  )}
+                </>
+              )}
               {view === 'Profile' && <ProfileView workouts={allDataset.workouts} />}
             </ContentFieldset>
           </div>
@@ -650,6 +681,7 @@ export default function App() {
                   <div className='flex flex-col gap-3 px-4 pt-[18px] pb-[30px]'>
                     <AddExercise
                       dataset={allDataset}
+                      workoutName={state.active.name}
                       existingNames={state.active.exercises.map((exercise) => exercise.name)}
                       onAdd={(exercise) =>
                         updateActive((active) => ({

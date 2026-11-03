@@ -1,5 +1,5 @@
 import {Plus, X} from 'lucide-react';
-import {type ReactNode, useState} from 'react';
+import {type ReactNode, useEffect, useRef, useState} from 'react';
 
 import {exerciseTypeFor} from '../catalog/catalog';
 import type {Dataset, ExerciseLog} from '../domain/types';
@@ -17,32 +17,50 @@ import {
 import {SectionHeading} from './ui/section-heading';
 import {historyTargets} from './workout-targets';
 
-/**
- * The full-screen exercise library as a picker. Picking a row hands over the exercise with
- * targets prefilled from its latest history; Close or Escape picks nothing.
- */
+/** Single-select library: existing names only, with latest-history targets on selection. */
 export function ExercisePicker({
   dataset,
   open,
   onOpenChange,
   onPick,
   title,
+  context,
   description,
   trigger,
   onCloseAutoFocus,
   existingNames = [],
+  scope = 'workout',
 }: {
   dataset: Dataset;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPick: (exercise: ExerciseLog) => void;
   title: string;
+  context: string;
   description: string;
   trigger?: ReactNode;
   onCloseAutoFocus?: (event: Event) => void;
   existingNames?: string[];
+  scope?: 'workout' | 'template';
 }) {
   const [error, setError] = useState('');
+  const panel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const resize = () => {
+      panel.current?.style.setProperty('--picker-height', `${viewport.height}px`);
+      panel.current?.style.setProperty('--picker-top', `${viewport.offsetTop}px`);
+    };
+    resize();
+    viewport.addEventListener('resize', resize);
+    viewport.addEventListener('scroll', resize);
+    return () => {
+      viewport.removeEventListener('resize', resize);
+      viewport.removeEventListener('scroll', resize);
+    };
+  }, [open]);
   const toggle = (next: boolean) => {
     onOpenChange(next);
     setError('');
@@ -50,7 +68,7 @@ export function ExercisePicker({
   useBackLayer(open, () => toggle(false));
   const pick = (name: string) => {
     if (existingNames.includes(name)) {
-      setError(`${name} is already in this workout.`);
+      setError(`${name} is already in this ${scope}.`);
       return;
     }
     onPick(historyTargets(dataset, name, exerciseTypeFor(name, dataset) ?? 'weighted'));
@@ -60,40 +78,58 @@ export function ExercisePicker({
     <Dialog open={open} onOpenChange={toggle}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
+        ref={panel}
         variant='fullscreen'
-        className='exercise-picker'
+        className='exercise-picker flex min-h-0 flex-col overflow-hidden p-0 max-desk:top-[var(--picker-top,0px)] max-desk:bottom-auto max-desk:h-[var(--picker-height,100dvh)]'
         onCloseAutoFocus={onCloseAutoFocus}
       >
-        <SectionHeading className='sticky -top-6 z-1 mb-6 flex-wrap bg-card py-3'>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogClose asChild>
-            <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
-              <X size={20} />
-            </Button>
-          </DialogClose>
-          {error && (
-            /* mt-3.5 restates the old `.dialog-content p` margin. */
-            <p role='alert' className='mt-3.5 w-full text-[14px] text-destructive'>
-              {error}
-            </p>
-          )}
-        </SectionHeading>
-        <DialogDescription srOnly>{description}</DialogDescription>
-        <ExerciseList dataset={dataset} onSelect={pick} />
+        <header className='flex max-h-[35%] shrink-0 flex-col px-[max(18px,calc((100vw-900px)/2))] pt-[max(12px,env(safe-area-inset-top))] pb-3'>
+          <SectionHeading className='mb-1 shrink-0'>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogClose asChild>
+              <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
+                <X size={20} />
+              </Button>
+            </DialogClose>
+          </SectionHeading>
+          <div className='min-h-0 overflow-y-auto overscroll-contain'>
+            <p className='text-sm font-medium [overflow-wrap:anywhere]'>{context}</p>
+            <DialogDescription className='mt-1 text-sm text-muted-foreground'>
+              {description}
+            </DialogDescription>
+            {error && (
+              <p role='alert' className='mt-2 text-sm [overflow-wrap:anywhere] text-destructive'>
+                {error}
+              </p>
+            )}
+          </div>
+        </header>
+        <ExerciseList
+          dataset={dataset}
+          onSelect={pick}
+          existingNames={existingNames}
+          scope={scope}
+          contained
+          onFilterChange={() => setError('')}
+        />
       </DialogContent>
     </Dialog>
   );
 }
 
-/** Add exercise opens the same library as the Exercises tab; picking a row adds it. */
+/** Add exercise opens the shared library over the unchanged logger or editor. */
 export function AddExercise({
   dataset,
   existingNames,
   onAdd,
+  workoutName,
+  scope = 'workout',
 }: {
   dataset: Dataset;
   onAdd: (exercise: ExerciseLog) => void;
   existingNames: string[];
+  workoutName: string;
+  scope?: 'workout' | 'template';
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -103,8 +139,10 @@ export function AddExercise({
       onOpenChange={setOpen}
       onPick={onAdd}
       existingNames={existingNames}
+      scope={scope}
       title='Add exercise'
-      description='Search or filter the exercise library and choose one to add to this workout.'
+      context={`To: ${workoutName.trim() || `Untitled ${scope}`}`}
+      description={`Choose one exercise to add to this ${scope}.`}
       trigger={
         <Button className='add-exercise-button w-full [.history-editor>.content-fieldset>&]:my-4 [.template-editor>&]:my-4'>
           <Plus size={16} /> Add exercise

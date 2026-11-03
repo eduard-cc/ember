@@ -60,9 +60,11 @@ export function WorkoutView({
   onDeletingChange,
   disabled = false,
   targetsOnly = false,
+  exerciseScope = 'workout',
 }: {
   workout: Workout;
   dataset: Dataset;
+  exerciseScope?: 'workout' | 'template';
   onChange: (update: (current: Workout) => Workout) => void;
   onSource: (id: string) => void;
   onDeletingChange: (deleting: boolean) => void;
@@ -91,7 +93,7 @@ export function WorkoutView({
     return id;
   };
   // Replace reuses the Add exercise picker; focus returns to the card's ⋯ button afterwards.
-  const [replacing, setReplacing] = useState<string | null>(null);
+  const [replacing, setReplacing] = useState<{id: string; name: string} | null>(null);
   const menuButtons = useRef(new Map<string, HTMLButtonElement>());
   const focusAfterPicker = useRef<string | null>(null);
   // Exercise details layer over the logger, which stays mounted underneath: values, checks,
@@ -432,7 +434,7 @@ export function WorkoutView({
                 ref={register(menuButtons.current, identity(ex))}
                 onReplace={() => {
                   focusAfterPicker.current = identity(ex);
-                  setReplacing(identity(ex));
+                  setReplacing({id: identity(ex), name: ex.name});
                 }}
                 onRemove={() => removeExercise(identity(ex))}
                 onMoveUp={ei > 0 ? () => stepExercise(identity(ex), -1) : undefined}
@@ -609,14 +611,16 @@ export function WorkoutView({
           if (!open) setReplacing(null);
         }}
         onPick={(exercise) => {
-          if (replacing) replaceExercise(replacing, exercise);
+          if (replacing) replaceExercise(replacing.id, exercise);
         }}
         existingNames={workout.exercises
           // eslint-disable-next-line react-hooks/refs -- identity() reads the same render-stable React key cache as the cards above.
-          .filter((exercise) => identity(exercise) !== replacing)
+          .filter((exercise) => identity(exercise) !== replacing?.id)
           .map((exercise) => exercise.name)}
         title='Replace exercise'
-        description='Search or filter the exercise library and choose the exercise to put in its place.'
+        context={`Replacing: ${replacing?.name ?? ''}`}
+        description='Choose one exercise. This replaces the exercise and its sets.'
+        scope={exerciseScope}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           const target = focusAfterPicker.current;

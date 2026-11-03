@@ -20,6 +20,24 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
   const before = await cards.count();
   const picker = await openPicker(page);
   // Same list as the Exercises tab: search, body-part chips, Recent and All sections.
+  await expect(picker.getByText('To: Upper body A', {exact: true})).toBeVisible();
+  const resultScroller = picker.locator('.exercise-results');
+  await resultScroller.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(picker.getByRole('button', {name: 'Close exercise picker'})).toBeInViewport({
+    ratio: 1,
+  });
+  await expect(picker.getByLabel('Search exercises')).toBeInViewport({ratio: 1});
+  await expect
+    .poll(() => resultScroller.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(100);
+  await picker.getByLabel('Search exercises').fill('press');
+  await expect(
+    picker.getByRole('region', {name: 'All exercises'}).getByRole('button').first(),
+  ).toBeInViewport({ratio: 1});
+  await picker.getByRole('button', {name: 'Clear filters', exact: true}).click();
+  await expect(resultScroller).toHaveJSProperty('scrollTop', 0);
   await expect(picker.getByLabel('Search exercises')).toBeVisible();
   if (info.project.name === 'mobile') {
     const search = picker.getByLabel('Search exercises');
@@ -33,6 +51,29 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
       .toBe(true);
     await page.setViewportSize({width: 412, height: 915});
     await search.blur();
+    // A keyboard may pan/shrink visualViewport without changing the CSS viewport.
+    await page.evaluate(() => {
+      Object.defineProperties(window.visualViewport!, {
+        height: {configurable: true, value: 390},
+        offsetTop: {configurable: true, value: 40},
+      });
+      window.visualViewport!.dispatchEvent(new Event('resize'));
+    });
+    await expect
+      .poll(async () => {
+        const box = (await picker.boundingBox())!;
+        return [Math.round(box.y), Math.round(box.height)];
+      })
+      .toEqual([40, 390]);
+    await expect(search).toBeInViewport({ratio: 1});
+    const results = (await resultScroller.boundingBox())!;
+    expect(results.height).toBeGreaterThan(100);
+    expect(results.y + results.height).toBeLessThanOrEqual(430);
+    await page.evaluate(() => {
+      Reflect.deleteProperty(window.visualViewport!, 'height');
+      Reflect.deleteProperty(window.visualViewport!, 'offsetTop');
+      window.visualViewport!.dispatchEvent(new Event('resize'));
+    });
   }
   // Only body parts that hold exercises; every demo name is in the catalog, so no Other.
   await expect(picker.getByRole('group', {name: 'Body part'}).getByRole('button')).toHaveText([
@@ -113,10 +154,27 @@ test('adding an exercise already in the workout explains why and keeps the draft
   await page.getByLabel('Weight for Bench Press (Barbell) set 1').fill('61');
   const picker = await openPicker(page);
   await picker.getByLabel('Search exercises').fill('Bench Press (Barbell)');
-  await picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).click();
+  const existing = picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true});
+  await expect(existing).toContainText('Already in workout');
+  await expect(existing).toHaveAccessibleDescription(/Already in workout/);
+  await existing.click();
+  await expect(picker.getByLabel('Search exercises')).toHaveValue('Bench Press (Barbell)');
   await expect(picker.getByRole('alert')).toHaveText(
     'Bench Press (Barbell) is already in this workout.',
   );
+  if (info.project.name === 'mobile') {
+    await page.setViewportSize({width: 740, height: 320});
+    const area = (await picker.locator('.exercise-results').boundingBox())!;
+    expect(area.height).toBeGreaterThanOrEqual(80);
+    expect(area.y + area.height).toBeLessThanOrEqual(320);
+    await expect(picker.getByRole('button', {name: 'Close exercise picker'})).toBeInViewport({
+      ratio: 1,
+    });
+    await expect(picker.getByRole('button', {name: 'Clear filters'})).toBeInViewport({ratio: 1});
+    await existing.scrollIntoViewIfNeeded();
+    await expect(existing).toBeInViewport({ratio: 1});
+    await page.setViewportSize({width: 412, height: 915});
+  }
   await expect(picker).toBeVisible();
   await picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).click();
   await expect(picker.getByRole('alert')).toBeVisible();
@@ -137,8 +195,13 @@ test('unknown exercise searches only offer existing library exercises', async ({
   const picker = await openPicker(page);
   await picker.getByLabel('Search exercises').fill('Sled Push Synthetic');
   await expect(picker.getByRole('heading', {name: 'No matching exercise'})).toBeVisible();
+  await expect(picker.getByText(/^0 of \d+ exercises$/)).toBeVisible();
   await expect(picker.getByRole('button', {name: /^Create /})).toHaveCount(0);
   await expect(picker.getByRole('group', {name: 'Exercise type'})).toHaveCount(0);
+  await picker.getByRole('button', {name: 'Clear filters', exact: true}).click();
+  await expect(picker.getByLabel('Search exercises')).toHaveValue('');
+  await expect(picker.getByLabel('Search exercises')).toBeFocused();
+  await expect(picker.getByRole('region', {name: 'Recent exercises'})).toBeVisible();
   await picker.getByLabel('Search exercises').fill('Plank');
   await picker.getByRole('button', {name: 'Plank', exact: true}).click();
   await expect(picker).toBeHidden();
@@ -151,14 +214,20 @@ test('the template editor adds exercises through the same picker', async ({page}
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Picker template');
   const picker = await openPicker(page);
+  await expect(picker.getByText('To: Picker template', {exact: true})).toBeVisible();
   await picker.getByLabel('Search exercises').fill('Squat (Barbell)');
   await picker.getByRole('button', {name: 'Squat (Barbell)', exact: true}).click();
   await expect(picker).toBeHidden();
   await expect(page.getByLabel('Weight for Squat (Barbell) set 1')).toHaveValue('85');
   await openPicker(page);
   await picker.getByLabel('Search exercises').fill('Squat (Barbell)');
+  await expect(picker.getByRole('button', {name: 'Squat (Barbell)', exact: true})).toContainText(
+    'Already in template',
+  );
   await picker.getByRole('button', {name: 'Squat (Barbell)', exact: true}).click();
-  await expect(picker.getByRole('alert')).toHaveText('Squat (Barbell) is already in this workout.');
+  await expect(picker.getByRole('alert')).toHaveText(
+    'Squat (Barbell) is already in this template.',
+  );
   await picker.getByRole('button', {name: 'Close exercise picker'}).click();
   await expect(page.locator('.template-editor .exercise-card')).toHaveCount(1);
   for (const name of ['Pull Up', 'Plank', 'Rowing (Machine)', 'Pull Up (Assisted)'])

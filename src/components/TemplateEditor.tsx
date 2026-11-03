@@ -162,6 +162,7 @@ export function TemplateEditor({
         </div>
         <WorkoutView
           targetsOnly
+          exerciseScope='template'
           workout={draft}
           dataset={dataset}
           disabled={disabled || saving}
@@ -172,6 +173,8 @@ export function TemplateEditor({
         <div className='mt-4'>
           <AddExercise
             dataset={dataset}
+            workoutName={draft.name}
+            scope='template'
             existingNames={draft.exercises.map((ex) => ex.name)}
             onAdd={(exercise) =>
               setDraft((current) => ({...current, exercises: [...current.exercises, exercise]}))

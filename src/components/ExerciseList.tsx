@@ -1,5 +1,5 @@
 import {Search, SearchX} from 'lucide-react';
-import {useId, useMemo, useState} from 'react';
+import {useId, useMemo, useRef, useState} from 'react';
 
 import {type BodyPart, allExerciseNames, bodyPartOf, bodyPartsOf} from '../catalog/catalog';
 import {
@@ -10,9 +10,11 @@ import {
 } from '../domain/model';
 import type {Dataset} from '../domain/types';
 import {cue} from '../feedback';
+import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
 import {ExerciseThumb} from './ExerciseThumb';
 import {ExerciseRowText, exerciseRowClass} from './exercise-row';
+import {Button} from './ui/button';
 import {Chip, ChipRow} from './ui/chip';
 import {EmptyState} from './ui/empty-state';
 import {Input} from './ui/input';
@@ -47,10 +49,12 @@ function ExerciseRow({
   name,
   sessions,
   onSelect,
+  unavailable,
 }: {
   name: string;
   sessions: number;
   onSelect: (name: string) => void;
+  unavailable?: string;
 }) {
   const id = useId();
   return (
@@ -58,26 +62,36 @@ function ExerciseRow({
       <button
         className={exerciseRowClass}
         aria-label={name}
-        aria-describedby={sessions ? id : undefined}
+        aria-describedby={sessions || unavailable ? id : undefined}
         onClick={() => {
           cue('tick');
           onSelect(name);
         }}
       >
         <ExerciseThumb name={name} />
-        <ExerciseRowText title={name} subtitle={bodyPartOf(name)} />
+        <ExerciseRowText
+          title={name}
+          subtitle={
+            <>
+              {bodyPartOf(name)}
+              {unavailable && <span className='block font-medium'>{unavailable}</span>}
+            </>
+          }
+        />
         {sessions > 0 && (
-          <>
-            <span
-              className='exercise-row-count ml-auto shrink-0 pr-2 pl-3 text-[16px] font-semibold text-primary tabular-nums'
-              aria-hidden='true'
-            >
-              {sessions}
-            </span>
-            <span id={id} className='sr-only'>
-              Performed in {plural(sessions, 'workout')}
-            </span>
-          </>
+          <span
+            className='exercise-row-count ml-auto shrink-0 pr-2 pl-3 text-[16px] font-semibold text-primary tabular-nums'
+            aria-hidden='true'
+          >
+            {sessions}
+          </span>
+        )}
+        {(sessions > 0 || unavailable) && (
+          <span id={id} className='sr-only'>
+            {[sessions > 0 ? `Performed in ${plural(sessions, 'workout')}` : '', unavailable]
+              .filter(Boolean)
+              .join('. ')}
+          </span>
         )}
       </button>
     </li>
@@ -89,13 +103,28 @@ export function ExerciseList({
   dataset,
   onSelect,
   sortable = false,
+  existingNames = [],
+  scope = 'workout',
+  contained = false,
+  onFilterChange,
 }: {
   dataset: Dataset;
   onSelect: (name: string) => void;
   /** Offer the persisted Most done / A–Z order (Exercises tab). The picker stays A–Z. */
   sortable?: boolean;
+  existingNames?: string[];
+  scope?: 'workout' | 'template';
+  /** The full-screen picker keeps search/filters above its contained results. */
+  contained?: boolean;
+  onFilterChange?: () => void;
 }) {
   const [search, setSearch] = useState('');
+  const searchInput = useRef<HTMLInputElement>(null);
+  const results = useRef<HTMLDivElement>(null);
+  const filtersChanged = () => {
+    if (results.current) results.current.scrollTop = 0;
+    onFilterChange?.();
+  };
   const [part, setPart] = useState<BodyPart | 'All'>('All');
   const names = useMemo(() => allExerciseNames(dataset), [dataset]);
   const parts = useMemo(() => bodyPartsOf(names), [names]);
@@ -109,98 +138,137 @@ export function ExerciseList({
     [stats],
   );
   const query = search.trim().toLowerCase();
+  const filtered = search.length > 0 || part !== 'All';
   const matches = (name: string) =>
     (!query || name.toLowerCase().includes(query)) && (part === 'All' || bodyPartOf(name) === part);
   const recent = byRecency.filter(matches).slice(0, 6);
   const all = ordered.filter(matches);
   return (
-    <div className='exercises-view'>
-      <div className='relative flex items-center'>
-        <Search
-          size={16}
-          className='pointer-events-none absolute left-[13px] text-muted-foreground'
-        />
-        <Input
-          type='search'
-          className='pl-[38px]'
-          aria-label='Search exercises'
-          placeholder='Search exercises'
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-      <ChipRow role='group' aria-label='Body part'>
-        {(['All', ...parts] as const).map((value) => (
-          <Chip
-            key={value}
-            aria-pressed={part === value}
-            onClick={() => {
-              cue('tick');
-              setPart(value);
+    <div className={cn('exercises-view', contained && 'flex min-h-0 flex-1 flex-col')}>
+      <div className={cn('shrink-0', contained && 'px-[max(18px,calc((100vw-900px)/2))] pb-3')}>
+        <div className='relative flex items-center'>
+          <Search
+            size={16}
+            className='pointer-events-none absolute left-[13px] text-muted-foreground'
+          />
+          <Input
+            ref={searchInput}
+            type='search'
+            className='pl-[38px]'
+            aria-label='Search exercises'
+            placeholder='Search exercises'
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              filtersChanged();
             }}
-          >
-            {value}
-          </Chip>
-        ))}
-      </ChipRow>
-      {sortable && (
-        <div
-          className='mt-3 inline-flex border border-border bg-card'
-          role='group'
-          aria-label='Sort exercises'
-        >
-          {sortOptions.map(([value, label]) => (
-            <button
-              key={value}
-              className='min-h-11 min-w-16 border-0 bg-transparent px-3 text-xs font-medium text-muted-foreground not-first:border-l not-first:border-l-border hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground'
-              aria-pressed={sort === value}
+          />
+        </div>
+        <div className='flex items-start gap-2'>
+          <ChipRow role='group' aria-label='Body part' className='min-w-0 flex-1'>
+            {(['All', ...parts] as const).map((value) => (
+              <Chip
+                key={value}
+                aria-pressed={part === value}
+                onClick={() => {
+                  cue('tick');
+                  setPart(value);
+                  filtersChanged();
+                }}
+              >
+                {value}
+              </Chip>
+            ))}
+          </ChipRow>
+          {filtered && (
+            <Button
+              variant='ghost'
+              className='mt-3 shrink-0'
               onClick={() => {
-                cue('tick');
-                setSort(value);
+                setSearch('');
+                setPart('All');
+                filtersChanged();
+                searchInput.current?.focus();
               }}
             >
-              {label}
-            </button>
-          ))}
+              Clear filters
+            </Button>
+          )}
         </div>
-      )}
-      {!query && part === 'All' && recent.length > 0 && (
-        <section aria-label='Recent exercises'>
-          <ListLabel>Recent</ListLabel>
+        {sortable && (
+          <div
+            className='mt-3 inline-flex border border-border bg-card'
+            role='group'
+            aria-label='Sort exercises'
+          >
+            {sortOptions.map(([value, label]) => (
+              <button
+                key={value}
+                className='min-h-11 min-w-16 border-0 bg-transparent px-3 text-xs font-medium text-muted-foreground not-first:border-l not-first:border-l-border hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground'
+                aria-pressed={sort === value}
+                onClick={() => {
+                  cue('tick');
+                  setSort(value);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div
+        ref={results}
+        className={cn(
+          'exercise-results',
+          contained &&
+            'min-h-0 flex-1 overflow-y-auto overscroll-contain px-[max(18px,calc((100vw-900px)/2))] pb-[max(24px,env(safe-area-inset-bottom))]',
+        )}
+      >
+        {!query && part === 'All' && recent.length > 0 && (
+          <section aria-label='Recent exercises'>
+            <ListLabel>Recent</ListLabel>
+            <ul>
+              {recent.map((name) => (
+                <ExerciseRow
+                  key={name}
+                  name={name}
+                  sessions={stats.get(name)?.sessions ?? 0}
+                  onSelect={onSelect}
+                  unavailable={existingNames.includes(name) ? `Already in ${scope}` : undefined}
+                />
+              ))}
+            </ul>
+          </section>
+        )}
+        <section aria-label='All exercises'>
+          <ListLabel>
+            {filtered
+              ? `${all.length} of ${names.length} exercises`
+              : plural(all.length, 'exercise')}
+          </ListLabel>
           <ul>
-            {recent.map((name) => (
+            {all.map((name) => (
               <ExerciseRow
                 key={name}
                 name={name}
                 sessions={stats.get(name)?.sessions ?? 0}
                 onSelect={onSelect}
+                unavailable={existingNames.includes(name) ? `Already in ${scope}` : undefined}
               />
             ))}
           </ul>
-        </section>
-      )}
-      <section aria-label='All exercises'>
-        <ListLabel>{plural(all.length, 'exercise')}</ListLabel>
-        <ul>
-          {all.map((name) => (
-            <ExerciseRow
-              key={name}
-              name={name}
-              sessions={stats.get(name)?.sessions ?? 0}
-              onSelect={onSelect}
+          {/* Always unframed: the list sits in the picker dialog and on the Exercises tab alike. */}
+          {!all.length && (
+            <EmptyState
+              icon={SearchX}
+              title='No matching exercise'
+              description='Try another name or clear the filters.'
+              framed={false}
             />
-          ))}
-        </ul>
-        {/* Always unframed: the list sits in the picker dialog and on the Exercises tab alike. */}
-        {!all.length && (
-          <EmptyState
-            icon={SearchX}
-            title='No matching exercise'
-            description='Try another name or clear the filters.'
-            framed={false}
-          />
-        )}
-      </section>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

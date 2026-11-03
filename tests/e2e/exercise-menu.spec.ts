@@ -99,6 +99,12 @@ test('Replace exercise swaps in the picked exercise at the same position with fr
   const picker = page.getByRole('dialog', {name: 'Replace exercise', exact: true});
   await expect(picker).toBeVisible();
   await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(picker.getByText('Replacing: Seated Row (Cable)', {exact: true})).toBeVisible();
+  await expect(
+    picker.getByText('Choose one exercise. This replaces the exercise and its sets.', {
+      exact: true,
+    }),
+  ).toBeVisible();
   await picker.getByLabel('Search exercises').fill('Squat (Barbell)');
   await picker
     .getByRole('region', {name: 'All exercises'})
@@ -167,6 +173,13 @@ test('the template editor offers the same Replace and Remove menu', async ({page
   await options(page, 'Squat (Barbell)').click();
   await page.getByRole('menuitem', {name: 'Replace exercise'}).click();
   const picker = page.getByRole('dialog', {name: 'Replace exercise', exact: true});
+  await expect(picker.getByText('Replacing: Squat (Barbell)', {exact: true})).toBeVisible();
+  await picker.getByLabel('Search exercises').fill('Plank');
+  await expect(picker.getByRole('button', {name: 'Plank', exact: true})).toContainText(
+    'Already in template',
+  );
+  await picker.getByRole('button', {name: 'Plank', exact: true}).click();
+  await expect(picker.getByRole('alert')).toHaveText('Plank is already in this template.');
   await picker.getByLabel('Search exercises').fill('Bench Press (Barbell)');
   await picker
     .getByRole('region', {name: 'All exercises'})

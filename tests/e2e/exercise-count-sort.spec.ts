@@ -107,6 +107,25 @@ test('sort toggle orders by most done first or A–Z, persists across reload and
   await expect(az).toBeFocused();
   expect(await az.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
 
+  const selected = all.getByRole('button').last();
+  await selected.scrollIntoViewIfNeeded();
+  const scroll = await page.locator('.library-scroll').evaluate((element) => element.scrollTop);
+  expect(scroll).toBeGreaterThan(0);
+  await selected.click();
+  await page.getByRole('button', {name: 'Back to exercises', exact: true}).click();
+  await expect(page.getByLabel('Search exercises')).toHaveValue('row');
+  await expect(selected).toBeFocused();
+  await expect
+    .poll(() => page.locator('.library-scroll').evaluate((element) => element.scrollTop))
+    .toBe(scroll);
+  await selected.click();
+  const cdp = await page.context().newCDPSession(page);
+  const {entries, currentIndex} = await cdp.send('Page.getNavigationHistory');
+  await cdp.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
+  await expect(page.getByLabel('Search exercises')).toHaveValue('row');
+  await expect(selected).toBeFocused();
+  await expect(az).toHaveAttribute('aria-pressed', 'true');
+
   await page.reload();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await navigate(page, 'Exercises');
@@ -149,6 +168,18 @@ test('body-part filter combined with Most done keeps the count order within that
   expect(rows.every((r) => r.part === 'Back')).toBe(true);
   expect(new Set(rows.map((r) => r.count)).size).toBeGreaterThan(1);
   expect(rows.map((r) => r.name)).toEqual(mostDoneOrder(rows));
+  await expect(all.getByText(new RegExp(`^${rows.length} of \\d+ exercises$`))).toBeVisible();
+  await page.getByLabel('Search exercises').fill('Synthetic no match');
+  await expect(all.getByRole('heading', {name: 'No matching exercise'})).toBeVisible();
+  await page.getByRole('button', {name: 'Clear filters', exact: true}).click();
+  await expect(page.getByLabel('Search exercises')).toHaveValue('');
+  await expect(page.getByLabel('Search exercises')).toBeFocused();
+  await expect(
+    page.getByRole('group', {name: 'Body part'}).getByRole('button', {name: 'All', exact: true}),
+  ).toHaveAttribute('aria-pressed', 'true');
+  const restored = await readRows(all);
+  expect(restored.length).toBeGreaterThan(rows.length);
+  expect(restored.map((r) => r.name)).toEqual(mostDoneOrder(restored));
 });
 
 test('an unknown stored sort falls back to Most done', async ({page}) => {

@@ -207,6 +207,7 @@ export function HistoryEditor({
         <div className='mt-4'>
           <AddExercise
             dataset={dataset}
+            workoutName={draft.name}
             existingNames={draft.exercises.map((exercise) => exercise.name)}
             onAdd={(exercise) =>
               setDraft((current) => ({...current, exercises: [...current.exercises, exercise]}))
