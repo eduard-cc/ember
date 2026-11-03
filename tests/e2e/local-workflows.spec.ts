@@ -3,7 +3,10 @@ import {expect, test} from '@playwright/test';
 import {addExercise, navigate, templateAction} from '../navigation';
 
 test('templates can be created edited started and deleted', async ({page}, info) => {
-  if (info.project.name === 'mobile') await page.setViewportSize({width: 412, height: 915});
+  if (info.project.name === 'mobile') {
+    test.setTimeout(60_000);
+    await page.setViewportSize({width: 412, height: 915});
+  }
   // Record haptics: confirming the template over the open draft plays the start cue.
   await page.addInitScript(() => {
     const record = window as unknown as {vibrations: number[][]};

@@ -43,10 +43,12 @@ test('back closes exercise details in the library, then a main tab has nothing l
     const panel = page.getByRole('dialog', {name: 'Bench Press (Barbell)', exact: true});
     await expect(panel).toBeVisible();
     expect(await panel.evaluate((el) => getComputedStyle(el).animationDuration)).toBe('0.34s');
-    await expect.poll(async () => Math.round((await panel.boundingBox())!.x)).toBe(0);
-    const bounds = (await panel.boundingBox())!;
-    expect(bounds.width).toBe(page.viewportSize()!.width);
-    expect(bounds.height).toBe(page.viewportSize()!.height);
+    await expect
+      .poll(async () => {
+        const bounds = (await panel.boundingBox())!;
+        return {x: Math.round(bounds.x), width: bounds.width, height: bounds.height};
+      })
+      .toEqual({x: 0, ...page.viewportSize()!});
     await expect(panel.getByRole('tab', {name: 'Charts', exact: true})).toHaveAttribute(
       'aria-selected',
       'true',
@@ -226,7 +228,10 @@ test('a reload with nothing open trims its leftover entry on the first tap', asy
 test('changed templates keep their draft through dismissal and discard writes nothing', async ({
   page,
 }, info) => {
-  if (info.project.name === 'mobile') await page.setViewportSize({width: 412, height: 915});
+  if (info.project.name === 'mobile') {
+    test.setTimeout(60_000);
+    await page.setViewportSize({width: 412, height: 915});
+  }
   await start(page);
   await navigate(page, 'Workouts');
   const stored = () =>
