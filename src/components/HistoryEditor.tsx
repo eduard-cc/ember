@@ -20,6 +20,7 @@ export function HistoryEditor({
   onSave,
   onClose,
   onCloseAutoFocus,
+  backLabel,
 }: {
   workout: Workout;
   dataset: Dataset;
@@ -27,6 +28,8 @@ export function HistoryEditor({
   onSave: (base: Workout, next: Workout) => Promise<boolean>;
   onClose: () => void;
   onCloseAutoFocus: (event: Event) => void;
+  /** Set while the workout's drawer is underneath: dismissing goes back to it. */
+  backLabel?: string;
 }) {
   const [draft, setDraft] = useState(() => editableCopy(workout));
   const [initial] = useState(() => JSON.stringify(draft));
@@ -57,6 +60,7 @@ export function HistoryEditor({
       description='Change the name, start time, duration, exercises and sets of this finished workout.'
       className='history-editor [--row-bg:hsl(var(--card))]'
       closeLabel='Close workout editor'
+      backLabel={backLabel}
       onClose={close}
       onCloseAutoFocus={onCloseAutoFocus}
       busy={saving}

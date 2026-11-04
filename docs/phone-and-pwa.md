@@ -19,6 +19,7 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. DESIGN.md 
 ## Dialogs, prompts and accessibility
 
 - Inline discard prompts in long editors must scroll into view and take keyboard focus on every dirty dismissal, not only the first. Test close/Escape, scroll back to the fields without answering, then close/Escape again.
+- Dialogs stack (DESIGN.md "Nested surfaces stack"): keep the parent open under its child rather than closing and reopening it. The Dialog scrim shares the surfaces' `z-50`, so stacked portals layer in opening order; a lower scrim would leave the parent undimmed above the child's scrim.
 - `<main>` is `hidden` while `sync.locked`, but Radix dialogs portal outside it: anything showing history must unmount while `sync.locked`.
 - Never put an `aria-live` region inside the logger or an editor. Radix's `hideOthers` keeps every `[aria-live]` element and its ancestors exposed, so the logger behind a modal stays in the accessibility tree. Portal live regions to `document.body` (see the reorder announcement in `src/views/WorkoutView.tsx`).
 

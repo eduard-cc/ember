@@ -1,11 +1,14 @@
-import {X} from 'lucide-react';
+import {ArrowLeft, X} from 'lucide-react';
 import {type ReactNode, useEffect, useRef} from 'react';
 
 import {cn} from '../utils/cn';
 import {Button} from './ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogTitle} from './ui/dialog';
 
-/** Focused editor chrome: only the body scrolls, leaving dismissal and saving reachable. */
+/**
+ * Focused editor chrome: only the body scrolls, leaving dismissal and saving reachable. Opened
+ * from another surface (`backLabel`), its dismiss control is a Back arrow before the title.
+ */
 export function EditorPanel({
   title,
   description,
@@ -13,6 +16,7 @@ export function EditorPanel({
   children,
   footer,
   closeLabel = 'Close template editor',
+  backLabel,
   onClose,
   onCloseAutoFocus,
   busy,
@@ -23,6 +27,8 @@ export function EditorPanel({
   children: ReactNode;
   footer: ReactNode;
   closeLabel?: string;
+  /** Names the surface underneath, which dismissing returns to. */
+  backLabel?: string;
   onClose: () => void;
   onCloseAutoFocus: (event: Event) => void;
   busy: boolean;
@@ -66,19 +72,37 @@ export function EditorPanel({
         }}
         onCloseAutoFocus={onCloseAutoFocus}
       >
-        <header className='flex shrink-0 items-center justify-between gap-3 border-b border-border px-[18px] pt-[env(safe-area-inset-top)] desk:px-6'>
+        <header
+          className={cn(
+            'flex shrink-0 items-center gap-3 border-b border-border px-[18px] pt-[env(safe-area-inset-top)] desk:px-6',
+            !backLabel && 'justify-between',
+          )}
+        >
+          {backLabel && (
+            <Button
+              size='icon'
+              variant='ghost'
+              aria-label={backLabel}
+              disabled={busy}
+              onClick={onClose}
+            >
+              <ArrowLeft size={20} />
+            </Button>
+          )}
           <DialogTitle ref={heading} tabIndex={-1} className='py-4 focus-visible:outline-none'>
             {title}
           </DialogTitle>
-          <Button
-            size='icon'
-            variant='ghost'
-            aria-label={closeLabel}
-            disabled={busy}
-            onClick={onClose}
-          >
-            <X size={20} />
-          </Button>
+          {!backLabel && (
+            <Button
+              size='icon'
+              variant='ghost'
+              aria-label={closeLabel}
+              disabled={busy}
+              onClick={onClose}
+            >
+              <X size={20} />
+            </Button>
+          )}
         </header>
         <DialogDescription srOnly>{description}</DialogDescription>
         <div className='editor-scroll min-h-0 flex-1 [scroll-padding-block:14px] overflow-y-auto overscroll-contain px-[18px] py-5 desk:px-6'>

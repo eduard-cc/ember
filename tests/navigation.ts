@@ -115,14 +115,18 @@ export async function openWorkout(page: Page, name: string) {
   return drawer;
 }
 
-/** Choose Edit workout or Delete workout from an open workout drawer's ⋯ menu. */
+/** Choose Edit workout or Delete workout from a workout drawer's ⋯ menu; the drawer stays under it. */
 export async function workoutAction(page: Page, name: string, action: string) {
   const drawer = await openWorkout(page, name);
   await drawer
     .getByRole('button', {name: new RegExp(`^Workout options for ${escape(name)}`)})
     .click();
   await page.getByRole('menuitem', {name: action}).click();
-  await expect(drawer).toBeHidden();
+  await expect(
+    action === 'Edit workout'
+      ? page.getByRole('dialog', {name: 'Edit workout'})
+      : page.getByRole('dialog', {name: 'Delete this workout?'}),
+  ).toBeVisible();
 }
 
 /** Choose Edit template or Delete template from a template card's ⋯ menu (the first card's without a name). */

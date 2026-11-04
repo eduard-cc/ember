@@ -171,7 +171,7 @@ test('a refused back keeps the next back inside the app', async ({page}) => {
     const prompt = editor.getByRole('group', {name: 'Discard changes?'});
     await expect(prompt).toBeInViewport({ratio: 1});
     await expect(prompt).toBeFocused();
-    await expect.poll(() => depth(page)).toBe(1);
+    await expect.poll(() => depth(page)).toBe(2);
   }
   await expect(editor.getByLabel('Workout name')).toHaveValue('Kept through two backs');
   // Audit issues arrive asynchronously; give a late one time to land before asserting none.
@@ -262,7 +262,7 @@ test('changed templates keep their draft through dismissal and discard writes no
     await editor.getByRole('button', {name: 'Add exercise', exact: true}).click();
     const picker = page.getByRole('dialog', {name: 'Add exercise', exact: true});
     await picker.getByLabel('Search exercises').fill('Plank');
-    await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+    await picker.getByRole('button', {name: 'Back to template'}).click();
     await editor.getByRole('button', {name: 'Close template editor'}).click();
     await prompt.getByRole('button', {name: 'Keep editing'}).click();
     await expect(weight).toBeFocused();
@@ -306,7 +306,9 @@ test('changed templates keep their draft through dismissal and discard writes no
   await expect(page.locator('.template-editor')).toBeHidden();
 });
 
-test('back on an edited history workout asks before discarding', async ({page}) => {
+test('back on an edited history workout asks before discarding, then steps back to its drawer', async ({
+  page,
+}) => {
   await start(page);
   await navigate(page, 'History');
   await editNewestWorkout(page);
@@ -317,13 +319,39 @@ test('back on an edited history workout asks before discarding', async ({page}) 
   await expect(editor).toBeVisible();
   await expect(editor.getByRole('group', {name: 'Discard changes?'})).toBeVisible();
   await expect(editor.getByLabel('Workout name')).toHaveValue('Renamed by back test');
-  await expect.poll(() => depth(page)).toBe(1);
+  await expect.poll(() => depth(page)).toBe(2);
   await editor.getByRole('button', {name: 'Discard changes'}).click();
   await expect(editor).toBeHidden();
-  await expect.poll(() => depth(page)).toBe(0);
-  // Without changes, back simply closes it.
-  await editNewestWorkout(page);
+  const drawer = page.locator('.workout-drawer');
+  await expect(drawer).toBeVisible();
+  await expect.poll(() => depth(page)).toBe(1);
+
+  // Without changes, the gesture closes one layer at a time: the editor, then the drawer.
+  // Driven from the browser side: an in-page history.back() counts as a tap.
+  const cdp = await page.context().newCDPSession(page);
+  const skippable: string[] = [];
+  cdp.on('Audits.issueAdded', ({issue}) => {
+    const type = (issue.details as {genericIssueDetails?: {errorType?: string}}).genericIssueDetails
+      ?.errorType;
+    if (type === 'NavigationEntryMarkedSkippable') skippable.push(type);
+  });
+  await cdp.send('Audits.enable');
+  const browserBack = async () => {
+    const {currentIndex, entries} = await cdp.send('Page.getNavigationHistory');
+    await cdp.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
+  };
+  await page.getByRole('button', {name: /^Workout options for /}).click();
+  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
   await expect(editor).toBeVisible();
-  await back(page);
+  await expect.poll(() => depth(page)).toBe(2);
+  await browserBack();
   await expect(editor).toBeHidden();
+  await expect(drawer).toBeVisible();
+  await expect.poll(() => depth(page)).toBe(1);
+  await browserBack();
+  await expect(drawer).toBeHidden();
+  await expect(page.locator('.history-card').first()).toBeVisible();
+  await expect.poll(() => depth(page)).toBe(0);
+  await page.waitForTimeout(300);
+  expect(skippable).toEqual([]);
 });

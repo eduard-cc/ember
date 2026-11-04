@@ -20,7 +20,7 @@ export function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        'dialog-overlay fixed inset-0 z-40 bg-[hsl(var(--scrim)/0.6)] dark:bg-[hsl(var(--scrim)/0.85)]',
+        'dialog-overlay fixed inset-0 z-50 bg-[hsl(var(--scrim)/0.6)] dark:bg-[hsl(var(--scrim)/0.85)]',
         className,
       )}
       {...props}

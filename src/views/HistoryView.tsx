@@ -235,18 +235,20 @@ export function HistoryView({
   useBackLayer(!!open && !locked, () => setOpenId(null));
   useBackLayer(!!deleting && !locked, () => setDeleting(null));
   const cards = useRef(new Map<string, HTMLButtonElement>());
-  // Focus returns to the workout's card when the editor or the confirmation closes.
+  // Edit and Delete open over the drawer, which stays as it was underneath; closing them goes
+  // back to its ⋯ button. Without the drawer (a peer removed the workout), focus returns to
+  // the workout's card.
+  const drawerOptions = useRef<HTMLButtonElement>(null);
   const returnTo = useRef<string | null>(null);
-  // Set when a drawer action hands focus to what it opens (the editor, a confirmation, the logger).
+  // Set when a drawer action leaves the drawer for another place (Repeat's logger, a template).
   const handedOff = useRef(false);
-  const focusCard = () => {
-    const id = returnTo.current;
-    returnTo.current = null;
-    if (id) cards.current.get(id)?.focus({preventScroll: true});
-  };
   const restoreFocus = (event: Event) => {
     event.preventDefault();
-    focusCard();
+    const id = returnTo.current;
+    returnTo.current = null;
+    const options = drawerOptions.current;
+    if (options?.closest('[data-state=open]')) options.focus({preventScroll: true});
+    else if (id) cards.current.get(id)?.focus({preventScroll: true});
   };
   const closeDrawer = (handOff: boolean) => {
     handedOff.current = handOff;
@@ -449,7 +451,7 @@ export function HistoryView({
                   </ResponsiveDialogDescription>
                   <WorkoutStats workout={drawn} records={drawnRecords} sets />
                 </ResponsiveDialogHeader>
-                <ResponsiveDialogBody className='min-h-0 flex-1 overflow-y-auto overscroll-contain'>
+                <ResponsiveDialogBody className='workout-drawer-body min-h-0 flex-1 overflow-y-auto overscroll-contain'>
                   <WorkoutSets workout={drawn} records={drawnRecords} />
                 </ResponsiveDialogBody>
                 <div className='grid shrink-0 grid-cols-[1fr_auto_auto] gap-2 border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] desk:px-0 desk:pt-5 desk:pb-0 narrow:grid-cols-[1fr_auto]'>
@@ -476,6 +478,7 @@ export function HistoryView({
                     <ArrowUpRight size={16} /> Save as template
                   </Button>
                   <OptionsMenu
+                    ref={drawerOptions}
                     className='[&>button]:size-12'
                     variant='secondary'
                     disabled={disabled}
@@ -487,7 +490,6 @@ export function HistoryView({
                         icon: Pencil,
                         onSelect: () => {
                           returnTo.current = drawn.id;
-                          closeDrawer(true);
                           setEditing(drawn);
                         },
                       },
@@ -497,7 +499,6 @@ export function HistoryView({
                         danger: true,
                         onSelect: () => {
                           returnTo.current = drawn.id;
-                          closeDrawer(true);
                           setDeleteError('');
                           setDeleting(drawn);
                         },
@@ -520,10 +521,8 @@ export function HistoryView({
           disabled={disabled}
           onSave={onChange}
           onClose={() => setEditing(null)}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            focusCard();
-          }}
+          onCloseAutoFocus={restoreFocus}
+          backLabel={open ? 'Back to workout' : undefined}
         />
       )}
       {!locked && (
@@ -556,8 +555,11 @@ export function HistoryView({
                   disabled={disabled}
                   onClick={async () => {
                     if (!deleting) return;
-                    if (await onChange(deleting, null)) setDeleting(null);
-                    else
+                    // The drawer showed this workout, so both close onto the list.
+                    if (await onChange(deleting, null)) {
+                      setDeleting(null);
+                      setOpenId(null);
+                    } else
                       setDeleteError(
                         'Not deleted. The workout may have changed on another device; close and retry.',
                       );

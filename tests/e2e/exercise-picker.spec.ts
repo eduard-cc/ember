@@ -25,7 +25,7 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
   await resultScroller.evaluate((element) => {
     element.scrollTop = element.scrollHeight;
   });
-  await expect(picker.getByRole('button', {name: 'Close exercise picker'})).toBeInViewport({
+  await expect(picker.getByRole('button', {name: 'Back to workout'})).toBeInViewport({
     ratio: 1,
   });
   await expect(picker.getByLabel('Search exercises')).toBeInViewport({ratio: 1});
@@ -101,7 +101,7 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
   const row = picker.getByRole('button', {name: 'Plank', exact: true});
   const box = (await row.boundingBox())!;
   expect(box.height).toBeGreaterThanOrEqual(44);
-  const close = picker.getByRole('button', {name: 'Close exercise picker'});
+  const close = picker.getByRole('button', {name: 'Back to workout'});
   const closeBox = (await close.boundingBox())!;
   expect(closeBox.width).toBeGreaterThanOrEqual(44);
   expect(closeBox.height).toBeGreaterThanOrEqual(44);
@@ -128,7 +128,7 @@ test('closing the exercise picker keeps the active workout unchanged', async ({p
   await expect(cards).toHaveCount(5);
   const before = await cards.count();
   const picker = await openPicker(page);
-  await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+  await picker.getByRole('button', {name: 'Back to workout'}).click();
   await expect(picker).toBeHidden();
   await expect(cards).toHaveCount(before);
   await expect(page.getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
@@ -167,7 +167,7 @@ test('adding an exercise already in the workout explains why and keeps the draft
     const area = (await picker.locator('.exercise-results').boundingBox())!;
     expect(area.height).toBeGreaterThanOrEqual(80);
     expect(area.y + area.height).toBeLessThanOrEqual(320);
-    await expect(picker.getByRole('button', {name: 'Close exercise picker'})).toBeInViewport({
+    await expect(picker.getByRole('button', {name: 'Back to workout'})).toBeInViewport({
       ratio: 1,
     });
     await expect(picker.getByRole('button', {name: 'Clear filters'})).toBeInViewport({ratio: 1});
@@ -228,7 +228,7 @@ test('the template editor adds exercises through the same picker', async ({page}
   await expect(picker.getByRole('alert')).toHaveText(
     'Squat (Barbell) is already in this template.',
   );
-  await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+  await picker.getByRole('button', {name: 'Back to template'}).click();
   await expect(page.locator('.template-editor .exercise-card')).toHaveCount(1);
   for (const name of ['Pull Up', 'Plank', 'Rowing (Machine)', 'Pull Up (Assisted)'])
     await addExercise(page, name);

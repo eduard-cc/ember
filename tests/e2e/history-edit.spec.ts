@@ -60,16 +60,37 @@ const stored = (page: Page) =>
     }
   });
 
-test('a history workout can be edited and the edit survives a reload', async ({page}) => {
+test('a history workout edited from its drawer returns to the drawer, and the edit survives a reload', async ({
+  page,
+}) => {
   const value = structuredClone(seeded);
+  // Enough sets that the drawer scrolls, so returning to it can be checked in place.
   value.dataset.workouts[0].exercises.push({
     name: 'Synthetic Press',
     type: 'weighted',
-    sets: [set('p2', 55, 7)],
+    sets: Array.from({length: 12}, (_, i) => set(`p${i + 2}`, 55, 7)),
   });
   await open(page, value);
-  await workoutAction(page, 'Push day', 'Edit workout');
+  const drawer = await openWorkout(page, 'Push day');
+  const body = drawer.locator('.workout-drawer-body');
+  await body.evaluate((el) => (el.scrollTop = el.scrollHeight));
+  const scrolled = await body.evaluate((el) => el.scrollTop);
+  expect(scrolled).toBeGreaterThan(0);
+  const options = drawer.getByRole('button', {name: /^Workout options for Push day/});
+  await options.click();
+  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
   const editor = page.getByRole('dialog', {name: 'Edit workout'});
+  await expect(editor).toBeVisible();
+  // The editor sits on the drawer: its dismiss control goes back to it, where it was.
+  await expect(editor.getByRole('button', {name: 'Close workout editor'})).toHaveCount(0);
+  await editor.getByRole('button', {name: 'Back to workout'}).click();
+  await expect(editor).toBeHidden();
+  await expect(drawer).toBeVisible();
+  await expect(options).toBeFocused();
+  expect(await body.evaluate((el) => el.scrollTop)).toBe(scrolled);
+
+  await options.click();
+  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
   await expect(editor.getByRole('button', {name: 'Save changes'})).toBeDisabled();
   await editor.getByLabel('Workout name').fill('Heavy push');
   await editor.getByLabel('Duration (min)').fill('55');
@@ -82,9 +103,16 @@ test('a history workout can be edited and the edit survives a reload', async ({p
   await expect(editor.getByRole('button', {name: 'Save changes'})).toBeDisabled();
   await editor.getByLabel('Weight for Synthetic Press set 1').first().fill('52.5');
   await editor.getByRole('button', {name: 'Save changes'}).click();
+  // A save returns to the drawer, showing the saved workout.
   await expect(editor).toBeHidden();
-  await expect(workoutCard(page, 'Heavy push')).toBeFocused();
+  await expect(drawer.getByRole('heading', {name: 'Heavy push'})).toBeVisible();
+  await expect(drawer).toContainText('55 min');
+  await expect(drawer.locator('.recorded-sets').first()).toContainText('52.5 kg × 6');
+  await expect(drawer.getByRole('button', {name: /^Workout options for Heavy push/})).toBeFocused();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await drawer.getByRole('button', {name: 'Close workout'}).click();
+  await expect(drawer).toBeHidden();
+  await expect(workoutCard(page, 'Heavy push')).toBeFocused();
   const saved = (await stored(page)).state.dataset!.workouts.find(
     (w: {id: string}) => w.id === 'later',
   );
@@ -105,9 +133,9 @@ test('a history workout can be edited and the edit survives a reload', async ({p
   await navigate(page, 'History');
   await expect(page.getByRole('heading', {name: 'Heavy push'})).toBeVisible();
   await expect(page.locator('.history-card').first()).toContainText('55 min');
-  const drawer = await openWorkout(page, 'Heavy push');
-  await expect(drawer.locator('.recorded-sets')).toContainText(['52.5 kg × 6', '55 kg × 7']);
-  await expect(drawer).toContainText('55 min');
+  const reopened = await openWorkout(page, 'Heavy push');
+  await expect(reopened.locator('.recorded-sets')).toContainText(['52.5 kg × 6', '55 kg × 7']);
+  await expect(reopened).toContainText('55 min');
 });
 
 test('cancelling an edited workout asks before discarding', async ({page}) => {
@@ -128,7 +156,7 @@ test('cancelling an edited workout asks before discarding', async ({page}) => {
   expect(await stored(page)).toEqual(before);
 });
 
-for (const dismissal of ['close button', 'Escape']) {
+for (const dismissal of ['Back button', 'Escape']) {
   test(`${dismissal} brings a long workout's discard prompt into view and focuses it`, async ({
     page,
   }) => {
@@ -190,11 +218,11 @@ for (const dismissal of ['close button', 'Escape']) {
       });
     }
     await expect(save).toBeInViewport({ratio: 1});
-    await expect(editor.getByRole('button', {name: 'Close workout editor'})).toBeInViewport({
+    await expect(editor.getByRole('button', {name: 'Back to workout'})).toBeInViewport({
       ratio: 1,
     });
     if (dismissal === 'Escape') await page.keyboard.press('Escape');
-    else await editor.getByRole('button', {name: 'Close workout editor'}).click();
+    else await editor.getByRole('button', {name: 'Back to workout'}).click();
     const prompt = editor.getByRole('group', {name: 'Discard changes?'});
     await expect(prompt).toBeInViewport({ratio: 1});
     await expect(prompt).toBeFocused();
@@ -207,9 +235,9 @@ for (const dismissal of ['close button', 'Escape']) {
     await editor.getByRole('button', {name: 'Add exercise', exact: true}).click();
     const picker = page.getByRole('dialog', {name: 'Add exercise', exact: true});
     await picker.getByLabel('Search exercises').fill('Plank');
-    await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+    await picker.getByRole('button', {name: 'Back to workout'}).click();
     if (dismissal === 'Escape') await page.keyboard.press('Escape');
-    else await editor.getByRole('button', {name: 'Close workout editor'}).click();
+    else await editor.getByRole('button', {name: 'Back to workout'}).click();
     await expect(prompt).toBeInViewport({ratio: 1});
     await expect(prompt).toBeFocused();
     await page.keyboard.press('Tab');
@@ -218,7 +246,7 @@ for (const dismissal of ['close button', 'Escape']) {
     await expect(prompt).toBeHidden();
     await expect(editor.getByLabel('Workout name')).toHaveValue('Unsaved name');
     await expect(editor.getByLabel('Workout name')).toBeFocused();
-    await editor.getByRole('button', {name: 'Close workout editor'}).click();
+    await editor.getByRole('button', {name: 'Back to workout'}).click();
     await prompt.getByRole('button', {name: 'Discard changes'}).click();
     await expect(editor).toBeHidden();
     await expect(page.getByRole('heading', {name: 'Push day'})).toBeVisible();
@@ -313,7 +341,7 @@ test('a failed history save keeps the draft for a successful retry', async ({pag
   await editor.getByRole('button', {name: 'Save changes'}).click();
   await expect(editor.getByRole('button', {name: 'Saving…', exact: true})).toBeDisabled();
   await expect(editor.getByLabel('Workout name')).toBeDisabled();
-  await expect(editor.getByRole('button', {name: 'Close workout editor'})).toBeDisabled();
+  await expect(editor.getByRole('button', {name: 'Back to workout'})).toBeDisabled();
   await expect(editor.getByRole('button', {name: 'Cancel', exact: true})).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(editor).toBeVisible();
@@ -375,7 +403,7 @@ test('a newer stored revision is preserved while an edited history draft stays o
   await expect(editor.getByRole('alert')).toBeFocused();
   await expect(editor.getByLabel('Workout name')).toHaveValue('Local correction');
   expect(await stored(page)).toEqual(peer);
-  await editor.getByRole('button', {name: 'Close workout editor'}).click();
+  await editor.getByRole('button', {name: 'Back to workout'}).click();
   await editor.getByRole('button', {name: 'Discard changes'}).click();
   await expect(editor).toBeHidden();
   await page.reload();
@@ -383,7 +411,9 @@ test('a newer stored revision is preserved while an edited history draft stays o
   await expect(workoutCard(page, 'Peer correction')).toBeVisible();
 });
 
-test('a history workout can be deleted after confirmation', async ({page}) => {
+test('a history workout deleted from its drawer asks first, and keeping it returns to the drawer', async ({
+  page,
+}) => {
   await open(page);
   await workoutAction(page, 'Pull day', 'Delete workout');
   const confirm = page.getByRole('dialog', {name: 'Delete this workout?'});
@@ -392,11 +422,17 @@ test('a history workout can be deleted after confirmation', async ({page}) => {
   );
   await confirm.getByRole('button', {name: 'Keep workout'}).click();
   await expect(confirm).toBeHidden();
-  await expect(workoutCard(page, 'Pull day')).toBeFocused();
+  const drawer = page.locator('.workout-drawer');
+  await expect(drawer).toBeVisible();
+  const options = drawer.getByRole('button', {name: /^Workout options for Pull day/});
+  await expect(options).toBeFocused();
 
-  await workoutAction(page, 'Pull day', 'Delete workout');
+  // Deleting removes what the drawer showed, so both close onto the list.
+  await options.click();
+  await page.getByRole('menuitem', {name: 'Delete workout'}).click();
   await confirm.getByRole('button', {name: 'Delete workout'}).click();
   await expect(confirm).toBeHidden();
+  await expect(drawer).toBeHidden();
   await expect(page.getByRole('heading', {name: 'Pull day'})).toHaveCount(0);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
 

@@ -127,13 +127,15 @@ test('Replace exercise swaps in the picked exercise at the same position with fr
   await expect(page.getByLabel('Weight for Squat (Barbell) set 1')).toHaveValue(latest!);
 });
 
-test('cancelling the replace picker leaves the workout unchanged', async ({page}) => {
+test('cancelling the replace picker goes back to the unchanged workout', async ({page}) => {
   const cards = await start(page);
   await page.getByLabel('Weight for Seated Row (Cable) set 1').fill('47');
   await options(page, 'Seated Row (Cable)').click();
   await page.getByRole('menuitem', {name: 'Replace exercise'}).click();
   const picker = page.getByRole('dialog', {name: 'Replace exercise', exact: true});
-  await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+  // The picker sits on the workout, so its dismiss control is Back.
+  await expect(picker.getByRole('button', {name: 'Close exercise picker'})).toHaveCount(0);
+  await picker.getByRole('button', {name: 'Back to workout'}).click();
   await expect(picker).toBeHidden();
   await expect(cards.locator('h2')).toHaveText(demo);
   await expect(page.getByLabel('Weight for Seated Row (Cable) set 1')).toHaveValue('47');
@@ -146,6 +148,27 @@ test('cancelling the replace picker leaves the workout unchanged', async ({page}
   await expect(picker).toBeHidden();
   await expect(cards.locator('h2')).toHaveText(demo);
   await expect(page.getByLabel('Weight for Seated Row (Cable) set 1')).toHaveValue('47');
+
+  // The back gesture closes only the picker, leaving the workout open under it.
+  const cdp = await page.context().newCDPSession(page);
+  const skippable: string[] = [];
+  cdp.on('Audits.issueAdded', ({issue}) => {
+    const type = (issue.details as {genericIssueDetails?: {errorType?: string}}).genericIssueDetails
+      ?.errorType;
+    if (type === 'NavigationEntryMarkedSkippable') skippable.push(type);
+  });
+  await cdp.send('Audits.enable');
+  await options(page, 'Seated Row (Cable)').click();
+  await page.getByRole('menuitem', {name: 'Replace exercise'}).click();
+  await expect(picker).toBeVisible();
+  const {currentIndex, entries} = await cdp.send('Page.getNavigationHistory');
+  await cdp.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
+  await expect(picker).toBeHidden();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
+  await expect(page.getByLabel('Weight for Seated Row (Cable) set 1')).toHaveValue('47');
+  await expect(options(page, 'Seated Row (Cable)')).toBeFocused();
+  await page.waitForTimeout(300);
+  expect(skippable).toEqual([]);
 });
 
 test('the template editor offers the same Replace and Remove menu', async ({page}) => {
@@ -221,7 +244,7 @@ test('replacing with another exercise already in the workout keeps both cards un
   await expect(picker.getByRole('alert')).toHaveText(
     'Bench Press (Barbell) is already in this workout.',
   );
-  await picker.getByRole('button', {name: 'Close exercise picker'}).click();
+  await picker.getByRole('button', {name: 'Back to workout'}).click();
   await expect(cards.locator('h2')).toHaveText(demo);
   await expect(page.getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
   await options(page, 'Seated Row (Cable)').click();

@@ -1,4 +1,4 @@
-import {Plus, X} from 'lucide-react';
+import {ArrowLeft, Plus} from 'lucide-react';
 import {type ReactNode, useEffect, useRef, useState} from 'react';
 
 import {exerciseTypeFor} from '../catalog/catalog';
@@ -14,7 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from './ui/dialog';
-import {SectionHeading} from './ui/section-heading';
 import {historyTargets} from './workout-targets';
 
 /** Single-select library: existing names only, with latest-history targets on selection. */
@@ -84,14 +83,15 @@ export function ExercisePicker({
         onCloseAutoFocus={onCloseAutoFocus}
       >
         <header className='flex max-h-[35%] shrink-0 flex-col px-[max(18px,calc((100vw-900px)/2))] pt-[max(12px,env(safe-area-inset-top))] pb-3'>
-          <SectionHeading className='mb-1 shrink-0'>
-            <DialogTitle>{title}</DialogTitle>
+          {/* Always opened from a workout or template, so its dismiss control goes back to it. */}
+          <div className='mb-1 flex shrink-0 items-center gap-3'>
             <DialogClose asChild>
-              <Button variant='ghost' size='icon' aria-label='Close exercise picker'>
-                <X size={20} />
+              <Button variant='ghost' size='icon' aria-label={`Back to ${scope}`}>
+                <ArrowLeft size={20} />
               </Button>
             </DialogClose>
-          </SectionHeading>
+            <DialogTitle>{title}</DialogTitle>
+          </div>
           <div className='min-h-0 overflow-y-auto overscroll-contain'>
             <p className='text-sm font-medium [overflow-wrap:anywhere]'>{context}</p>
             <DialogDescription className='mt-1 text-sm text-muted-foreground'>
