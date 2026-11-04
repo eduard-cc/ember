@@ -17,6 +17,9 @@ async function add(section: Locator, kg: string, when?: string) {
   await section.page().getByRole('button', {name: 'Save entry', exact: true}).click();
   await expect(section.page().getByLabel('Weight in kg', {exact: true})).toBeHidden();
 }
+/** Undo is a toast in Settings' own toaster. */
+const undoToast = (page: Page) => page.locator('[data-sonner-toast]', {hasText: 'deleted'});
+const undoButton = (page: Page) => undoToast(page).getByRole('button', {name: 'Undo', exact: true});
 const rows = (section: Locator) =>
   section.getByRole('list', {name: 'Body weight history'}).getByRole('listitem');
 async function renderedLabelSize(chart: Locator) {
@@ -100,12 +103,26 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   await expect(rows(section).nth(2)).toContainText('31 Dec 2018');
   await expect(rows(section).nth(2)).toContainText('68.75');
 
-  // Delete is reversible with Undo, then deleted for real.
+  // Delete is reversible with the toast's Undo, then deleted for real.
   await section.getByRole('button', {name: /Edit entry 5 Jan 2019/}).click();
   await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(2);
-  await section.getByRole('button', {name: 'Undo', exact: true}).click();
+  await expect(undoToast(page)).toHaveText(/Entry from 5 Jan 2019 deleted/);
+  // Once it has slid in, it leaves Settings' title and Close button clear.
+  await expect(undoToast(page)).toHaveAttribute('data-mounted', 'true');
+  await undoToast(page).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  expect((await undoButton(page).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  const close = (await page.getByRole('button', {name: 'Close settings'}).boundingBox())!;
+  const toast = (await undoToast(page).boundingBox())!;
+  expect(
+    toast.y >= close.y + close.height ||
+      toast.y + toast.height <= close.y ||
+      toast.x + toast.width <= close.x,
+  ).toBe(true);
+  await undoButton(page).click();
   await expect(rows(section)).toHaveCount(3);
+  await expect(undoToast(page)).toHaveCount(0);
+  await expect(page.getByRole('dialog', {name: 'Settings', exact: true})).toBeVisible();
   await section.getByRole('button', {name: /Edit entry 5 Jan 2019/}).click();
   await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(2);
@@ -216,7 +233,7 @@ test('keyboard Undo returns focus to Add weight after restoring the entry', asyn
   await page.keyboard.press('Enter');
   const addButton = section.getByRole('button', {name: 'Add weight', exact: true});
   await expect(addButton).toBeFocused();
-  const undo = section.getByRole('button', {name: 'Undo', exact: true});
+  const undo = undoButton(page);
   await undo.focus();
   await page.keyboard.press('Enter');
   await expect(rows(section)).toHaveCount(1);
@@ -245,7 +262,7 @@ test('stale Undo explains the conflict without overwriting the newer entry', asy
     }
   });
   await expect(rows(section)).toHaveCount(1);
-  const undo = section.getByRole('button', {name: 'Undo', exact: true});
+  const undo = undoButton(page);
   await undo.focus();
   await page.keyboard.press('Enter');
   await expect(section.getByRole('alert')).toHaveText(
@@ -271,31 +288,87 @@ test('stale Undo explains the conflict without overwriting the newer entry', asy
   expect(stored.writes).toBe(3);
 });
 
-test('Undo covers one deletion until another edit starts or Settings closes', async ({page}) => {
+test('a failed Undo shows a Retry toast that restores the entry', async ({page}) => {
+  await page.goto('/');
+  const section = await open(page);
+  await add(section, '75.25', '2024-07-01T08:00');
+  await section.getByRole('button', {name: /Edit entry/}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await expect(rows(section)).toHaveCount(0);
+  await page.evaluate(async () => {
+    const path = '/src/storage/repository.ts';
+    const {WorkoutRepository} = await import(path);
+    const put = WorkoutRepository.prototype.putBodyWeight;
+    WorkoutRepository.prototype.putBodyWeight = function () {
+      WorkoutRepository.prototype.putBodyWeight = put;
+      return Promise.reject(new DOMException('Storage quota exceeded', 'QuotaExceededError'));
+    };
+  });
+  await undoButton(page).click();
+  const failed = page.locator('[data-sonner-toast][data-type=error]');
+  await expect(failed).toContainText('Entry not restored');
+  await expect(undoToast(page)).toHaveCount(0);
+  await expect(section.getByRole('alert')).toHaveCount(0);
+  await expect(rows(section)).toHaveCount(0);
+  await failed.getByRole('button', {name: 'Retry', exact: true}).click();
+  await expect(rows(section)).toHaveCount(1);
+  await expect(failed).toHaveCount(0);
+
+  // Like Undo, its Retry ends when another add or edit starts.
+  await section.getByRole('button', {name: /Edit entry/}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await page.evaluate(async () => {
+    const path = '/src/storage/repository.ts';
+    const {WorkoutRepository} = await import(path);
+    const put = WorkoutRepository.prototype.putBodyWeight;
+    WorkoutRepository.prototype.putBodyWeight = function () {
+      WorkoutRepository.prototype.putBodyWeight = put;
+      return Promise.reject(new DOMException('Storage quota exceeded', 'QuotaExceededError'));
+    };
+  });
+  await undoButton(page).click();
+  await expect(failed).toContainText('Entry not restored');
+  await section.getByRole('button', {name: 'Add weight', exact: true}).click();
+  await expect(failed).toHaveCount(0);
+});
+
+test('Undo covers one deletion until its toast closes, another edit starts or Settings closes', async ({
+  page,
+}) => {
   await page.goto('/');
   let section = await open(page);
   await add(section, '75.25', '2024-07-01T08:00');
   await add(section, '75.5', '2024-07-02T08:00');
+  await add(section, '75.75', '2024-07-03T08:00');
   await section.getByRole('button', {name: /Edit entry 1 Jul 2024/}).click();
   await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
-  await expect(section.getByRole('button', {name: 'Undo', exact: true})).toBeVisible();
+  await expect(undoButton(page)).toBeVisible();
 
   // Starting another action consumes the previous Undo, even when that edit is cancelled.
   await section.getByRole('button', {name: /Edit entry 2 Jul 2024/}).click();
-  await expect(section.getByRole('button', {name: 'Undo', exact: true})).toHaveCount(0);
+  await expect(undoToast(page)).toHaveCount(0);
   await section.page().getByRole('button', {name: 'Cancel', exact: true}).click();
-  await expect(rows(section)).toHaveCount(1);
+  await expect(rows(section)).toHaveCount(2);
   await section.getByRole('button', {name: /Edit entry 2 Jul 2024/}).click();
   await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
-  await section.getByRole('button', {name: 'Undo', exact: true}).click();
+  await undoButton(page).click();
+  await expect(rows(section)).toHaveCount(2);
+  await expect(rows(section).nth(1)).toContainText('2 Jul 2024');
+
+  // The toast closes by itself after a few seconds, taking Undo with it.
+  await section.getByRole('button', {name: /Edit entry 3 Jul 2024/}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await expect(undoToast(page)).toBeVisible();
+  await expect(undoToast(page)).toHaveCount(0, {timeout: 8000});
   await expect(rows(section)).toHaveCount(1);
-  await expect(rows(section)).toContainText('2 Jul 2024');
 
   await section.getByRole('button', {name: /Edit entry/}).click();
   await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await expect(undoToast(page)).toBeVisible();
   await page.getByRole('button', {name: 'Close settings'}).click();
+  await expect(undoToast(page)).toHaveCount(0);
   section = await open(page);
-  await expect(section.getByRole('button', {name: 'Undo', exact: true})).toHaveCount(0);
+  await expect(undoToast(page)).toHaveCount(0);
   await expect(section.getByText('No entries yet', {exact: false})).toBeVisible();
   await expect(rows(section)).toHaveCount(0);
 });

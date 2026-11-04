@@ -21,6 +21,7 @@ import {type Celebration, FinishCelebration} from './components/FinishCelebratio
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {StateNotice} from './components/StateNotice';
 import {SyncStatus} from './components/SyncStatus';
+import {EmberToaster, SETTINGS_TOASTER, toastDone, toastFailed} from './components/toasts';
 import {Button} from './components/ui/button';
 import {ContentFieldset} from './components/ui/content-fieldset';
 import {
@@ -44,7 +45,6 @@ import {
 } from './components/ui/responsive-dialog';
 import {RollingNumber} from './components/ui/rolling-number';
 import {SectionHeading} from './components/ui/section-heading';
-import {Toaster} from './components/ui/sonner';
 import {routineTargets} from './components/workout-targets';
 import {newRecords} from './domain/finish-summary';
 import {countedSets} from './domain/sets';
@@ -183,7 +183,6 @@ export default function App() {
       throw error;
     }
   };
-  const [notice, setNotice] = useState('');
   useEffect(() => {
     let frame = 0;
     const revealField = () => {
@@ -245,7 +244,6 @@ export default function App() {
     setFocus(null);
     setHistorySearch(false);
     setPendingWorkout(null);
-    setNotice('');
   };
   const source = (id: string) => {
     go('History');
@@ -263,18 +261,27 @@ export default function App() {
       expand(true);
     }
   };
+  // The template opens on the Workout tab, away from the drawer it was saved from, so it gets a
+  // short toast; during a workout only a failure does. A failed commit keeps the template in
+  // memory, so Retry commits the current state again rather than adding a second copy.
+  const confirmTemplate = (saved: boolean, workout: boolean) => {
+    if (!saved)
+      toastFailed('Template not saved', () => {
+        let running = false;
+        void setState((s) => {
+          running = !!s.active;
+          return {...s};
+        }).then((retried) => confirmTemplate(retried, running));
+      });
+    else if (!workout) toastDone('Template saved');
+  };
   const saveTemplate = async (workout: Workout) => {
     setView('Workout');
-    setNotice('Saving template…');
     const saved = await setState((s) => ({
       ...s,
       templates: [...(s.templates ?? []), newWorkout(workout)],
     }));
-    setNotice(
-      saved
-        ? 'Workout saved as an editable template.'
-        : 'Template was not saved. Keep this tab open and retry.',
-    );
+    confirmTemplate(saved, !!state.active);
   };
   const sets = state.active?.exercises.flatMap((ex) => ex.sets) ?? [];
   const completed = state.active?.exercises.reduce((n, ex) => n + countedSets(ex).length, 0) ?? 0;
@@ -329,23 +336,6 @@ export default function App() {
     if (saveStatus !== 'saving') setConfirmFinish(false);
   });
   useBackLayer(!!celebration, () => setCelebration(null));
-  // In Settings the banners keep the 20px (and the issue text the 14px) top margin of the panel's
-  // old `> .notice`, `> section` and `.dialog-content p` rules.
-  const feedback = (className?: string) =>
-    notice &&
-    !persistenceError && (
-      <StateNotice title='Template' announcement={notice} className={cn('mb-5', className)}>
-        <p className='text-inherit'>{notice}</p>
-        <Button
-          variant='ghost'
-          size='icon'
-          aria-label='Dismiss notice'
-          onClick={() => setNotice('')}
-        >
-          <X size={15} />
-        </Button>
-      </StateNotice>
-    );
   // Sync is silent. Only states that need the owner surface here. In the logger the banners stay
   // on screen while a long workout scrolls.
   const errors = (where: 'page' | 'logger' | 'settings' = 'page') => {
@@ -494,7 +484,6 @@ export default function App() {
             </div>
             {!showSheet && !sync.locked && !settingsOpen && errors()}
             <ContentFieldset disabled={disabled}>
-              {!showSheet && !settingsOpen && feedback()}
               {view === 'Workout' && !sync.locked && (
                 <>
                   <section className='quick-start' aria-labelledby='quick-start'>
@@ -670,12 +659,7 @@ export default function App() {
               </header>
               <div className='workout-scroll min-h-0 flex-1 [scroll-padding:14px_0_30px] overflow-y-auto overscroll-contain'>
                 <h2 className='sr-only'>Your workout</h2>
-                {showSheet && !settingsOpen && !confirmFinish && !confirmCancel && (
-                  <>
-                    {errors('logger')}
-                    {feedback()}
-                  </>
-                )}
+                {showSheet && !settingsOpen && !confirmFinish && !confirmCancel && errors('logger')}
                 <ContentFieldset disabled={disabled}>
                   <WorkoutView
                     key={state.active.id}
@@ -748,7 +732,6 @@ export default function App() {
             Appearance, feedback, body weight and app updates.
           </DialogDescription>
           {errors('settings')}
-          {feedback('mt-5')}
           <div className='mt-5 space-y-10'>
             <AppearanceSettings settings={appearance} />
             <FeedbackSettings />
@@ -774,6 +757,7 @@ export default function App() {
               />
             )}
           </div>
+          <EmberToaster id={SETTINGS_TOASTER} />
         </DialogContent>
       </Dialog>
       <ResponsiveDialog open={confirmReset} onOpenChange={setConfirmReset}>
@@ -926,12 +910,10 @@ export default function App() {
       </ResponsiveDialog>
       {/* Over History, after the finish committed; a sync lock ends it, like other history views. */}
       <FinishCelebration celebration={celebration} onDone={() => setCelebration(null)} />
-      {/* Mounted once. On phones toasts drop in from the top, under the status bar. */}
-      <Toaster
-        position={mobile ? 'top-center' : 'bottom-right'}
-        offset={mobile ? {top: 'calc(env(safe-area-inset-top) + 16px)'} : undefined}
-        mobileOffset={{top: 'calc(env(safe-area-inset-top) + 16px)'}}
-      />
+      {/* Settings shows its own toaster; this one waits behind it, so only one toast shows. */}
+      <div hidden={settingsOpen}>
+        <EmberToaster />
+      </div>
     </div>
   );
 }

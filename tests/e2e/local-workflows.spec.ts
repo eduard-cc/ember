@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test';
+import {type Page, expect, test} from '@playwright/test';
 
 import {addExercise, navigate, pressAt, templateAction} from '../navigation';
 
@@ -131,12 +131,57 @@ test('templates can be created edited started and deleted', async ({page}, info)
   await page.getByRole('button', {name: 'Confirm delete template'}).click();
   await expect(page.getByRole('heading', {name: 'Edited session'})).toHaveCount(0);
 });
-test('a failed template commit never announces that it was saved', async ({page}) => {
+/** The first History workout's name and how many templates already carry it. */
+async function firstWorkout(page: Page) {
+  await navigate(page, 'History');
+  const name = (await page.locator('.history-card h3').first().textContent())!;
+  await navigate(page, 'Workouts');
+  const cards = page.locator('.template-card', {hasText: name});
+  await expect(page.getByRole('button', {name: 'Create template'})).toBeVisible();
+  const before = await cards.count();
+  await navigate(page, 'History');
+  return {cards, before};
+}
+test('Save as template confirms with a toast that closes itself, and stays quiet during a workout', async ({
+  page,
+}) => {
   await page.goto('/?demo=1');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  // The demo opens with a draft; discard it so no workout is running.
+  await page.getByRole('button', {name: 'Cancel workout'}).click();
+  await page.getByRole('button', {name: 'Discard workout'}).click();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toHaveCount(0);
+  const {cards, before} = await firstWorkout(page);
+  await page.locator('.history-card button').first().click();
+  await page.getByRole('button', {name: 'Save as template'}).click();
+  const toast = page.locator('[data-sonner-toast]');
+  await expect(toast).toHaveText('Template saved');
+  await expect(toast).toHaveAttribute('data-type', 'success');
+  // The template opens on the Workout tab; nothing lingers there once the toast has gone.
+  await expect(cards).toHaveCount(before + 1);
+  await expect(page.getByRole('region', {name: 'Template'})).toHaveCount(0);
+  await expect(toast).toHaveCount(0, {timeout: 6000});
+
+  // During a workout the result shows on the Workout tab without a toast.
+  await page.getByRole('button', {name: 'Start empty workout'}).click();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   await navigate(page, 'History');
+  await page.locator('.history-card button').first().click();
+  await page.getByRole('button', {name: 'Save as template'}).click();
+  await expect(cards).toHaveCount(before + 2);
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await expect(toast).toHaveCount(0);
+});
+test('a failed template save shows a Retry toast during a workout and saves the template once', async ({
+  page,
+}, info) => {
+  await page.goto('/?demo=1');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  const {cards, before} = await firstWorkout(page);
   await page.evaluate(() => {
     const add = IDBObjectStore.prototype.add;
+    const state = window as unknown as {restoreTemplateAdd: () => void};
+    state.restoreTemplateAdd = () => (IDBObjectStore.prototype.add = add);
     IDBObjectStore.prototype.add = function (...args) {
       if (this.name === 'templates')
         throw new DOMException('Storage quota exceeded', 'QuotaExceededError');
@@ -146,9 +191,44 @@ test('a failed template commit never announces that it was saved', async ({page}
   await page.locator('.history-card button').first().click();
   await page.getByRole('button', {name: 'Save as template'}).click();
   await expect(page.getByRole('alert')).toContainText('Could not save on this device');
-  await expect(page.getByText('Workout saved as an editable template.', {exact: true})).toHaveCount(
-    0,
+  const toast = page.locator('[data-sonner-toast]');
+  await expect(toast).toContainText('Template not saved');
+  await expect(toast).toHaveAttribute('data-type', 'error');
+  for (const label of ['Retry', 'Dismiss'])
+    expect(
+      (await toast.getByRole('button', {name: label, exact: true}).boundingBox())!.height,
+    ).toBeGreaterThanOrEqual(44);
+  // A failure stays until it is retried or dismissed.
+  await page.waitForTimeout(4000);
+  await expect(toast).toContainText('Template not saved');
+  if (info.project.name === 'mobile') {
+    // On phones it sits at the top and swipes away upwards; the next failure brings it back.
+    const box = (await toast.boundingBox())!;
+    expect(box.y).toBeLessThan(100);
+    await page.mouse.move(box.x + 30, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 30, box.y - 60, {steps: 6});
+    await page.mouse.up();
+    await expect(toast).toHaveCount(0);
+    await navigate(page, 'History');
+    await page.locator('.history-card button').first().click();
+    await page.getByRole('button', {name: 'Save as template'}).click();
+    await expect(toast).toContainText('Template not saved');
+  }
+
+  await page.evaluate(() =>
+    (window as unknown as {restoreTemplateAdd: () => void}).restoreTemplateAdd(),
   );
+  await toast.getByRole('button', {name: 'Retry', exact: true}).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  // The demo's draft is still running, so the saved template needs no toast.
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await expect(toast).toHaveCount(0);
+  const saved = before + (info.project.name === 'mobile' ? 2 : 1);
+  await expect(cards).toHaveCount(saved);
+  await page.reload();
+  await navigate(page, 'Workouts');
+  await expect(cards).toHaveCount(saved);
 });
 test('template editor retains a failed save and closes after a successful retry', async ({
   page,

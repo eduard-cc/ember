@@ -435,6 +435,8 @@ test('a history workout deleted from its drawer asks first, and keeping it retur
   await expect(drawer).toBeHidden();
   await expect(page.getByRole('heading', {name: 'Pull day'})).toHaveCount(0);
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  // The list already shows the confirmed delete, so it needs no toast.
+  await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
 
   await page.reload();
   await navigate(page, 'History');

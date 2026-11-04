@@ -1,6 +1,6 @@
 import {liveQuery} from 'dexie';
 import {ChartLine, ChevronRight, Plus, Scale} from 'lucide-react';
-import {type FormEvent, useEffect, useMemo, useRef, useState} from 'react';
+import {type FormEvent, useEffect, useEffectEvent, useMemo, useRef, useState} from 'react';
 
 import type {BodyWeight} from '../../shared/contracts';
 import {
@@ -15,8 +15,8 @@ import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
-import {noticeClass} from './banner';
 import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
+import {SETTINGS_TOASTER, dismissToast, toastFailed, toastUndo} from './toasts';
 import {TrendArea} from './trend-area';
 import {Button} from './ui/button';
 import {Card} from './ui/card';
@@ -72,8 +72,9 @@ interface Editing {
 /**
  * Body weight in kg: a chart of the full history above newest-first entries. Entries are
  * device-durable documents that sync on their own; they never touch workouts or imports.
- * Undo covers the latest deletion in this mounted Settings view only. Opening another
- * add/edit form or leaving Settings ends it; deleted entries remain sync tombstones.
+ * Undo is a short toast for the latest deletion in this mounted Settings view only. It ends
+ * when the toast closes, another add/edit form opens or Settings closes; deleted entries remain
+ * sync tombstones.
  */
 export function BodyWeightSettings({
   repository,
@@ -89,6 +90,9 @@ export function BodyWeightSettings({
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [undo, setUndo] = useState<BodyWeight | null>(null);
+  // A deletion whose Undo failed for a reason other than a newer revision; Retry tries again
+  // until it is dismissed or, like Undo, another add/edit starts.
+  const [unrestored, setUnrestored] = useState<BodyWeight | null>(null);
   const addRef = useRef<HTMLButtonElement>(null);
   const kgRef = useRef<HTMLInputElement>(null);
   const returnFocus = useRef(false);
@@ -114,7 +118,7 @@ export function BodyWeightSettings({
     try {
       await repository.putBodyWeight(next, base);
       setError('');
-      return true;
+      return 'saved';
     } catch (cause) {
       const changed = cause instanceof Error && cause.message.includes('changed');
       if (changed && base?.deleted) {
@@ -129,7 +133,7 @@ export function BodyWeightSettings({
             : 'This entry changed on another device. Cancel, review the latest value and try again.'
           : 'Could not save on this device. Nothing was changed; retry.',
       );
-      return false;
+      return changed ? 'changed' : 'failed';
     } finally {
       setSaving(false);
     }
@@ -153,7 +157,7 @@ export function BodyWeightSettings({
         : fromLocalInput(editing.when);
     if (date === null) return setError('Enter a valid date and time.');
     const next = {id: editing.base?.id ?? crypto.randomUUID(), date, kg, deleted: false};
-    if (await write(next, editing.base)) {
+    if ((await write(next, editing.base)) === 'saved') {
       setUndo(null);
       close();
     }
@@ -161,24 +165,50 @@ export function BodyWeightSettings({
   const remove = async () => {
     if (!editing?.base || saving || disabled) return;
     const tombstone = {...editing.base, deleted: true};
-    if (await write(tombstone, editing.base)) {
+    if ((await write(tombstone, editing.base)) === 'saved') {
       setUndo(tombstone);
       close();
     }
   };
-  const restore = async () => {
-    if (!undo || saving || disabled) return;
-    if (await write({...undo, deleted: false}, undo)) {
+  // Toast actions run after the render that created them, so they read the current state here.
+  const restore = useEffectEvent(async (entry: BodyWeight) => {
+    if (saving || disabled) return;
+    setUnrestored(null);
+    const result = await write({...entry, deleted: false}, entry);
+    if (result === 'saved') {
       returnFocus.current = true;
       setUndo(null);
+    } else if (result === 'failed') {
+      // The failure toast replaces the inline message; a newer revision keeps its explanation.
+      setError('');
+      setUndo(null);
+      setUnrestored({...entry});
     }
-  };
+  });
+  useEffect(() => {
+    if (!undo) return;
+    const id = toastUndo(`Entry from ${dateLabel(undo.date)} deleted`, () => void restore(undo), {
+      toasterId: SETTINGS_TOASTER,
+      onDismiss: () => setUndo((shown) => (shown === undo ? null : shown)),
+      onAutoClose: () => setUndo((shown) => (shown === undo ? null : shown)),
+    });
+    return () => void dismissToast(id);
+  }, [undo]);
+  useEffect(() => {
+    if (!unrestored) return;
+    const id = toastFailed('Entry not restored', () => void restore(unrestored), {
+      toasterId: SETTINGS_TOASTER,
+      onDismiss: () => setUnrestored((shown) => (shown === unrestored ? null : shown)),
+    });
+    return () => void dismissToast(id);
+  }, [unrestored]);
   const add = (
     <Button
       ref={addRef}
       disabled={disabled || !!editing || stored === null}
       onClick={() => {
         setUndo(null);
+        setUnrestored(null);
         setError('');
         setEditing({base: null, kg: '', when: toLocalInput(localNow())});
       }}
@@ -248,14 +278,6 @@ export function BodyWeightSettings({
     >
       <div className='flex flex-col gap-3'>
         {!editing && error && <InlineError role='alert'>{error}</InlineError>}
-        {undo && (
-          <div className={noticeClass} role='status'>
-            Entry from {dateLabel(undo.date)} deleted.
-            <Button disabled={disabled || saving} onClick={() => void restore()}>
-              Undo
-            </Button>
-          </div>
-        )}
         {stored !== null && entries.length > 0 && (
           <Card className='body-weight-chart'>
             {entries.length > 0 && (
@@ -297,6 +319,7 @@ export function BodyWeightSettings({
                   disabled={disabled || !!editing}
                   onClick={() => {
                     setUndo(null);
+                    setUnrestored(null);
                     setError('');
                     setEditing({base: m, kg: formatKg(m.kg), when: toLocalInput(m.date)});
                   }}
