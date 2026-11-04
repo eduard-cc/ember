@@ -347,14 +347,15 @@ export function HistoryView({
                       focused ? 'border-primary' : 'border-border',
                     )}
                   >
-                    {/* The whole card is this button's target; the rows stay readable under it. */}
+                    {/* The whole card is this button's target, lifted above the rows: drawings are
+                        masks, which paint over an unlifted button and swallow its taps. */}
                     <button
                       type='button'
                       ref={(node) => {
                         if (node) cards.current.set(workout.id, node);
                         else cards.current.delete(workout.id);
                       }}
-                      className='absolute inset-0 focus-visible:outline-none'
+                      className='absolute inset-0 z-1 focus-visible:outline-none'
                       aria-label={`${workout.name}, ${dateLabel(workout.date)}`}
                       aria-describedby={`stats-${workout.id}`}
                       onClick={() => {

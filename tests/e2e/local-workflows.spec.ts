@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {addExercise, navigate, templateAction} from '../navigation';
+import {addExercise, navigate, pressAt, templateAction} from '../navigation';
 
 test('templates can be created edited started and deleted', async ({page}, info) => {
   if (info.project.name === 'mobile') {
@@ -111,7 +111,11 @@ test('templates can be created edited started and deleted', async ({page}, info)
   });
   expect(persisted.exercises[0].sets[0]).toMatchObject({weight: 62.5, reps: 9, completed: false});
   expect(persisted.exercises[0].sets.at(-1)).toMatchObject({reps: 11, completed: false});
-  await page.getByRole('button', {name: 'Open template Edited session', exact: true}).click();
+  // Pressing the card's exercise drawing opens its preview.
+  await pressAt(
+    page,
+    page.locator('.template-card', {hasText: 'Edited session'}).locator('.drawing'),
+  );
   await page.getByRole('button', {name: 'Start template Edited session', exact: true}).click();
   await page.evaluate(() => ((window as unknown as {vibrations: number[][]}).vibrations = []));
   await page.getByRole('button', {name: 'Replace active draft'}).click();

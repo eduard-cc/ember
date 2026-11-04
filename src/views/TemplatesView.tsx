@@ -136,14 +136,15 @@ export function TemplatesView({
                     className='template-card pressable relative flex min-w-0 flex-col border border-border bg-card hover:bg-accent/60 has-[.template-open:focus-visible]:outline-2 has-[.template-open:focus-visible]:outline-offset-2 has-[.template-open:focus-visible]:outline-ring'
                     key={template.id}
                   >
-                    {/* The whole card opens the preview; the rows stay readable under it. */}
+                    {/* The whole card opens the preview, lifted above the rows (drawings are masks,
+                        which paint over an unlifted button); the ⋯ menu sits above it. */}
                     <button
                       type='button'
                       ref={(node) => {
                         if (node) cards.current.set(template.id, node);
                         else cards.current.delete(template.id);
                       }}
-                      className='template-open absolute inset-0 focus-visible:outline-none'
+                      className='template-open absolute inset-0 z-1 focus-visible:outline-none'
                       aria-label={`Open template ${template.name}`}
                       onClick={() => {
                         cue('tick');

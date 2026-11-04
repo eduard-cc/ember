@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate, openWorkout} from '../navigation';
+import {navigate, openWorkout, pressAt} from '../navigation';
 
 // Synthetic fixture only: 22 one-exercise October workouts, then one long September session.
 const set = (id: string, weight: number | null, reps: number | null, extra = {}) => ({
@@ -190,6 +190,14 @@ test("a source link opens a workout's drawer with every set, its records and bou
   await drawer.getByRole('button', {name: 'Close workout'}).click();
   await expect(drawer).toBeHidden();
   await expect(page.getByRole('button', {name: new RegExp(`^${long.name}, `)})).toBeFocused();
+  // Pressing a card's exercise drawing opens that workout too.
+  await pressAt(
+    page,
+    page.locator('.history-card', {hasText: long.name}).locator('.drawing').first(),
+  );
+  await expect(drawer.getByRole('heading', {name: long.name})).toBeVisible();
+  await drawer.getByRole('button', {name: 'Close workout'}).click();
+  await expect(drawer).toBeHidden();
   // The newest session beat the one before on weight, volume and estimate.
   await page.locator('.library-scroll').evaluate((el) => el.scrollTo(0, 0));
   const newest = await openWorkout(page, 'Synthetic October 1');

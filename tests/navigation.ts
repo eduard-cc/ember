@@ -73,6 +73,19 @@ export function shownText(locator: Locator) {
 }
 
 /**
+ * Press whatever the user sees at the centre of an element, as a finger would: unlike
+ * `locator.click()`, the event goes to the topmost element at that point.
+ */
+export async function pressAt(page: Page, locator: Locator) {
+  await locator.scrollIntoViewIfNeeded();
+  const box = (await locator.boundingBox())!;
+  const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+  const touch = await page.evaluate(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0);
+  if (touch) await page.touchscreen.tap(x, y);
+  else await page.mouse.click(x, y);
+}
+
+/**
  * Delete one set through its set-number actions: the phone drawer's Delete set below 1000px,
  * the row's revealed Delete from 1000px.
  */
