@@ -454,6 +454,8 @@ test('appearance is separate from workout saving, follows System, and persists t
 test('sounds and haptics start on, play when a workout starts, climb within each exercise and each switch persists on this device', async ({
   page,
 }) => {
+  // Two exercises, a reload and a second start outrun the default timeout on CI runners.
+  test.setTimeout(60_000);
   await page.addInitScript(() => {
     const record = window as unknown as {
       vibrations: number[][];
@@ -535,10 +537,8 @@ test('sounds and haptics start on, play when a workout starts, climb within each
     .nth(1)
     .getByRole('button', {name: 'Add set', exact: true})
     .click();
-  for (const set of [1, 2]) {
-    await page.getByLabel(`Weight for Bench Press (Barbell) set ${set}`).fill('60');
-    await page.getByLabel(`Reps for Bench Press (Barbell) set ${set}`).fill('8');
-  }
+  await page.getByLabel('Weight for Bench Press (Barbell) set 1').fill('60');
+  await page.getByLabel('Reps for Bench Press (Barbell) set 1').fill('8');
   await page.getByRole('button', {name: 'Complete Bench Press (Barbell) set 1'}).click();
   await expect
     .poll(async () => (await cues()).vibrations)
