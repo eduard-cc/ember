@@ -366,7 +366,7 @@ export function WorkoutView({
         );
         return (
           <section
-            className='exercise-card border-b border-border px-4 pt-5 pb-[18px] narrow:px-3 [.workout-sheet_&]:desk:px-6 [.workout-sheet_&]:desk:py-[22px]'
+            className='exercise-card border-b border-border px-(--card-pad) pt-5 pb-[18px] [--card-pad:--spacing(4)] narrow:[--card-pad:--spacing(3)] [.workout-sheet_&]:desk:py-[22px] [.workout-sheet_&]:desk:[--card-pad:--spacing(6)]'
             key={identity(ex)}
             hidden={!!reordering}
             ref={register(cards.current, identity(ex))}
@@ -376,8 +376,11 @@ export function WorkoutView({
               onPointerDown={(event) => {
                 // Presses inside the ⋯ drawer bubble here through React's portal tree.
                 if (!event.currentTarget.contains(event.target as Node)) return;
-                // ⋯ keeps its own press; only the name, drawing and status lift the card.
-                if ((event.target as HTMLElement).closest('.exercise-menu')) return;
+                // Holding ⋯ lifts the card too; its open desktop list and backdrop keep their
+                // own presses.
+                const target = event.target as HTMLElement;
+                if (target.closest('.exercise-menu') && !target.closest('.exercise-menu > button'))
+                  return;
                 if (workout.exercises.length < 2) return;
                 hold.begin(event, identity(ex), event.currentTarget.parentElement!);
               }}
@@ -429,7 +432,7 @@ export function WorkoutView({
                 {caption && <p className='mt-[3px] text-[12px]'>{caption}</p>}
               </div>
               <ExerciseMenu
-                className='col-3 row-[1/3] -mr-[13px] [&_svg]:translate-x-[3px]'
+                className='col-3 row-[1/3] [&_svg]:translate-x-[9px]'
                 name={ex.name}
                 ref={register(menuButtons.current, identity(ex))}
                 onReplace={() => {

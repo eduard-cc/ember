@@ -154,7 +154,7 @@ test('dragging upward to the top, and Escape puts a held exercise back', async (
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('a short press on a header opens details, and the ⋯ menu offers Move up and Move down', async ({
+test('a short press on a header opens details, a hold on ⋯ lifts the card, and the ⋯ menu offers Move up and Move down', async ({
   page,
 }) => {
   const sheet = await start(page);
@@ -166,6 +166,29 @@ test('a short press on a header opens details, and the ⋯ menu offers Move up a
   const menu = (name: string) => page.getByRole('menu', {name: `Exercise options for ${name}`});
   const options = (name: string) =>
     page.getByRole('button', {name: `Exercise options for ${name}`, exact: true});
+  // Holding ⋯ lifts the card like holding its header; the release drops it without opening
+  // the menu.
+  const dots = (await options(demo[1]).boundingBox())!;
+  const point = {x: dots.x + dots.width / 2, y: dots.y + dots.height / 2};
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  await expect(page.getByRole('list', {name: 'Reorder exercises'})).toBeVisible();
+  await expect(page.locator('.reorder-row[data-held]')).toContainText(demo[1]);
+  await dragTo(page, point, 2);
+  await page.mouse.up();
+  await expect(sheet.locator('.exercise-card h2')).toHaveText([
+    demo[0],
+    demo[2],
+    demo[1],
+    demo[3],
+    demo[4],
+  ]);
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await options(demo[1]).click();
+  await menu(demo[1]).getByRole('menuitem', {name: 'Move up'}).click();
+  await expect(sheet.locator('.exercise-card h2')).toHaveText(demo);
+
   await options(demo[0]).click();
   await expect(menu(demo[0]).getByRole('menuitem')).toHaveText([
     'Replace exercise',
@@ -299,6 +322,38 @@ test('real touch: hold and drag reorders without scrolling away, and a quick swi
   await page.keyboard.press('Enter');
   await expect(page.getByRole('menu', {name: `Exercise options for ${demo[0]}`})).toBeVisible();
   await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toHaveCount(0);
+
+  // A tap on ⋯ opens its drawer; a hold on it lifts the card with the header's buzz, and the
+  // release only drops it.
+  const dots = (await options.boundingBox())!;
+  const at = {x: dots.x + dots.width / 2, y: dots.y + dots.height / 2};
+  await page.touchscreen.tap(at.x, at.y);
+  await expect(page.getByRole('menu', {name: `Exercise options for ${demo[0]}`})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await page.evaluate(() => {
+    const buzzes: unknown[] = [];
+    Object.assign(window, {buzzes});
+    navigator.vibrate = (pattern) => (buzzes.push(pattern), true);
+  });
+  await touch('touchStart', at.x, at.y);
+  await expect(page.getByRole('list', {name: 'Reorder exercises'})).toBeVisible();
+  await expect(page.locator('.reorder-row[data-held]')).toContainText(demo[0]);
+  expect(await page.evaluate(() => (window as unknown as {buzzes: unknown[]}).buzzes)).toEqual([
+    10,
+  ]);
+  await touch('touchEnd');
+  await expect(page.getByRole('list', {name: 'Reorder exercises'})).toHaveCount(0);
+  await page.waitForTimeout(300);
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(sheet.locator('.exercise-card h2')).toHaveText([
+    demo[0],
+    demo[2],
+    demo[3],
+    demo[1],
+    demo[4],
+  ]);
 
   // Held low on the screen in a list too short to scroll, the row still sits under the finger,
   // and every slot stays reachable without the finger leaving the screen.

@@ -411,18 +411,21 @@ test('Tab out of the menu continues from the ⋯ button', async ({page}, info) =
   }
 });
 
-test('the ⋯ icon sits at the far right of the card, flush with the set column', async ({page}) => {
+test('the ⋯ dots end flush with the completion boxes, inside the content edge', async ({page}) => {
   const cards = await start(page);
   const card = cards.first();
   const icon = (await options(page, 'Bench Press (Barbell)').locator('svg').boundingBox())!;
-  const check = (await card.getByRole('button', {name: /^Complete .* set 1$/}).boundingBox())!;
+  const check = card.getByRole('button', {name: /^Complete .* set 1$/});
+  const target = (await check.boundingBox())!;
+  const box = (await check.locator('.check-box').boundingBox())!;
   const trigger = (await options(page, 'Bench Press (Barbell)').boundingBox())!;
-  const cardBox = (await card.boundingBox())!;
   // Lucide's ellipsis draws its last dot ending at 20 of 24 viewBox units.
   const dotsRight = icon.x + (icon.width * 20) / 24;
-  expect(Math.abs(dotsRight - (check.x + check.width))).toBeLessThanOrEqual(1);
+  expect(Math.abs(dotsRight - (box.x + box.width))).toBeLessThanOrEqual(1);
+  // The 44px target (and its pressed and open wash) stops at the content edge, like the
+  // completion target, so it keeps the card's side margin.
   expect(trigger.width).toBeGreaterThanOrEqual(44);
-  expect(trigger.x + trigger.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+  expect(trigger.x + trigger.width).toBeCloseTo(target.x + target.width, 0);
 });
 
 test('a keyboard-focused menu item keeps its inset focus ring', async ({page}) => {

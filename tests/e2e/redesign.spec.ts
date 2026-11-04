@@ -230,7 +230,7 @@ test('an unrecorded weight shows the nearest actual lighter and heavier sets wit
 
 test('exercise Done survives value edits and reload but a new set needs its own tick', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto('/?demo=1');
   const exercise = page.locator('.exercise-card').first();
   const progress = page.locator('.workout-progress');
@@ -259,6 +259,18 @@ test('exercise Done survives value edits and reload but a new set needs its own 
     .poll(() => shownText(exercise.getByRole('group', {name: 'Exercise completion'})))
     .toBe('Done');
   await expect(exercise.locator('.set-complete')).toHaveCount(3);
+  // The checked tint runs edge to edge of the card (the whole screen on phones), while the
+  // columns keep the card's padding: completion still ends where the column headings do.
+  const card = (await exercise.boundingBox())!;
+  const head = (await exercise.locator('.set-head').boundingBox())!;
+  if (testInfo.project.name === 'mobile') expect(card.width).toBe(page.viewportSize()!.width);
+  for (const row of await exercise.locator('.set-complete').all()) {
+    const tint = (await row.locator('.set-swipe-content').boundingBox())!;
+    expect(tint.x).toBeCloseTo(card.x, 0);
+    expect(tint.width).toBeCloseTo(card.width, 0);
+    const check = (await row.getByRole('button', {name: /^Uncomplete/}).boundingBox())!;
+    expect(check.x + check.width).toBeCloseTo(head.x + head.width, 0);
+  }
   await expect(exercise.locator('.exercise-badge')).toHaveCSS('opacity', '1');
   await expect
     .poll(() => page.evaluate(() => [...(window as unknown as {flashes: string[]}).flashes].sort()))

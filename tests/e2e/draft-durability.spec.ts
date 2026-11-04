@@ -10,7 +10,9 @@ const legacy = {
   finished: [],
   templates: demoTemplates,
 };
-test('Saving stays visible until the real IndexedDB transaction can commit', async ({page}) => {
+test('autosave stays pending until the real IndexedDB transaction can commit, with a quiet header', async ({
+  page,
+}) => {
   await page.goto('/?demo=1');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.evaluate(async () => {
@@ -37,7 +39,9 @@ test('Saving stays visible until the real IndexedDB transaction can commit', asy
   });
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Commit boundary');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saving');
-  await expect(page.getByText('Saving…', {exact: true})).toBeVisible();
+  // Every keystroke autosaves, so the header doesn't announce it.
+  await expect(page.locator('.workout-meta')).toBeVisible();
+  await expect(page.locator('.workout-meta')).not.toContainText('Saving');
   await page.evaluate(() =>
     (window as unknown as {releaseStorageTest: () => void}).releaseStorageTest(),
   );

@@ -430,6 +430,14 @@
     transition: clip-path 140ms var(--ease-out);
     pointer-events: none;
   }
+  /* In an exercise card a row spans the card's side padding, so the tint runs edge to edge;
+     the content pads itself back, keeping the columns in line with the heading. */
+  .exercise-card .set-row.set-swipe {
+    margin-inline: calc(-1 * var(--card-pad));
+  }
+  .exercise-card .set-swipe-content {
+    padding-inline: var(--card-pad);
+  }
   .set-complete > .set-swipe-content::before {
     clip-path: inset(0);
     transition-duration: 320ms;

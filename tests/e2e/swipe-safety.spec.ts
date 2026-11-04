@@ -96,10 +96,11 @@ for (const phase of ['before swipe', 'during exit'])
     const count = await rows.count();
     if (phase === 'before swipe')
       await row.evaluate((el) => ((el.closest('fieldset') as HTMLFieldSetElement).disabled = true));
-    await pointer(row, 'pointerdown', 330);
-    await pointer(row, 'pointermove', 40);
+    const width = (await row.boundingBox())!.width;
+    await pointer(row, 'pointerdown', width * 0.9);
+    await pointer(row, 'pointermove', width * 0.1);
     if (phase === 'before swipe') expect(await offset(row)).toBe(0);
-    await pointer(row, 'pointerup', 40);
+    await pointer(row, 'pointerup', width * 0.1);
     if (phase === 'during exit') {
       await row.evaluate((el) => {
         // Freeze exactly between the user's release and the deferred delete.

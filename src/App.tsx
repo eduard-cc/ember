@@ -658,7 +658,6 @@ export default function App() {
                       </strong>{' '}
                       {sets.length === 1 ? 'set' : 'sets'} completed
                     </span>
-                    {saveStatus === 'saving' && <span>Saving…</span>}
                   </div>
                 )}
                 {/* Progress through the planned sets, over the header's bottom rule. */}
