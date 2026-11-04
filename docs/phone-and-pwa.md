@@ -18,7 +18,8 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. DESIGN.md 
 
 ## Dialogs, prompts and accessibility
 
-- Inline discard prompts in long editors must scroll into view and take keyboard focus on every dirty dismissal, not only the first. Test close/Escape, scroll back to the fields without answering, then close/Escape again.
+- The editors' Discard changes? drawer covers the editor, so Radix hides the editor from the accessibility tree while it is open: role queries scoped to the editor dialog find nothing then. Select it by its class (`.history-editor`, `.template-editor`) in tests, and check that Keep editing, Escape and back each return focus to the last field.
+- Never toggle a CSS animation by focus modality on a surface that stays open (`.pushed-page:has(:focus-visible)` sets `animation: none`): the pointer press that moves focus off a programmatically focused field restores the animation and replays the slide-in, so the press lands on whatever slid under it. The pushed editor uses its own `.editor-pushed` class for that reason.
 - Dialogs stack (DESIGN.md "Nested surfaces stack"): keep the parent open under its child rather than closing and reopening it. The Dialog scrim shares the surfaces' `z-50`, so stacked portals layer in opening order; a lower scrim would leave the parent undimmed above the child's scrim.
 - `<main>` is `hidden` while `sync.locked`, but Radix dialogs portal outside it: anything showing history must unmount while `sync.locked`.
 - Never put an `aria-live` region inside the logger or an editor. Radix's `hideOthers` keeps every `[aria-live]` element and its ancestors exposed, so the logger behind a modal stays in the accessibility tree. Portal live regions to `document.body` (see the reorder announcement in `src/views/WorkoutView.tsx`).

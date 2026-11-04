@@ -19,13 +19,25 @@ test('templates can be created edited started and deleted', async ({page}, info)
   await page.goto('/?demo=1');
   await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template'}).click();
-  const editor = page.getByRole('dialog', {name: 'Create a template', exact: true});
+  const editor = page.getByRole('dialog', {name: 'New template', exact: true});
   await expect(editor).toBeVisible();
   await expect(page.getByRole('button', {name: 'Start empty workout'})).toHaveCount(0);
-  await expect(editor.getByRole('button', {name: 'Save template', exact: true})).toBeDisabled();
-  await expect(editor).toContainText('Enter a name and add an exercise.');
-  await page.getByLabel('Template name').fill('My test session');
+  // Saving says what is missing, by the name and by Add exercise, and focuses the name.
+  const name = editor.getByLabel('Template name');
+  await editor.getByRole('button', {name: 'Save template', exact: true}).click();
+  await expect(name).toBeFocused();
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  await expect(name).toHaveAccessibleDescription('Enter a template name.');
+  await expect(editor.locator('.add-exercise-problem')).toHaveText('Add an exercise.');
+  await expect(editor).toBeVisible();
+  await name.fill('My test session');
+  await expect(editor.getByText('Enter a template name.')).toHaveCount(0);
   await addExercise(page, 'Bench Press (Barbell)');
+  await expect(editor.getByText('Add an exercise.')).toHaveCount(0);
+  // Previous gives the latest actual sets as evidence; the targets start empty.
+  await expect(
+    editor.getByRole('button', {name: 'Previous for Bench Press (Barbell) set 1'}),
+  ).toContainText(/\d+ kg × \d+/);
   const weight = editor.getByLabel('Weight for Bench Press (Barbell) set 1');
   const reps = editor.getByLabel('Reps for Bench Press (Barbell) set 1');
   expect((await weight.boundingBox())!.width).toBeGreaterThan(100);
@@ -36,6 +48,9 @@ test('templates can be created edited started and deleted', async ({page}, info)
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.getByRole('heading', {name: 'My test session'})).toBeVisible();
   const card = page.locator('.template-card', {hasText: 'My test session'});
+  // The card shows the result, so there is no toast; a brief Amber border marks it.
+  await expect(card).toHaveAttribute('data-landed', '');
+  await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
   // The row shows what Start will prefill: Bench Press's latest demo sets.
   await expect(card.locator('.exercise-line')).toHaveCount(1);
   await expect(card.locator('.exercise-line')).toContainText('Bench Press (Barbell)');
@@ -56,8 +71,8 @@ test('templates can be created edited started and deleted', async ({page}, info)
     expect(button.y).toBeGreaterThanOrEqual(0);
     expect(button.y + button.height).toBeLessThanOrEqual(page.viewportSize()!.height);
     const field = (await lastReps.boundingBox())!;
-    const footer = (await editPanel.locator('footer').boundingBox())!;
-    expect(field.y + field.height).toBeLessThanOrEqual(footer.y);
+    const panel = (await editPanel.boundingBox())!;
+    expect(field.y + field.height).toBeLessThanOrEqual(panel.y + panel.height);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       page.viewportSize()!.width,
     );
@@ -270,10 +285,11 @@ test('template editor retains a failed save and closes after a successful retry'
     (window as unknown as {releaseTemplateCommit: () => void}).releaseTemplateCommit(),
   );
   await expect(editor.getByRole('alert')).toContainText('Template not saved.');
+  await expect(editor.getByRole('alert')).toBeFocused();
   await expect(page.getByRole('alert')).toHaveCount(1);
+  await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
   await expect(editor.getByLabel('Template name')).toHaveValue('Retry template');
-  await expect(editor.getByRole('button', {name: 'Save template', exact: true})).toBeEnabled();
-  await editor.getByRole('button', {name: 'Save template', exact: true}).click();
+  await editor.getByRole('button', {name: 'Retry', exact: true}).click();
   await expect(editor).toBeHidden();
   await page.reload();
   await navigate(page, 'Workouts');

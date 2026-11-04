@@ -191,7 +191,7 @@ test('the template editor offers the same Replace and Remove menu', async ({page
   await page.keyboard.press('Escape');
   await expect(editor).toBeVisible();
   await expect(page.getByRole('menuitem', {name: 'Replace exercise'})).toBeHidden();
-  expect(await editor.getByRole('group', {name: 'Discard changes?'}).count()).toBe(0);
+  expect(await page.getByRole('dialog', {name: 'Discard changes?'}).count()).toBe(0);
   await expect(options(page, 'Squat (Barbell)')).toBeFocused();
   await options(page, 'Squat (Barbell)').click();
   await page.getByRole('menuitem', {name: 'Replace exercise'}).click();

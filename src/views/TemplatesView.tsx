@@ -1,5 +1,5 @@
 import {ClipboardList, Clock, Layers, Pencil, Play, Plus, Trash2} from 'lucide-react';
-import {useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 
 import {OptionsMenu} from '../components/ExerciseMenu';
 import {TemplateEditor} from '../components/TemplateEditor';
@@ -77,6 +77,13 @@ export function TemplatesView({
   const [editing, setEditing] = useState<Workout | null>(null);
   const [editingBase, setEditingBase] = useState<Workout | undefined>();
   const [deleting, setDeleting] = useState<Workout | null>(null);
+  // A template just saved from the editor: its card shows the result with a brief Amber border.
+  const [landed, setLanded] = useState<string | null>(null);
+  useEffect(() => {
+    if (!landed) return;
+    const timer = window.setTimeout(() => setLanded(null), 1600);
+    return () => window.clearTimeout(timer);
+  }, [landed]);
   const [previewId, setPreviewId] = useState<string | null>(null);
   // The template's current revision, so a peer's edit shows and starts; gone if deleted.
   const preview = (previewId && templates.find((t) => t.id === previewId)) || null;
@@ -135,6 +142,7 @@ export function TemplatesView({
                   <li
                     className='template-card pressable relative flex min-w-0 flex-col border border-border bg-card hover:bg-accent/60 has-[.template-open:focus-visible]:outline-2 has-[.template-open:focus-visible]:outline-offset-2 has-[.template-open:focus-visible]:outline-ring'
                     key={template.id}
+                    data-landed={landed === template.id ? '' : undefined}
                   >
                     {/* The whole card opens the preview, lifted above the rows (drawings are masks,
                         which paint over an unlifted button); the ⋯ menu sits above it. */}
@@ -205,14 +213,16 @@ export function TemplatesView({
           disabled={disabled}
           onClose={() => setEditing(null)}
           onCloseAutoFocus={focusCard}
-          onSave={(clean) =>
-            onChange(
+          onSave={async (clean) => {
+            const saved = await onChange(
               templates.some((t) => t.id === clean.id)
                 ? templates.map((t) => (t.id === clean.id ? clean : t))
                 : [...templates, clean],
               editingBase,
-            )
-          }
+            );
+            if (saved) setLanded(clean.id);
+            return saved;
+          }}
         />
       )}
 

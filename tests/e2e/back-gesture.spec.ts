@@ -166,11 +166,17 @@ test('a refused back keeps the next back inside the app', async ({page}) => {
   await editNewestWorkout(page);
   const editor = page.getByRole('dialog', {name: 'Edit workout'});
   await editor.getByLabel('Workout name').fill('Kept through two backs');
+  const prompt = page.getByRole('dialog', {name: 'Discard changes?'});
   for (let i = 0; i < 2; i++) {
     await browserBack();
-    const prompt = editor.getByRole('group', {name: 'Discard changes?'});
-    await expect(prompt).toBeInViewport({ratio: 1});
-    await expect(prompt).toBeFocused();
+    await expect(prompt.getByRole('button', {name: 'Discard changes'})).toBeInViewport({
+      ratio: 1,
+    });
+    await expect(prompt.getByRole('button', {name: 'Keep editing'})).toBeFocused();
+    // The prompt is a layer of its own: back on it keeps editing.
+    await expect.poll(() => depth(page)).toBe(3);
+    await browserBack();
+    await expect(prompt).toBeHidden();
     await expect.poll(() => depth(page)).toBe(2);
   }
   await expect(editor.getByLabel('Workout name')).toHaveValue('Kept through two backs');
@@ -258,7 +264,8 @@ test('changed templates keep their draft through dismissal and discard writes no
     if (!existing) await addExercise(page, 'Bench Press (Barbell)');
     const weight = editor.getByLabel('Weight for Bench Press (Barbell) set 1');
     await weight.fill('63.5');
-    const prompt = editor.getByRole('group', {name: 'Discard changes?'});
+    const prompt = page.getByRole('dialog', {name: 'Discard changes?'});
+    const keep = prompt.getByRole('button', {name: 'Keep editing'});
     await editor.getByRole('button', {name: 'Add exercise', exact: true}).click();
     const picker = page.getByRole('dialog', {name: 'Add exercise', exact: true});
     await picker.getByLabel('Search exercises').fill('Plank');
@@ -266,28 +273,28 @@ test('changed templates keep their draft through dismissal and discard writes no
     await editor.getByRole('button', {name: 'Close template editor'}).click();
     await prompt.getByRole('button', {name: 'Keep editing'}).click();
     await expect(weight).toBeFocused();
-    for (const method of ['close', 'cancel', 'escape', 'back', 'back']) {
+    const browserBack = async () => {
+      const {currentIndex, entries} = await cdp.send('Page.getNavigationHistory');
+      await cdp.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
+    };
+    for (const method of ['close', 'escape', 'back', 'back']) {
       await weight.focus();
       if (method === 'close')
         await editor.getByRole('button', {name: 'Close template editor'}).click();
-      else if (method === 'cancel')
-        await editor.getByRole('button', {name: 'Cancel', exact: true}).click();
       else if (method === 'escape') await page.keyboard.press('Escape');
-      else {
-        const {currentIndex, entries} = await cdp.send('Page.getNavigationHistory');
-        await cdp.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
-      }
-      await expect(editor).toBeVisible();
-      await expect(prompt).toBeFocused();
+      else await browserBack();
+      await expect(prompt).toBeVisible();
+      await expect(keep).toBeFocused();
+      await expect.poll(() => depth(page)).toBe(2);
+      // Escape, back and Keep editing all keep the draft and return to the field in use.
+      if (method === 'close') await keep.click();
+      else if (method === 'escape') await page.keyboard.press('Escape');
+      else await browserBack();
+      await expect(prompt).toBeHidden();
+      await expect(weight).toBeFocused();
       await expect(weight).toHaveValue('63.5');
       await expect(editor.getByLabel('Template name')).toHaveValue('Kept template draft');
       await expect.poll(() => depth(page)).toBe(1);
-      // A second dismissal must bring an already-open prompt back to focus.
-      await weight.focus();
-      await page.keyboard.press('Escape');
-      await expect(prompt).toBeFocused();
-      await prompt.getByRole('button', {name: 'Keep editing'}).click();
-      await expect(weight).toBeFocused();
     }
     await page.keyboard.press('Escape');
     await prompt.getByRole('button', {name: 'Discard changes', exact: true}).click();
@@ -315,12 +322,15 @@ test('back on an edited history workout asks before discarding, then steps back 
   const editor = page.getByRole('dialog', {name: 'Edit workout'});
   await editor.getByLabel('Workout name').fill('Renamed by back test');
   await back(page);
-  // Unsaved changes are never dropped by back; the editor stays with the discard prompt.
-  await expect(editor).toBeVisible();
-  await expect(editor.getByRole('group', {name: 'Discard changes?'})).toBeVisible();
-  await expect(editor.getByLabel('Workout name')).toHaveValue('Renamed by back test');
-  await expect.poll(() => depth(page)).toBe(2);
-  await editor.getByRole('button', {name: 'Discard changes'}).click();
+  // Unsaved changes are never dropped by back; the editor stays under the discard prompt.
+  await expect(page.locator('.history-editor')).toBeVisible();
+  const prompt = page.getByRole('dialog', {name: 'Discard changes?'});
+  await expect(prompt).toBeVisible();
+  await expect(page.locator('.history-editor').getByLabel('Workout name')).toHaveValue(
+    'Renamed by back test',
+  );
+  await expect.poll(() => depth(page)).toBe(3);
+  await prompt.getByRole('button', {name: 'Discard changes'}).click();
   await expect(editor).toBeHidden();
   const drawer = page.locator('.workout-drawer');
   await expect(drawer).toBeVisible();

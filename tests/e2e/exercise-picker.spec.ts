@@ -233,11 +233,12 @@ test('the template editor adds exercises through the same picker', async ({page}
   for (const name of ['Pull Up', 'Plank', 'Rowing (Machine)', 'Pull Up (Assisted)'])
     await addExercise(page, name);
   const editor = page.locator('.template-editor');
+  // The logger's columns without Done, so each value sits where it does while logging.
   for (const [name, headers] of [
-    ['Pull Up', ['Set', 'Reps']],
-    ['Plank', ['Set', 'Seconds']],
-    ['Rowing (Machine)', ['Set', 'Seconds', 'km']],
-    ['Pull Up (Assisted)', ['Set', 'Assist. kg', 'Reps']],
+    ['Pull Up', ['Set', 'Previous', 'kg', 'Reps']],
+    ['Plank', ['Set', 'Previous', 'Seconds', '']],
+    ['Rowing (Machine)', ['Set', 'Previous', 'Seconds', 'km']],
+    ['Pull Up (Assisted)', ['Set', 'Previous', 'Assist. kg', 'Reps']],
   ] as const) {
     await expect(
       editor

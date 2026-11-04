@@ -36,7 +36,8 @@ export function PreviousSet({
   exercise: ExerciseLog;
   set: SetRecord;
   index: number;
-  onSource: (id: string) => void;
+  /** Opens a source workout; editors leave it out, as History is underneath them. */
+  onSource?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   useBackLayer(open, () => setOpen(false));
@@ -65,7 +66,7 @@ export function PreviousSet({
   const nearestId = useId();
   const source = (id: string) => {
     setOpen(false);
-    onSource(id);
+    onSource?.(id);
   };
   return (
     <ResponsiveDialog open={open} onOpenChange={setOpen}>
@@ -102,14 +103,16 @@ export function PreviousSet({
                   <p className='mt-3.5'>
                     {recorded(comparable.set, exercise.type)} · {dateLabel(comparable.date)}
                   </p>
-                  <Button
-                    variant='ghost'
-                    aria-label={`View source workout ${comparable.workoutName}`}
-                    onClick={() => source(comparable.workoutId)}
-                  >
-                    {comparable.workoutName}
-                    <ArrowUpRight size={16} />
-                  </Button>
+                  {onSource && (
+                    <Button
+                      variant='ghost'
+                      aria-label={`View source workout ${comparable.workoutName}`}
+                      onClick={() => source(comparable.workoutId)}
+                    >
+                      {comparable.workoutName}
+                      <ArrowUpRight size={16} />
+                    </Button>
+                  )}
                 </>
               ) : (
                 <p className='mt-3.5'>
@@ -145,15 +148,17 @@ export function PreviousSet({
                         <strong>{label}</strong> {recorded(entry.set, exercise.type)} ·{' '}
                         {dateLabel(entry.date)}
                       </span>
-                      <Button
-                        variant='ghost'
-                        className='justify-self-start'
-                        aria-label={`View source workout ${entry.workoutName} (${label.toLowerCase()})`}
-                        onClick={() => source(entry.workoutId)}
-                      >
-                        {entry.workoutName}
-                        <ArrowUpRight size={16} />
-                      </Button>
+                      {onSource && (
+                        <Button
+                          variant='ghost'
+                          className='justify-self-start'
+                          aria-label={`View source workout ${entry.workoutName} (${label.toLowerCase()})`}
+                          onClick={() => source(entry.workoutId)}
+                        >
+                          {entry.workoutName}
+                          <ArrowUpRight size={16} />
+                        </Button>
+                      )}
                     </li>
                   ) : null,
                 )}
@@ -174,13 +179,15 @@ export function PreviousSet({
                     </li>
                   ))}
                 </ol>
-                <Button
-                  variant='ghost'
-                  aria-label={`View source workout ${previous.workoutName}`}
-                  onClick={() => source(previous.workoutId)}
-                >
-                  View source workout <ArrowUpRight size={16} />
-                </Button>
+                {onSource && (
+                  <Button
+                    variant='ghost'
+                    aria-label={`View source workout ${previous.workoutName}`}
+                    onClick={() => source(previous.workoutId)}
+                  >
+                    View source workout <ArrowUpRight size={16} />
+                  </Button>
+                )}
               </>
             ) : (
               <p className='mt-3.5'>

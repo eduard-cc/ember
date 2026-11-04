@@ -144,7 +144,7 @@ export function AddExercise({
       context={`To: ${workoutName.trim() || `Untitled ${scope}`}`}
       description={`Choose one exercise to add to this ${scope}.`}
       trigger={
-        <Button className='add-exercise-button w-full [.history-editor>.content-fieldset>&]:my-4 [.template-editor>&]:my-4'>
+        <Button className='add-exercise-button w-full'>
           <Plus size={16} /> Add exercise
         </Button>
       }

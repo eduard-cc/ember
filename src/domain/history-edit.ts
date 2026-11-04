@@ -2,7 +2,7 @@ import {validSet} from './sets';
 import type {SetRecord, Workout} from './types';
 
 const values = ['weight', 'reps', 'seconds', 'distance'] as const;
-const LOCAL_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
+export const LOCAL_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 
 /** The editor's working copy: no completion state, so rows don't toggle or turn green. */
 export function editableCopy(workout: Workout): Workout {

@@ -45,6 +45,9 @@ export function relativeDay(date: string, now = new Date()) {
   return dateLabel(date);
 }
 
+/** "Sun, 1 Nov 2026": the editor's meta line. */
+export const weekdayDateLabel = (date: string) => `${weekdayLabel(date)}, ${dateLabel(date)}`;
+
 export function dateLabel(date: string) {
   return new Date(date.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-GB', {
     day: 'numeric',

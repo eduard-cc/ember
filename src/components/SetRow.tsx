@@ -11,6 +11,9 @@ import {Button} from './ui/button';
 /** The five-column set grid, shared by the header row and each row's sliding content. */
 export const SET_GRID =
   'relative grid min-h-14 grid-cols-[44px_minmax(66px,1fr)_minmax(52px,.86fr)_minmax(48px,.78fr)_48px] items-center gap-1.5 tabular-nums narrow:gap-1';
+/** The editors' grid: the logger's without its Done column, so every value sits where it does there. */
+export const EDIT_GRID =
+  'relative grid min-h-14 grid-cols-[44px_minmax(66px,1fr)_minmax(52px,.86fr)_minmax(48px,.78fr)] items-center gap-1.5 tabular-nums narrow:gap-1';
 
 /** Width of the revealed Delete action. */
 const OPEN = 88;
@@ -39,6 +42,7 @@ export function SetRow({
   children,
   gridClass = SET_GRID,
   completed,
+  added,
   number,
   label,
   onDelete,
@@ -47,6 +51,8 @@ export function SetRow({
   children: ReactNode;
   gridClass?: string;
   completed?: boolean;
+  /** A set added in the history editor: its number is Amber. */
+  added?: boolean;
   number: number;
   label: string;
   onDelete: () => void;
@@ -292,7 +298,7 @@ export function SetRow({
         <Button
           size='icon'
           variant='ghost'
-          className={cn('set-index gap-0.5', completed && 'font-semibold text-primary')}
+          className={cn('set-index gap-0.5', (completed || added) && 'font-semibold text-primary')}
           ref={action}
           aria-label={`Actions for ${label}`}
           aria-haspopup={mobile ? 'menu' : undefined}

@@ -2,6 +2,7 @@ import {Check, Plus} from 'lucide-react';
 import {type KeyboardEvent, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 
+import {catalogEntry} from '../catalog/catalog';
 import {ExercisePicker} from '../components/AddExercise';
 import {ExerciseMenu} from '../components/ExerciseMenu';
 import {ExercisePage} from '../components/ExercisePage';
@@ -9,7 +10,7 @@ import {ReorderList, type ReorderStart, scrollParent, useHold} from '../componen
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {PreviousSet} from '../components/PreviousSet';
 import {ReplaceInput} from '../components/ReplaceInput';
-import {SET_GRID, SetRow} from '../components/SetRow';
+import {EDIT_GRID, SET_GRID, SetRow} from '../components/SetRow';
 import {Button} from '../components/ui/button';
 import {RollingNumber} from '../components/ui/rolling-number';
 import {moveItem} from '../domain/reorder';
@@ -52,9 +53,23 @@ function loadCaption(ex: ExerciseLog): string | null {
   }
 }
 
+const setValues = ['weight', 'reps', 'seconds', 'distance'] as const;
+
+/** History editing: a value that differs from the stored set gets an Amber field edge. */
+const edited = (
+  set: SetRecord,
+  original: Map<string, SetRecord> | undefined,
+  key: (typeof setValues)[number],
+) => {
+  const before = original?.get(set.id);
+  return !!before && before[key] !== set[key];
+};
+
 export function WorkoutView({
   workout,
   dataset,
+  evidence = dataset,
+  original,
   onChange,
   onSource,
   onDeletingChange,
@@ -64,13 +79,18 @@ export function WorkoutView({
 }: {
   workout: Workout;
   dataset: Dataset;
+  /** The history Previous reads; the history editor passes only earlier workouts. */
+  evidence?: Dataset;
+  /** History editing: the stored sets by id, so changed values and added sets are marked. */
+  original?: Map<string, SetRecord>;
   exerciseScope?: 'workout' | 'template';
   onChange: (update: (current: Workout) => Workout) => void;
-  onSource: (id: string) => void;
+  /** Opens a source workout from Previous; the editors leave it out. */
+  onSource?: (id: string) => void;
   onDeletingChange: (deleting: boolean) => void;
   /** Mirrors the logger's disabled fieldset, which the portaled details sit outside of. */
   disabled?: boolean;
-  /** Routine and history editors: no exercise details from names and thumbnails. */
+  /** Template and history editors: no completion column and no exercise details. */
   targetsOnly?: boolean;
 }) {
   // Save/Finish must wait for every exit, not just the first animated deletion.
@@ -337,16 +357,19 @@ export function WorkoutView({
       {/* eslint-disable-next-line react-hooks/refs -- identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use. */}
       {workout.exercises.map((ex, ei) => {
         const timed = isTimed(ex.type);
-        const singleTarget = targetsOnly && (ex.type === 'bodyweight' || ex.type === 'duration');
-        const gridClass = targetsOnly
-          ? cn(
-              'relative grid min-h-14 grid-cols-[44px_minmax(0,1fr)_minmax(0,1fr)] items-center gap-3 tabular-nums',
-              singleTarget && 'grid-cols-[44px_minmax(0,1fr)]',
-            )
-          : SET_GRID;
+        const gridClass = targetsOnly ? EDIT_GRID : SET_GRID;
         const checked = countedSets(ex).length;
         const done = ex.sets.length > 0 && checked === ex.sets.length;
-        const caption = targetsOnly && loadCaption(ex);
+        const changedSets = original
+          ? ex.sets.filter((set) => setValues.some((key) => edited(set, original, key))).length
+          : 0;
+        const addedSets = original ? ex.sets.filter((set) => !original.has(set.id)).length : 0;
+        const marks = [
+          changedSets && `${changedSets} changed`,
+          addedSets && `${addedSets} added`,
+        ].filter(Boolean);
+        // Editors name the load convention, else the body part, then what Save would write.
+        const subtitle = loadCaption(ex) ?? catalogEntry(ex.name)?.bodyPart;
         const title = (
           <>
             <span className='thumb-slot relative'>
@@ -429,7 +452,17 @@ export function WorkoutView({
                     )}
                   </span>
                 )}
-                {caption && <p className='mt-[3px] text-[12px]'>{caption}</p>}
+                {targetsOnly && (subtitle || marks.length > 0) && (
+                  <p className='text-[12px] text-muted-foreground'>
+                    {subtitle}
+                    {marks.length > 0 && (
+                      <span className='text-primary'>
+                        {subtitle && ' · '}
+                        {marks.join(', ')}
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
               <ExerciseMenu
                 className='col-3 row-[1/3] [&_svg]:translate-x-[9px]'
@@ -456,13 +489,9 @@ export function WorkoutView({
                 )}
               >
                 <span>Set</span>
-                {!targetsOnly && <span>Previous</span>}
-                {!(targetsOnly && ex.type === 'bodyweight') && (
-                  <span>{timed ? 'Seconds' : ex.type === 'assisted' ? 'Assist. kg' : 'kg'}</span>
-                )}
-                {!(targetsOnly && ex.type === 'duration') && (
-                  <span>{ex.type === 'duration' ? '' : timed ? 'km' : 'Reps'}</span>
-                )}
+                <span>Previous</span>
+                <span>{timed ? 'Seconds' : ex.type === 'assisted' ? 'Assist. kg' : 'kg'}</span>
+                <span>{ex.type === 'duration' ? '' : timed ? 'km' : 'Reps'}</span>
                 {!targetsOnly && <span />}
                 <span className='desktop-remove hidden' />
               </div>
@@ -470,62 +499,66 @@ export function WorkoutView({
                 <SetRow
                   gridClass={gridClass}
                   completed={set.completed}
+                  added={!!original && !original.has(set.id)}
                   key={set.id}
                   number={si + 1}
                   label={`${ex.name} set ${si + 1}`}
                   onDelete={() => removeSet(ex, si)}
                   onDeletingChange={(deleting) => setDeleting(set.id, deleting)}
                 >
-                  {!targetsOnly && (
-                    <PreviousSet
-                      dataset={dataset}
-                      exercise={ex}
-                      set={set}
-                      index={si}
-                      onSource={onSource}
-                    />
-                  )}
-                  {!(targetsOnly && ex.type === 'bodyweight') && (
-                    <ReplaceInput
-                      type='number'
-                      className={setInput(set.completed)}
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter') return;
-                        event.preventDefault();
-                        if (ex.type === 'duration') {
-                          if (targetsOnly) event.currentTarget.blur();
-                          else completeAndBlur(event, ei, si);
-                        } else {
-                          const row = event.currentTarget.closest('.set-row');
-                          row?.querySelectorAll('input')[1]?.focus();
-                        }
-                      }}
-                      inputMode={timed ? 'numeric' : 'decimal'}
-                      min={timed ? 1 : 0}
-                      max={timed ? 86400 : 2000}
-                      step={timed ? 1 : 0.5}
-                      disabled={ex.type === 'bodyweight'}
-                      aria-label={`${timed ? 'Seconds' : 'Weight'} for ${ex.name} set ${si + 1}`}
-                      value={(timed ? set.seconds : set.weight) ?? ''}
-                      onValueChange={(value) =>
-                        edit(ei, si, {
-                          [timed ? 'seconds' : 'weight']: value === '' ? null : Number(value),
-                        })
+                  <PreviousSet
+                    dataset={evidence}
+                    exercise={ex}
+                    set={set}
+                    index={si}
+                    onSource={onSource}
+                  />
+                  <ReplaceInput
+                    type='number'
+                    className={cn(
+                      setInput(set.completed),
+                      edited(set, original, timed ? 'seconds' : 'weight') &&
+                        'edited-field border-primary',
+                    )}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter') return;
+                      event.preventDefault();
+                      if (ex.type === 'duration') {
+                        if (targetsOnly) event.currentTarget.blur();
+                        else completeAndBlur(event, ei, si);
+                      } else {
+                        const row = event.currentTarget.closest('.set-row');
+                        row?.querySelectorAll('input')[1]?.focus();
                       }
-                    />
-                  )}
+                    }}
+                    inputMode={timed ? 'numeric' : 'decimal'}
+                    min={timed ? 1 : 0}
+                    max={timed ? 86400 : 2000}
+                    step={timed ? 1 : 0.5}
+                    disabled={ex.type === 'bodyweight'}
+                    aria-label={`${timed ? 'Seconds' : 'Weight'} for ${ex.name} set ${si + 1}`}
+                    value={(timed ? set.seconds : set.weight) ?? ''}
+                    onValueChange={(value) =>
+                      edit(ei, si, {
+                        [timed ? 'seconds' : 'weight']: value === '' ? null : Number(value),
+                      })
+                    }
+                  />
                   {ex.type === 'duration' ? (
-                    !targetsOnly && (
-                      <span className='text-center text-[12px] text-muted-foreground'>seconds</span>
-                    )
+                    <span className='text-center text-[12px] text-muted-foreground'>seconds</span>
                   ) : (
                     <ReplaceInput
                       type='number'
-                      className={setInput(set.completed)}
+                      className={cn(
+                        setInput(set.completed),
+                        edited(set, original, timed ? 'distance' : 'reps') &&
+                          'edited-field border-primary',
+                      )}
                       onKeyDown={(event) => {
-                        if (event.key !== 'Enter' || targetsOnly) return;
+                        if (event.key !== 'Enter') return;
                         event.preventDefault();
-                        completeAndBlur(event, ei, si);
+                        if (targetsOnly) event.currentTarget.blur();
+                        else completeAndBlur(event, ei, si);
                       }}
                       inputMode={timed ? 'decimal' : 'numeric'}
                       min={timed ? 0 : 1}
@@ -641,7 +674,7 @@ export function WorkoutView({
           onClose={() => setDetails(null)}
           onSource={(id) => {
             setDetails(null);
-            onSource(id);
+            onSource?.(id);
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();

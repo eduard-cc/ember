@@ -330,6 +330,11 @@
         transform: translateX(100%);
       }
     }
+    /* An editor opened over the History drawer slides in like a pushed page. Unlike that page it
+       keeps the animation whatever the focus modality: toggling it on focus would replay it. */
+    .editor-pushed[data-state='open'] {
+      animation: page-push 340ms var(--ease-drawer);
+    }
   }
   /* Press feedback: pressed controls sink slightly on touch screens. */
   .press-feedback {
@@ -377,8 +382,15 @@
        end of every swipe, which reads as a flicker on Android. */
     will-change: transform;
   }
-  .template-editor {
-    --row-bg: hsl(var(--card));
+  /* A template just saved from its editor: a brief Amber border on its card. */
+  .template-card[data-landed] {
+    animation: landed-card 1600ms ease-out;
+  }
+  @keyframes landed-card {
+    0%,
+    60% {
+      border-color: hsl(var(--primary));
+    }
   }
   .set-swipe :focus-visible {
     outline-offset: -2px;
