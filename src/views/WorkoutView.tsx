@@ -255,16 +255,16 @@ export function WorkoutView({
       ),
     }));
   /**
-   * An explicit tick or untick. The completion cue climbs one step per checked set in the
-   * workout; finishing an exercise's last set adds the exercise chime just after it.
+   * An explicit tick or untick. The completion cue climbs one step per set already checked in
+   * this exercise, so each exercise starts again from the bottom note; finishing an exercise's
+   * last set adds the exercise chime just after it.
    */
   const toggleSet = (ei: number, si: number) => {
     const ex = workout.exercises[ei];
     const completing = !ex.sets[si].completed;
     edit(ei, si, {completed: completing});
     if (!completing) return cue('unset');
-    const checkedBefore = workout.exercises.reduce((n, item) => n + countedSets(item).length, 0);
-    cue('set', checkedBefore);
+    cue('set', countedSets(ex).length);
     const exerciseDone = ex.sets.every(
       (set, j) => j === si || (set.completed && validSet(set, ex.type)),
     );
@@ -576,7 +576,8 @@ export function WorkoutView({
             <Button
               variant='ghost'
               className='mt-1 w-full'
-              onClick={() =>
+              onClick={() => {
+                cue('tick');
                 onChange(() => ({
                   ...workout,
                   exercises: workout.exercises.map((x, i) =>
@@ -596,8 +597,8 @@ export function WorkoutView({
                           },
                         ]),
                   ),
-                }))
-              }
+                }));
+              }}
             >
               <Plus size={16} /> Add set
             </Button>

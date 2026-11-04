@@ -97,7 +97,8 @@ function swell(at: number) {
   }
 }
 
-// A major pentatonic run, so each completed set climbs one step and never clashes.
+// A major pentatonic run, so each completed set in an exercise climbs one step and never
+// clashes; sets past the tenth hold the top note.
 const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98, 1760];
 
 function sound(cue: Cue, step: number) {

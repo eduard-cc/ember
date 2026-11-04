@@ -451,13 +451,18 @@ test('appearance is separate from workout saving, follows System, and persists t
   ).toEqual({version: 1, theme: 'dark'});
 });
 
-test('sounds and haptics start on, play when a workout starts and each switch persists on this device', async ({
+test('sounds and haptics start on, play when a workout starts, climb within each exercise and each switch persists on this device', async ({
   page,
 }) => {
   await page.addInitScript(() => {
-    const record = window as unknown as {vibrations: number[][]; audioContexts: number};
+    const record = window as unknown as {
+      vibrations: number[][];
+      audioContexts: number;
+      sines: number[];
+    };
     record.vibrations = [];
     record.audioContexts = 0;
+    record.sines = [];
     navigator.vibrate = (pattern) => {
       record.vibrations.push(typeof pattern === 'number' ? [pattern] : [...pattern]);
       return true;
@@ -467,6 +472,16 @@ test('sounds and haptics start on, play when a workout starts and each switch pe
       constructor(options?: AudioContextOptions) {
         super(options);
         record.audioContexts++;
+      }
+      // Each bell starts its fundamental sine first, then two quieter partials.
+      createOscillator() {
+        const oscillator = super.createOscillator();
+        const start = oscillator.start.bind(oscillator);
+        oscillator.start = (when?: number) => {
+          if (oscillator.type === 'sine') record.sines.push(Math.round(oscillator.frequency.value));
+          start(when);
+        };
+        return oscillator;
       }
     };
   });
@@ -482,6 +497,10 @@ test('sounds and haptics start on, play when a workout starts and each switch pe
       const record = window as unknown as {vibrations: number[][]; audioContexts: number};
       return {vibrations: record.vibrations, audioContexts: record.audioContexts};
     });
+  const bells = () =>
+    page.evaluate(() =>
+      (window as unknown as {sines: number[]}).sines.filter((_, i) => i % 3 === 0),
+    );
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
@@ -509,6 +528,23 @@ test('sounds and haptics start on, play when a workout starts and each switch pe
     .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18], [6], [6]]);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('menu')).toHaveCount(0);
+  // The next exercise's scale starts again from the bottom note; Add set ticks.
+  await addExercise(page, 'Bench Press (Barbell)');
+  await page
+    .locator('.exercise-card')
+    .nth(1)
+    .getByRole('button', {name: 'Add set', exact: true})
+    .click();
+  for (const set of [1, 2]) {
+    await page.getByLabel(`Weight for Bench Press (Barbell) set ${set}`).fill('60');
+    await page.getByLabel(`Reps for Bench Press (Barbell) set ${set}`).fill('8');
+  }
+  await page.getByRole('button', {name: 'Complete Bench Press (Barbell) set 1'}).click();
+  await expect
+    .poll(async () => (await cues()).vibrations)
+    .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18], [6], [6], [6], [6], [12]]);
+  // Start swell bells, three climbing checks, the exercise chime, the untick, then set 1 again.
+  expect(await bells()).toEqual([587, 880, 523, 587, 659, 659, 988, 392, 523]);
 
   await openSettings(page);
   const settings = page.getByRole('dialog', {name: 'Settings', exact: true});
