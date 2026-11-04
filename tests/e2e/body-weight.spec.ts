@@ -335,6 +335,8 @@ test('a failed Undo shows a Retry toast that restores the entry', async ({page})
 test('Undo covers one deletion until its toast closes, another edit starts or Settings closes', async ({
   page,
 }) => {
+  // Waiting out the toast's own lifetime adds 5s to a long flow.
+  test.setTimeout(60_000);
   await page.goto('/');
   let section = await open(page);
   await add(section, '75.25', '2024-07-01T08:00');
