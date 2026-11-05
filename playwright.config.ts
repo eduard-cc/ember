@@ -24,7 +24,13 @@ export default defineConfig({
     screenshot: process.env.CI ? 'only-on-failure' : 'off',
   },
   projects: [
-    {name: 'desktop', use: {viewport: {width: 1440, height: 1000}}},
+    // CI minutes are capped, so CI runs every flow at phone size and only the @desktop-tagged
+    // (desktop-only) tests at desktop size. Local runs cover both projects in full.
+    {
+      name: 'desktop',
+      use: {viewport: {width: 1440, height: 1000}},
+      grep: process.env.CI ? /@desktop/ : undefined,
+    },
     {name: 'mobile', use: {viewport: {width: 390, height: 844}}},
   ],
   // A dedicated strict-port server: reusing another checkout's dev server silently tests the wrong source.

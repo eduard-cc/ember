@@ -108,9 +108,10 @@ jobs:
           TMPDIR: ${{ runner.temp }}
 
   playwright:
-    name: Playwright (desktop and mobile)
+    name: Playwright (mobile, desktop-only tests)
     runs-on: ubuntu-24.04
-    # Desktop/mobile E2E takes 12-17 minutes and apt's install-deps up to 5 on a slow mirror;
+    # Every flow runs at phone size plus the @desktop-tagged tests at desktop size (see
+    # playwright.config.ts); apt's install-deps can take up to 5 minutes on a slow mirror, and
     # the serial production PWA suite reuses setup. Leave headroom for both suites and caches.
     timeout-minutes: 25
     steps:

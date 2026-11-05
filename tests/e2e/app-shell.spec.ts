@@ -67,21 +67,25 @@ for (const width of [320, 390, 412]) {
   });
 }
 
-test('desktop header carries brand, text links and Settings', async ({page}, info) => {
-  test.skip(info.project.name !== 'desktop');
-  await open(page, false);
-  const bar = page.locator('.app-bar');
-  const box = await bar.boundingBox();
-  expect(box!.y).toBe(0);
-  expect(box!.height).toBe(48);
-  await expect(bar.locator('.app-brand')).toHaveText('Ember');
-  await expect(bar.locator('.nav-item svg').first()).toBeHidden();
-  const color = await bar
-    .locator('.nav-item.active')
-    .evaluate((el) => getComputedStyle(el).borderBottomColor);
-  expect(color).toBe(await resolve(page, AMBER));
-  await expect(bar.getByRole('button', {name: 'Settings', exact: true})).toBeVisible();
-});
+test(
+  'desktop header carries brand, text links and Settings',
+  {tag: '@desktop'},
+  async ({page}, info) => {
+    test.skip(info.project.name !== 'desktop');
+    await open(page, false);
+    const bar = page.locator('.app-bar');
+    const box = await bar.boundingBox();
+    expect(box!.y).toBe(0);
+    expect(box!.height).toBe(48);
+    await expect(bar.locator('.app-brand')).toHaveText('Ember');
+    await expect(bar.locator('.nav-item svg').first()).toBeHidden();
+    const color = await bar
+      .locator('.nav-item.active')
+      .evaluate((el) => getComputedStyle(el).borderBottomColor);
+    expect(color).toBe(await resolve(page, AMBER));
+    await expect(bar.getByRole('button', {name: 'Settings', exact: true})).toBeVisible();
+  },
+);
 
 test('resume bar is a card strip with an Amber edge', async ({page}, info) => {
   test.skip(info.project.name !== 'mobile');
@@ -190,7 +194,7 @@ test('templates are separate flat bordered cards', async ({page}) => {
   expect(Math.round(gap)).toBe(12);
 });
 
-test('long template lines wrap to fit their row', async ({page}, info) => {
+test('long template lines wrap to fit their row', {tag: '@desktop'}, async ({page}, info) => {
   test.skip(info.project.name !== 'desktop');
   await open(page, false);
   await minimizeIfPossible(page);
@@ -393,14 +397,18 @@ test('selected appearance is an Amber ring on a neutral ground', async ({page}, 
   expect(style.background).toBe(await resolve(page, 'hsl(var(--card))'));
 });
 
-test('desktop hides the Profile cog because the header gear is the entry', async ({page}, info) => {
-  test.skip(info.project.name !== 'desktop');
-  await openProfile(page, 'light');
-  await expect(page.locator('.profile-view')).toBeVisible();
-  await expect(
-    page.locator('.library-scroll').getByRole('button', {name: 'Settings', exact: true}),
-  ).toBeHidden();
-});
+test(
+  'desktop hides the Profile cog because the header gear is the entry',
+  {tag: '@desktop'},
+  async ({page}, info) => {
+    test.skip(info.project.name !== 'desktop');
+    await openProfile(page, 'light');
+    await expect(page.locator('.profile-view')).toBeVisible();
+    await expect(
+      page.locator('.library-scroll').getByRole('button', {name: 'Settings', exact: true}),
+    ).toBeHidden();
+  },
+);
 
 test('Settings opened from the Profile cog returns focus to the cog', async ({page}, info) => {
   test.skip(info.project.name !== 'mobile');
@@ -419,19 +427,23 @@ test('Settings opened from the Profile cog returns focus to the cog', async ({pa
   }
 });
 
-test('desktop templates use two columns, and one beside the open logger', async ({page}, info) => {
-  test.skip(info.project.name !== 'desktop');
-  await open(page, false);
-  const grid = page.locator('.template-grid');
-  await expect(grid).toBeVisible();
-  const tracks = () => grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' '));
-  expect(await tracks()).toHaveLength(1);
-  const gridBox = await grid.boundingBox();
-  const lastBox = await page.locator('.template-card').last().boundingBox();
-  expect(Math.abs(lastBox!.width - gridBox!.width)).toBeLessThanOrEqual(1);
-  await minimizeIfPossible(page);
-  await expect.poll(tracks).toHaveLength(2);
-});
+test(
+  'desktop templates use two columns, and one beside the open logger',
+  {tag: '@desktop'},
+  async ({page}, info) => {
+    test.skip(info.project.name !== 'desktop');
+    await open(page, false);
+    const grid = page.locator('.template-grid');
+    await expect(grid).toBeVisible();
+    const tracks = () => grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' '));
+    expect(await tracks()).toHaveLength(1);
+    const gridBox = await grid.boundingBox();
+    const lastBox = await page.locator('.template-card').last().boundingBox();
+    expect(Math.abs(lastBox!.width - gridBox!.width)).toBeLessThanOrEqual(1);
+    await minimizeIfPossible(page);
+    await expect.poll(tracks).toHaveLength(2);
+  },
+);
 
 test('the empty templates state sits outside the bordered grid', async ({page}) => {
   await page.goto('/');
@@ -443,13 +455,17 @@ test('the empty templates state sits outside the bordered grid', async ({page}) 
   await expect(page.locator('.template-grid .empty-state')).toHaveCount(0);
 });
 
-test('the brand stays on one line at 1000px with the logger open', async ({page}, info) => {
-  test.skip(info.project.name !== 'desktop');
-  await page.setViewportSize({width: 1000, height: 800});
-  await open(page, false);
-  const box = await page.locator('.app-brand').boundingBox();
-  expect(box!.height).toBeLessThanOrEqual(24);
-});
+test(
+  'the brand stays on one line at 1000px with the logger open',
+  {tag: '@desktop'},
+  async ({page}, info) => {
+    test.skip(info.project.name !== 'desktop');
+    await page.setViewportSize({width: 1000, height: 800});
+    await open(page, false);
+    const box = await page.locator('.app-brand').boundingBox();
+    expect(box!.height).toBeLessThanOrEqual(24);
+  },
+);
 
 test('the tab bar hides while editing a template name', async ({page}, info) => {
   test.skip(info.project.name !== 'mobile');
@@ -505,7 +521,7 @@ test('Delete entry is an outline action with destructive text', async ({page}) =
   expect(style.background).not.toBe(await resolve(page, 'hsl(6 62% 42%)'));
 });
 
-test('secondary buttons wash on hover', async ({page}, info) => {
+test('secondary buttons wash on hover', {tag: '@desktop'}, async ({page}, info) => {
   test.skip(info.project.name !== 'desktop');
   await page.emulateMedia({colorScheme: 'light'});
   await open(page, false);
@@ -519,7 +535,7 @@ test('secondary buttons wash on hover', async ({page}, info) => {
   await expect(add).toHaveCSS('background-color', await resolve(page, 'hsl(42 55.6% 96.5%)'));
 });
 
-test('primary buttons dim on hover', async ({page}, info) => {
+test('primary buttons dim on hover', {tag: '@desktop'}, async ({page}, info) => {
   test.skip(info.project.name !== 'desktop');
   await open(page, false);
   await page.getByRole('button', {name: 'Cancel workout'}).click();
@@ -536,26 +552,28 @@ for (const [scheme, wash] of [
   ['light', 'hsl(37.1 36.8% 88.8%)'],
   ['dark', 'hsl(262.5 9.1% 17.3%)'],
 ] as const) {
-  test(`resume bar hovers to the accent wash with foreground meta (${scheme})`, async ({
-    page,
-  }, info) => {
-    test.skip(info.project.name !== 'desktop');
-    await page.emulateMedia({colorScheme: scheme});
-    await open(page, true);
-    const bar = page.getByRole('button', {name: 'Resume Upper body A'});
-    await expect(bar).toBeVisible();
-    const meta = bar.locator('span.block');
-    const time = bar.locator('.elapsed');
-    const accent = await resolve(page, wash);
-    const foreground = await bar.evaluate((el) => getComputedStyle(el).color);
-    await page.mouse.move(0, 0);
-    await expect(bar).not.toHaveCSS('background-color', accent);
-    await expect(meta).not.toHaveCSS('color', foreground);
-    await bar.hover();
-    await expect(bar).toHaveCSS('background-color', accent);
-    await expect(meta).toHaveCSS('color', foreground);
-    await expect(time).toHaveCSS('color', foreground);
-  });
+  test(
+    `resume bar hovers to the accent wash with foreground meta (${scheme})`,
+    {tag: '@desktop'},
+    async ({page}, info) => {
+      test.skip(info.project.name !== 'desktop');
+      await page.emulateMedia({colorScheme: scheme});
+      await open(page, true);
+      const bar = page.getByRole('button', {name: 'Resume Upper body A'});
+      await expect(bar).toBeVisible();
+      const meta = bar.locator('span.block');
+      const time = bar.locator('.elapsed');
+      const accent = await resolve(page, wash);
+      const foreground = await bar.evaluate((el) => getComputedStyle(el).color);
+      await page.mouse.move(0, 0);
+      await expect(bar).not.toHaveCSS('background-color', accent);
+      await expect(meta).not.toHaveCSS('color', foreground);
+      await bar.hover();
+      await expect(bar).toHaveCSS('background-color', accent);
+      await expect(meta).toHaveCSS('color', foreground);
+      await expect(time).toHaveCSS('color', foreground);
+    },
+  );
 }
 
 test('empty states use the shared EmptyState', async ({page}) => {

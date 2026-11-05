@@ -373,20 +373,24 @@ for (const viewport of [
   });
 }
 
-test('moving focus to another ⋯ button closes the open menu', async ({page}, info) => {
-  test.skip(info.project.name === 'mobile', 'The phone drawer is modal and keeps focus inside.');
-  await start(page);
-  await options(page, 'Bench Press (Barbell)').click();
-  const first = page.getByRole('menu', {name: 'Exercise options for Bench Press (Barbell)'});
-  await expect(first).toBeVisible();
-  await options(page, 'Seated Row (Cable)').focus();
-  await expect(first).toBeHidden();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('menu')).toHaveCount(1);
-  await expect(
-    page.getByRole('menu', {name: 'Exercise options for Seated Row (Cable)'}),
-  ).toBeVisible();
-});
+test(
+  'moving focus to another ⋯ button closes the open menu',
+  {tag: '@desktop'},
+  async ({page}, info) => {
+    test.skip(info.project.name === 'mobile', 'The phone drawer is modal and keeps focus inside.');
+    await start(page);
+    await options(page, 'Bench Press (Barbell)').click();
+    const first = page.getByRole('menu', {name: 'Exercise options for Bench Press (Barbell)'});
+    await expect(first).toBeVisible();
+    await options(page, 'Seated Row (Cable)').focus();
+    await expect(first).toBeHidden();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('menu')).toHaveCount(1);
+    await expect(
+      page.getByRole('menu', {name: 'Exercise options for Seated Row (Cable)'}),
+    ).toBeVisible();
+  },
+);
 
 test('after Remove, focus moves to the next card, the previous one, then Add exercise', async ({
   page,
@@ -411,7 +415,7 @@ test('after Remove, focus moves to the next card, the previous one, then Add exe
   await expect(page.getByRole('button', {name: 'Add exercise', exact: true})).toBeFocused();
 });
 
-test('Tab out of the menu continues from the ⋯ button', async ({page}, info) => {
+test('Tab out of the menu continues from the ⋯ button', {tag: '@desktop'}, async ({page}, info) => {
   test.skip(info.project.name === 'mobile', 'The phone drawer is modal and keeps focus inside.');
   await start(page);
   const trigger = options(page, 'Seated Row (Cable)');

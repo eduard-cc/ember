@@ -443,20 +443,24 @@ for (const [width, height, padding] of [
   [320, 740, '12px'],
   [1440, 1000, '14px 24px'],
 ] as const) {
-  test(`the lifted reorder list pads ${padding} at ${width}x${height}`, async ({page}, info) => {
-    test.skip(info.project.name !== 'desktop');
-    await page.setViewportSize({width, height});
-    await start(page);
-    await lift(page, demo[1]);
-    const list = page.getByRole('list', {name: 'Reorder exercises'});
-    const css = await list.evaluate((el) => {
-      const style = getComputedStyle(el);
-      return [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft];
-    });
-    const [top, right, bottom, left] = css;
-    expect(top).toBe(bottom);
-    expect(right).toBe(left);
-    expect(top === right ? top : `${top} ${right}`).toBe(padding);
-    await page.mouse.up();
-  });
+  test(
+    `the lifted reorder list pads ${padding} at ${width}x${height}`,
+    {tag: '@desktop'},
+    async ({page}, info) => {
+      test.skip(info.project.name !== 'desktop');
+      await page.setViewportSize({width, height});
+      await start(page);
+      await lift(page, demo[1]);
+      const list = page.getByRole('list', {name: 'Reorder exercises'});
+      const css = await list.evaluate((el) => {
+        const style = getComputedStyle(el);
+        return [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft];
+      });
+      const [top, right, bottom, left] = css;
+      expect(top).toBe(bottom);
+      expect(right).toBe(left);
+      expect(top === right ? top : `${top} ${right}`).toBe(padding);
+      await page.mouse.up();
+    },
+  );
 }
