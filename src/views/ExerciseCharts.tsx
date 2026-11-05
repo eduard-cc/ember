@@ -37,7 +37,7 @@ export function ExerciseCharts({
 }: {
   dataset: Dataset;
   name: string;
-  onSource: (id: string) => void;
+  onSource: (id: string, opener: HTMLElement) => void;
   framed?: boolean;
 }) {
   const history = useMemo(() => getHistory(dataset, name), [dataset, name]);
@@ -191,7 +191,7 @@ export function ExerciseCharts({
                 <button
                   className='pressable grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto_16px] items-center gap-2 py-2 text-left hover:bg-accent focus-visible:-outline-offset-2'
                   aria-label={`View source workout ${dateLabel(point.date)}, ${source.spoken ?? source.text}, ${metricLabel} ${chartNumber(point.value)} ${unit}${point.pr ? ', personal record' : ''}`}
-                  onClick={() => onSource(point.workoutId)}
+                  onClick={(event) => onSource(point.workoutId, event.currentTarget)}
                 >
                   <span className='flex min-w-0 flex-col gap-0.5 numeric text-sm text-muted-foreground min-[480px]:flex-row min-[480px]:gap-4'>
                     <span>{dateLabel(point.date)}</span>

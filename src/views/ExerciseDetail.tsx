@@ -100,7 +100,7 @@ function HistoryTab({
 }: {
   dataset: Dataset;
   name: string;
-  onSource: (id: string) => void;
+  onSource: (id: string, opener: HTMLElement) => void;
   framed: boolean;
 }) {
   const [limit, setLimit] = useState(10);
@@ -126,7 +126,7 @@ function HistoryTab({
               variant='ghost'
               className='w-full justify-between gap-3 px-4 py-3 text-left text-foreground'
               aria-label={`View source workout ${session.workoutName} ${dateLabel(session.date)}`}
-              onClick={() => onSource(session.workoutId)}
+              onClick={(event) => onSource(session.workoutId, event.currentTarget)}
             >
               <span className='min-w-0'>
                 <span
@@ -190,7 +190,7 @@ function RecordsTab({
 }: {
   dataset: Dataset;
   name: string;
-  onSource: (id: string) => void;
+  onSource: (id: string, opener: HTMLElement) => void;
   framed: boolean;
 }) {
   const records = useMemo(() => getRecords(dataset, name), [dataset, name]);
@@ -219,7 +219,7 @@ function RecordsTab({
           variant='ghost'
           className='w-full justify-between gap-3 px-0 py-3 text-left text-foreground'
           aria-label={`View source workout for ${label}: ${value}${showSet && actual ? `, ${actual.spoken ?? actual.text}` : ''}, ${dateLabel(entry.date)}, ${entry.workoutName}`}
-          onClick={() => onSource(entry.workoutId)}
+          onClick={(event) => onSource(entry.workoutId, event.currentTarget)}
         >
           <span className='min-w-0 flex-1'>
             <span className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1'>
@@ -345,8 +345,9 @@ export function ExerciseDetail({
   // A session opens its workout right here, over these details; closing it returns to the row.
   const [openId, setOpenId] = useState<string | null>(null);
   const trigger = useRef<HTMLElement | null>(null);
-  const onSource = (workoutId: string) => {
-    trigger.current = document.activeElement as HTMLElement | null;
+  // The tapped row itself: Safari on iPhone does not focus a button it taps.
+  const onSource = (workoutId: string, opener: HTMLElement) => {
+    trigger.current = opener;
     cue('tick');
     setOpenId(workoutId);
   };

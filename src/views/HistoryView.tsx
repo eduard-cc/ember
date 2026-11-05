@@ -20,15 +20,15 @@ const CARD_LINES = 5;
 
 export function HistoryView({
   dataset,
-  focus,
+  marked,
   searching,
   onSearchingChange,
   locked,
   downloading,
 }: {
   dataset: Dataset;
-  /** The workout to mark (a finish) or, with `open`, to open (a source link). */
-  focus: {id: string; open: boolean} | null;
+  /** The just-finished workout, marked with an Amber border. */
+  marked: string | null;
   /** The search field is shown, from the search button beside the page title. */
   searching: boolean;
   onSearchingChange: (searching: boolean) => void;
@@ -40,35 +40,21 @@ export function HistoryView({
   const mobile = useIsMobile();
 
   const workouts = dataset.workouts;
-  // Enough pages to include a workout, so its card is there for focus to return to.
-  const pagesFor = (id: string | undefined) =>
-    Math.max(PAGE, Math.ceil((workouts.findIndex((w) => w.id === id) + 1) / PAGE) * PAGE);
   const [search, setSearch] = useState('');
   const cancelSearch = () => {
     setSearch('');
     onSearchingChange(false);
   };
   useBackLayer(searching && mobile && !locked, cancelSearch);
-  const [limit, setLimit] = useState(() => (focus?.open ? pagesFor(focus.id) : PAGE));
-  // Closing or reopening search starts it empty, on the first page. This runs before the focus
-  // check below, so a source link that also closes search keeps the page its workout is on.
+  const [limit, setLimit] = useState(PAGE);
+  // Closing or reopening search starts it empty, on the first page.
   const [wasSearching, setWasSearching] = useState(searching);
   if (wasSearching !== searching) {
     setWasSearching(searching);
     setSearch('');
     setLimit(PAGE);
   }
-  // A source link opens its workout; a new focus opens it even while History is showing.
-  const [openId, setOpenId] = useState<string | null>(focus?.open ? focus.id : null);
-  const [seenFocus, setSeenFocus] = useState(focus);
-  if (focus !== seenFocus) {
-    setSeenFocus(focus);
-    if (focus?.open) {
-      setSearch('');
-      setOpenId(focus.id);
-      setLimit((n) => Math.max(n, pagesFor(focus.id)));
-    }
-  }
+  const [openId, setOpenId] = useState<string | null>(null);
   const cards = useRef(new Map<string, HTMLButtonElement>());
 
   const query = searching ? search.trim().toLowerCase() : '';
@@ -152,7 +138,7 @@ export function HistoryView({
             {group.items.map((workout) => {
               const workoutRecords = records.get(workout.id) ?? [];
               const recordNames = new Set(workoutRecords.map((record) => record.exercise));
-              const focused = focus?.id === workout.id;
+              const focused = marked === workout.id;
               return (
                 <li key={workout.id} className={cn(focused && 'focused-history')}>
                   <article

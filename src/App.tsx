@@ -155,8 +155,8 @@ export default function App() {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [deletingSets, setDeletingSets] = useState(false);
   const [pendingWorkout, setPendingWorkout] = useState<Workout | null>(null);
-  // The History workout to mark (a finish) or open (a source link).
-  const [focus, setFocus] = useState<{id: string; open: boolean} | null>(null);
+  // The just-finished workout, marked at the top of History.
+  const [finished, setFinished] = useState<string | null>(null);
   const [historySearch, setHistorySearch] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -243,14 +243,9 @@ export default function App() {
   const go = (next: View) => {
     setView(next);
     setExercise(null);
-    setFocus(null);
+    setFinished(null);
     setHistorySearch(false);
     setPendingWorkout(null);
-  };
-  const source = (id: string) => {
-    go('History');
-    setFocus({id, open: true});
-    expand(false);
   };
   // On phones an exercise's page is a dialog over the library, so it would cover the logger.
   const showLogger = () => {
@@ -298,7 +293,7 @@ export default function App() {
     // Only a committed finish celebrates; a failed one keeps the confirmation and its error.
     if (workout) {
       setConfirmFinish(false);
-      setFocus({id: workout.id, open: false});
+      setFinished(workout.id);
       setHistorySearch(false);
       setView('History');
       setExercise(null);
@@ -471,7 +466,7 @@ export default function App() {
               {view === 'History' && (
                 <HistoryView
                   dataset={allDataset}
-                  focus={focus}
+                  marked={finished}
                   searching={historySearch}
                   onSearchingChange={setHistorySearch}
                   locked={sync.locked}
@@ -624,7 +619,7 @@ export default function App() {
                     dataset={allDataset}
                     onChange={updateActive}
                     onDeletingChange={setDeletingSets}
-                    onSource={source}
+                    sources
                     disabled={disabled}
                   />
                   <div className='flex flex-col gap-3 px-4 pt-[18px] pb-[30px]'>

@@ -247,7 +247,7 @@ test("Repeat from an exercise's workout, with a workout active, replaces it and 
   await expect(weight).toBeFocused();
 });
 
-test('a logger source link closes History search and opens an older workout on its page', async ({
+test('a logger source link opens its workout over Previous and leaves History as it was', async ({
   page,
 }) => {
   const active = {
@@ -271,15 +271,18 @@ test('a logger source link closes History search and opens an older workout on i
   const resume = page.getByRole('button', {name: /^Resume /});
   if (await resume.isVisible()) await resume.click();
   await page.getByRole('button', {name: 'Previous for Synthetic Leg Press set 1'}).click();
-  await page
-    .getByRole('dialog')
-    .getByRole('button', {name: /View source workout/})
-    .first()
-    .click();
+  const previous = page.locator('.source-dialog');
+  const source = previous.getByRole('button', {
+    name: new RegExp(`^View source workout ${long.name} 15 Sept? 2026$`),
+  });
+  await source.click();
   const drawer = page.locator('.workout-drawer');
   await expect(drawer.getByRole('heading', {name: long.name})).toBeVisible();
   await drawer.getByRole('button', {name: 'Close workout'}).click();
   await expect(drawer).toBeHidden();
-  await expect(page.getByLabel('Search workout history')).toHaveCount(0);
-  await expect(page.getByRole('button', {name: new RegExp(`^${long.name}, `)})).toBeFocused();
+  await expect(source).toBeFocused();
+  await previous.getByRole('button', {name: 'Close previous sets'}).click();
+  await page.getByRole('button', {name: 'Minimize workout'}).click();
+  await expect(page.getByLabel('Search workout history')).toHaveValue('october');
+  await expect(page.locator('.history-card')).toHaveCount(20);
 });

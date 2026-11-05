@@ -71,7 +71,7 @@ export function WorkoutView({
   evidence = dataset,
   original,
   onChange,
-  onSource,
+  sources = false,
   onDeletingChange,
   disabled = false,
   targetsOnly = false,
@@ -85,8 +85,8 @@ export function WorkoutView({
   original?: Map<string, SetRecord>;
   exerciseScope?: 'workout' | 'template';
   onChange: (update: (current: Workout) => Workout) => void;
-  /** Opens a source workout from Previous; the editors leave it out. */
-  onSource?: (id: string) => void;
+  /** Previous links its source workouts, opening them in place; the editors leave it out. */
+  sources?: boolean;
   onDeletingChange: (deleting: boolean) => void;
   /** Mirrors the logger's disabled fieldset, which the portaled details sit outside of. */
   disabled?: boolean;
@@ -511,7 +511,7 @@ export function WorkoutView({
                     exercise={ex}
                     set={set}
                     index={si}
-                    onSource={onSource}
+                    sources={sources}
                   />
                   <ReplaceInput
                     type='number'

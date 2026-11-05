@@ -169,27 +169,32 @@ test('five-column Previous opens evidence for the selected set weight and source
   const second = exercise.locator('.set-row:not(.set-head)').nth(1);
   await second.getByLabel(/Weight/).fill('60');
   await second.getByRole('button', {name: /Previous for .* set 2/}).click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.locator('.source-dialog');
+  await expect(dialog.getByRole('heading', {name: 'Bench Press (Barbell)'})).toBeVisible();
+  await expect(dialog).toContainText('Set 2 · recorded sets only, nothing estimated');
   await expect(dialog).toContainText('Best at 60 kg');
-  await expect(dialog).toContainText(/60 kg × \d+ · \d/);
+  const best = dialog.getByRole('button', {name: /^View source workout .*, 60 kg × \d+, \d/});
+  await expect(best).toContainText(/60 kg × \d+/);
+  expect((await best.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  // The previous session lists its sets with this set marked.
   await expect(dialog).toContainText('Previous session');
-  await expect(dialog.getByRole('button', {name: /View source workout/}).first()).toBeVisible();
-  await dialog
-    .getByRole('button', {name: /View source workout/})
-    .first()
-    .click();
-  // The source workout opens in its drawer over History.
-  await expect(page.locator('.library-scroll h1')).toHaveText('History');
+  const sets = dialog.getByRole('list', {name: 'Sets performed'}).getByRole('listitem');
+  await expect(sets.nth(1)).toHaveAttribute('aria-current', 'true');
+  await expect(sets.nth(1)).toContainText('This set');
+  await expect(sets.nth(0)).not.toHaveAttribute('aria-current');
+  await best.click();
+  // The source workout opens in its drawer over Previous, with the logger still underneath.
   const drawer = page.locator('.workout-drawer');
   await expect(drawer.locator('.recorded-sets').first()).toContainText('60 kg × 9');
   await drawer.getByRole('button', {name: 'Close workout'}).click();
   await expect(drawer).toBeHidden();
-  await expect(page.locator('.focused-history button')).toBeFocused();
-  await page.getByRole('button', {name: /Resume Upper body A/}).click();
+  await expect(best).toBeFocused();
+  await dialog.getByRole('button', {name: 'Close previous sets'}).click();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   await second.getByLabel(/Weight/).fill('61');
   await second.getByRole('button', {name: /Previous for .* set 2/}).click();
   await expect(dialog).toContainText('No counted sets at 61 kg');
-  await expect(dialog).toContainText('No equivalent performance is inferred');
+  await expect(dialog).toContainText('not an equivalent for 61 kg');
   await dialog.getByRole('button', {name: 'Close previous sets'}).click();
   await expect(second.getByLabel(/Weight/)).toHaveValue('61');
 });
@@ -201,15 +206,17 @@ test('an unrecorded weight shows the nearest actual lighter and heavier sets wit
   const second = page.locator('.exercise-card').first().locator('.set-row:not(.set-head)').nth(1);
   await second.getByLabel(/Weight/).fill('61');
   await second.getByRole('button', {name: /Previous for .* set 2/}).click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.locator('.source-dialog');
   await expect(dialog).toContainText('No counted sets at 61 kg');
   const nearest = dialog.getByRole('region', {name: 'Nearest recorded'});
-  await expect(nearest).toContainText('actual sets');
+  await expect(nearest).toContainText('Actual sets at other weights');
   const lighter = nearest.getByRole('listitem').filter({hasText: 'Lighter'});
   const heavier = nearest.getByRole('listitem').filter({hasText: 'Heavier'});
-  await expect(lighter).toContainText(/60 kg × 9 · \d/);
-  await expect(heavier).toContainText(/62\.5 kg × 8 · \d/);
-  const view = heavier.getByRole('button', {name: /View source workout/});
+  await expect(lighter).toContainText('60 kg × 9');
+  await expect(heavier).toContainText('62.5 kg × 8');
+  const view = heavier.getByRole('button', {
+    name: /View source workout .*\(heavier\), 62\.5 kg × 8, \d/,
+  });
   // Measured once the open animation has settled (it zooms in from 95%).
   await expect.poll(async () => (await view.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   // Nothing in the sheet may scroll sideways on a phone.
@@ -224,8 +231,8 @@ test('an unrecorded weight shows the nearest actual lighter and heavier sets wit
   await second.getByLabel(/Weight/).fill('61');
   await second.getByRole('button', {name: /Previous for .* set 2/}).click();
   await view.click();
-  await expect(page.locator('.library-scroll h1')).toHaveText('History');
   await expect(page.locator('.workout-drawer .recorded-sets').first()).toContainText('62.5 kg × 8');
+  await expect(dialog).toBeAttached();
 });
 
 test('exercise Done survives value edits and reload but a new set needs its own tick', async ({
