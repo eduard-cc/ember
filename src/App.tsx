@@ -19,6 +19,7 @@ import {ElapsedTimer} from './components/ElapsedTimer';
 import {ExercisePage} from './components/ExercisePage';
 import {FeedbackSettings} from './components/FeedbackSettings';
 import {type Celebration, FinishCelebration} from './components/FinishCelebration';
+import {LaunchSplash, useLaunchSplash} from './components/LaunchSplash';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {StateNotice} from './components/StateNotice';
 import {SyncLockedNotice} from './components/SyncStatus';
@@ -352,6 +353,9 @@ export default function App() {
       setConfirmReset(true);
     },
   });
+  // Launch shows the Ember heart while the app opens; a failed connection or a condition that
+  // needs the owner shows the locked page instead.
+  const launching = useLaunchSplash(sync.locked && !sync.lastAttemptFailed && !conditions.length);
   const pageConditions = !showSheet && !sync.locked && !settingsOpen;
   const settingsButton = (className?: string) => (
     <Button
@@ -375,7 +379,8 @@ export default function App() {
       data-save={saveStatus}
       data-sync={sync.status}
     >
-      {sync.locked && (
+      {launching && <LaunchSplash />}
+      {sync.locked && !launching && (
         <div className='flex max-h-full flex-col overflow-auto'>
           {!settingsOpen && <StatusStrips />}
           <div className='px-[18px] py-3.5'>

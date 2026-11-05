@@ -205,6 +205,11 @@
     .celebrate-glow {
       animation: celebrate-fade 200ms ease both !important;
     }
+    /* The launch heart keeps a delayed plain fade, so a quick launch shows no flash. */
+    .launch-heart,
+    .launch-glow {
+      animation: celebrate-fade 600ms ease 400ms both !important;
+    }
   }
   * {
     scrollbar-width: thin;
@@ -663,6 +668,30 @@
   @keyframes celebrate-fade {
     from {
       opacity: 0;
+    }
+  }
+
+  /* Launch: the Ember heart slowly lights up and grows while the app opens. The delay keeps a
+     quick launch from flashing it. */
+  .launch-heart {
+    animation: launch-heart 3s var(--ease-out) 400ms both;
+  }
+  @keyframes launch-heart {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      transform: scale(1.15);
+    }
+  }
+  .launch-glow {
+    animation: launch-glow 3s var(--ease-out) 400ms both;
+  }
+  @keyframes launch-glow {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
     }
   }
 }

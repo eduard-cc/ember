@@ -183,28 +183,58 @@ test('online wake reacquires an expired session before syncing pending changes',
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
 });
 
-test('restored owner trust reconnects automatically on wake', async ({page}) => {
+test('restored owner trust reconnects automatically on wake and on launch', async ({page}) => {
   let sessions = 0;
+  let held: Promise<void> | null = null;
+  let release!: () => void;
+  let unreachable = false;
   await page.route('**/api/v1/**', async (route) => {
+    if (unreachable) return route.abort('failed');
     if (route.request().url().endsWith('/session')) {
       sessions++;
+      await held;
       return route.fulfill({json: {ownerId: 'owner', csrfToken: 'synthetic-csrf'}});
     }
     return route.fulfill({json: {changes: [], nextCursor: 0, hasMore: false}});
   });
+  const revokeTrust = () =>
+    page.evaluate(async () => {
+      const path = '/src/storage/repository.ts';
+      const {WorkoutRepository} = await import(path);
+      const repository = new WorkoutRepository();
+      await repository.db.meta.put({key: 'local-trust', value: false});
+      repository.close();
+    });
+  const splash = page.getByRole('status', {name: 'Opening Ember'});
+  const notice = page.getByRole('heading', {name: 'Connecting…'});
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
-  await page.evaluate(async () => {
-    const path = '/src/storage/repository.ts';
-    const {WorkoutRepository} = await import(path);
-    const repository = new WorkoutRepository();
-    await repository.db.meta.put({key: 'local-trust', value: false});
-    repository.close();
-  });
+  await revokeTrust();
   await expect(page.locator('main')).toBeHidden();
+  await expect(notice).toBeVisible();
+  await expect(splash).toHaveCount(0);
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(page.locator('main')).toBeVisible();
   expect(sessions).toBe(2);
+  // Launching while the server is slow shows the Ember heart, then the connection notice.
+  held = new Promise<void>((resolve) => (release = resolve));
+  await revokeTrust();
+  await page.reload();
+  await expect(splash).toBeVisible();
+  await expect(notice).toHaveCount(0);
+  await expect(page.locator('main')).toBeHidden();
+  await expect(notice).toBeVisible({timeout: 10_000});
+  await expect(splash).toHaveCount(0);
+  release();
+  await expect(page.locator('main')).toBeVisible();
+  // Launching while the server is unreachable shows the connection notice as soon as it fails.
+  unreachable = true;
+  await revokeTrust();
+  await page.reload();
+  await expect(page.getByRole('heading', {name: 'Connection required'})).toBeVisible({
+    timeout: 4_000,
+  });
+  await expect(splash).toHaveCount(0);
 });
 
 test('unavailable server keeps trusted local drafts and pending edits across reopen', async ({
