@@ -22,7 +22,8 @@ test('the cog beside the Profile title opens Settings, also for a read-only foll
   // On the title row, at its right edge, without making the 32px row taller.
   const title = await library.locator('h1').boundingBox();
   const box = await cog.boundingBox();
-  expect(title!.height).toBe(32);
+  // The built CSS rounds the 32px line height to 31.9999px.
+  expect(title!.height).toBeCloseTo(32, 1);
   expect(box!.width).toBeGreaterThanOrEqual(44);
   expect(box!.height).toBeGreaterThanOrEqual(44);
   expect(Math.abs(box!.y + box!.height / 2 - (title!.y + title!.height / 2))).toBeLessThanOrEqual(

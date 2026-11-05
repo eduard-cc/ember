@@ -242,7 +242,9 @@ test('keyboard Undo returns focus to Add weight after restoring the entry', asyn
   expect(await addButton.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
 });
 
-test('stale Undo explains the conflict without overwriting the newer entry', async ({page}) => {
+test('stale Undo explains the conflict without overwriting the newer entry @dev-server', async ({
+  page,
+}) => {
   await page.goto('/');
   const section = await open(page);
   await add(section, '75.25', '2024-07-01T08:00');
@@ -288,7 +290,7 @@ test('stale Undo explains the conflict without overwriting the newer entry', asy
   expect(stored.writes).toBe(3);
 });
 
-test('a failed Undo shows a Retry toast that restores the entry', async ({page}) => {
+test('a failed Undo shows a Retry toast that restores the entry @dev-server', async ({page}) => {
   await page.goto('/');
   const section = await open(page);
   await add(section, '75.25', '2024-07-01T08:00');
@@ -417,7 +419,9 @@ test('read-only follower tabs show entries but cannot change them', async ({page
   await expect(section.getByRole('button', {name: /Edit entry/})).toBeDisabled();
 });
 
-test('a locked installation hides body-weight history and refuses writes', async ({page}) => {
+test('a locked installation hides body-weight history and refuses writes @dev-server', async ({
+  page,
+}) => {
   let revoked = false;
   await page.route('**/api/v1/**', async (route) => {
     if (route.request().url().endsWith('/session')) {

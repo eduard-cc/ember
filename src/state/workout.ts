@@ -145,10 +145,10 @@ export function useWorkoutState() {
           );
           setSaveStatus('error');
         } else {
-          // Explicit development-only demo entry. Production and ordinary / are empty.
+          // Explicit development and e2e-build demo entry. Production and ordinary / are empty.
           if (
             lock.writable &&
-            import.meta.env.DEV &&
+            (import.meta.env.DEV || import.meta.env.MODE === 'e2e') &&
             new URLSearchParams(location.search).get('demo') === '1' &&
             !next.active &&
             !next.dataset &&

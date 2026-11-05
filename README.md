@@ -12,7 +12,7 @@ npm --prefix server ci --include=dev
 npm run dev
 ```
 
-Open http://127.0.0.1:5188. An ordinary installation starts empty. `/?demo=1` is an explicit **development-only** synthetic demo; production builds ignore it. Do not synchronize demo profiles with personal history.
+Open http://127.0.0.1:5188. An ordinary installation starts empty. `/?demo=1` is an explicit synthetic demo for development and the e2e build; production builds ignore it. Do not synchronize demo profiles with personal history.
 
 For the API (separate terminal; setup and credentials in `server/README.md`):
 

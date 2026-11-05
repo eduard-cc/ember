@@ -136,7 +136,7 @@ const evidenceWorkouts: Workout[] = [
   },
 ];
 
-test('exercise history exposes every block and numbered actual set with its source workout', async ({
+test('exercise history exposes every block and numbered actual set with its source workout @dev-server', async ({
   page,
 }) => {
   await evidence(page, evidenceWorkouts);
@@ -175,7 +175,7 @@ test('exercise history exposes every block and numbered actual set with its sour
   await expect(source).toBeFocused();
 });
 
-test('records lead with actual loads and exact reps, followed by source-linked estimates', async ({
+test('records lead with actual loads and exact reps, followed by source-linked estimates @dev-server', async ({
   page,
 }) => {
   await evidence(page, evidenceWorkouts);
@@ -251,7 +251,7 @@ for (const example of [
     record: null,
   },
 ] as const) {
-  test(`${example.type} evidence shows its recorded units and applicable records`, async ({
+  test(`${example.type} evidence shows its recorded units and applicable records @dev-server`, async ({
     page,
   }) => {
     await evidence(
@@ -287,7 +287,7 @@ for (const example of [
   });
 }
 
-test('recorded names outside the catalog keep source evidence and an explicit About state', async ({
+test('recorded names outside the catalog keep source evidence and an explicit About state @dev-server', async ({
   page,
 }) => {
   const name = 'SyntheticRecordedExerciseName'.repeat(5) + '肩部';
@@ -319,7 +319,9 @@ test('recorded names outside the catalog keep source evidence and an explicit Ab
   ).toContainText('42.5 kg × 6');
 });
 
-test('older exercise blocks can be loaded without hiding the displayed sets', async ({page}) => {
+test('older exercise blocks can be loaded without hiding the displayed sets @dev-server', async ({
+  page,
+}) => {
   const first = evidenceWorkouts[0];
   const workouts = Array.from({length: 31}, (_, index) => ({
     ...first,
@@ -336,7 +338,7 @@ test('older exercise blocks can be loaded without hiding the displayed sets', as
   await expect(page.getByRole('list', {name: 'Sets performed'}).locator('li')).toHaveCount(62);
 });
 
-test('an unused catalog exercise opens About with explicit empty History and Records', async ({
+test('an unused catalog exercise opens About with explicit empty History and Records @dev-server', async ({
   page,
 }) => {
   await evidence(page, [], 'Bench Press (Barbell)');
@@ -369,7 +371,7 @@ test('About shows facts and drawings without instructions or credit text', async
   }
 });
 
-test('catalog facts remain available when no drawing is supplied', async ({page}) => {
+test('catalog facts remain available when no drawing is supplied @dev-server', async ({page}) => {
   await page.route('**/src/catalog/catalog.ts', async (route) => {
     const response = await route.fetch();
     await route.fulfill({

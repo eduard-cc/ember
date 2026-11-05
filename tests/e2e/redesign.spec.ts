@@ -696,7 +696,7 @@ test('denied appearance storage leaves workout durability independent and the ch
   await expect(page.getByLabel(/Weight for .* set 1/).first()).toHaveValue('47.5');
 });
 
-test('a saved dark theme applies before the app script runs, so dark phones do not flash light', async ({
+test('a saved dark theme applies before the app script runs, so dark phones do not flash light @dev-server', async ({
   page,
 }) => {
   await page.addInitScript(() =>

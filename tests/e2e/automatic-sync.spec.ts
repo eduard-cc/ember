@@ -183,7 +183,9 @@ test('online wake reacquires an expired session before syncing pending changes',
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
 });
 
-test('restored owner trust reconnects automatically on wake and on launch', async ({page}) => {
+test('restored owner trust reconnects automatically on wake and on launch @dev-server', async ({
+  page,
+}) => {
   let sessions = 0;
   let held: Promise<void> | null = null;
   let release!: () => void;
@@ -237,7 +239,7 @@ test('restored owner trust reconnects automatically on wake and on launch', asyn
   await expect(splash).toHaveCount(0);
 });
 
-test('unavailable server keeps trusted local drafts and pending edits across reopen', async ({
+test('unavailable server keeps trusted local drafts and pending edits across reopen @dev-server', async ({
   page,
 }) => {
   let unavailable = false;
@@ -307,7 +309,7 @@ test('demo installation never attempts server session bootstrap', async ({page})
 });
 
 for (const status of ['conflict', 'rejected'] as const) {
-  test(`${status} keeps local work without continuously polling`, async ({page}) => {
+  test(`${status} keeps local work without continuously polling @dev-server`, async ({page}) => {
     await page.addInitScript(() => {
       const interval = window.setInterval;
       window.setInterval = ((handler: TimerHandler, delay?: number, ...args: unknown[]) =>

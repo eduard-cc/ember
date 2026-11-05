@@ -14,6 +14,7 @@ export default [
     // server/ has its own config.
     ignores: [
       'dist/**',
+      'dist-e2e/**',
       'coverage/**',
       'playwright-report/**',
       'test-results/**',

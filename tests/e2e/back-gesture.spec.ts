@@ -228,7 +228,7 @@ test('a reload with nothing open trims its leftover entry on the first tap', asy
   await expect.poll(() => depth(page)).toBe(0);
 });
 
-test('changed templates keep their draft through dismissal and discard writes nothing', async ({
+test('changed templates keep their draft through dismissal and discard writes nothing @dev-server', async ({
   page,
 }) => {
   test.setTimeout(60_000);

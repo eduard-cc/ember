@@ -2,7 +2,7 @@ import {type Page, expect, test} from '@playwright/test';
 
 import {addExercise, navigate, pressAt, templateAction} from '../navigation';
 
-test('templates can be created edited started and deleted', async ({page}) => {
+test('templates can be created edited started and deleted @dev-server', async ({page}) => {
   test.setTimeout(60_000);
   await page.setViewportSize({width: 412, height: 915});
   // Record haptics: confirming the template over the open draft plays the start cue.
@@ -244,7 +244,7 @@ test('a failed template save shows a Retry toast during a workout and saves the 
   await navigate(page, 'Workouts');
   await expect(cards).toHaveCount(saved);
 });
-test('template editor retains a failed save and closes after a successful retry', async ({
+test('template editor retains a failed save and closes after a successful retry @dev-server', async ({
   page,
 }) => {
   await page.goto('/?demo=1');

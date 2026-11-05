@@ -1,5 +1,12 @@
 import {expect, test} from '@playwright/test';
 
+test('a production installation ignores the demo entry and starts empty', async ({page}) => {
+  await page.goto('/?demo=1');
+  await expect(page.getByRole('heading', {name: 'Quick start', exact: true})).toBeVisible();
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await expect(page.getByRole('heading', {name: 'Your workout'})).toHaveCount(0);
+});
+
 test('production shell reopens offline with a real service worker', async ({page, context}) => {
   await page.goto('/');
   await expect
@@ -11,8 +18,7 @@ test('production shell reopens offline with a real service worker', async ({page
   await expect
     .poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller)))
     .toBe(true);
-  const shell = await page.locator('#root').innerText();
-  expect(shell.length).toBeGreaterThan(0);
+  await expect(page.locator('#root')).not.toHaveText('');
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('#root')).not.toBeEmpty();

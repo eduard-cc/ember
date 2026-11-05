@@ -60,7 +60,7 @@ const stored = (page: Page) =>
     }
   });
 
-test('a history workout edited from its drawer returns to the drawer, and the edit survives a reload', async ({
+test('a history workout edited from its drawer returns to the drawer, and the edit survives a reload @dev-server', async ({
   page,
 }) => {
   const value = structuredClone(seeded);
@@ -164,7 +164,7 @@ test('a history workout edited from its drawer returns to the drawer, and the ed
   await expect(reopened).toContainText('55 min');
 });
 
-test('cancelling an edited workout asks before discarding', async ({page}) => {
+test('cancelling an edited workout asks before discarding @dev-server', async ({page}) => {
   await open(page);
   const before = await stored(page);
   await workoutAction(page, 'Pull day', 'Edit workout');
@@ -342,7 +342,7 @@ test('history editing saves added, replaced and reordered exercises with their o
   await expect(drawer.locator('.recorded-sets')).toContainText(['60 s', '30 kg × 10']);
 });
 
-test('a failed history save keeps the draft for a successful retry', async ({page}) => {
+test('a failed history save keeps the draft for a successful retry @dev-server', async ({page}) => {
   await open(page);
   await workoutAction(page, 'Push day', 'Edit workout');
   const editor = page.locator('.history-editor');
@@ -410,7 +410,7 @@ test('a failed history save keeps the draft for a successful retry', async ({pag
   await expect(drawer.locator('.recorded-sets')).toContainText('50 kg × 9');
 });
 
-test('a newer stored revision is preserved while an edited history draft stays open', async ({
+test('a newer stored revision is preserved while an edited history draft stays open @dev-server', async ({
   page,
 }) => {
   await open(page);

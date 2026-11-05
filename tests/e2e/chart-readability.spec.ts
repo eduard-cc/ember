@@ -81,7 +81,7 @@ test('chart axis and date labels stay readable without clipping or overlap', asy
     .toBeGreaterThanOrEqual(10.99);
 });
 
-test('each repeated exercise block can be inspected at its recorded time, then the metric switches on one press', async ({
+test('each repeated exercise block can be inspected at its recorded time, then the metric switches on one press @dev-server', async ({
   page,
 }) => {
   await page.route('**/src/domain/demo.ts', async (route) => {
@@ -131,7 +131,7 @@ test('each repeated exercise block can be inspected at its recorded time, then t
   await expect(headline).toHaveText(/^70\s*kg/);
 });
 
-test('holding and sliding inspects sessions with optional haptics, then returns to the latest value', async ({
+test('holding and sliding inspects sessions with optional haptics, then returns to the latest value @dev-server', async ({
   browser,
   baseURL,
 }) => {

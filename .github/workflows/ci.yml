@@ -40,8 +40,8 @@ jobs:
       - run: npm --prefix server run lint:check
       - run: npm --prefix server run typecheck
       # Synthetic install/notification and deploy decisions, with no live units or services.
-      - run: shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh ops/notify.sh ops/test-install.sh
-      - run: bash ops/test-install.sh && bash ops/test-auto-deploy.sh && bash ops/test-dependency-check.sh
+      - run: shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh ops/notify.sh ops/test-install.sh ops/browser-tests-needed.sh ops/test-browser-tests-needed.sh
+      - run: bash ops/test-install.sh && bash ops/test-auto-deploy.sh && bash ops/test-dependency-check.sh && bash ops/test-browser-tests-needed.sh
       - run: python3 -B ops/test-ember-run.py
       - run: npm run test:run
       # The web build typechecks the root first. The server build runs in server-e2e.
@@ -110,35 +110,64 @@ jobs:
   playwright:
     name: Playwright (phone)
     runs-on: ubuntu-24.04
-    # Phone E2E takes about 8 minutes and apt's install-deps up to 5 on a slow mirror; the
-    # serial production PWA suite reuses setup. Leave headroom for both suites and caches.
+    # Phone E2E has taken up to 18 minutes on the dev server, and apt's install-deps up to 5 on a
+    # slow mirror; the serial production PWA suite reuses setup. Leave headroom for both suites.
     timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+          fetch-depth: 0
+      # Skips the browser suites, not the job, so the check still reports success. A main push
+      # compares with the last green main run, so a change whose run was cancelled is still
+      # tested by the next push; a PR compares with its base.
+      - name: Find the last green main commit
+        id: base
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&event=push&status=success&per_page=1"
+          --jq '"sha=" + (.workflow_runs[0].head_sha // "")' >> "$GITHUB_OUTPUT" || true
+      - name: Decide whether browser tests are needed
+        env:
+          BASE: ${{ github.event_name == 'push' && steps.base.outputs.sha || '' }}
+        run: |
+          if [[ $GITHUB_EVENT_NAME == pull_request ]]; then BASE=$(git rev-parse HEAD^1); fi
+          needed=$(bash ops/browser-tests-needed.sh "$BASE")
+          echo "base=${BASE:-unknown} browser tests needed: $needed"
+          echo "RUN_BROWSER_TESTS=$needed" >> "$GITHUB_ENV"
+      - if: env.RUN_BROWSER_TESTS == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci --include=dev
+      - if: env.RUN_BROWSER_TESTS == 'true'
+        run: npm ci --include=dev
       - name: Read Playwright version
+        if: env.RUN_BROWSER_TESTS == 'true'
         id: playwright
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright Chromium
+        if: env.RUN_BROWSER_TESTS == 'true'
         id: playwright-cache
         uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-chromium-shell
       - name: Install Playwright Chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: env.RUN_BROWSER_TESTS == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps --only-shell chromium
       - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        if: env.RUN_BROWSER_TESTS == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
-      - run: npm run test:e2e
+      - if: env.RUN_BROWSER_TESTS == 'true'
+        run: npm run test:e2e
       - name: Production offline shell and safe updates (Pixel 6)
+        if: env.RUN_BROWSER_TESTS == 'true'
         run: npm run test:pwa
       # Separate HTML reports embed failure screenshots and retry traces. Timeouts count as
       # cancelled, not failed, so they upload nothing.
