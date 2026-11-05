@@ -209,9 +209,12 @@ test('a failed template save shows a Retry toast during a workout and saves the 
   const toast = page.locator('[data-sonner-toast]');
   await expect(toast).toContainText('Template not saved');
   await expect(toast).toHaveAttribute('data-type', 'error');
+  // Rounded: the toast's entrance transform can leave a 44px button a hair under 44.
   for (const label of ['Retry', 'Dismiss'])
     expect(
-      (await toast.getByRole('button', {name: label, exact: true}).boundingBox())!.height,
+      Math.round(
+        (await toast.getByRole('button', {name: label, exact: true}).boundingBox())!.height,
+      ),
     ).toBeGreaterThanOrEqual(44);
   // A failure stays until it is retried or dismissed.
   await page.waitForTimeout(4000);
