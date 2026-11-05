@@ -60,8 +60,13 @@ export function ExerciseCharts({
     () =>
       trend
         .filter((p) => !firstDay || p.date.slice(0, 10) >= firstDay)
-        .map((p) => ({...p, t: new Date(p.date).getTime()})),
-    [trend, firstDay],
+        .map((p) => ({
+          ...p,
+          // An estimate reads to one decimal, like the workout drawer and Records.
+          value: activeMetric === 'e1rm' ? Number(p.value.toFixed(1)) : p.value,
+          t: new Date(p.date).getTime(),
+        })),
+    [trend, firstDay, activeMetric],
   );
   const hover = inspected && data.includes(inspected) ? inspected : null;
   const first = data[0];

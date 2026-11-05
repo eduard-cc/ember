@@ -107,9 +107,16 @@ test('each repeated exercise block can be inspected at its recorded time', async
   await page.getByLabel('Search exercises').fill('Bench');
   await page.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).first().click();
   await page.getByRole('tab', {name: 'Charts', exact: true}).click();
-  const chart = page.getByRole('img', {name: /Heaviest weight for Bench/});
+  // Estimates read to one decimal: 50 kg × 8 is 63.3 kg, so the change is +20.7 kg.
+  await page.getByRole('radio', {name: 'Est. 1RM', exact: true}).click();
+  const chart = page.getByRole('img', {name: /Est\. 1RM for Bench/});
   const headline = page.locator('.chart-headline');
+  await expect(headline).toHaveText(/^84\s*kg.*\+20\.7 kg since/);
+  await expect(page.getByRole('list', {name: 'Sessions'}).locator('li').last()).toHaveText(
+    /63\.3 kg$/,
+  );
   await chart.locator('.recharts-surface').focus();
+  await expect(headline).toHaveText(/^63\.3\s*kg.*50 kg × 8$/);
   await page.keyboard.press('ArrowRight');
   await expect(headline).toContainText('60 kg × 8');
   await page.keyboard.press('ArrowRight');

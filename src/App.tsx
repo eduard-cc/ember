@@ -39,7 +39,6 @@ import {
   ResponsiveDialog,
   ResponsiveDialogClose,
   ResponsiveDialogContent,
-  ResponsiveDialogCornerClose,
   ResponsiveDialogDescription,
   ResponsiveDialogFooter,
   ResponsiveDialogHeader,
@@ -751,7 +750,7 @@ export default function App() {
         }}
       >
         <ResponsiveDialogContent>
-          <ResponsiveDialogHeader className='pr-14 desk:pr-7'>
+          <ResponsiveDialogHeader className='text-left'>
             <ResponsiveDialogTitle>Replace your active workout?</ResponsiveDialogTitle>
             <ResponsiveDialogDescription className='mt-2'>
               Your current workout will be discarded. All repeated sets start uncompleted.
@@ -780,12 +779,11 @@ export default function App() {
               Replace active draft
             </Button>
           </ResponsiveDialogFooter>
-          <ResponsiveDialogCornerClose label='Cancel replacement' />
         </ResponsiveDialogContent>
       </ResponsiveDialog>
       <ResponsiveDialog open={confirmCancel && !sync.locked} onOpenChange={setConfirmCancel}>
         <ResponsiveDialogContent>
-          <ResponsiveDialogHeader>
+          <ResponsiveDialogHeader className='text-left'>
             <ResponsiveDialogTitle>Cancel this workout?</ResponsiveDialogTitle>
             {persistenceError && (
               <StateNotice
@@ -828,7 +826,7 @@ export default function App() {
         }}
       >
         <ResponsiveDialogContent>
-          <ResponsiveDialogHeader className='pr-14 desk:pr-7'>
+          <ResponsiveDialogHeader className='text-left'>
             <ResponsiveDialogTitle>Finish this workout?</ResponsiveDialogTitle>
             {persistenceError && (
               <StateNotice
@@ -857,7 +855,6 @@ export default function App() {
               {saveStatus === 'saving' ? 'Saving…' : 'Save finished workout'}
             </Button>
           </ResponsiveDialogFooter>
-          {saveStatus !== 'saving' && <ResponsiveDialogCornerClose label='Close' />}
         </ResponsiveDialogContent>
       </ResponsiveDialog>
       {/* Over History, after the finish committed; a sync lock ends it, like other history views. */}

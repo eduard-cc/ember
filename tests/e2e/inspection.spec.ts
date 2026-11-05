@@ -3,12 +3,29 @@ import {type Page, expect, test} from '@playwright/test';
 import type {Workout} from '../../src/domain/types';
 import {navigate} from '../navigation';
 
-test('historical workouts repeat as editable uncompleted targets', async ({page}) => {
+test('historical workouts repeat as editable uncompleted targets', async ({page}, info) => {
   await page.goto('/?demo=1');
   await navigate(page, 'History');
   await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
   await page.locator('.history-card button').first().click();
   await page.getByRole('button', {name: /^Repeat workout /}).click();
+  // On phones, like every confirmation, its text starts at the actions' left edge and spans
+  // their width.
+  const confirmation = page.getByRole('dialog', {name: 'Replace your active workout?'});
+  const textEdges = await confirmation.evaluate((dialog) =>
+    [dialog.querySelector('h2')!, dialog.querySelector('p')!].map((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return {start: range.getClientRects()[0].left, right: element.getBoundingClientRect().right};
+    }),
+  );
+  const actions = (await confirmation
+    .getByRole('button', {name: 'Resume current workout'})
+    .boundingBox())!;
+  for (const {start, right} of info.project.name === 'mobile' ? textEdges : []) {
+    expect(Math.abs(start - actions.x)).toBeLessThan(1);
+    expect(Math.abs(right - (actions.x + actions.width))).toBeLessThan(1);
+  }
   await page.getByRole('button', {name: 'Replace active draft'}).click();
   await expect(page.getByRole('heading', {name: 'Your workout'})).toBeVisible();
   await expect(page.getByRole('button', {name: 'Finish workout'})).toBeDisabled();
