@@ -186,6 +186,8 @@ test('Save as template confirms with a toast that closes itself, and stays quiet
 test('a failed template save shows a Retry toast during a workout and saves the template once', async ({
   page,
 }) => {
+  // Two failed saves, a 4s wait and a reload: more than the default 30s on a loaded runner.
+  test.setTimeout(60_000);
   await page.goto('/?demo=1');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   const {cards, before} = await firstWorkout(page);
