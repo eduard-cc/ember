@@ -83,7 +83,9 @@ test('chart axis and date labels stay readable without clipping or overlap', asy
     .toBeGreaterThanOrEqual(10.99);
 });
 
-test('each repeated exercise block can be inspected at its recorded time', async ({page}) => {
+test('each repeated exercise block can be inspected at its recorded time, then the metric switches on one press', async ({
+  page,
+}) => {
   await page.route('**/src/domain/demo.ts', async (route) => {
     const response = await route.fetch();
     const body = await response.text();
@@ -124,6 +126,11 @@ test('each repeated exercise block can be inspected at its recorded time', async
   const dotY = await chart.locator('.recharts-area-dots circle').last().getAttribute('cy');
   await expect(chart.locator('.chart-active-dot')).toHaveAttribute('cy', dotY!);
   await expect(page.getByRole('list', {name: 'Sessions'}).locator('li')).toHaveCount(3);
+  // Leaving keyboard inspection, one press switches the metric (on phones the page stays put).
+  const load = page.getByRole('radio', {name: 'Heaviest weight', exact: true});
+  await load.click();
+  await expect(load).toHaveAttribute('data-state', 'on');
+  await expect(headline).toHaveText(/^70\s*kg/);
 });
 
 test('holding and sliding inspects sessions with optional haptics, then returns to the latest value', async ({

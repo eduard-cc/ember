@@ -309,10 +309,12 @@
     .page-overlay[data-state='closed'] {
       animation: celebrate-fade 240ms var(--ease-drawer) reverse;
     }
-    /* Focus-visible follows the activation modality: keyboard entry/exit is immediate. */
+    /* Focus-visible follows the activation modality: keyboard entry/exit is immediate. Only the
+       duration changes: removing the animation would replay the push when focus-visible ends,
+       sliding the page out from under the next press. */
     .pushed-page:has(:focus-visible),
     body:has(.pushed-page :focus-visible) .page-overlay {
-      animation: none;
+      animation-duration: 0s;
     }
     @keyframes page-push {
       from {

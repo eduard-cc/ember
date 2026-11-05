@@ -77,8 +77,8 @@ test('back closes exercise details in the library, then a main tab has nothing l
   await page.keyboard.press('Enter');
   if (page.viewportSize()!.width < 1000) {
     expect(
-      await page.locator('.pushed-page').evaluate((el) => getComputedStyle(el).animationName),
-    ).toBe('none');
+      await page.locator('.pushed-page').evaluate((el) => getComputedStyle(el).animationDuration),
+    ).toBe('0s');
   }
   await page.getByRole('button', {name: 'Back to exercises'}).click();
   await expect.poll(() => depth(page)).toBe(0);
