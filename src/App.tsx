@@ -265,6 +265,9 @@ export default function App() {
   // The template opens on the Workout tab, away from the drawer it was saved from, so it gets a
   // short toast; during a workout only a failure does. A failed commit keeps the template in
   // memory, so Retry commits the current state again rather than adding a second copy.
+  // During a workout the new card shows on the Workout tab, so a success stays quiet, except on
+  // a phone with the logger open over that tab (Save as template from inside the logger).
+  const loggerCovers = mobile && expanded;
   const confirmTemplate = (saved: boolean, workout: boolean) => {
     if (!saved)
       toastFailed('Template not saved', () => {
@@ -274,7 +277,7 @@ export default function App() {
           return {...s};
         }).then((retried) => confirmTemplate(retried, running));
       });
-    else if (!workout) toastDone('Template saved');
+    else if (!workout || loggerCovers) toastDone('Template saved');
   };
   const saveTemplate = async (workout: Workout) => {
     setView('Workout');

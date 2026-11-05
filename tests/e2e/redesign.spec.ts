@@ -153,8 +153,10 @@ test('numeric entry replaces the target and Enter moves weight to reps then expl
 
 test('five-column Previous opens evidence for the selected set weight and source workout', async ({
   page,
-}) => {
+}, info) => {
   await page.goto('/?demo=1');
+  await expect(page.locator('.template-card').first()).toBeAttached();
+  const templates = await page.locator('.template-card').count();
   const exercise = page.locator('.exercise-card').first();
   await expect(exercise.locator('.set-head')).toContainText('Previous');
   // The open five-column sheet must not scroll sideways on any viewport.
@@ -189,6 +191,16 @@ test('five-column Previous opens evidence for the selected set weight and source
   await drawer.getByRole('button', {name: 'Close workout'}).click();
   await expect(drawer).toBeHidden();
   await expect(best).toBeFocused();
+  // Saving it as a template confirms with a toast where the logger covers the Workout tab.
+  await best.click();
+  await drawer.getByRole('button', {name: 'Save as template'}).click();
+  await expect(drawer).toBeHidden();
+  const toast = page.locator('[data-sonner-toast]');
+  if (info.project.name === 'mobile') await expect(toast).toHaveText('Template saved');
+  else {
+    await expect(page.locator('.template-card')).toHaveCount(templates + 1);
+    await expect(toast).toHaveCount(0);
+  }
   await dialog.getByRole('button', {name: 'Close previous sets'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   await second.getByLabel(/Weight/).fill('61');

@@ -193,7 +193,7 @@ Events get toasts, conditions stay on the page. Toasts are few and never block:
 - An action with an existing Undo path gets a neutral toast with Undo for about 5s (body-weight delete). A failed restore becomes a Retry toast.
 - A result that lands off-screen gets a success toast for about 3.5s (Save as template, which opens the Workout tab).
 - A failed one-off action gets an error toast with Retry and Dismiss that stays until used or swiped (template save; body-weight Undo). Errors inside an open dialog or editor stay inline there and are not repeated as toasts.
-- While a workout is running only failures toast; Settings' Undo still shows, since it is that delete's only undo.
+- While a workout is running only failures toast; Settings' Undo still shows, since it is that delete's only undo, and Save as template still confirms on a phone while the logger is open, because the logger covers the Workout tab where the new card would show.
 - Ongoing conditions (connection and download state, read-only tab, unsaved or unreadable data, sync issues) stay on the page in the three tiers below. Sonner's live region announces toasts.
 
 Conditions come in three tiers (`src/components/Conditions.tsx`). Each condition shows in exactly one place, the open logger or editor, otherwise the page (Settings while it is open), and opens one details drawer (a ResponsiveDialog) with the explanation, the affected items where known, the action where one exists, and Close. Nothing shows when all is well; healthy background sync and brief pending work stay quiet.
