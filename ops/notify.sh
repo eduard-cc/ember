@@ -9,7 +9,7 @@
 # route's HMAC secret on its second. Without that file, or when Hermes does not take the
 # alert, it posts to the Discord webhook whose URL is the only line of
 # ~/.config/ember/discord-webhook (mode 0600), and without either the alert goes through
-# `hermes send`, as on an owner-run install. Neither the URL nor the secret
+# `hermes send` to the Hermes app (push), as on an owner-run install. Neither the URL nor the secret
 # ever appears on a command line, where other local users could read it.
 set -Eeuo pipefail
 (($# == 2)) || {
@@ -55,7 +55,7 @@ then
 fi
 webhook=${EMBER_DISCORD_WEBHOOK_FILE:-$HOME/.config/ember/discord-webhook}
 if [[ ! -e $webhook ]]; then
-	exec hermes send --quiet --to discord --subject "$1" "$2"
+	exec hermes send --quiet --to push --subject "$1" "$2"
 fi
 url=$(head -n 1 -- "$webhook")
 [[ $url =~ ^https://[A-Za-z0-9.:-]+/[A-Za-z0-9/_.-]+$ ]] || {

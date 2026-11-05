@@ -33,7 +33,9 @@ for key, value in {'%h': str(home), '%H': 'test-host', '%i': 'test-unit'}.items(
     command = command.replace(key, value)
 subprocess.run(shlex.split(command), check=True)
 assert not (home / 'checkout-code-ran').exists(), 'owner-side notification executed checkout code'
-assert 'test-unit failed.' in (home / 'alert').read_text(), 'owner-side alert was not dispatched'
+alert = (home / 'alert').read_text()
+assert 'test-unit failed.' in alert, 'owner-side alert was not dispatched'
+assert '--to push' in alert, f'owner-side alert did not go to the Hermes app: {alert}'
 PY
 # With a Hermes webhook file the installed notifier posts a signed alert to it instead.
 mkdir -p "$HOME/.config/ember"
