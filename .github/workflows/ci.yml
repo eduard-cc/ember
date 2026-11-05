@@ -110,9 +110,9 @@ jobs:
   playwright:
     name: Playwright (desktop and mobile)
     runs-on: ubuntu-24.04
-    # Desktop/mobile E2E takes about 14.5 minutes; the serial production PWA suite reuses setup.
-    # Leave headroom for both suites and cache steps.
-    timeout-minutes: 20
+    # Desktop/mobile E2E takes 12-17 minutes and apt's install-deps up to 5 on a slow mirror;
+    # the serial production PWA suite reuses setup. Leave headroom for both suites and caches.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
