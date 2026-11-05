@@ -136,10 +136,10 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   await expect(section.getByText('5 Jan 2019')).toHaveCount(0);
 });
 
-test('fits the phone and desktop without clipping, with 44px targets, readable labels and keyboard focus', async ({
+test('fits the phone without clipping, with 44px targets, readable labels and keyboard focus', async ({
   page,
-}, testInfo) => {
-  if (testInfo.project.name === 'mobile') await page.setViewportSize({width: 412, height: 915});
+}) => {
+  await page.setViewportSize({width: 412, height: 915});
   await page.goto('/');
   const section = await open(page);
   await add(section, '100.25', '2021-03-04T06:05');

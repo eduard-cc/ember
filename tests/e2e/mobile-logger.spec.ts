@@ -57,8 +57,7 @@ test('deleting the only set of a duplicate-named exercise removes exactly that s
   await expect(exercises.first().getByLabel(/Weight/)).toHaveValue('80');
 });
 
-test('phone landscape keeps first editable set in the usable viewport', async ({page}, info) => {
-  test.skip(info.project.name !== 'mobile');
+test('phone landscape keeps first editable set in the usable viewport', async ({page}) => {
   await page.setViewportSize({width: 844, height: 390});
   await page.goto('/?demo=1');
   const weight = page.getByLabel(/Weight for .* set 1/).first();
@@ -77,8 +76,7 @@ test('phone landscape keeps first editable set in the usable viewport', async ({
 test('real touch swipe from completion reveals actions without confirming and vertical touch scrolls', async ({
   browser,
   baseURL,
-}, info) => {
-  test.skip(info.project.name !== 'mobile');
+}) => {
   const context = await browser.newContext({
     viewport: {width: 390, height: 844},
     isMobile: true,
@@ -118,8 +116,7 @@ test('real touch swipe from completion reveals actions without confirming and ve
 
 test('mobile ledger reaches first set quickly with wide fields and explicit empty completion', async ({
   page,
-}, info) => {
-  test.skip(info.project.name !== 'mobile');
+}) => {
   await page.goto('/?demo=1');
   const weight = page.getByLabel(/Weight for .* set 1/).first();
   await expect(weight).toBeEnabled();
@@ -153,8 +150,7 @@ test('mobile ledger reaches first set quickly with wide fields and explicit empt
 
 test('focused mobile field stays above resized viewport and navigation returns after editing', async ({
   page,
-}, info) => {
-  test.skip(info.project.name !== 'mobile');
+}) => {
   await page.goto('/?demo=1');
   const weight = page.getByLabel(/Weight for .* set 1/).nth(2);
   await expect(weight).toBeEnabled();
@@ -287,8 +283,7 @@ test('left swipe reveals Delete without deleting; Delete removes that set and ke
 test('swipe follows the finger from the weight field, settles open, and a long swipe deletes', async ({
   browser,
   baseURL,
-}, info) => {
-  test.skip(info.project.name !== 'mobile');
+}) => {
   const context = await browser.newContext({
     viewport: {width: 390, height: 844},
     isMobile: true,

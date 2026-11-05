@@ -3,9 +3,8 @@ import {expect, test} from '@playwright/test';
 test('the cog beside the Profile title opens Settings, also for a read-only follower', async ({
   page,
   context,
-}, info) => {
-  // The cog is the phone entry point; desktop uses the header gear (see app-shell).
-  test.skip(info.project.name !== 'mobile');
+}) => {
+  // The cog beside the Profile title is the phone entry to Settings.
   await page.goto('/?demo=1');
   await expect(page.getByLabel('WORKOUT NAME')).toBeEditable();
   const follower = await context.newPage();

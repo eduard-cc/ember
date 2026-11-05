@@ -333,65 +333,6 @@ for (const viewport of [
   });
 }
 
-// The inline menu: from 1000px up (phones get the drawer above).
-for (const viewport of [
-  {width: 1000, height: 640},
-  {width: 1280, height: 720},
-]) {
-  test.describe(`at ${viewport.width}x${viewport.height}`, () => {
-    test.use({viewport});
-
-    test('near the bottom the menu opens upward with every item visible and tappable', async ({
-      page,
-    }) => {
-      const cards = await start(page);
-      const last = 'Pull Up (Assisted)';
-      const trigger = options(page, last);
-      const scroller = page.locator('.workout-sheet .workout-scroll');
-      // Put the last card's heading just above the bottom of the scroll area.
-      await trigger.evaluate((button) => {
-        const scroll = button.closest('.workout-scroll')!;
-        const bottom = Math.min(scroll.getBoundingClientRect().bottom, window.innerHeight);
-        scroll.scrollTop += button.getBoundingClientRect().bottom - (bottom - 12);
-      });
-      const before = (await trigger.boundingBox())!;
-      const area = (await scroller.boundingBox())!;
-      expect(area.y + area.height - (before.y + before.height)).toBeLessThan(40);
-      await trigger.click();
-      const menu = page.getByRole('menu', {name: `Exercise options for ${last}`});
-      await expect(menu).toBeVisible();
-      const bottom = Math.min(area.y + area.height, viewport.height);
-      for (const item of await menu.getByRole('menuitem').all()) {
-        const box = (await item.boundingBox())!;
-        expect(box.y).toBeGreaterThanOrEqual(Math.max(area.y, 0));
-        expect(box.y + box.height).toBeLessThanOrEqual(bottom);
-      }
-      // Both items are really hit-testable, not hidden under the scroll area's clip.
-      await menu.getByRole('menuitem', {name: 'Remove exercise'}).click();
-      await expect(cards.locator('h2')).toHaveText(demo.filter((name) => name !== last));
-    });
-  });
-}
-
-test(
-  'moving focus to another ⋯ button closes the open menu',
-  {tag: '@desktop'},
-  async ({page}, info) => {
-    test.skip(info.project.name === 'mobile', 'The phone drawer is modal and keeps focus inside.');
-    await start(page);
-    await options(page, 'Bench Press (Barbell)').click();
-    const first = page.getByRole('menu', {name: 'Exercise options for Bench Press (Barbell)'});
-    await expect(first).toBeVisible();
-    await options(page, 'Seated Row (Cable)').focus();
-    await expect(first).toBeHidden();
-    await page.keyboard.press('Enter');
-    await expect(page.getByRole('menu')).toHaveCount(1);
-    await expect(
-      page.getByRole('menu', {name: 'Exercise options for Seated Row (Cable)'}),
-    ).toBeVisible();
-  },
-);
-
 test('after Remove, focus moves to the next card, the previous one, then Add exercise', async ({
   page,
 }) => {
@@ -413,29 +354,6 @@ test('after Remove, focus moves to the next card, the previous one, then Add exe
     await remove(name);
   await expect(cards).toHaveCount(0);
   await expect(page.getByRole('button', {name: 'Add exercise', exact: true})).toBeFocused();
-});
-
-test('Tab out of the menu continues from the ⋯ button', {tag: '@desktop'}, async ({page}, info) => {
-  test.skip(info.project.name === 'mobile', 'The phone drawer is modal and keeps focus inside.');
-  await start(page);
-  const trigger = options(page, 'Seated Row (Cable)');
-  const active = () =>
-    page.evaluate(() => {
-      const el = document.activeElement as HTMLElement | null;
-      return el?.getAttribute('aria-label') ?? el?.textContent ?? null;
-    });
-  for (const key of ['Tab', 'Shift+Tab']) {
-    await trigger.focus();
-    await page.keyboard.press(key);
-    const fromTrigger = await active();
-    expect(fromTrigger).not.toBeNull();
-    await trigger.focus();
-    await page.keyboard.press('Enter');
-    await expect(page.getByRole('menu')).toBeVisible();
-    await page.keyboard.press(key);
-    await expect(page.getByRole('menu')).toHaveCount(0);
-    expect(await active()).toBe(fromTrigger);
-  }
 });
 
 test('the ⋯ dots end flush with the completion boxes, inside the content edge', async ({page}) => {

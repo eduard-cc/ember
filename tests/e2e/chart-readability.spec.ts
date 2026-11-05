@@ -3,10 +3,8 @@ import {devices, expect, test} from '@playwright/test';
 import {navigate} from '../navigation';
 
 // Pixel 6 CSS viewport, not its physical-pixel resolution.
-test('chart axis and date labels stay readable without clipping or overlap', async ({
-  page,
-}, testInfo) => {
-  if (testInfo.project.name === 'mobile') await page.setViewportSize({width: 412, height: 915});
+test('chart axis and date labels stay readable without clipping or overlap', async ({page}) => {
+  await page.setViewportSize({width: 412, height: 915});
   await page.goto('/?demo=1');
   await navigate(page, 'Exercises');
   await page.getByLabel('Search exercises').fill('Bench');
@@ -66,7 +64,7 @@ test('chart axis and date labels stay readable without clipping or overlap', asy
   }
 
   // The chart must also adapt when an already mounted container changes size.
-  await page.setViewportSize({width: testInfo.project.name === 'mobile' ? 390 : 1100, height: 915});
+  await page.setViewportSize({width: 390, height: 915});
   await expect
     .poll(async () =>
       page.locator('.trend-chart text').evaluateAll((labels) =>
@@ -136,8 +134,7 @@ test('each repeated exercise block can be inspected at its recorded time, then t
 test('holding and sliding inspects sessions with optional haptics, then returns to the latest value', async ({
   browser,
   baseURL,
-}, info) => {
-  test.skip(info.project.name !== 'mobile');
+}) => {
   const context = await browser.newContext({...devices['Pixel 6'], baseURL});
   const page = await context.newPage();
   await page.addInitScript(() => {

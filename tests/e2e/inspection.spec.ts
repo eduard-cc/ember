@@ -3,7 +3,7 @@ import {type Page, expect, test} from '@playwright/test';
 import type {Workout} from '../../src/domain/types';
 import {navigate} from '../navigation';
 
-test('historical workouts repeat as editable uncompleted targets', async ({page}, info) => {
+test('historical workouts repeat as editable uncompleted targets', async ({page}) => {
   await page.goto('/?demo=1');
   await navigate(page, 'History');
   await expect(page.getByRole('heading', {name: 'History', exact: true})).toBeVisible();
@@ -22,7 +22,7 @@ test('historical workouts repeat as editable uncompleted targets', async ({page}
   const actions = (await confirmation
     .getByRole('button', {name: 'Resume current workout'})
     .boundingBox())!;
-  for (const {start, right} of info.project.name === 'mobile' ? textEdges : []) {
+  for (const {start, right} of textEdges) {
     expect(Math.abs(start - actions.x)).toBeLessThan(1);
     expect(Math.abs(right - (actions.x + actions.width))).toBeLessThan(1);
   }

@@ -35,7 +35,7 @@ const scrollTop = (page: Page) => page.locator('.workout-scroll').evaluate((el) 
 
 test('tapping an exercise name or thumbnail opens its details with finished-workout history only', async ({
   page,
-}, info) => {
+}) => {
   const sheet = await start(page);
   // Draft work is not history: an unusual value entered and completed here must not show up.
   await page.getByLabel('Weight for Seated Row (Cable) set 1').fill('97.5');
@@ -83,18 +83,11 @@ test('tapping an exercise name or thumbnail opens its details with finished-work
 
   const panel = (await dialog.boundingBox())!;
   const viewport = page.viewportSize()!;
-  if (info.project.name === 'mobile') {
-    // Full screen over the full-screen workout sheet.
-    expect(panel.x).toBe(0);
-    expect(panel.y).toBe(0);
-    expect(panel.width).toBe(viewport.width);
-    expect(panel.height).toBe(viewport.height);
-  } else {
-    // The dialog covers the actual workout column, including on ultrawide screens.
-    const logger = (await page.locator('.workout-sheet').boundingBox())!;
-    expect(panel.x).toBeCloseTo(logger.x, 0);
-    expect(panel.width).toBeCloseTo(logger.width, 0);
-  }
+  // Full screen over the full-screen workout sheet.
+  expect(panel.x).toBe(0);
+  expect(panel.y).toBe(0);
+  expect(panel.width).toBe(viewport.width);
+  expect(panel.height).toBe(viewport.height);
 
   await dialog.getByRole('button', {name: 'Back to workout', exact: true}).click();
   await expect(dialog).toBeHidden();
@@ -240,27 +233,6 @@ test('a source workout link inside the details opens it over them and keeps the 
   await expect(sheet).toBeVisible();
   await expect(page.getByLabel('Weight for Bench Press (Barbell) set 2')).toHaveValue('66');
 });
-
-for (const width of [1000, 1440, 1920, 2560]) {
-  test(`exercise details stay aligned to the workout column at ${width}px and after resize`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({width, height: 915});
-    await start(page);
-    await details(page, demo[0]).click();
-    const dialog = detailDialog(page, demo[0]);
-    await expect(dialog).toBeVisible();
-    for (const resizedWidth of [width, 1920, 1440]) {
-      await page.setViewportSize({width: resizedWidth, height: 915});
-      const logger = (await page.locator('.workout-sheet').boundingBox())!;
-      const panel = (await dialog.boundingBox())!;
-      expect(panel.x).toBeCloseTo(logger.x, 0);
-      expect(panel.width).toBeCloseTo(logger.width, 0);
-      expect(panel.y).toBeCloseTo(logger.y, 0);
-      expect(panel.height).toBeCloseTo(logger.height, 0);
-    }
-  });
-}
 
 test('template editing keeps plain exercise headings without a details button', async ({page}) => {
   await start(page);

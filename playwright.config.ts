@@ -23,16 +23,9 @@ export default defineConfig({
     trace: process.env.CI ? 'on-first-retry' : 'off',
     screenshot: process.env.CI ? 'only-on-failure' : 'off',
   },
-  projects: [
-    // CI minutes are capped, so CI runs every flow at phone size and only the @desktop-tagged
-    // (desktop-only) tests at desktop size. Local runs cover both projects in full.
-    {
-      name: 'desktop',
-      use: {viewport: {width: 1440, height: 1000}},
-      grep: process.env.CI ? /@desktop/ : undefined,
-    },
-    {name: 'mobile', use: {viewport: {width: 390, height: 844}}},
-  ],
+  // Ember is phone-only: one phone-sized project. Tests set Pixel 6 or other phone sizes
+  // themselves where it matters.
+  projects: [{name: 'mobile', use: {viewport: {width: 390, height: 844}}}],
   // A dedicated strict-port server: reusing another checkout's dev server silently tests the wrong source.
   webServer: {
     command: `NODE_ENV=development npx vite --host 127.0.0.1 --port ${port} --strictPort`,

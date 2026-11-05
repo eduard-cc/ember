@@ -4,8 +4,7 @@ import {addExercise, closeCelebration} from '../navigation';
 
 test.use({...devices['Pixel 6']});
 
-test('finishing saves elapsed minutes in history on Pixel 6', async ({page}, testInfo) => {
-  test.skip(testInfo.project.name !== 'mobile', 'Pixel 6 flow');
+test('finishing saves elapsed minutes in history on Pixel 6', async ({page}) => {
   await page.clock.install({time: new Date('2026-01-10T12:00:00')});
   await page.goto('/');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
@@ -30,10 +29,7 @@ test('finishing saves elapsed minutes in history on Pixel 6', async ({page}, tes
   await expect(card).toContainText('45 min');
 });
 
-test('a workout finished within a minute shows under one minute on Pixel 6', async ({
-  page,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== 'mobile', 'Pixel 6 flow');
+test('a workout finished within a minute shows under one minute on Pixel 6', async ({page}) => {
   await page.clock.install({time: new Date('2026-01-10T12:00:00')});
   await page.goto('/');
   await page.getByRole('button', {name: 'Start empty workout'}).click();

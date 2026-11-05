@@ -11,8 +11,8 @@ async function openPicker(page: Page) {
 
 test('Add exercise opens the searchable library and tapping a row adds it to the workout', async ({
   page,
-}, info) => {
-  if (info.project.name === 'mobile') await page.setViewportSize({width: 412, height: 915});
+}) => {
+  await page.setViewportSize({width: 412, height: 915});
   await page.goto('/?demo=1');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   const cards = page.locator('.workout-sheet .exercise-card');
@@ -39,42 +39,40 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
   await picker.getByRole('button', {name: 'Clear filter', exact: true}).click();
   await expect(resultScroller).toHaveJSProperty('scrollTop', 0);
   await expect(picker.getByLabel('Search exercises')).toBeVisible();
-  if (info.project.name === 'mobile') {
-    const search = picker.getByLabel('Search exercises');
-    await search.focus();
-    await page.setViewportSize({width: 412, height: 390});
-    await expect
-      .poll(async () => {
-        const r = (await search.boundingBox())!;
-        return r.y >= 14 && r.y + r.height <= 376;
-      })
-      .toBe(true);
-    await page.setViewportSize({width: 412, height: 915});
-    await search.blur();
-    // A keyboard may pan/shrink visualViewport without changing the CSS viewport.
-    await page.evaluate(() => {
-      Object.defineProperties(window.visualViewport!, {
-        height: {configurable: true, value: 390},
-        offsetTop: {configurable: true, value: 40},
-      });
-      window.visualViewport!.dispatchEvent(new Event('resize'));
+  const search = picker.getByLabel('Search exercises');
+  await search.focus();
+  await page.setViewportSize({width: 412, height: 390});
+  await expect
+    .poll(async () => {
+      const r = (await search.boundingBox())!;
+      return r.y >= 14 && r.y + r.height <= 376;
+    })
+    .toBe(true);
+  await page.setViewportSize({width: 412, height: 915});
+  await search.blur();
+  // A keyboard may pan/shrink visualViewport without changing the CSS viewport.
+  await page.evaluate(() => {
+    Object.defineProperties(window.visualViewport!, {
+      height: {configurable: true, value: 390},
+      offsetTop: {configurable: true, value: 40},
     });
-    await expect
-      .poll(async () => {
-        const box = (await picker.boundingBox())!;
-        return [Math.round(box.y), Math.round(box.height)];
-      })
-      .toEqual([40, 390]);
-    await expect(search).toBeInViewport({ratio: 1});
-    const results = (await resultScroller.boundingBox())!;
-    expect(results.height).toBeGreaterThan(100);
-    expect(results.y + results.height).toBeLessThanOrEqual(430);
-    await page.evaluate(() => {
-      Reflect.deleteProperty(window.visualViewport!, 'height');
-      Reflect.deleteProperty(window.visualViewport!, 'offsetTop');
-      window.visualViewport!.dispatchEvent(new Event('resize'));
-    });
-  }
+    window.visualViewport!.dispatchEvent(new Event('resize'));
+  });
+  await expect
+    .poll(async () => {
+      const box = (await picker.boundingBox())!;
+      return [Math.round(box.y), Math.round(box.height)];
+    })
+    .toEqual([40, 390]);
+  await expect(search).toBeInViewport({ratio: 1});
+  const results = (await resultScroller.boundingBox())!;
+  expect(results.height).toBeGreaterThan(100);
+  expect(results.y + results.height).toBeLessThanOrEqual(430);
+  await page.evaluate(() => {
+    Reflect.deleteProperty(window.visualViewport!, 'height');
+    Reflect.deleteProperty(window.visualViewport!, 'offsetTop');
+    window.visualViewport!.dispatchEvent(new Event('resize'));
+  });
   // Only body parts that hold exercises; every demo name is in the catalog, so no Other.
   await expect(picker.getByRole('group', {name: 'Body part'}).getByRole('button')).toHaveText([
     'All',
@@ -106,11 +104,9 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
   expect(closeBox.width).toBeGreaterThanOrEqual(44);
   expect(closeBox.height).toBeGreaterThanOrEqual(44);
   const sheet = (await picker.boundingBox())!;
-  expect(sheet.width).toBe(info.project.name === 'mobile' ? 412 : 1440);
-  expect(sheet.height).toBe(info.project.name === 'mobile' ? 915 : 1000);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-    info.project.name === 'mobile' ? 412 : 1440,
-  );
+  expect(sheet.width).toBe(412);
+  expect(sheet.height).toBe(915);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(412);
   await row.click();
   await expect(picker).toBeHidden();
   // The existing draft is kept and the new exercise uses its latest history as targets.
@@ -146,8 +142,8 @@ test('closing the exercise picker keeps the active workout unchanged', async ({p
 });
 test('adding an exercise already in the workout explains why and keeps the draft unchanged', async ({
   page,
-}, info) => {
-  if (info.project.name === 'mobile') await page.setViewportSize({width: 412, height: 915});
+}) => {
+  await page.setViewportSize({width: 412, height: 915});
   await page.goto('/?demo=1');
   const cards = page.locator('.workout-sheet .exercise-card');
   await expect(cards).toHaveCount(5);
@@ -162,21 +158,19 @@ test('adding an exercise already in the workout explains why and keeps the draft
   await expect(picker.getByRole('alert')).toHaveText(
     'Bench Press (Barbell) is already in this workout.',
   );
-  if (info.project.name === 'mobile') {
-    await page.setViewportSize({width: 740, height: 320});
-    const area = (await picker.locator('.exercise-results').boundingBox())!;
-    expect(area.height).toBeGreaterThanOrEqual(80);
-    expect(area.y + area.height).toBeLessThanOrEqual(320);
-    await expect(picker.getByRole('button', {name: 'Back to workout'})).toBeInViewport({
-      ratio: 1,
-    });
-    await expect(picker.getByRole('button', {name: 'Clear filter', exact: true})).toBeInViewport({
-      ratio: 1,
-    });
-    await existing.scrollIntoViewIfNeeded();
-    await expect(existing).toBeInViewport({ratio: 1});
-    await page.setViewportSize({width: 412, height: 915});
-  }
+  await page.setViewportSize({width: 740, height: 320});
+  const area = (await picker.locator('.exercise-results').boundingBox())!;
+  expect(area.height).toBeGreaterThanOrEqual(80);
+  expect(area.y + area.height).toBeLessThanOrEqual(320);
+  await expect(picker.getByRole('button', {name: 'Back to workout'})).toBeInViewport({
+    ratio: 1,
+  });
+  await expect(picker.getByRole('button', {name: 'Clear filter', exact: true})).toBeInViewport({
+    ratio: 1,
+  });
+  await existing.scrollIntoViewIfNeeded();
+  await expect(existing).toBeInViewport({ratio: 1});
+  await page.setViewportSize({width: 412, height: 915});
   await expect(picker).toBeVisible();
   await picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).click();
   await expect(picker.getByRole('alert')).toBeVisible();

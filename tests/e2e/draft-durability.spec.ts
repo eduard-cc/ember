@@ -49,9 +49,7 @@ test('autosave stays pending until the real IndexedDB transaction can commit, wi
   await page.reload();
   await expect(page.getByLabel('WORKOUT NAME', {exact: true})).toHaveValue('Commit boundary');
 });
-test('failed outbox insert rolls back finish in the browser and allows retry', async ({
-  page,
-}, info) => {
+test('failed outbox insert rolls back finish in the browser and allows retry', async ({page}) => {
   await page.goto('/?demo=1');
   await page
     .getByRole('button', {name: /Complete .* set 1/})
@@ -148,27 +146,25 @@ test('failed outbox insert rolls back finish in the browser and allows retry', a
   await page.keyboard.press('Escape');
   await expect(confirmation).toBeVisible();
   const navigation = await page.context().newCDPSession(page);
-  if (info.project.name === 'mobile') {
-    await navigation.send('Emulation.setTouchEmulationEnabled', {enabled: true});
-    const beforeSwipe = (await confirmation.boundingBox())!;
-    const x = beforeSwipe.x + beforeSwipe.width / 2;
-    const y = beforeSwipe.y + 20;
+  await navigation.send('Emulation.setTouchEmulationEnabled', {enabled: true});
+  const beforeSwipe = (await confirmation.boundingBox())!;
+  const x = beforeSwipe.x + beforeSwipe.width / 2;
+  const y = beforeSwipe.y + 20;
+  await navigation.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{x, y}],
+  });
+  for (let step = 1; step <= 8; step++) {
     await navigation.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [{x, y}],
+      type: 'touchMove',
+      touchPoints: [{x, y: y + step * 20}],
     });
-    for (let step = 1; step <= 8; step++) {
-      await navigation.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: [{x, y: y + step * 20}],
-      });
-    }
-    await navigation.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
-    await expect
-      .poll(async () => (await confirmation.boundingBox())!.y)
-      .toBeCloseTo(beforeSwipe.y, 0);
-    await expect(confirmation.getByRole('button', {name: 'Saving…', exact: true})).toBeInViewport();
   }
+  await navigation.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+  await expect
+    .poll(async () => (await confirmation.boundingBox())!.y)
+    .toBeCloseTo(beforeSwipe.y, 0);
+  await expect(confirmation.getByRole('button', {name: 'Saving…', exact: true})).toBeInViewport();
   const {entries, currentIndex} = await navigation.send('Page.getNavigationHistory');
   await navigation.send('Page.navigateToHistoryEntry', {entryId: entries[currentIndex - 1].id});
   await expect(confirmation).toBeVisible();

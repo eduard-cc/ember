@@ -110,8 +110,7 @@ test('back closes Settings, the template preview and a History workout', async (
   await expect.poll(() => depth(page)).toBe(0);
 });
 
-test('back steps out of nested layers one at a time on the phone workout', async ({page}, info) => {
-  test.skip(info.project.name !== 'mobile', 'The workout covers the tabs only on phones.');
+test('back steps out of nested layers one at a time on the phone workout', async ({page}) => {
   await start(page);
   await expect(sheet(page)).toBeVisible();
   await page
@@ -136,8 +135,7 @@ test('back steps out of nested layers one at a time on the phone workout', async
 
 test('back on the phone workout opened at launch minimizes it after the first tap', async ({
   page,
-}, info) => {
-  test.skip(info.project.name !== 'mobile', 'The workout covers the tabs only on phones.');
+}) => {
   await start(page);
   await expect(sheet(page)).toBeVisible();
   await sheet(page).getByLabel('WORKOUT NAME').click();
@@ -187,8 +185,7 @@ test('a refused back keeps the next back inside the app', async ({page}) => {
 
 test('a relaunch with the phone workout open keeps back in the app before any tap', async ({
   page,
-}, info) => {
-  test.skip(info.project.name !== 'mobile', 'The workout covers the tabs only on phones.');
+}) => {
   await start(page);
   await sheet(page).getByLabel('WORKOUT NAME').click();
   await expect.poll(() => depth(page)).toBe(1);
@@ -233,11 +230,9 @@ test('a reload with nothing open trims its leftover entry on the first tap', asy
 
 test('changed templates keep their draft through dismissal and discard writes nothing', async ({
   page,
-}, info) => {
-  if (info.project.name === 'mobile') {
-    test.setTimeout(60_000);
-    await page.setViewportSize({width: 412, height: 915});
-  }
+}) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({width: 412, height: 915});
   await start(page);
   await navigate(page, 'Workouts');
   const stored = () =>

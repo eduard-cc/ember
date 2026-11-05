@@ -5,22 +5,17 @@ import {resolve} from './colour-helpers';
 
 test('workout sheet minimizes to a named resume bar preserving the draft and ledger scroll', async ({
   page,
-}, info) => {
+}) => {
   await page.goto('/?demo=1');
   const sheet = page.getByRole('region', {name: 'Active workout'});
   await expect(sheet).toBeVisible();
   const box = (await sheet.boundingBox())!;
-  if (info.project.name === 'mobile') {
-    expect(box.x).toBe(0);
-    expect(box.y).toBe(0);
-    expect(box.width).toBe(390);
-    expect(box.height).toBe(844);
-    await expect(page.getByRole('navigation', {name: 'Main navigation'})).toBeHidden();
-    expect(await page.locator('.library').evaluate((el) => (el as HTMLElement).inert)).toBe(true);
-  } else {
-    expect(box.width).toBe(500);
-    await expect(page.getByRole('navigation', {name: 'Main navigation'})).toBeVisible();
-  }
+  expect(box.x).toBe(0);
+  expect(box.y).toBe(0);
+  expect(box.width).toBe(390);
+  expect(box.height).toBe(844);
+  await expect(page.getByRole('navigation', {name: 'Main navigation'})).toBeHidden();
+  expect(await page.locator('.library').evaluate((el) => (el as HTMLElement).inert)).toBe(true);
   await page
     .getByLabel(/Weight for .* set 1/)
     .first()
@@ -42,11 +37,9 @@ test('workout sheet minimizes to a named resume bar preserving the draft and led
   const resume = page.getByRole('button', {name: /Resume Upper body A/});
   await expect(resume.locator('.live-dot')).toBeVisible();
   await resume.click();
-  if (info.project.name === 'mobile') {
-    // The sheet slides back up over the library and settles flush with the screen.
-    await expect(sheet).toHaveAttribute('data-motion');
-    await expect.poll(async () => (await sheet.boundingBox())!.y).toBe(0);
-  }
+  // The sheet slides back up over the library and settles flush with the screen.
+  await expect(sheet).toHaveAttribute('data-motion');
+  await expect.poll(async () => (await sheet.boundingBox())!.y).toBe(0);
   await expect(page.getByLabel(/Weight for .* set 1/).first()).toHaveValue('42.5');
   await expect(page.getByRole('button', {name: /Uncomplete .* set 1/}).first()).toHaveAttribute(
     'aria-pressed',
@@ -153,10 +146,8 @@ test('numeric entry replaces the target and Enter moves weight to reps then expl
 
 test('five-column Previous opens evidence for the selected set weight and source workout', async ({
   page,
-}, info) => {
+}) => {
   await page.goto('/?demo=1');
-  await expect(page.locator('.template-card').first()).toBeAttached();
-  const templates = await page.locator('.template-card').count();
   const exercise = page.locator('.exercise-card').first();
   await expect(exercise.locator('.set-head')).toContainText('Previous');
   // The open five-column sheet must not scroll sideways on any viewport.
@@ -196,11 +187,7 @@ test('five-column Previous opens evidence for the selected set weight and source
   await drawer.getByRole('button', {name: 'Save as template'}).click();
   await expect(drawer).toBeHidden();
   const toast = page.locator('[data-sonner-toast]');
-  if (info.project.name === 'mobile') await expect(toast).toHaveText('Template saved');
-  else {
-    await expect(page.locator('.template-card')).toHaveCount(templates + 1);
-    await expect(toast).toHaveCount(0);
-  }
+  await expect(toast).toHaveText('Template saved');
   await dialog.getByRole('button', {name: 'Close previous sets'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   await second.getByLabel(/Weight/).fill('61');
@@ -249,7 +236,7 @@ test('an unrecorded weight shows the nearest actual lighter and heavier sets wit
 
 test('exercise Done survives value edits and reload but a new set needs its own tick', async ({
   page,
-}, testInfo) => {
+}) => {
   await page.goto('/?demo=1');
   const exercise = page.locator('.exercise-card').first();
   const progress = page.locator('.workout-progress');
@@ -282,7 +269,7 @@ test('exercise Done survives value edits and reload but a new set needs its own 
   // columns keep the card's padding: completion still ends where the column headings do.
   const card = (await exercise.boundingBox())!;
   const head = (await exercise.locator('.set-head').boundingBox())!;
-  if (testInfo.project.name === 'mobile') expect(card.width).toBe(page.viewportSize()!.width);
+  expect(card.width).toBe(page.viewportSize()!.width);
   for (const row of await exercise.locator('.set-complete').all()) {
     const tint = (await row.locator('.set-swipe-content').boundingBox())!;
     expect(tint.x).toBeCloseTo(card.x, 0);
@@ -729,8 +716,7 @@ test('a saved dark theme applies before the app script runs, so dark phones do n
 test('swiping left from the Previous column reveals Delete without opening evidence', async ({
   browser,
   baseURL,
-}, info) => {
-  test.skip(info.project.name !== 'mobile');
+}) => {
   const context = await browser.newContext({
     viewport: {width: 390, height: 844},
     isMobile: true,

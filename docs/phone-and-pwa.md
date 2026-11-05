@@ -13,8 +13,7 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. DESIGN.md 
 ## Layout and rendered size
 
 - Verify SVG label sizes in rendered CSS pixels on Pixel 6, not only their declared font-size: a wide fixed viewBox can shrink labels below readable size.
-- Anchor fixed exercise-detail panels to the centred 1480px workspace (`max-w-[1480px]` in `src/App.tsx`), not the viewport edge. Assert panel and logger bounds at 1000, 1440, 1920 and 2560px and after a resize; a passing 1440px screenshot misses ultrawide misalignment.
-- End the exercise-header ⋯ dots flush with the drawn 30px completion box's right edge, not its centre, and keep the 44px ⋯ target's right edge on the content edge (the completion target's), so its pressed/open wash keeps the card's side margin. Measure the drawn dots, not the 18px icon box: Lucide's ellipsis ends at 20 of 24 viewBox units, so the icon is nudged 9px right inside the target. Assert dots/column geometry on phone and desktop.
+- End the exercise-header ⋯ dots flush with the drawn 30px completion box's right edge, not its centre, and keep the 44px ⋯ target's right edge on the content edge (the completion target's), so its pressed/open wash keeps the card's side margin. Measure the drawn dots, not the 18px icon box: Lucide's ellipsis ends at 20 of 24 viewBox units, so the icon is nudged 9px right inside the target. Assert dots/column geometry on phone.
 
 ## Dialogs, prompts and accessibility
 

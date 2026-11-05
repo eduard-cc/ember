@@ -2,11 +2,9 @@ import {type Page, expect, test} from '@playwright/test';
 
 import {addExercise, navigate, pressAt, templateAction} from '../navigation';
 
-test('templates can be created edited started and deleted', async ({page}, info) => {
-  if (info.project.name === 'mobile') {
-    test.setTimeout(60_000);
-    await page.setViewportSize({width: 412, height: 915});
-  }
+test('templates can be created edited started and deleted', async ({page}) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({width: 412, height: 915});
   // Record haptics: confirming the template over the open draft plays the start cue.
   await page.addInitScript(() => {
     const record = window as unknown as {vibrations: number[][]};
@@ -78,38 +76,36 @@ test('templates can be created edited started and deleted', async ({page}, info)
     );
   };
   await reachable();
-  if (info.project.name === 'mobile') {
-    for (const size of [
-      {width: 320, height: 740},
-      {width: 740, height: 320},
-      {width: 412, height: 390},
-    ]) {
-      await page.setViewportSize(size);
-      await lastReps.focus();
-      await expect(async () => reachable()).toPass();
-    }
-    await page.setViewportSize({width: 412, height: 915});
-    // Visual-only keyboard resize/pan: the layout viewport remains 915px tall.
-    await page.evaluate(() => {
-      Object.defineProperties(window.visualViewport!, {
-        height: {configurable: true, value: 390},
-        offsetTop: {configurable: true, value: 40},
-      });
-      window.visualViewport!.dispatchEvent(new Event('resize'));
-    });
-    await expect
-      .poll(async () => {
-        const box = (await editPanel.boundingBox())!;
-        return [Math.round(box.y), Math.round(box.height)];
-      })
-      .toEqual([40, 390]);
+  for (const size of [
+    {width: 320, height: 740},
+    {width: 740, height: 320},
+    {width: 412, height: 390},
+  ]) {
+    await page.setViewportSize(size);
+    await lastReps.focus();
     await expect(async () => reachable()).toPass();
-    await page.evaluate(() => {
-      Reflect.deleteProperty(window.visualViewport!, 'height');
-      Reflect.deleteProperty(window.visualViewport!, 'offsetTop');
-      window.visualViewport!.dispatchEvent(new Event('resize'));
-    });
   }
+  await page.setViewportSize({width: 412, height: 915});
+  // Visual-only keyboard resize/pan: the layout viewport remains 915px tall.
+  await page.evaluate(() => {
+    Object.defineProperties(window.visualViewport!, {
+      height: {configurable: true, value: 390},
+      offsetTop: {configurable: true, value: 40},
+    });
+    window.visualViewport!.dispatchEvent(new Event('resize'));
+  });
+  await expect
+    .poll(async () => {
+      const box = (await editPanel.boundingBox())!;
+      return [Math.round(box.y), Math.round(box.height)];
+    })
+    .toEqual([40, 390]);
+  await expect(async () => reachable()).toPass();
+  await page.evaluate(() => {
+    Reflect.deleteProperty(window.visualViewport!, 'height');
+    Reflect.deleteProperty(window.visualViewport!, 'offsetTop');
+    window.visualViewport!.dispatchEvent(new Event('resize'));
+  });
   await save.click();
   await expect(editPanel).toBeHidden();
   const persisted = await page.evaluate(async () => {
@@ -189,7 +185,7 @@ test('Save as template confirms with a toast that closes itself, and stays quiet
 });
 test('a failed template save shows a Retry toast during a workout and saves the template once', async ({
   page,
-}, info) => {
+}) => {
   await page.goto('/?demo=1');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   const {cards, before} = await firstWorkout(page);
@@ -219,20 +215,18 @@ test('a failed template save shows a Retry toast during a workout and saves the 
   // A failure stays until it is retried or dismissed.
   await page.waitForTimeout(4000);
   await expect(toast).toContainText('Template not saved');
-  if (info.project.name === 'mobile') {
-    // On phones it sits at the top and swipes away upwards; the next failure brings it back.
-    const box = (await toast.boundingBox())!;
-    expect(box.y).toBeLessThan(100);
-    await page.mouse.move(box.x + 30, box.y + box.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(box.x + 30, box.y - 60, {steps: 6});
-    await page.mouse.up();
-    await expect(toast).toHaveCount(0);
-    await navigate(page, 'History');
-    await page.locator('.history-card button').first().click();
-    await page.getByRole('button', {name: 'Save as template'}).click();
-    await expect(toast).toContainText('Template not saved');
-  }
+  // On phones it sits at the top and swipes away upwards; the next failure brings it back.
+  const box = (await toast.boundingBox())!;
+  expect(box.y).toBeLessThan(100);
+  await page.mouse.move(box.x + 30, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 30, box.y - 60, {steps: 6});
+  await page.mouse.up();
+  await expect(toast).toHaveCount(0);
+  await navigate(page, 'History');
+  await page.locator('.history-card button').first().click();
+  await page.getByRole('button', {name: 'Save as template'}).click();
+  await expect(toast).toContainText('Template not saved');
 
   await page.evaluate(() =>
     (window as unknown as {restoreTemplateAdd: () => void}).restoreTemplateAdd(),
@@ -242,7 +236,7 @@ test('a failed template save shows a Retry toast during a workout and saves the 
   // The demo's draft is still running, so the saved template needs no toast.
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await expect(toast).toHaveCount(0);
-  const saved = before + (info.project.name === 'mobile' ? 2 : 1);
+  const saved = before + 2;
   await expect(cards).toHaveCount(saved);
   await page.reload();
   await navigate(page, 'Workouts');

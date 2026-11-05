@@ -208,7 +208,7 @@ for (const dismissal of ['Back button', 'Escape']) {
     await editor.getByLabel('Workout name').fill('Unsaved name');
     const last = editor.getByLabel('Reps for Synthetic exercise 8 set 4');
     await last.fill('9');
-    if (dismissal === 'Escape' && test.info().project.name === 'mobile') {
+    if (dismissal === 'Escape') {
       const reachable = async () => {
         await expect(save).toBeInViewport({ratio: 1});
         const field = (await last.boundingBox())!;
