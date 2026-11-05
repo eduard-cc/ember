@@ -22,6 +22,7 @@ import {type Celebration, FinishCelebration} from './components/FinishCelebratio
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {StateNotice} from './components/StateNotice';
 import {SyncLockedNotice} from './components/SyncStatus';
+import {WorkoutActionsProvider} from './components/WorkoutDrawer';
 import {EmberToaster, SETTINGS_TOASTER, toastDone, toastFailed} from './components/toasts';
 import {Button} from './components/ui/button';
 import {ContentFieldset} from './components/ui/content-fieldset';
@@ -251,6 +252,11 @@ export default function App() {
     setFocus({id, open: true});
     expand(false);
   };
+  // On phones an exercise's page is a dialog over the library, so it would cover the logger.
+  const showLogger = () => {
+    if (mobile) setExercise(null);
+    expand(true);
+  };
   const updateActive = (update: (active: Workout) => Workout) =>
     setState((s) => (s.active ? {...s, active: update(s.active)} : s));
   const start = (workout: Workout) => {
@@ -468,10 +474,6 @@ export default function App() {
                   focus={focus}
                   searching={historySearch}
                   onSearchingChange={setHistorySearch}
-                  onRepeat={start}
-                  onTemplate={saveTemplate}
-                  onChange={changeHistoryWorkout}
-                  disabled={disabled}
                   locked={sync.locked}
                   downloading={!!sync.historyDownload}
                 />
@@ -506,7 +508,6 @@ export default function App() {
                       dataset={allDataset}
                       name={exercise}
                       onBack={closeDesktopExercise}
-                      onSource={source}
                     />
                   )}
                 </>
@@ -657,10 +658,6 @@ export default function App() {
           name={exercise}
           dataset={allDataset}
           onClose={() => setExercise(null)}
-          onSource={(id) => {
-            setExercise(null);
-            source(id);
-          }}
           disabled={disabled}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
@@ -769,7 +766,7 @@ export default function App() {
             <Button
               onClick={() => {
                 setPendingWorkout(null);
-                expand(true);
+                showLogger();
               }}
             >
               Resume current workout
@@ -782,7 +779,7 @@ export default function App() {
                 cue('start');
                 void setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
                 setPendingWorkout(null);
-                expand(true);
+                showLogger();
               }}
             >
               Replace active draft
@@ -876,5 +873,19 @@ export default function App() {
       </div>
     </div>
   );
-  return <ConditionsProvider conditions={conditions}>{shell}</ConditionsProvider>;
+  return (
+    <ConditionsProvider conditions={conditions}>
+      <WorkoutActionsProvider
+        value={{
+          onRepeat: start,
+          onTemplate: (workout) => void saveTemplate(workout),
+          onChange: changeHistoryWorkout,
+          disabled,
+          locked: sync.locked,
+        }}
+      >
+        {shell}
+      </WorkoutActionsProvider>
+    </ConditionsProvider>
+  );
 }

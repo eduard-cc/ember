@@ -36,7 +36,7 @@ test('Add exercise opens the searchable library and tapping a row adds it to the
   await expect(
     picker.getByRole('region', {name: 'All exercises'}).getByRole('button').first(),
   ).toBeInViewport({ratio: 1});
-  await picker.getByRole('button', {name: 'Clear filters', exact: true}).click();
+  await picker.getByRole('button', {name: 'Clear filter', exact: true}).click();
   await expect(resultScroller).toHaveJSProperty('scrollTop', 0);
   await expect(picker.getByLabel('Search exercises')).toBeVisible();
   if (info.project.name === 'mobile') {
@@ -170,7 +170,9 @@ test('adding an exercise already in the workout explains why and keeps the draft
     await expect(picker.getByRole('button', {name: 'Back to workout'})).toBeInViewport({
       ratio: 1,
     });
-    await expect(picker.getByRole('button', {name: 'Clear filters'})).toBeInViewport({ratio: 1});
+    await expect(picker.getByRole('button', {name: 'Clear filter', exact: true})).toBeInViewport({
+      ratio: 1,
+    });
     await existing.scrollIntoViewIfNeeded();
     await expect(existing).toBeInViewport({ratio: 1});
     await page.setViewportSize({width: 412, height: 915});
@@ -198,7 +200,7 @@ test('unknown exercise searches only offer existing library exercises', async ({
   await expect(picker.getByText(/^0 of \d+ exercises$/)).toBeVisible();
   await expect(picker.getByRole('button', {name: /^Create /})).toHaveCount(0);
   await expect(picker.getByRole('group', {name: 'Exercise type'})).toHaveCount(0);
-  await picker.getByRole('button', {name: 'Clear filters', exact: true}).click();
+  await picker.getByRole('button', {name: 'Clear filter', exact: true}).click();
   await expect(picker.getByLabel('Search exercises')).toHaveValue('');
   await expect(picker.getByLabel('Search exercises')).toBeFocused();
   await expect(picker.getByRole('region', {name: 'Recent exercises'})).toBeVisible();

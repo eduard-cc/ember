@@ -10,7 +10,6 @@ export function ExercisePage({
   name,
   dataset,
   onClose,
-  onSource,
   onCloseAutoFocus,
   workout = false,
   disabled = false,
@@ -18,7 +17,6 @@ export function ExercisePage({
   name: string | null;
   dataset: Dataset;
   onClose: () => void;
-  onSource: (id: string) => void;
   onCloseAutoFocus: (event: Event) => void;
   workout?: boolean;
   disabled?: boolean;
@@ -48,7 +46,6 @@ export function ExercisePage({
               dataset={dataset}
               name={shown}
               onBack={onClose}
-              onSource={onSource}
               backLabel={workout ? 'Back to workout' : 'Back to exercises'}
               emptyFramed={!workout}
               renderTitle={(heading) => <DialogTitle asChild>{heading}</DialogTitle>}

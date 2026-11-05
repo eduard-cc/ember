@@ -41,12 +41,23 @@ test('progress exposes source sets and selectable metrics', async ({page}) => {
       'on',
     );
   }
-  await page
-    .getByRole('button', {name: /View source workout/})
-    .first()
-    .click();
-  await expect(page.locator('.workout-drawer')).toBeVisible();
-  await expect(page.locator('.workout-drawer .recorded-sets').first()).toBeVisible();
+  const source = page.getByRole('button', {name: /View source workout/}).first();
+  await source.click();
+  // The workout opens over the charts; closing it lands back on the same session.
+  const drawer = page.locator('.workout-drawer');
+  await expect(drawer).toBeVisible();
+  await expect(drawer.locator('.recorded-sets').first()).toBeVisible();
+  await drawer.getByRole('button', {name: 'Close workout'}).click();
+  await expect(drawer).toBeHidden();
+  await expect(page.getByRole('tab', {name: 'Charts', exact: true})).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.getByRole('radio', {name: 'All', exact: true})).toHaveAttribute(
+    'data-state',
+    'on',
+  );
+  await expect(source).toBeFocused();
 });
 
 async function evidence(page: Page, workouts: Workout[], name = 'Bench Press (Barbell)') {
@@ -137,6 +148,14 @@ test('exercise history exposes every block and numbered actual set with its sour
     drawer.getByRole('heading', {name: 'Repeated press blocks', exact: true}),
   ).toBeVisible();
   await expect(drawer.locator('.recorded-sets')).toHaveCount(2);
+  // It opens over the exercise's History tab, which is still there once it closes.
+  await drawer.getByRole('button', {name: 'Close workout'}).click();
+  await expect(drawer).toBeHidden();
+  await expect(page.getByRole('tab', {name: 'History', exact: true})).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(source).toBeFocused();
 });
 
 test('records lead with actual loads and exact reps, followed by source-linked estimates', async ({

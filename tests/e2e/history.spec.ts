@@ -163,15 +163,13 @@ test("a source link opens a workout's drawer with every set, its records and bou
   page,
 }) => {
   await open(page);
-  // A source link opens its workout's drawer, even one beyond the first page.
+  // An exercise's source link opens its workout's drawer over the exercise.
   await navigate(page, 'Exercises');
   await page.getByLabel('Search exercises').fill('Synthetic Leg Press');
   await page.getByRole('button', {name: /^Synthetic Leg Press/}).click();
   await page.getByRole('tab', {name: 'History', exact: true}).click();
-  await page
-    .getByRole('button', {name: /^View source workout /})
-    .first()
-    .click();
+  const source = page.getByRole('button', {name: /^View source workout /}).first();
+  await source.click();
   const drawer = page.locator('.workout-drawer');
   await expect(drawer).toBeVisible();
   await expect(drawer.getByRole('heading', {name: long.name})).toBeVisible();
@@ -189,8 +187,12 @@ test("a source link opens a workout's drawer with every set, its records and bou
   await expect(assisted.getByRole('columnheader')).toHaveText(['Set', 'Assistance × reps']);
   await drawer.getByRole('button', {name: 'Close workout'}).click();
   await expect(drawer).toBeHidden();
-  await expect(page.getByRole('button', {name: new RegExp(`^${long.name}, `)})).toBeFocused();
-  // Pressing a card's exercise drawing opens that workout too.
+  await expect(source).toBeFocused();
+  await page.getByRole('button', {name: 'Back to exercises'}).click();
+  // In History, pressing a card's exercise drawing opens that workout, even one beyond the
+  // first page; closing it returns to the card.
+  await navigate(page, 'History');
+  await page.getByRole('button', {name: 'Show older workouts'}).click();
   await pressAt(
     page,
     page.locator('.history-card', {hasText: long.name}).locator('.drawing').first(),
@@ -198,6 +200,7 @@ test("a source link opens a workout's drawer with every set, its records and bou
   await expect(drawer.getByRole('heading', {name: long.name})).toBeVisible();
   await drawer.getByRole('button', {name: 'Close workout'}).click();
   await expect(drawer).toBeHidden();
+  await expect(page.getByRole('button', {name: new RegExp(`^${long.name}, `)})).toBeFocused();
   // The newest session beat the one before on weight, volume and estimate.
   await page.locator('.library-scroll').evaluate((el) => el.scrollTo(0, 0));
   const newest = await openWorkout(page, 'Synthetic October 1');
@@ -209,6 +212,39 @@ test("a source link opens a workout's drawer with every set, its records and bou
   await expect(newest).toBeHidden();
   await expect(page.getByLabel('Weight for Synthetic Press set 1')).toHaveValue('61');
   await expect(page.getByRole('button', {name: /Uncomplete /})).toHaveCount(0);
+});
+
+test("Repeat from an exercise's workout, with a workout active, replaces it and shows the logger", async ({
+  page,
+}) => {
+  const active = {
+    id: 'active-synthetic',
+    name: 'Synthetic active',
+    date: '2026-10-31T09:00:00',
+    duration: 0,
+    exercises: [
+      {name: 'Synthetic Curl', type: 'weighted', sets: [{...set('a1', 10, 8), completed: false}]},
+    ],
+  };
+  await open(page, {...seeded, active});
+  await navigate(page, 'Exercises');
+  await page.getByLabel('Search exercises').fill('Synthetic Leg Press');
+  await page.getByRole('button', {name: /^Synthetic Leg Press/}).click();
+  await page.getByRole('tab', {name: 'History', exact: true}).click();
+  await page
+    .getByRole('button', {name: /^View source workout /})
+    .first()
+    .click();
+  const drawer = page.locator('.workout-drawer');
+  await drawer.getByRole('button', {name: /^Repeat workout /}).click();
+  await page.getByRole('button', {name: 'Replace active draft'}).click();
+  // The repeated workout's logger is what shows, not the exercise it was opened from.
+  const weight = page.getByLabel('Weight for Synthetic Leg Press set 1');
+  await expect(weight).toBeInViewport();
+  await expect(page.locator('.overlay-motion')).toHaveCount(0);
+  const box = (await weight.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(weight).toBeFocused();
 });
 
 test('a logger source link closes History search and opens an older workout on its page', async ({

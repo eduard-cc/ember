@@ -163,6 +163,15 @@ test('body-part filter combined with Most done keeps the count order within that
     }),
   ).toBe(true);
   await expect(page.getByRole('region', {name: 'Recent exercises'})).toHaveCount(0);
+  // Clear sits in the sort row under the chips, at the far end from the sort control.
+  const clear = page.getByRole('button', {name: 'Clear filter', exact: true});
+  const sortBox = (await page.getByRole('group', {name: 'Sort exercises'}).boundingBox())!;
+  const clearBox = (await clear.boundingBox())!;
+  const chipsBox = (await page.getByRole('group', {name: 'Body part'}).boundingBox())!;
+  expect(clearBox.y + clearBox.height / 2).toBeCloseTo(sortBox.y + sortBox.height / 2, 0);
+  expect(clearBox.y).toBeGreaterThanOrEqual(chipsBox.y + chipsBox.height);
+  expect(clearBox.x).toBeGreaterThan(sortBox.x + sortBox.width);
+  expect(clearBox.x + clearBox.width).toBeCloseTo(chipsBox.x + chipsBox.width, 0);
   const rows = await readRows(all);
   expect(rows.length).toBeGreaterThan(2);
   expect(rows.every((r) => r.part === 'Back')).toBe(true);

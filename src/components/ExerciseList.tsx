@@ -143,6 +143,21 @@ export function ExerciseList({
     (!query || name.toLowerCase().includes(query)) && (part === 'All' || bodyPartOf(name) === part);
   const recent = byRecency.filter(matches).slice(0, 6);
   const all = ordered.filter(matches);
+  const clear = (className?: string) => (
+    <Button
+      variant='ghost'
+      className={cn('shrink-0', className)}
+      onClick={() => {
+        setSearch('');
+        setPart('All');
+        filtersChanged();
+        searchInput.current?.focus();
+      }}
+    >
+      {/* One body part at a time; a search alongside it makes two. */}
+      {query && part !== 'All' ? 'Clear filters' : 'Clear filter'}
+    </Button>
+  );
   return (
     <div className={cn('exercises-view', contained && 'flex min-h-0 flex-1 flex-col')}>
       <div className={cn('shrink-0', contained && 'px-[max(18px,calc((100vw-900px)/2))] pb-3')}>
@@ -164,6 +179,8 @@ export function ExerciseList({
             }}
           />
         </div>
+        {/* Clear joins the sort control under the chips; the picker has no sort, so it keeps
+            Clear beside the chips rather than spending a row of its short landscape height. */}
         <div className='flex items-start gap-2'>
           <ChipRow role='group' aria-label='Body part' className='min-w-0 flex-1'>
             {(['All', ...parts] as const).map((value) => (
@@ -180,40 +197,30 @@ export function ExerciseList({
               </Chip>
             ))}
           </ChipRow>
-          {filtered && (
-            <Button
-              variant='ghost'
-              className='mt-3 shrink-0'
-              onClick={() => {
-                setSearch('');
-                setPart('All');
-                filtersChanged();
-                searchInput.current?.focus();
-              }}
-            >
-              Clear filters
-            </Button>
-          )}
+          {!sortable && filtered && clear('mt-3')}
         </div>
         {sortable && (
-          <div
-            className='mt-3 inline-flex border border-border bg-card'
-            role='group'
-            aria-label='Sort exercises'
-          >
-            {sortOptions.map(([value, label]) => (
-              <button
-                key={value}
-                className='min-h-11 min-w-16 border-0 bg-transparent px-3 text-xs font-medium text-muted-foreground not-first:border-l not-first:border-l-border hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground'
-                aria-pressed={sort === value}
-                onClick={() => {
-                  cue('tick');
-                  setSort(value);
-                }}
-              >
-                {label}
-              </button>
-            ))}
+          <div className='mt-3 flex items-center justify-between gap-3'>
+            <div
+              className='inline-flex border border-border bg-card'
+              role='group'
+              aria-label='Sort exercises'
+            >
+              {sortOptions.map(([value, label]) => (
+                <button
+                  key={value}
+                  className='min-h-11 min-w-16 border-0 bg-transparent px-3 text-xs font-medium text-muted-foreground not-first:border-l not-first:border-l-border hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground'
+                  aria-pressed={sort === value}
+                  onClick={() => {
+                    cue('tick');
+                    setSort(value);
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {filtered && clear()}
           </div>
         )}
       </div>

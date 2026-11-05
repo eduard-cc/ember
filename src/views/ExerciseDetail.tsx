@@ -1,8 +1,9 @@
 import {ArrowLeft, ArrowUpRight, History, Info, Trophy} from 'lucide-react';
-import {type ReactElement, type ReactNode, useId, useMemo, useState} from 'react';
+import {type ReactElement, type ReactNode, useId, useMemo, useRef, useState} from 'react';
 
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
+import {WorkoutDrawer} from '../components/WorkoutDrawer';
 import {Spoken} from '../components/exercise-line';
 import {Button} from '../components/ui/button';
 import {MetricExplanation} from '../components/ui/chart';
@@ -322,7 +323,6 @@ export function ExerciseDetail({
   dataset,
   name,
   onBack,
-  onSource,
   backLabel = 'Back to exercises',
   renderTitle = (heading) => heading,
   emptyFramed = true,
@@ -330,7 +330,6 @@ export function ExerciseDetail({
   dataset: Dataset;
   name: string;
   onBack: () => void;
-  onSource: (id: string) => void;
   backLabel?: string;
   /** Lets a dialog host wrap the name heading as its accessible title. */
   renderTitle?: (heading: ReactElement) => ReactNode;
@@ -343,6 +342,14 @@ export function ExerciseDetail({
   const [tabMotion, setTabMotion] = useState(false);
   // The library and the workout can both show details at once; ids must stay unique.
   const id = useId();
+  // A session opens its workout right here, over these details; closing it returns to the row.
+  const [openId, setOpenId] = useState<string | null>(null);
+  const trigger = useRef<HTMLElement | null>(null);
+  const onSource = (workoutId: string) => {
+    trigger.current = document.activeElement as HTMLElement | null;
+    cue('tick');
+    setOpenId(workoutId);
+  };
   return (
     <div className='exercise-detail'>
       <header className='detail-header mb-3.5 flex items-center gap-3'>
@@ -425,6 +432,18 @@ export function ExerciseDetail({
           <RecordsTab dataset={dataset} name={name} onSource={onSource} framed={emptyFramed} />
         )}
       </div>
+      <WorkoutDrawer
+        dataset={dataset}
+        workoutId={openId}
+        onClose={() => setOpenId(null)}
+        returnFocus={() => {
+          // An edit or delete can remove the tapped row; the selected tab is then the way back.
+          const target = trigger.current?.isConnected
+            ? trigger.current
+            : document.getElementById(`${id}-tab-${tab}`);
+          target?.focus({preventScroll: true});
+        }}
+      />
     </div>
   );
 }

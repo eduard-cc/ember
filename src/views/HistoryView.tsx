@@ -1,181 +1,28 @@
-import {
-  ArrowUpRight,
-  Clock,
-  History,
-  Layers,
-  Loader,
-  Pencil,
-  RotateCcw,
-  Search,
-  Trash2,
-  Trophy,
-  Weight,
-} from 'lucide-react';
+import {History, Loader, Search} from 'lucide-react';
 import {useMemo, useRef, useState} from 'react';
 
-import {OptionsMenu} from '../components/ExerciseMenu';
-import {ExerciseThumb} from '../components/ExerciseThumb';
-import {HistoryEditor} from '../components/HistoryEditor';
-import {ExerciseLine, Spoken, Stat} from '../components/exercise-line';
+import {WorkoutDrawer, WorkoutStats} from '../components/WorkoutDrawer';
+import {ExerciseLine} from '../components/exercise-line';
 import {Button} from '../components/ui/button';
-import {DialogActions} from '../components/ui/dialog';
 import {EmptyState} from '../components/ui/empty-state';
 import {Input} from '../components/ui/input';
-import {
-  ResponsiveDialog,
-  ResponsiveDialogBody,
-  ResponsiveDialogClose,
-  ResponsiveDialogContent,
-  ResponsiveDialogCornerClose,
-  ResponsiveDialogDescription,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-} from '../components/ui/responsive-dialog';
-import {
-  type PersonalRecord,
-  recordKindLabel,
-  recordKinds,
-  recordsAt,
-  workoutVolume,
-} from '../domain/finish-summary';
-import {estimate1RM} from '../domain/model';
-import {setCount} from '../domain/sets';
-import type {Dataset, ExerciseType, Workout} from '../domain/types';
-import {durationLabel} from '../domain/workout-duration';
+import {recordsAt} from '../domain/finish-summary';
+import type {Dataset, Workout} from '../domain/types';
 import {cue} from '../feedback';
 import {useIsMobile} from '../hooks/use-is-mobile';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
-import {dateLabel, fullDateTime, monthLabel, weekdayLabel} from '../utils/date';
+import {dateLabel, monthLabel, weekdayLabel} from '../utils/date';
 import {plural} from '../utils/plural';
-import {setText} from '../utils/set-label';
 
 const PAGE = 20;
 const CARD_LINES = 5;
-
-const kg = (n: number) => `${Math.round(n).toLocaleString('en-GB')} kg`;
-
-/** The stats under a workout's name: duration and volume when known, PRs when it set any. */
-function WorkoutStats({
-  workout,
-  records,
-  sets = false,
-  id,
-}: {
-  workout: Workout;
-  records: PersonalRecord[];
-  sets?: boolean;
-  id?: string;
-}) {
-  const volume = workoutVolume(workout);
-  return (
-    <p id={id} className='flex flex-wrap gap-x-3.5 gap-y-1'>
-      {!!workout.duration && <Stat icon={Clock}>{durationLabel(workout.duration)}</Stat>}
-      {sets && <Stat icon={Layers}>{plural(setCount(workout), 'set')}</Stat>}
-      {volume > 0 && <Stat icon={Weight}>{kg(volume)}</Stat>}
-      {records.length > 0 && (
-        <Stat icon={Trophy} className='font-medium text-primary'>
-          {records.length} {records.length === 1 ? 'PR' : 'PRs'}
-        </Stat>
-      )}
-    </p>
-  );
-}
-
-const valueHeading: Record<ExerciseType, string> = {
-  weighted: 'Weight × reps',
-  assisted: 'Assistance × reps',
-  bodyweight: 'Reps',
-  duration: 'Time',
-  cardio: 'Distance · time',
-};
-
-/** Every set of every exercise, with its records and the bounded estimate for weighted work. */
-function WorkoutSets({workout, records}: {workout: Workout; records: PersonalRecord[]}) {
-  return (
-    <>
-      {workout.exercises.map((exercise, i) => {
-        const kinds = records
-          .filter((record) => record.exercise === exercise.name)
-          .sort((a, b) => recordKinds.indexOf(a.kind) - recordKinds.indexOf(b.kind));
-        const weighted = exercise.type === 'weighted';
-        return (
-          <section key={i} className='border-b border-border py-4 last:border-b-0'>
-            <div className='flex items-center gap-3'>
-              <ExerciseThumb name={exercise.name} className='size-10' />
-              <div className='min-w-0 flex-1'>
-                <h3 className='line-clamp-2 text-card-title [overflow-wrap:anywhere]'>
-                  {exercise.name}
-                </h3>
-                {kinds.length > 0 && (
-                  <p className='flex items-start gap-1 text-[12px] text-pretty text-primary'>
-                    <Trophy
-                      size={14}
-                      className='mt-px shrink-0'
-                      aria-label='Personal records'
-                      role='img'
-                    />
-                    <span>{kinds.map((record) => recordKindLabel[record.kind]).join(' · ')}</span>
-                  </p>
-                )}
-              </div>
-            </div>
-            <table className='recorded-sets mt-2 w-full text-sm tabular-nums'>
-              <thead>
-                <tr className='text-[11px] text-muted-foreground'>
-                  <th scope='col' className='w-12 py-1.5 text-left font-normal'>
-                    Set
-                  </th>
-                  <th scope='col' className='py-1.5 text-left font-normal'>
-                    {valueHeading[exercise.type]}
-                  </th>
-                  {weighted && (
-                    <th scope='col' className='py-1.5 text-right font-normal'>
-                      Est. 1RM
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {exercise.sets.map((set, j) => {
-                  const estimate = weighted ? estimate1RM(set, exercise.type) : null;
-                  return (
-                    <tr key={set.id} className='border-t border-border'>
-                      <td className='h-10 text-muted-foreground'>{j + 1}</td>
-                      <td className='font-semibold [overflow-wrap:anywhere]'>
-                        <Spoken value={setText(set, exercise.type)} />
-                      </td>
-                      {weighted && (
-                        <td className='text-right text-muted-foreground'>
-                          {estimate === null ? '—' : `${Number(estimate.toFixed(1))} kg`}
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </section>
-        );
-      })}
-      {workout.exercises.some((exercise) => exercise.type === 'weighted') && (
-        <p className='pb-4 text-[12px]'>
-          Est. 1RM uses the Epley formula and is shown for weighted sets of 1–10 reps.
-        </p>
-      )}
-    </>
-  );
-}
 
 export function HistoryView({
   dataset,
   focus,
   searching,
   onSearchingChange,
-  onRepeat,
-  onTemplate,
-  onChange,
-  disabled,
   locked,
   downloading,
 }: {
@@ -185,13 +32,7 @@ export function HistoryView({
   /** The search field is shown, from the search button beside the page title. */
   searching: boolean;
   onSearchingChange: (searching: boolean) => void;
-  onRepeat: (workout: Workout) => void;
-  onTemplate: (workout: Workout) => void;
-  /** Save an edited workout (`next`) or delete it (`next` null). */
-  onChange: (base: Workout, next: Workout | null) => Promise<boolean>;
-  /** Mirrors the library's disabled fieldset, which the portaled drawer and editor sit outside of. */
-  disabled: boolean;
-  /** Sync is locked: portaled dialogs escape <main hidden>, so they must unmount. */
+  /** Sync is locked: search's back layer stands down with the rest of the page. */
   locked: boolean;
   /** The history download is partial, so the list may end early. */
   downloading: boolean;
@@ -199,9 +40,6 @@ export function HistoryView({
   const mobile = useIsMobile();
 
   const workouts = dataset.workouts;
-  const [editing, setEditing] = useState<Workout | null>(null);
-  const [deleting, setDeleting] = useState<Workout | null>(null);
-  const [deleteError, setDeleteError] = useState('');
   // Enough pages to include a workout, so its card is there for focus to return to.
   const pagesFor = (id: string | undefined) =>
     Math.max(PAGE, Math.ceil((workouts.findIndex((w) => w.id === id) + 1) / PAGE) * PAGE);
@@ -231,33 +69,7 @@ export function HistoryView({
       setLimit((n) => Math.max(n, pagesFor(focus.id)));
     }
   }
-  const open = (openId && workouts.find((w) => w.id === openId)) || null;
-  // The drawer keeps its last workout while it slides away.
-  const [shown, setShown] = useState<Workout | null>(open);
-  if (open && open !== shown) setShown(open);
-  const drawn = open ?? shown;
-  useBackLayer(!!open && !locked, () => setOpenId(null));
-  useBackLayer(!!deleting && !locked, () => setDeleting(null));
   const cards = useRef(new Map<string, HTMLButtonElement>());
-  // Edit and Delete open over the drawer, which stays as it was underneath; closing them goes
-  // back to its ⋯ button. Without the drawer (a peer removed the workout), focus returns to
-  // the workout's card.
-  const drawerOptions = useRef<HTMLButtonElement>(null);
-  const returnTo = useRef<string | null>(null);
-  // Set when a drawer action leaves the drawer for another place (Repeat's logger, a template).
-  const handedOff = useRef(false);
-  const restoreFocus = (event: Event) => {
-    event.preventDefault();
-    const id = returnTo.current;
-    returnTo.current = null;
-    const options = drawerOptions.current;
-    if (options?.closest('[data-state=open]')) options.focus({preventScroll: true});
-    else if (id) cards.current.get(id)?.focus({preventScroll: true});
-  };
-  const closeDrawer = (handOff: boolean) => {
-    handedOff.current = handOff;
-    setOpenId(null);
-  };
 
   const query = searching ? search.trim().toLowerCase() : '';
   const filtered = useMemo(
@@ -279,10 +91,6 @@ export function HistoryView({
       records: new Map(visible.map((w) => [w.id, recordsAt(w, dataset)])),
     };
   }, [filtered, limit, dataset]);
-  const drawnRecords = useMemo(
-    () => (drawn ? (records.get(drawn.id) ?? recordsAt(drawn, dataset)) : []),
-    [drawn, records, dataset],
-  );
   const months = useMemo(() => {
     const counts = new Map<string, number>();
     for (const w of filtered) {
@@ -437,155 +245,12 @@ export function HistoryView({
         </p>
       )}
 
-      {/* Unmounted, not just closed, while locked: a closing drawer stays drawn while it slides
-          away, outside <main hidden>. */}
-      {!locked && (
-        <ResponsiveDialog
-          open={!!open}
-          onOpenChange={(next) => {
-            if (!next) closeDrawer(false);
-          }}
-        >
-          <ResponsiveDialogContent
-            className='workout-drawer max-desk:max-h-[calc(100dvh-2.5rem)] desk:flex desk:flex-col'
-            onCloseAutoFocus={(event: Event) => {
-              event.preventDefault();
-              if (handedOff.current) handedOff.current = false;
-              else if (drawn) cards.current.get(drawn.id)?.focus({preventScroll: true});
-            }}
-          >
-            {drawn && (
-              <>
-                <ResponsiveDialogHeader className='shrink-0 border-b border-border pr-14 pb-3 text-left desk:pr-7'>
-                  <ResponsiveDialogTitle className='[overflow-wrap:anywhere]'>
-                    {drawn.name}
-                  </ResponsiveDialogTitle>
-                  <ResponsiveDialogDescription className='desk:mt-0'>
-                    {fullDateTime(drawn.date)}
-                  </ResponsiveDialogDescription>
-                  <WorkoutStats workout={drawn} records={drawnRecords} sets />
-                </ResponsiveDialogHeader>
-                <ResponsiveDialogBody className='workout-drawer-body min-h-0 flex-1 overflow-y-auto overscroll-contain'>
-                  <WorkoutSets workout={drawn} records={drawnRecords} />
-                </ResponsiveDialogBody>
-                <div className='grid shrink-0 grid-cols-[1fr_auto_auto] gap-2 border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] desk:px-0 desk:pt-5 desk:pb-0 narrow:grid-cols-[1fr_auto]'>
-                  <Button
-                    variant='primary'
-                    className='min-h-12 narrow:col-span-full'
-                    disabled={disabled}
-                    aria-label={`Repeat workout ${drawn.name} ${dateLabel(drawn.date)}`}
-                    onClick={() => {
-                      closeDrawer(true);
-                      onRepeat(drawn);
-                    }}
-                  >
-                    <RotateCcw size={16} /> Repeat
-                  </Button>
-                  <Button
-                    className='min-h-12 whitespace-nowrap'
-                    disabled={disabled}
-                    onClick={() => {
-                      closeDrawer(true);
-                      onTemplate(drawn);
-                    }}
-                  >
-                    <ArrowUpRight size={16} /> Save as template
-                  </Button>
-                  <OptionsMenu
-                    ref={drawerOptions}
-                    className='[&>button]:size-12'
-                    variant='secondary'
-                    disabled={disabled}
-                    label={`Workout options for ${drawn.name} ${dateLabel(drawn.date)}`}
-                    title={drawn.name}
-                    items={[
-                      {
-                        label: 'Edit workout',
-                        icon: Pencil,
-                        onSelect: () => {
-                          returnTo.current = drawn.id;
-                          setEditing(drawn);
-                        },
-                      },
-                      {
-                        label: 'Delete workout',
-                        icon: Trash2,
-                        danger: true,
-                        onSelect: () => {
-                          returnTo.current = drawn.id;
-                          setDeleteError('');
-                          setDeleting(drawn);
-                        },
-                      },
-                    ]}
-                  />
-                </div>
-                <ResponsiveDialogCornerClose label='Close workout' />
-              </>
-            )}
-          </ResponsiveDialogContent>
-        </ResponsiveDialog>
-      )}
-
-      {editing && !locked && (
-        <HistoryEditor
-          key={editing.id}
-          workout={editing}
-          dataset={dataset}
-          disabled={disabled}
-          onSave={onChange}
-          onClose={() => setEditing(null)}
-          onCloseAutoFocus={restoreFocus}
-          backLabel={open ? 'Back to workout' : undefined}
-        />
-      )}
-      {!locked && (
-        <ResponsiveDialog
-          open={!!deleting}
-          onOpenChange={(next) => {
-            if (!next) setDeleting(null);
-          }}
-        >
-          <ResponsiveDialogContent className='delete-workout' onCloseAutoFocus={restoreFocus}>
-            <ResponsiveDialogHeader className='text-left'>
-              <ResponsiveDialogTitle>Delete this workout?</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                {deleting &&
-                  `${deleting.name} on ${dateLabel(deleting.date)} and its ${plural(setCount(deleting), 'set')} will be removed from history.`}
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
-            <ResponsiveDialogBody className='pb-[calc(1rem+env(safe-area-inset-bottom))] desk:pb-0'>
-              {deleteError && (
-                <p className='mt-3.5' role='alert'>
-                  {deleteError}
-                </p>
-              )}
-              <DialogActions>
-                <ResponsiveDialogClose asChild>
-                  <Button>Keep workout</Button>
-                </ResponsiveDialogClose>
-                <Button
-                  variant='danger'
-                  disabled={disabled}
-                  onClick={async () => {
-                    if (!deleting) return;
-                    // The drawer showed this workout, so both close onto the list.
-                    if (await onChange(deleting, null)) {
-                      setDeleting(null);
-                      setOpenId(null);
-                    } else
-                      setDeleteError(
-                        'Not deleted. The workout may have changed on another device; close and retry.',
-                      );
-                  }}
-                >
-                  Delete workout
-                </Button>
-              </DialogActions>
-            </ResponsiveDialogBody>
-          </ResponsiveDialogContent>
-        </ResponsiveDialog>
-      )}
+      <WorkoutDrawer
+        dataset={dataset}
+        workoutId={openId}
+        onClose={() => setOpenId(null)}
+        returnFocus={(id) => cards.current.get(id)?.focus({preventScroll: true})}
+      />
     </div>
   );
 }

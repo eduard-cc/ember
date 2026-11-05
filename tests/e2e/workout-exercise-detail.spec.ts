@@ -212,31 +212,33 @@ test('the ⋯ menu stays a separate control next to the details button', async (
   await expect(detailDialog(page, 'Incline Bench Press (Dumbbell)')).toBeVisible();
 });
 
-test('a source workout link inside the details minimizes the workout and keeps the draft', async ({
+test('a source workout link inside the details opens it over them and keeps the draft', async ({
   page,
 }) => {
   const sheet = await start(page);
   await page.getByLabel('Weight for Bench Press (Barbell) set 2').fill('66');
+  await details(page, 'Bench Press (Barbell)').click();
+  const dialog = detailDialog(page, 'Bench Press (Barbell)');
   for (const tab of ['Charts', 'History', 'Records']) {
-    await details(page, 'Bench Press (Barbell)').click();
-    const dialog = detailDialog(page, 'Bench Press (Barbell)');
     await dialog.getByRole('tab', {name: tab, exact: true}).click();
-    await dialog
-      .getByRole('button', {name: /View source workout/})
-      .first()
-      .click();
-    await expect(dialog).toBeHidden();
-    await expect(sheet).toBeHidden();
-    // History opens with the source workout's drawer over it.
-    await expect(page.locator('.library-scroll h1')).toHaveText('History');
+    const source = dialog.getByRole('button', {name: /View source workout/}).first();
+    await source.click();
+    // The source workout's drawer opens over the details, with the workout still under them.
     const drawer = page.locator('.workout-drawer');
     await expect(drawer.locator('.recorded-sets').first()).toBeVisible();
     await drawer.getByRole('button', {name: 'Close workout'}).click();
     await expect(drawer).toBeHidden();
-    await page.getByRole('button', {name: /Resume Upper body A/}).click();
-    await expect(sheet).toBeVisible();
-    await expect(page.getByLabel('Weight for Bench Press (Barbell) set 2')).toHaveValue('66');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('tab', {name: tab, exact: true})).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(source).toBeFocused();
   }
+  await dialog.getByRole('button', {name: 'Back to workout'}).click();
+  await expect(dialog).toBeHidden();
+  await expect(sheet).toBeVisible();
+  await expect(page.getByLabel('Weight for Bench Press (Barbell) set 2')).toHaveValue('66');
 });
 
 for (const width of [1000, 1440, 1920, 2560]) {

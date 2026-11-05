@@ -672,10 +672,6 @@ export function WorkoutView({
           workout
           disabled={disabled}
           onClose={() => setDetails(null)}
-          onSource={(id) => {
-            setDetails(null);
-            onSource?.(id);
-          }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             const target = detailsReturn.current;
