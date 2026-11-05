@@ -7,7 +7,7 @@
 # change. Builds from `git archive`, never from a working tree. A release that adds
 # a migration is preceded by a backup whose restore is tested. If the new release
 # is unhealthy, or the extra endpoints were healthy before the switch and are not after it, the
-# previous release is restored and Discord is told. Migrations are never rolled back.
+# previous release is restored and the owner is alerted. Migrations are never rolled back.
 ACTION=deploy
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 # shellcheck source=ops/lib.sh

@@ -2,7 +2,7 @@
 # trigger system units through OnFailure=. The helper is a reviewed installed copy,
 # never a script from the checkout (the owner's development daemon uses this unit too).
 [Unit]
-Description=Send a Hermes Discord message when %i fails
+Description=Alert the owner when %i fails
 
 [Service]
 Type=oneshot

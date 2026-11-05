@@ -26,7 +26,7 @@ die() {
 	log "ERROR: $*" >&2
 	exit 1
 }
-notify() { "$SCRIPT_DIR/notify.sh" '[ember]' "$1" || log 'could not send the Discord alert' >&2; }
+notify() { "$SCRIPT_DIR/notify.sh" '[ember]' "$1" || log 'could not send the alert' >&2; }
 
 # ops/auto-deploy.sh takes the lock and runs ops/deploy.sh with it on fd 9, which this
 # reuses: flock on the same open file succeeds, and reopening would release it.
@@ -107,7 +107,7 @@ fetch() { curl --fail --silent --show-error --max-time 10 --retry 10 --retry-del
 fetch_file() { curl --fail --silent --show-error --max-time 10 --retry 3 --retry-delay 1 --retry-connrefused "$@"; }
 
 # Why the last health check failed, when the server's journal will not say (it never logs
-# a 404); switch_release puts it in the Discord alert.
+# a 404); switch_release puts it in the alert.
 HEALTH_DETAIL=
 unhealthy() {
 	HEALTH_DETAIL=$1
@@ -219,11 +219,11 @@ extra_recovered() {
 }
 
 # Switch to a built release and check it. If the extra endpoints were healthy before
-# ($2 == true), also check that they still are. A failed check rolls back and alerts Discord.
+# ($2 == true), also check that they still are. A failed check rolls back and sends an alert.
 # Returns 0 when live and healthy, 1 after a successful rollback, 2 when the rollback
 # failed too, 3 when the link could not be switched (nothing changed), and 4 when only
 # an extra endpoint failed but the release applied migrations ($3 == true): rolling back would run
-# old code on a newer schema, so it stays live and Discord is told instead.
+# old code on a newer schema, so it stays live and the owner is alerted instead.
 switch_release() {
 	local sha=$1 extra_before=$2 migrated=${3:-false} problem extra_after= now
 	now=$(current_release)

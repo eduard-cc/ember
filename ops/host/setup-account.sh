@@ -4,10 +4,10 @@
 # it). Idempotent.
 #
 #   sudo ops/host/setup-account.sh <account> <loopback-ports> <tailnet-https-addresses>
-#   sudo ops/host/setup-account.sh ember 5191,55438 100.64.0.10,fd7a:115c:a1e0::a
+#   sudo ops/host/setup-account.sh ember 5191,55438,<webhook-port> 100.64.0.10,fd7a:115c:a1e0::a
 #
-# <loopback-ports> are the only 127.0.0.1 TCP ports the account may connect to: the app
-# and its database. <tailnet-https-addresses> (IPv4 and IPv6)
+# <loopback-ports> are the only 127.0.0.1 TCP ports the account may connect to: the app,
+# its database and the owner's Hermes webhook (alerts). <tailnet-https-addresses> (IPv4 and IPv6)
 # are the only tailnet destinations it may reach, on HTTPS only: Ember's own tailnet device
 # (the deploy health check goes through its Serve origin).
 #

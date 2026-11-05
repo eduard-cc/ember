@@ -6,7 +6,7 @@
 #
 # Fast-forwards this checkout first, so ops/deploy.sh runs the newest scripts. A commit
 # whose CI or deploy failed, or that ops/rollback.sh rolled back from, is held: it is
-# never retried and Discord hears about it once. The next commit on main replaces the
+# never retried and the owner is alerted once. The next commit on main replaces the
 # hold. When GitHub cannot be reached, the next run simply tries again.
 ACTION=auto-deploy
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
