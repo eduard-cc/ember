@@ -11,13 +11,18 @@
 # which takes only signed alerts), HTTPS on its own tailnet device (the
 # deploy checks the app through Serve), and nothing
 # else on this host, the LAN or the tailnet. Replies on connections other users
-# opened to it are allowed. Other accounts are not affected.
+# opened to it are allowed. Other accounts are not affected, and neither are packets the
+# kernel sends without a socket (IPv6 neighbor and router discovery, IGMP/MLD reports, TCP
+# resets): they have no owner, so only a positive uid match may send traffic into the
+# account chain.
 table inet @TABLE@
 delete table inet @TABLE@
 table inet @TABLE@ {
 	chain output {
 		type filter hook output priority filter - 5; policy accept;
-		meta skuid != { @UID@, @SUBUIDS@ } accept
+		meta skuid { @UID@, @SUBUIDS@ } jump account
+	}
+	chain account {
 		ct state established,related accept
 		# This host's own addresses, LAN and tailnet ones included, leave through lo.
 		oifname "lo" jump loopback
