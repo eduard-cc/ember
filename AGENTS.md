@@ -41,7 +41,7 @@ Personal workout history, exports and backups stay outside tracked source, publi
 
 ## Design and delivery
 
-DESIGN.md is the visual contract. Preserve a restrained shadcn style with Ember's own amber color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support, desktop/mobile browser verification.
+DESIGN.md is the visual contract. Preserve a restrained shadcn style with Ember's own amber color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support. Ember is phone-only: design, test and verify at phone sizes; the legacy desktop layouts stay in the code but get no new work.
 Preserve unrelated work. Prefer tests before domain behavior; verify observable Playwright flows and typecheck/build before handoff.
 
 ## Production data
