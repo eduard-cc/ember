@@ -22,7 +22,7 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. DESIGN.md 
 - Never toggle a CSS animation by focus modality on a surface that stays open (`.pushed-page:has(:focus-visible)` sets `animation: none`): the pointer press that moves focus off a programmatically focused field restores the animation and replays the slide-in, so the press lands on whatever slid under it. The pushed editor uses its own `.editor-pushed` class for that reason.
 - Dialogs stack (DESIGN.md "Nested surfaces stack"): keep the parent open under its child rather than closing and reopening it. The Dialog scrim shares the surfaces' `z-50`, so stacked portals layer in opening order; a lower scrim would leave the parent undimmed above the child's scrim.
 - `<main>` is `hidden` while `sync.locked`, but Radix dialogs portal outside it: anything showing history must unmount while `sync.locked`.
-- Never put an `aria-live` region inside the logger or an editor. Radix's `hideOthers` keeps every `[aria-live]` element and its ancestors exposed, so the logger behind a modal stays in the accessibility tree. Portal live regions to `document.body` (see the reorder announcement in `src/views/WorkoutView.tsx`).
+- Never put an `aria-live` region inside the logger or an editor. Radix's `hideOthers` keeps every `[aria-live]` element and its ancestors exposed, so the logger behind a modal stays in the accessibility tree. Portal live regions to `document.body` (see the reorder announcement in `src/views/WorkoutView.tsx` and `Announcement` in `src/components/StateNotice.tsx`, which condition pills and strips use).
 
 ## Back gesture (`src/state/back.ts`)
 

@@ -31,7 +31,7 @@ Also follow the sync-protocol-evolution workflow for a new record kind.
 ## First download
 
 - The writer tab asks for persistent storage (`navigator.storage.persist()`, only when not yet persisted). Best-effort IndexedDB can be evicted, after which the installation is fresh and downloads the whole feed again.
-- `history-downloaded` in `syncState` is written with the feed page that has `hasMore: false`. Until then `useSync().historyIncomplete` shows a download notice instead of letting empty states read as "no workouts"; `history-download-started` marks an interrupted first download so it stays labelled after reopening. Installations that synced before the flag existed already hold the deletes cursor and count as complete. The notice needs a connected owner (a fresh install that is offline on first open shows only the offline status), and a legacy install holding only `cursor` shows it once while it replays the feed.
+- `history-downloaded` in `syncState` is written with the feed page that has `hasMore: false`. Until then `useSync().historyDownload` shows the Downloading history (or Offline) pill and History ends with a still-downloading label instead of letting empty states read as "no workouts"; `history-download-started` marks an interrupted first download so it stays labelled after reopening. Installations that synced before the flag existed already hold the deletes cursor and count as complete. The label needs a connected owner (a fresh install that is offline on first open shows only the offline status), and a legacy install holding only `cursor` shows it once while it replays the feed.
 
 ## Retriggering sync
 

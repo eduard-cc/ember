@@ -1,6 +1,7 @@
 import {liveQuery} from 'dexie';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
+import type {LocalOperation} from '../../shared/contracts';
 import type {WorkoutRepository} from '../storage/repository';
 import {
   DELETES_CURSOR,
@@ -12,6 +13,15 @@ import {
 } from './engine';
 
 const HISTORY_DOWNLOAD_STARTED = 'history-download-started';
+
+/** A retained conflict or rejection, with the queued operation it holds back. */
+export interface SyncIssue {
+  operationId: string;
+  entityId: string;
+  errorCode?: string;
+  kind?: LocalOperation['kind'];
+  payload: LocalOperation['payload'];
+}
 
 export function useSync(
   repository: WorkoutRepository,
@@ -26,9 +36,7 @@ export function useSync(
   const [pending, setPending] = useState(0);
   const [eligibleWork, setEligibleWork] = useState('');
   const attemptedWork = useRef('');
-  const [issues, setIssues] = useState<
-    {operationId: string; entityId: string; errorCode?: string}[]
-  >([]);
+  const [issues, setIssues] = useState<SyncIssue[]>([]);
   const failures = useRef(0),
     nextAttempt = useRef(0);
   const running = useRef(false);
@@ -53,9 +61,14 @@ export function useSync(
     if (!ready) return;
     const sub = liveQuery(async () => {
       const operations = await repository.db.outbox.toArray();
+      // Retained operations stay queued, so each issue names the change it holds back.
       const issues = (
         await repository.db.syncState.where('key').startsWith('issue:').toArray()
-      ).map((r) => r.value as {operationId: string; entityId: string; errorCode?: string});
+      ).map((r): SyncIssue => {
+        const issue = r.value as {operationId: string; entityId: string; errorCode?: string};
+        const operation = operations.find((o) => o.operationId === issue.operationId);
+        return {...issue, kind: operation?.kind, payload: operation?.payload ?? null};
+      });
       const blocked = new Set(issues.map((issue) => issue.entityId));
       return {
         pending: operations.length,

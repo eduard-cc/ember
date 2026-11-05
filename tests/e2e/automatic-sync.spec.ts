@@ -80,10 +80,14 @@ test('fresh installation connects automatically, keeps its storage and says hist
   });
   await page.goto('/');
   await expect(page.getByRole('button', {name: 'Start empty workout', exact: true})).toBeEnabled();
-  await expect(page.getByRole('region', {name: 'Connecting…', exact: true})).toBeVisible();
+  // Quiet conditions are one small pill beside the page title.
+  const pill = page.locator('.status-pill');
+  await expect(pill).toHaveText('Connecting…, details');
   releaseSession();
-  const download = page.getByRole('status', {name: 'History download'});
-  await expect(download).toHaveText('Downloading your workout history from your server…');
+  await expect(pill).toHaveText('Downloading history, details');
+  await expect(page.getByRole('status', {name: 'History downloading'})).toHaveText(
+    'Downloading your workout history from your server. Older workouts appear as they arrive.',
+  );
   await expect
     .poll(() =>
       page.evaluate(() => (window as unknown as {persistRequests: number}).persistRequests),
@@ -96,35 +100,54 @@ test('fresh installation connects automatically, keeps its storage and says hist
     'data-sync',
     'Offline or server unavailable · changes pending',
   );
-  await expect(download).toHaveText(
-    'Your workout history has not finished downloading. It continues when your server is reachable.',
+  await expect(pill).toHaveText('Offline, details');
+  await expect(page.getByRole('status', {name: 'Offline'})).toHaveText(
+    'Ember can’t reach your server, so your workout history has not finished downloading. Ember reconnects on its own.',
   );
+  // History never reads as empty while it downloads.
+  await navigate(page, 'History');
+  await expect(page.locator('.history-downloading')).toHaveText(
+    'Your workouts are still downloading',
+  );
+  await expect(page.getByText('No workouts yet')).toHaveCount(0);
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
+  // The open editor shows it in its meta line, and only there.
+  await expect(page.locator('.status-pill')).toHaveCount(1);
+  await expect(page.locator('.template-editor .editor-meta .status-pill')).toHaveText(
+    'Offline, details',
+  );
   await page.getByLabel('Template name').fill('Queued during download');
   await addExercise(page, 'Bench Press (Barbell)');
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  await expect(page.getByRole('region', {name: 'History download'})).toContainText(
-    '1 change waiting to sync',
-  );
+  await expect(pill).toHaveText('Offline · 1 waiting, details');
   await page.reload();
-  await expect(download).toBeVisible();
-  await expect(page.getByRole('region', {name: 'History download'})).toContainText(
-    '1 change waiting to sync',
+  await expect(pill).toHaveText('Offline · 1 waiting, details');
+  // The pill opens its details; reconnecting stays automatic, so they hold no Retry.
+  await pill.click();
+  const details = page.getByRole('dialog', {name: 'Offline', exact: true});
+  await expect(details).toContainText(
+    '1 change is saved on this phone and will sync when your server is reachable.',
   );
+  await expect(details.getByRole('button')).toHaveText(['Close']);
+  await details.getByRole('button', {name: 'Close', exact: true}).click();
+  await expect(details).toBeHidden();
+  await expect(pill).toBeFocused();
   serverUp = true;
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
-  await expect(download).toHaveCount(0);
+  await expect(pill).toHaveCount(0);
   await navigate(page, 'History');
   for (const n of [1, 2])
     await expect(page.getByRole('heading', {name: `Synthetic history ${n}`})).toBeVisible();
+  await expect(page.locator('.history-downloading')).toHaveCount(0);
   await expect(page.getByLabel('Server password')).toHaveCount(0);
   await expect(page.getByRole('button', {name: 'Sign out', exact: true})).toHaveCount(0);
   await expect(page.getByRole('status', {name: 'Server synchronization'})).toHaveCount(0);
   await page.reload();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
-  await expect(download).toHaveCount(0);
+  await expect(pill).toHaveCount(0);
   expect(bootstraps).toBe(1);
 });
 
@@ -217,8 +240,8 @@ test('unavailable server keeps trusted local drafts and pending edits across reo
     'data-sync',
     'Offline or server unavailable · changes pending',
   );
-  await expect(page.getByRole('region', {name: 'Server unavailable'})).toContainText(
-    '1 change waiting to sync',
+  await expect(page.locator('.workout-meta .status-pill')).toHaveText(
+    'Offline · 1 waiting, details',
   );
   await navigate(page, 'Workouts');
   await expect(
@@ -296,9 +319,14 @@ for (const status of ['conflict', 'rejected'] as const) {
       'data-sync',
       /Sync conflict or rejection/,
     );
-    await expect(page.getByRole('region', {name: 'Changes not synced'})).toContainText(
-      'REVISION_CONFLICT',
-    );
+    // A problem is a strip under the header; its details name the change it holds back.
+    await page.getByRole('button', {name: /^1 change not synced/}).click();
+    const details = page.getByRole('dialog', {name: 'Changes not synced', exact: true});
+    await expect(details.getByRole('listitem')).toHaveText([
+      'Retained template · templateChanged on another device',
+    ]);
+    await details.getByRole('button', {name: 'Close', exact: true}).click();
+    await expect(details).toBeHidden();
     const completedFeeds = feeds;
     await page.waitForTimeout(1000);
     expect(feeds).toBe(completedFeeds);

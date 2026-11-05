@@ -3,6 +3,7 @@ import {type ReactNode, type RefObject, useEffect, useRef, useState} from 'react
 
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
+import {StatusPill, StatusStrips} from './Conditions';
 import {Button} from './ui/button';
 import {ContentFieldset} from './ui/content-fieldset';
 import {Dialog, DialogContent, DialogDescription, DialogTitle} from './ui/dialog';
@@ -198,16 +199,19 @@ export function EditorPanel({
             value={name}
             onChange={(event) => onNameChange(event.target.value)}
           />
-          <p className='editor-meta mx-1 mt-1 flex min-h-7 items-center text-[12px] text-muted-foreground tabular-nums'>
+          <div className='editor-meta mx-1 mt-1 flex min-h-7 items-center justify-between gap-2 text-[12px] text-muted-foreground tabular-nums'>
             {nameProblem ? (
               <span id='editor-name-problem' className='text-[13px] font-medium text-destructive'>
                 {nameProblem}
               </span>
             ) : (
-              meta
+              <span className='min-w-0'>{meta}</span>
             )}
-          </p>
+            <StatusPill covering />
+          </div>
         </header>
+        {/* A failed save is this editor's own strip below, so it is not repeated above it. */}
+        <StatusStrips covering omit={failed ? 'not-saved' : undefined} />
         {problem && (
           <div
             ref={strip}

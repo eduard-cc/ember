@@ -3,6 +3,7 @@ import {
   Clock,
   History,
   Layers,
+  Loader,
   Pencil,
   RotateCcw,
   Search,
@@ -176,6 +177,7 @@ export function HistoryView({
   onChange,
   disabled,
   locked,
+  downloading,
 }: {
   dataset: Dataset;
   /** The workout to mark (a finish) or, with `open`, to open (a source link). */
@@ -191,6 +193,8 @@ export function HistoryView({
   disabled: boolean;
   /** Sync is locked: portaled dialogs escape <main hidden>, so they must unmount. */
   locked: boolean;
+  /** The history download is partial, so the list may end early. */
+  downloading: boolean;
 }) {
   const mobile = useIsMobile();
 
@@ -409,6 +413,7 @@ export function HistoryView({
         <Button onClick={() => setLimit((n) => n + PAGE)}>Show older workouts</Button>
       )}
       {!filtered.length &&
+        (query || !downloading) &&
         (query ? (
           <EmptyState
             icon={Search}
@@ -422,6 +427,15 @@ export function HistoryView({
             description='Finished workouts appear here, newest first.'
           />
         ))}
+      {/* A partial download never reads as a short or empty history. */}
+      {downloading && filtered.length <= limit && (
+        <p className='history-downloading flex items-center justify-center gap-2 border border-dashed border-border px-4 py-4 text-center text-[13px] text-muted-foreground'>
+          <Loader size={14} aria-hidden='true' className='shrink-0 motion-safe:animate-slow-spin' />
+          {workouts.length
+            ? 'Older workouts are still downloading'
+            : 'Your workouts are still downloading'}
+        </p>
+      )}
 
       {/* Unmounted, not just closed, while locked: a closing drawer stays drawn while it slides
           away, outside <main hidden>. */}

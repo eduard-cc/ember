@@ -14,13 +14,14 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import {AddExercise} from './components/AddExercise';
 import {AppearanceSettings, useAppearance} from './components/AppearanceSettings';
 import {BodyWeightSettings} from './components/BodyWeightSettings';
+import {ConditionsProvider, StatusPill, StatusStrips, appConditions} from './components/Conditions';
 import {ElapsedTimer} from './components/ElapsedTimer';
 import {ExercisePage} from './components/ExercisePage';
 import {FeedbackSettings} from './components/FeedbackSettings';
 import {type Celebration, FinishCelebration} from './components/FinishCelebration';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {StateNotice} from './components/StateNotice';
-import {SyncStatus} from './components/SyncStatus';
+import {SyncLockedNotice} from './components/SyncStatus';
 import {EmberToaster, SETTINGS_TOASTER, toastDone, toastFailed} from './components/toasts';
 import {Button} from './components/ui/button';
 import {ContentFieldset} from './components/ui/content-fieldset';
@@ -64,7 +65,6 @@ import {ProfileView} from './views/ProfileView';
 import {TemplatesView} from './views/TemplatesView';
 import {WorkoutView} from './views/WorkoutView';
 
-const stickyClass = 'sticky top-0 z-3';
 /** Drawer footers stack the primary action on top, like `DialogActions` on phones. */
 const confirmFooter = 'max-desk:flex-col-reverse max-desk:*:min-h-12';
 // The bar is a bottom tab strip below the `desk` breakpoint and a 48px header from it up. It is
@@ -99,7 +99,6 @@ type View = (typeof navigation)[number]['name'];
 export default function App() {
   const appearance = useAppearance();
   const settingsTrigger = useRef<HTMLButtonElement | null>(null);
-  const resetTrigger = useRef<HTMLButtonElement | null>(null);
   const exerciseTrigger = useRef<HTMLElement | null>(null);
   const exerciseScroll = useRef(0);
   const {
@@ -160,6 +159,8 @@ export default function App() {
   const [historySearch, setHistorySearch] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  // The drawer button the reset confirmation returns to.
+  const [resetTrigger, setResetTrigger] = useState<HTMLButtonElement | null>(null);
   useBackLayer(confirmReset, () => setConfirmReset(false));
   const transitioning = useRef(false);
   // App-shell updates pause editing and sync around a saved, draft-free transition.
@@ -336,73 +337,19 @@ export default function App() {
     if (saveStatus !== 'saving') setConfirmFinish(false);
   });
   useBackLayer(!!celebration, () => setCelebration(null));
-  // Sync is silent. Only states that need the owner surface here. In the logger the banners stay
-  // on screen while a long workout scrolls.
-  const errors = (where: 'page' | 'logger' | 'settings' = 'page') => {
-    const banner = cn('mb-5', where === 'logger' && stickyClass);
-    return (
-      <>
-        {ownershipError && (
-          <StateNotice
-            title='Read-only tab'
-            announcement={ownershipError}
-            problem
-            className={banner}
-          >
-            <p className='text-inherit'>{ownershipError}</p>
-            {typeof navigator.locks?.request === 'function' && (
-              <Button className='self-start' onClick={() => location.reload()}>
-                Reload to enable editing
-              </Button>
-            )}
-          </StateNotice>
-        )}
-        {persistenceError && (
-          <StateNotice
-            title={recoveryError ? 'Saved data unavailable' : 'Changes not saved'}
-            announcement={persistenceError}
-            problem
-            className={banner}
-          >
-            <p className='text-inherit'>{persistenceError}</p>
-            {recoveryError && (
-              <Button
-                variant='secondary'
-                className='text-destructive'
-                onClick={(event) => {
-                  resetTrigger.current = event.currentTarget;
-                  setConfirmReset(true);
-                }}
-              >
-                Reset unreadable saved data
-              </Button>
-            )}
-          </StateNotice>
-        )}
-        {!sync.locked && sync.issues.length > 0 && (
-          <StateNotice
-            title='Changes not synced'
-            announcement={`${plural(sync.issues.length, 'change')} could not sync. Later edits to the same item wait until this is resolved.`}
-            problem
-            className={banner}
-          >
-            <p className='text-inherit'>
-              {plural(sync.issues.length, 'change')} could not sync. Later edits to the same item
-              wait until this is resolved.
-            </p>
-            <ul className='w-full [overflow-wrap:anywhere]'>
-              {sync.issues.map((issue) => (
-                <li key={issue.operationId}>
-                  <strong>{issue.errorCode ?? 'SYNC_REJECTED'}</strong>
-                </li>
-              ))}
-            </ul>
-          </StateNotice>
-        )}
-        {!ownershipError && !persistenceError && <SyncStatus sync={sync} />}
-      </>
-    );
-  };
+  // Sync is silent. Only conditions that need the owner, or heal by themselves, show, each in one
+  // place: the logger while it is open, otherwise the page (or Settings over it).
+  const conditions = appConditions({
+    ownershipError,
+    persistenceError,
+    recoveryError,
+    sync,
+    onReset: (trigger) => {
+      setResetTrigger(trigger);
+      setConfirmReset(true);
+    },
+  });
+  const pageConditions = !showSheet && !sync.locked && !settingsOpen;
   const settingsButton = (className?: string) => (
     <Button
       variant='ghost'
@@ -419,16 +366,19 @@ export default function App() {
     </Button>
   );
   const title = view === 'Exercises' && exercise ? 'Exercise' : view;
-  return (
+  const shell = (
     <div
       className={`app-shell h-dvh ${showSheet ? 'sheet-open' : ''}`}
       data-save={saveStatus}
       data-sync={sync.status}
     >
       {sync.locked && (
-        <div className='flex max-h-full flex-col overflow-auto px-[18px] py-3.5'>
-          <div className='mb-3 flex justify-end'>{settingsButton()}</div>
-          {!settingsOpen && errors()}
+        <div className='flex max-h-full flex-col overflow-auto'>
+          {!settingsOpen && <StatusStrips />}
+          <div className='px-[18px] py-3.5'>
+            <div className='mb-3 flex justify-end'>{settingsButton()}</div>
+            {!settingsOpen && <SyncLockedNotice sync={sync} />}
+          </div>
         </div>
       )}
       <main hidden={sync.locked} className='workspace relative m-auto flex h-full max-w-[1480px]'>
@@ -462,27 +412,31 @@ export default function App() {
             </nav>
             <div className='max-desk:hidden desk:ml-auto'>{settingsButton()}</div>
           </header>
+          {/* Pinned under the status bar (the app bar on desktop); the title still scrolls. */}
+          {pageConditions && <StatusStrips />}
           <div className='library-scroll min-h-0 flex-1 overflow-auto overscroll-contain px-8 pt-6.5 pb-10 max-desk:px-4.5 max-desk:pt-6 max-desk:pb-7.5'>
             {/* The title row sits outside the content fieldset, so the Profile cog (the phone entry
                 to Settings; desktop has the header gear) also works while edits are disabled. The
                 negative margins keep the 44px target from growing the 32px title row. */}
             <div className='mb-5 flex items-center justify-between gap-3'>
               <h1>{title}</h1>
-              {view === 'Profile' && settingsButton('-my-1.5 -mr-2.5 desk:hidden')}
-              {view === 'History' && (
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='history-search-trigger -my-1.5 -mr-2.5'
-                  aria-label={historySearch ? 'Close search' : 'Search history'}
-                  aria-expanded={historySearch}
-                  onClick={() => setHistorySearch((value) => !value)}
-                >
-                  {historySearch ? <X size={20} /> : <Search size={20} />}
-                </Button>
-              )}
+              <div className='flex min-w-0 items-center gap-2'>
+                {pageConditions && <StatusPill />}
+                {view === 'Profile' && settingsButton('-my-1.5 -mr-2.5 desk:hidden')}
+                {view === 'History' && (
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='history-search-trigger -my-1.5 -mr-2.5'
+                    aria-label={historySearch ? 'Close search' : 'Search history'}
+                    aria-expanded={historySearch}
+                    onClick={() => setHistorySearch((value) => !value)}
+                  >
+                    {historySearch ? <X size={20} /> : <Search size={20} />}
+                  </Button>
+                )}
+              </div>
             </div>
-            {!showSheet && !sync.locked && !settingsOpen && errors()}
             <ContentFieldset disabled={disabled}>
               {view === 'Workout' && !sync.locked && (
                 <>
@@ -519,6 +473,7 @@ export default function App() {
                   onChange={changeHistoryWorkout}
                   disabled={disabled}
                   locked={sync.locked}
+                  downloading={!!sync.historyDownload}
                 />
               )}
               {view === 'Exercises' && (
@@ -640,13 +595,14 @@ export default function App() {
                   }
                 />
                 {sheetDrawn && (
-                  <div className='workout-meta mx-1 mt-1 flex items-center justify-between gap-2 text-[12px] text-muted-foreground tabular-nums'>
-                    <span>
+                  <div className='workout-meta mx-1 mt-1 flex min-h-7 items-center justify-between gap-2 text-[12px] text-muted-foreground tabular-nums'>
+                    <span className='shrink-0'>
                       <strong className='font-medium text-foreground'>
                         <RollingNumber value={completed} /> / {sets.length}
                       </strong>{' '}
                       {sets.length === 1 ? 'set' : 'sets'} completed
                     </span>
+                    {showSheet && !settingsOpen && <StatusPill />}
                   </div>
                 )}
                 {/* Progress through the planned sets, over the header's bottom rule. */}
@@ -657,9 +613,9 @@ export default function App() {
                   />
                 </div>
               </header>
+              {showSheet && !settingsOpen && <StatusStrips />}
               <div className='workout-scroll min-h-0 flex-1 [scroll-padding:14px_0_30px] overflow-y-auto overscroll-contain'>
                 <h2 className='sr-only'>Your workout</h2>
-                {showSheet && !settingsOpen && !confirmFinish && !confirmCancel && errors('logger')}
                 <ContentFieldset disabled={disabled}>
                   <WorkoutView
                     key={state.active.id}
@@ -722,16 +678,20 @@ export default function App() {
         >
           <SectionHeading className='mb-6'>
             <DialogTitle>Settings</DialogTitle>
-            <DialogClose asChild>
-              <Button aria-label='Close settings' variant='ghost' size='icon'>
-                <X size={20} />
-              </Button>
-            </DialogClose>
+            <div className='flex min-w-0 items-center gap-2'>
+              <StatusPill />
+              <DialogClose asChild>
+                <Button aria-label='Close settings' variant='ghost' size='icon'>
+                  <X size={20} />
+                </Button>
+              </DialogClose>
+            </div>
           </SectionHeading>
           <DialogDescription srOnly>
             Appearance, feedback, body weight and app updates.
           </DialogDescription>
-          {errors('settings')}
+          <StatusStrips className='border' />
+          {sync.locked && <SyncLockedNotice sync={sync} />}
           <div className='mt-5 space-y-10'>
             <AppearanceSettings settings={appearance} />
             <FeedbackSettings />
@@ -764,7 +724,7 @@ export default function App() {
         <ResponsiveDialogContent
           onCloseAutoFocus={(event) => {
             event.preventDefault();
-            resetTrigger.current?.focus();
+            resetTrigger?.focus();
           }}
         >
           <ResponsiveDialogHeader className='text-left'>
@@ -916,4 +876,5 @@ export default function App() {
       </div>
     </div>
   );
+  return <ConditionsProvider conditions={conditions}>{shell}</ConditionsProvider>;
 }

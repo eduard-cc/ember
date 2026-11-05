@@ -312,6 +312,17 @@ test('IndexedDB quota-error injection retains memory and never reports saved', a
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Unsaved edit '.repeat(10000));
   await expect(page.getByRole('alert')).toContainText('Could not save on this device');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
+  // A problem strip under the logger's header, in the layout: it covers no sets and Finish stays
+  // in reach.
+  const strip = page.locator('.workout-sheet .status-strip');
+  await expect(strip).toHaveText(/^Can’t save on this phone/);
+  const header = (await page.locator('.workout-top').boundingBox())!;
+  const shown = (await strip.boundingBox())!;
+  const sets = (await page.locator('.workout-scroll').boundingBox())!;
+  expect(shown.y).toBeGreaterThanOrEqual(header.y + header.height - 1);
+  expect(sets.y).toBeGreaterThanOrEqual(shown.y + shown.height - 1);
+  expect(shown.height).toBeGreaterThanOrEqual(44);
+  await expect(page.getByRole('button', {name: 'Finish workout'})).toBeInViewport();
   await expect(page.getByLabel('WORKOUT NAME', {exact: true})).toHaveValue(
     'Unsaved edit '.repeat(10000),
   );

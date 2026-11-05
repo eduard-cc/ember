@@ -608,9 +608,17 @@ test('a read-only writer follower can minimize and reach settings and recovery g
   await follower.getByRole('button', {name: 'Settings', exact: true}).last().click();
   await expect(follower.getByRole('dialog', {name: 'Settings'})).toBeVisible();
   await expect(follower.getByRole('button', {name: 'Add weight'})).toBeDisabled();
-  await expect(follower.getByRole('button', {name: 'Reload to enable editing'})).toBeEnabled();
   await expect(follower.getByRole('region', {name: 'Active workout'})).toHaveCount(0);
-  await expect(follower.getByRole('region', {name: 'Read-only tab'})).toBeVisible();
+  // Read-only needs the owner but is no failure: a neutral strip whose details hold Reload.
+  await follower
+    .getByRole('dialog', {name: 'Settings'})
+    .getByRole('button', {name: /^Read-only · Ember is open in another tab/})
+    .click();
+  const details = follower.getByRole('dialog', {name: 'Read-only tab', exact: true});
+  await expect(details).toContainText('Another tab is editing');
+  await expect(details.getByRole('button', {name: 'Reload to enable editing'})).toBeEnabled();
+  await details.getByRole('button', {name: 'Close', exact: true}).click();
+  await expect(details).toBeHidden();
   expect(
     await follower
       .locator(
