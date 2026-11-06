@@ -25,7 +25,7 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. DESIGN.md 
 
 ## Back gesture (`src/state/back.ts`)
 
-Chrome lets the back gesture skip history entries a page added without a fresh user tap, and an in-page back resets that tap. Never re-`pushState` after a back. To keep a layer that declined to close, step forward onto the entry that still exists (`history.go(+n)`, ignoring its popstate). Playwright's in-page `history.back()` counts as a tap and hides the problem, so drive back with CDP `Page.navigateToHistoryEntry` and assert there is no `NavigationEntryMarkedSkippable` audit issue (`tests/e2e/back-gesture.spec.ts`).
+Chrome lets the back gesture skip history entries a page added without a fresh user tap, and an in-page back resets that tap. Never re-`pushState` after a back. To keep a layer that declined to close, step forward onto the entry that still exists (`history.go(+n)`, ignoring its popstate). A layer that the declining layer opens in response (a Discard changes? prompt) shares that entry rather than pushing one: Chrome marks an entry pushed within roughly 50 ms of a gesture back skippable, so a push there fails only some of the time and mostly on the faster bundled build. Playwright's in-page `history.back()` counts as a tap and hides the problem, so drive back with CDP `Page.navigateToHistoryEntry` and assert there is no `NavigationEntryMarkedSkippable` audit issue (`tests/e2e/back-gesture.spec.ts`).
 
 ## Drag gestures
 

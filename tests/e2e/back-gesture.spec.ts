@@ -144,9 +144,7 @@ test('back on the phone workout opened at launch minimizes it after the first ta
   await expect(sheet(page)).toBeHidden();
 });
 
-// Runs on the dev server: on the bundled build Chrome sometimes reports a skippable entry here,
-// depending on timing (kanban t_b4a0100f).
-test('a refused back keeps the next back inside the app @dev-server', async ({page}) => {
+test('a refused back keeps the next back inside the app', async ({page}) => {
   // Driven from the browser side, like the gesture: an in-page history.back() counts as a tap.
   // Chrome lets the gesture skip entries a page adds without a fresh tap, and reports it.
   const cdp = await page.context().newCDPSession(page);
@@ -173,8 +171,9 @@ test('a refused back keeps the next back inside the app @dev-server', async ({pa
       ratio: 1,
     });
     await expect(prompt.getByRole('button', {name: 'Keep editing'})).toBeFocused();
-    // The prompt is a layer of its own: back on it keeps editing.
-    await expect.poll(() => depth(page)).toBe(3);
+    // The prompt shares the editor's entry, since Chrome marks an entry pushed right after a
+    // gesture back skippable. Back on it keeps editing.
+    await expect.poll(() => depth(page)).toBe(2);
     await browserBack();
     await expect(prompt).toBeHidden();
     await expect.poll(() => depth(page)).toBe(2);
@@ -282,7 +281,8 @@ test('changed templates keep their draft through dismissal and discard writes no
       else await browserBack();
       await expect(prompt).toBeVisible();
       await expect(keep).toBeFocused();
-      await expect.poll(() => depth(page)).toBe(2);
+      // A prompt opened by a refused back shares the editor's entry.
+      await expect.poll(() => depth(page)).toBe(method === 'back' ? 1 : 2);
       // Escape, back and Keep editing all keep the draft and return to the field in use.
       if (method === 'close') await keep.click();
       else if (method === 'escape') await page.keyboard.press('Escape');
@@ -326,7 +326,7 @@ test('back on an edited history workout asks before discarding, then steps back 
   await expect(page.locator('.history-editor').getByLabel('Workout name')).toHaveValue(
     'Renamed by back test',
   );
-  await expect.poll(() => depth(page)).toBe(3);
+  await expect.poll(() => depth(page)).toBe(2);
   await prompt.getByRole('button', {name: 'Discard changes'}).click();
   await expect(editor).toBeHidden();
   const drawer = page.locator('.workout-drawer');

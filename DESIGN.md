@@ -220,7 +220,7 @@ App update appears only with a waiting production shell. Apply shell update open
 
 ## Back, safety and verification
 
-Every transient layer holds one same-document back entry: picker/details, drawer/menu, Settings, editors, celebration and the expanded phone logger. Back closes only the newest; dirty history edits ask and preserve the changes. Main tabs add no history. Chrome can skip entries added without user activation: preserve `src/state/back.ts`'s forward-onto-existing-entry strategy rather than pushing again after a refused back. A launch-restored logger arms on the first tap.
+Every transient layer holds one same-document back entry: picker/details, drawer/menu, Settings, editors, celebration and the expanded phone logger. Back closes only the newest; dirty history edits ask and preserve the changes. Main tabs add no history. Chrome can skip entries added without user activation: preserve `src/state/back.ts`'s forward-onto-existing-entry strategy rather than pushing again after a refused back; a prompt the refusal opens shares its layer's entry. A launch-restored logger arms on the first tap.
 
 Hook classes (`app-shell`, `library-scroll`, `settings-panel`, `dialog-content`, `exercise-detail-panel`, `workout-sheet`, `set-row`, etc.) are test/viewport contracts; keep them. No live region inside a covered logger/editor. Portaled owned data must unmount on sync lock, not merely hide under main. Preference persistence is not workout saving; saved means the IndexedDB transaction committed, not a cosmetic timer. Sync is not off-device recovery.
 
