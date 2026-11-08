@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react';
+import {type ReactNode, useMemo, useState} from 'react';
 import {Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis} from 'recharts';
 
 import {SegmentToggle} from '../components/segment-toggle';
@@ -21,8 +21,11 @@ const metrics: {value: WeekMetric; label: string}[] = [
   {value: 'time', label: 'Time'},
 ];
 
-/** Weekly actual totals. The average always excludes the current partial week. */
-export function ProfileView({workouts}: {workouts: Workout[]}) {
+/**
+ * Weekly actual totals, then `children` (body weight). The average always excludes the current
+ * partial week.
+ */
+export function ProfileView({workouts, children}: {workouts: Workout[]; children?: ReactNode}) {
   const weeks = useMemo(() => workoutsPerWeek(workouts, WEEKS), [workouts]);
   const sets = useMemo(() => workouts.reduce((n, w) => n + setCount(w), 0), [workouts]);
   const [metric, setMetric] = useState<WeekMetric>('count');
@@ -151,6 +154,7 @@ export function ProfileView({workouts}: {workouts: Workout[]}) {
               : ` ${plural(current.count, 'workout')} this week.`}
         </p>
       </Card>
+      {children}
     </div>
   );
 }

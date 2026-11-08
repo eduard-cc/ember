@@ -4,34 +4,28 @@ import {cn} from '../utils/cn';
 
 /**
  * A titled settings group: a small heading and optional one-line
- * context above the group's content. Ember adds `action`, a control on the title row (Add weight),
- * so a long description keeps the full width under it. `titleAs` is the title's
- * heading level: `h3` inside the Settings dialog, whose own title is an `h2`.
+ * context above the group's content. `titleAs` is the title's heading level: `h3` inside the
+ * Settings dialog, whose own title is an `h2`.
  */
 export function SettingsGroup({
   id,
   title,
   titleAs: Title = 'h2',
   description,
-  action,
   children,
 }: {
   id: string;
   title: string;
   titleAs?: 'h2' | 'h3';
   description?: ReactNode;
-  action?: ReactNode;
   children?: ReactNode;
 }) {
   return (
     <section aria-labelledby={id}>
       <div className='mb-3 min-w-0'>
-        <div className='flex items-center justify-between gap-3'>
-          <Title id={id} className='min-w-0 text-card-title'>
-            {title}
-          </Title>
-          {action && <div className='shrink-0'>{action}</div>}
-        </div>
+        <Title id={id} className='min-w-0 text-card-title'>
+          {title}
+        </Title>
         {description && <p className='mt-1 text-sm text-muted-foreground'>{description}</p>}
       </div>
       {children}

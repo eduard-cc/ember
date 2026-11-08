@@ -13,7 +13,7 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 
 import {AddExercise} from './components/AddExercise';
 import {AppearanceSettings, useAppearance} from './components/AppearanceSettings';
-import {BodyWeightSettings} from './components/BodyWeightSettings';
+import {BodyWeight} from './components/BodyWeight';
 import {ConditionsProvider, StatusPill, StatusStrips, appConditions} from './components/Conditions';
 import {ElapsedTimer} from './components/ElapsedTimer';
 import {ExercisePage} from './components/ExercisePage';
@@ -24,7 +24,7 @@ import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {StateNotice} from './components/StateNotice';
 import {SyncLockedNotice} from './components/SyncStatus';
 import {WorkoutActionsProvider} from './components/WorkoutDrawer';
-import {EmberToaster, SETTINGS_TOASTER, toastDone, toastFailed} from './components/toasts';
+import {EmberToaster, toastDone, toastFailed} from './components/toasts';
 import {Button} from './components/ui/button';
 import {ContentFieldset} from './components/ui/content-fieldset';
 import {
@@ -514,7 +514,14 @@ export default function App() {
                   )}
                 </>
               )}
-              {view === 'Profile' && <ProfileView workouts={allDataset.workouts} />}
+              {view === 'Profile' && (
+                <ProfileView workouts={allDataset.workouts}>
+                  {/* Personal history: unmounted while sync is locked, like other owned data. */}
+                  {hydrated && !sync.locked && !recoveryError && (
+                    <BodyWeight repository={repository} disabled={disabled} />
+                  )}
+                </ProfileView>
+              )}
             </ContentFieldset>
           </div>
           {state.active && !showSheet && (
@@ -685,18 +692,12 @@ export default function App() {
               </DialogClose>
             </div>
           </SectionHeading>
-          <DialogDescription srOnly>
-            Appearance, feedback, body weight and app updates.
-          </DialogDescription>
+          <DialogDescription srOnly>Appearance, feedback and app updates.</DialogDescription>
           <StatusStrips className='border' />
           {sync.locked && <SyncLockedNotice sync={sync} />}
           <div className='mt-5 space-y-10'>
             <AppearanceSettings settings={appearance} />
             <FeedbackSettings />
-            {/* Personal history: unmounted while sync is locked, like other owned data. */}
-            {hydrated && !sync.locked && !recoveryError && (
-              <BodyWeightSettings repository={repository} disabled={disabled} />
-            )}
             {!demo && (
               <ShellUpdatePanel
                 repository={repository}
@@ -715,7 +716,6 @@ export default function App() {
               />
             )}
           </div>
-          <EmberToaster id={SETTINGS_TOASTER} />
         </DialogContent>
       </Dialog>
       <ResponsiveDialog open={confirmReset} onOpenChange={setConfirmReset}>
@@ -866,7 +866,8 @@ export default function App() {
       </ResponsiveDialog>
       {/* Over History, after the finish committed; a sync lock ends it, like other history views. */}
       <FinishCelebration celebration={celebration} onDone={() => setCelebration(null)} />
-      {/* Settings shows its own toaster; this one waits behind it, so only one toast shows. */}
+      {/* Settings' focus trap would keep the keyboard from a toast's action, so toasts wait
+          behind it. */}
       <div hidden={settingsOpen}>
         <EmberToaster />
       </div>

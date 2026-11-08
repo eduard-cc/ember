@@ -415,7 +415,7 @@ test('Delete entry is an outline action with destructive text', async ({page}) =
   await page.emulateMedia({colorScheme: 'light'});
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  await openSettings(page);
+  await navigate(page, 'Profile');
   const section = page.getByRole('region', {name: 'Body weight', exact: true});
   await section.getByRole('button', {name: 'Add weight', exact: true}).click();
   await page.getByLabel('Weight in kg', {exact: true}).fill('70');
@@ -510,15 +510,13 @@ test('emptyFramed: the library details state is framed, the logger dialog one is
   await expect(framed).toHaveCSS('border-top-width', '1px');
 });
 
-test('Settings sections are h3 groups under the h2 dialog title; no Body weight entries use EmptyState', async ({
-  page,
-}) => {
+test('Settings sections are h3 groups under the h2 dialog title', async ({page}) => {
   await page.emulateMedia({colorScheme: 'light'});
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await openSettings(page);
   const dialog = page.getByRole('dialog', {name: 'Settings', exact: true});
-  for (const name of ['Appearance', 'Body weight']) {
+  for (const name of ['Appearance', 'Feedback']) {
     const group = dialog.getByRole('region', {name, exact: true});
     await expect(group).toBeVisible();
     const id = await group.getAttribute('aria-labelledby');
@@ -527,12 +525,20 @@ test('Settings sections are h3 groups under the h2 dialog title; no Body weight 
     await expect(title).toHaveText(name);
     await expect(title).toHaveCSS('font-size', '16px');
   }
-  // No entries: a framed EmptyState, no chart card.
-  const section = dialog.getByRole('region', {name: 'Body weight', exact: true});
+});
+
+test('Profile body weight is an h2 card whose empty state uses EmptyState', async ({page}) => {
+  await page.emulateMedia({colorScheme: 'light'});
+  await page.goto('/');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await navigate(page, 'Profile');
+  const section = page.getByRole('region', {name: 'Body weight', exact: true});
+  await expect(section.locator('h2#body-weight-heading')).toHaveCSS('font-size', '16px');
+  // No entries: an unframed EmptyState inside the section's card, no chart.
   const empty = section.locator('.empty-state', {hasText: 'No entries yet'});
   await expect(empty).toBeVisible();
-  await expect(empty.locator('h4')).toHaveText('No entries yet');
-  await expect(empty).toHaveCSS('border-top-width', '1px');
+  await expect(empty.locator('h3')).toHaveText('No entries yet');
+  await expect(empty).toHaveCSS('border-top-width', '0px');
   await expect(section.locator('.body-weight-chart')).toHaveCount(0);
   // One entry: the chart card shows it in place of a line.
   await section.getByRole('button', {name: 'Add weight', exact: true}).click();

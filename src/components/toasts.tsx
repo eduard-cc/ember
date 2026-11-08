@@ -3,15 +3,8 @@ import {type ExternalToast, toast} from 'sonner';
 import {useIsMobile} from '../hooks/use-is-mobile';
 import {Toaster} from './ui/sonner';
 
-/**
- * Settings is a modal whose focus trap keeps the keyboard out of the app's toaster, so its own
- * toasts (body-weight Undo) render in a toaster inside the panel.
- */
-export const SETTINGS_TOASTER = 'settings';
 /** The full-screen exercise picker's own toaster, under its Back row rather than over it. */
 export const PICKER_TOASTER = 'picker';
-/** Phone top offsets that keep each full-screen surface's title row and dismiss control clear. */
-const phoneTop: Record<string, number> = {[SETTINGS_TOASTER]: 72, [PICKER_TOASTER]: 64};
 
 /**
  * Toasts carry one-off events the screen does not already show; ongoing conditions stay as page
@@ -19,7 +12,8 @@ const phoneTop: Record<string, number> = {[SETTINGS_TOASTER]: 72, [PICKER_TOASTE
  */
 export function EmberToaster({id}: {id?: string}) {
   const mobile = useIsMobile();
-  const top = {top: `calc(env(safe-area-inset-top) + ${(id && phoneTop[id]) ?? 16}px)`};
+  // On phones the picker's toasts clear its Back row.
+  const top = {top: `calc(env(safe-area-inset-top) + ${id === PICKER_TOASTER ? 64 : 16}px)`};
   return (
     <Toaster
       id={id}

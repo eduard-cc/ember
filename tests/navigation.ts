@@ -1,7 +1,7 @@
 import {type Locator, type Page, expect} from '@playwright/test';
 
 /** Browse the real library without interacting with the covered mobile sheet. */
-export async function navigate(page: Page, name: 'Workouts' | 'History' | 'Exercises') {
+export async function navigate(page: Page, name: 'Workouts' | 'History' | 'Exercises' | 'Profile') {
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', /^(saving|error|saved)$/);
   await expect(page.locator('main')).toBeVisible();
   // A closing drawer or animated dialog still hides the page from the accessibility tree.

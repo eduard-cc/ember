@@ -1,11 +1,11 @@
 import {type Locator, type Page, expect, test} from '@playwright/test';
 
-import {openSettings} from '../navigation';
+import {navigate} from '../navigation';
 
 // Synthetic values only; never real measurements.
 async function open(page: Page) {
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  await openSettings(page);
+  await navigate(page, 'Profile');
   const section = page.getByRole('region', {name: 'Body weight', exact: true});
   await expect(section).toBeVisible();
   return section;
@@ -17,7 +17,7 @@ async function add(section: Locator, kg: string, when?: string) {
   await section.page().getByRole('button', {name: 'Save entry', exact: true}).click();
   await expect(section.page().getByLabel('Weight in kg', {exact: true})).toBeHidden();
 }
-/** Undo is a toast in Settings' own toaster. */
+/** Undo is a toast. */
 const undoToast = (page: Page) => page.locator('[data-sonner-toast]', {hasText: 'deleted'});
 const undoButton = (page: Page) => undoToast(page).getByRole('button', {name: 'Undo', exact: true});
 const rows = (section: Locator) =>
@@ -116,21 +116,12 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(2);
   await expect(undoToast(page)).toHaveText(/Entry from 5 Jan 2019 deleted/);
-  // Once it has slid in, it leaves Settings' title and Close button clear.
   await expect(undoToast(page)).toHaveAttribute('data-mounted', 'true');
   await undoToast(page).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   expect((await undoButton(page).boundingBox())!.height).toBeGreaterThanOrEqual(44);
-  const close = (await page.getByRole('button', {name: 'Close settings'}).boundingBox())!;
-  const toast = (await undoToast(page).boundingBox())!;
-  expect(
-    toast.y >= close.y + close.height ||
-      toast.y + toast.height <= close.y ||
-      toast.x + toast.width <= close.x,
-  ).toBe(true);
   await undoButton(page).click();
   await expect(rows(section)).toHaveCount(3);
   await expect(undoToast(page)).toHaveCount(0);
-  await expect(page.getByRole('dialog', {name: 'Settings', exact: true})).toBeVisible();
   await section.getByRole('button', {name: /Edit entry 5 Jan 2019/}).click();
   await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(2);
@@ -167,7 +158,7 @@ test('fits the phone without clipping, with 44px targets, readable labels and ke
   await add(section, '101.75', '2024-07-01T12:00');
   await page.evaluate(() => document.fonts.ready);
 
-  const panel = page.locator('.settings-panel');
+  const panel = page.locator('.library-scroll');
   expect(await panel.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   const sectionBox = (await section.boundingBox())!;
   for (const target of await section.locator('button, input').all()) {
@@ -354,7 +345,7 @@ test('a failed Undo shows a Retry toast that restores the entry @dev-server', as
   await expect(failed).toHaveCount(0);
 });
 
-test('Undo covers one deletion until its toast closes, another edit starts or Settings closes', async ({
+test('Undo covers one deletion until its toast closes, another edit starts or Profile is left', async ({
   page,
 }) => {
   // Waiting out the toast's own lifetime adds 5s to a long flow.
@@ -389,7 +380,7 @@ test('Undo covers one deletion until its toast closes, another edit starts or Se
   await section.getByRole('button', {name: /Edit entry/}).click();
   await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
   await expect(undoToast(page)).toBeVisible();
-  await page.getByRole('button', {name: 'Close settings'}).click();
+  await navigate(page, 'History');
   await expect(undoToast(page)).toHaveCount(0);
   section = await open(page);
   await expect(undoToast(page)).toHaveCount(0);
@@ -432,7 +423,7 @@ test('read-only follower tabs show entries but cannot change them', async ({page
   const follower = await context.newPage();
   await follower.goto('/');
   await expect(follower.getByRole('alert').first()).toContainText('Another tab is editing');
-  await openSettings(follower);
+  await navigate(follower, 'Profile');
   const section = follower.getByRole('region', {name: 'Body weight', exact: true});
   await expect(rows(section)).toHaveCount(1);
   await expect(section.getByRole('button', {name: 'Add weight', exact: true})).toBeDisabled();
@@ -473,7 +464,6 @@ test('a locked installation hides body-weight history and refuses writes @dev-se
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   await add(await open(page), '75.5', '2022-02-02T08:00');
-  await page.getByRole('button', {name: 'Close settings'}).click();
   revoked = true;
   await page.evaluate(async () => {
     const path = '/src/storage/repository.ts';
@@ -483,11 +473,9 @@ test('a locked installation hides body-weight history and refuses writes @dev-se
     repository.close();
   });
   await expect(page.locator('main')).toBeHidden();
-  await openSettings(page);
-  const settings = page.getByRole('dialog', {name: 'Settings'});
-  await expect(settings).toBeVisible();
-  await expect(settings.getByRole('region', {name: 'Body weight', exact: true})).toHaveCount(0);
-  await expect(settings.getByText('75.5')).toHaveCount(0);
+  // Unmounted, not just hidden with the page.
+  await expect(page.locator('#body-weight-heading')).toHaveCount(0);
+  await expect(page.getByText('75.5')).toHaveCount(0);
   const refused = await page.evaluate(async () => {
     const path = '/src/storage/repository.ts';
     const {WorkoutRepository} = await import(path);

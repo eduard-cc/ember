@@ -16,8 +16,8 @@ import type {WorkoutRepository} from '../storage/repository';
 import {cn} from '../utils/cn';
 import {dateLabel, localDay} from '../utils/date';
 import {SegmentToggle} from './segment-toggle';
-import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
-import {SETTINGS_TOASTER, dismissToast, toastFailed, toastUndo} from './toasts';
+import {SettingsList, settingsRowClass} from './settings-group';
+import {dismissToast, toastFailed, toastUndo} from './toasts';
 import {TrendArea} from './trend-area';
 import {Button} from './ui/button';
 import {Card} from './ui/card';
@@ -128,11 +128,11 @@ interface Editing {
  * Body weight in kg: a chart above newest-first entries, both narrowed by the selected range.
  * Entries are device-durable documents that sync on their own; they never touch workouts or
  * imports.
- * Undo is a short toast for the latest deletion in this mounted Settings view only. It ends
- * when the toast closes, another add/edit form opens or Settings closes; deleted entries remain
+ * Undo is a short toast for the latest deletion while Profile stays open. It ends when the
+ * toast closes, another add/edit form opens or Profile is left; deleted entries remain
  * sync tombstones.
  */
-export function BodyWeightSettings({
+export function BodyWeight({
   repository,
   disabled,
 }: {
@@ -246,7 +246,6 @@ export function BodyWeightSettings({
   useEffect(() => {
     if (!undo) return;
     const id = toastUndo(`Entry from ${dateLabel(undo.date)} deleted`, () => void restore(undo), {
-      toasterId: SETTINGS_TOASTER,
       onDismiss: () => setUndo((shown) => (shown === undo ? null : shown)),
       onAutoClose: () => setUndo((shown) => (shown === undo ? null : shown)),
     });
@@ -255,7 +254,6 @@ export function BodyWeightSettings({
   useEffect(() => {
     if (!unrestored) return;
     const id = toastFailed('Entry not restored', () => void restore(unrestored), {
-      toasterId: SETTINGS_TOASTER,
       onDismiss: () => setUnrestored((shown) => (shown === unrestored ? null : shown)),
     });
     return () => void dismissToast(id);
@@ -338,11 +336,18 @@ export function BodyWeightSettings({
     </form>
   );
   return (
-    <SettingsGroup id='body-weight-heading' titleAs='h3' title='Body weight' action={add}>
-      <div className='flex flex-col gap-3'>
+    // Like Every week above it: the title and its action head the card.
+    <section aria-labelledby='body-weight-heading' className='grid gap-3'>
+      <Card className='grid gap-4'>
+        <header className='flex flex-wrap items-center justify-between gap-2'>
+          <h2 id='body-weight-heading' className='text-card-title'>
+            Body weight
+          </h2>
+          {add}
+        </header>
         {!editing && error && <InlineError role='alert'>{error}</InlineError>}
         {stored !== null && entries.length > 0 && (
-          <Card className='body-weight-chart grid gap-4'>
+          <div className='body-weight-chart grid gap-4'>
             {shownEntries.length > 0 ? (
               <WeightChart key={range} entries={shownEntries} total={entries.length} />
             ) : (
@@ -361,52 +366,53 @@ export function BodyWeightSettings({
                 itemClassName='px-2.5'
               />
             )}
-          </Card>
+          </div>
         )}
         {stored !== null && entries.length === 0 && (
           <EmptyState
-            titleAs='h4'
+            framed={false}
+            titleAs='h3'
             icon={Scale}
             title='No entries yet'
             description='Add your weight to start a chart.'
           />
         )}
-        {shownEntries.length > 0 && (
-          <SettingsList as='ul' aria-label='Body weight history'>
-            {shownEntries.map((m) => (
-              <li key={m.id}>
-                <button
-                  className={cn(
-                    settingsRowClass,
-                    'pressable min-h-14 w-full text-left tabular-nums hover:not-disabled:bg-accent focus-visible:-outline-offset-2',
-                  )}
-                  aria-label={`Edit entry ${describe(m)}`}
-                  disabled={disabled || !!editing}
-                  onClick={() => {
-                    setUndo(null);
-                    setUnrestored(null);
-                    setError('');
-                    setEditing({base: m, kg: formatKg(m.kg), when: toLocalInput(m.date)});
-                  }}
-                >
-                  <span className='min-w-0 text-sm'>
-                    <span className='font-medium'>{dateLabel(m.date)}</span>
-                    <span className='text-muted-foreground'> · {time(m.date)}</span>
-                  </span>
-                  <span className='ml-auto shrink-0 text-sm font-semibold'>
-                    {formatKg(m.kg)} <span className='font-normal text-muted-foreground'>kg</span>
-                  </span>
-                  <ChevronRight
-                    size={16}
-                    aria-hidden='true'
-                    className='shrink-0 text-muted-foreground'
-                  />
-                </button>
-              </li>
-            ))}
-          </SettingsList>
-        )}
-      </div>
+      </Card>
+      {shownEntries.length > 0 && (
+        <SettingsList as='ul' aria-label='Body weight history'>
+          {shownEntries.map((m) => (
+            <li key={m.id}>
+              <button
+                className={cn(
+                  settingsRowClass,
+                  'pressable min-h-14 w-full text-left tabular-nums hover:not-disabled:bg-accent focus-visible:-outline-offset-2',
+                )}
+                aria-label={`Edit entry ${describe(m)}`}
+                disabled={disabled || !!editing}
+                onClick={() => {
+                  setUndo(null);
+                  setUnrestored(null);
+                  setError('');
+                  setEditing({base: m, kg: formatKg(m.kg), when: toLocalInput(m.date)});
+                }}
+              >
+                <span className='min-w-0 text-sm'>
+                  <span className='font-medium'>{dateLabel(m.date)}</span>
+                  <span className='text-muted-foreground'> · {time(m.date)}</span>
+                </span>
+                <span className='ml-auto shrink-0 text-sm font-semibold'>
+                  {formatKg(m.kg)} <span className='font-normal text-muted-foreground'>kg</span>
+                </span>
+                <ChevronRight
+                  size={16}
+                  aria-hidden='true'
+                  className='shrink-0 text-muted-foreground'
+                />
+              </button>
+            </li>
+          ))}
+        </SettingsList>
+      )}
       <ResponsiveDialog
         open={!!editing}
         onOpenChange={(open) => {
@@ -435,6 +441,6 @@ export function BodyWeightSettings({
           </ResponsiveDialogBody>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
-    </SettingsGroup>
+    </section>
   );
 }

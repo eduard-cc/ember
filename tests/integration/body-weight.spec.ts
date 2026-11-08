@@ -1,11 +1,11 @@
 import {type Locator, type Page, expect, test} from '@playwright/test';
 
-import {openSettings} from '../navigation';
+import {navigate} from '../navigation';
 import {login, syncNow} from './helpers';
 
 // Synthetic values only.
 async function section(page: Page) {
-  await openSettings(page);
+  await navigate(page, 'Profile');
   const region = page.getByRole('region', {name: 'Body weight', exact: true});
   await expect(region).toBeVisible();
   return region;

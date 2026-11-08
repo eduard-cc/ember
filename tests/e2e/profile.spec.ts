@@ -18,6 +18,8 @@ test('the cog beside the Profile title opens Settings, also for a read-only foll
   const library = follower.locator('.library-scroll');
   const cog = library.getByRole('button', {name: 'Settings', exact: true});
   await expect(cog).toHaveCount(1);
+  // The page's edits are disabled; the cog is not.
+  await expect(library.getByRole('button', {name: 'Add weight'})).toBeDisabled();
   await expect(cog).toBeEnabled();
   // On the title row, at its right edge, without making the 32px row taller.
   const title = await library.locator('h1').boundingBox();
@@ -34,7 +36,7 @@ test('the cog beside the Profile title opens Settings, also for a read-only foll
   await cog.click();
   const settings = follower.getByRole('dialog', {name: 'Settings', exact: true});
   await expect(settings).toBeVisible();
-  await expect(settings.getByRole('button', {name: 'Add weight'})).toBeDisabled();
+  await expect(settings.getByRole('region', {name: 'Appearance', exact: true})).toBeVisible();
   await settings.getByRole('button', {name: 'Close settings'}).click();
   await expect(settings).toBeHidden();
 });
