@@ -469,7 +469,7 @@ test('appearance is separate from workout saving, follows System, and persists t
   ).toEqual({version: 1, theme: 'dark'});
 });
 
-test('sounds and haptics start on, play when a workout starts, climb within each exercise and each switch persists on this device', async ({
+test('sounds and haptics start on, play when a workout starts, climb within each exercise, stay silent while browsing and each switch persists on this device', async ({
   page,
 }) => {
   // Two exercises, a reload and a second start outrun the default timeout on CI runners.
@@ -526,7 +526,7 @@ test('sounds and haptics start on, play when a workout starts, climb within each
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   expect(await cues()).toEqual({vibrations: [[18, 60, 10]], audioContexts: 1});
-  // Selecting an exercise ticks; typing stays silent.
+  // Adding an exercise gives a light buzz; typing stays silent.
   await addExercise(page, 'Squat (Barbell)');
   expect((await cues()).vibrations).toEqual([[18, 60, 10], [6]]);
   for (const set of [1, 2, 3]) {
@@ -534,21 +534,22 @@ test('sounds and haptics start on, play when a workout starts, climb within each
     await page.getByLabel(`Reps for Squat (Barbell) set ${set}`).fill('5');
   }
   expect((await cues()).vibrations).toEqual([[18, 60, 10], [6]]);
-  // Each check climbs, the exercise's last check chimes, an untick drops.
+  // Each check climbs and the exercise's last check chimes; an untick only buzzes.
   for (const set of [1, 2, 3])
     await page.getByRole('button', {name: `Complete Squat (Barbell) set ${set}`}).click();
   await expect
     .poll(async () => (await cues()).vibrations)
     .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18]]);
   await page.getByRole('button', {name: 'Uncomplete Squat (Barbell) set 1'}).click();
-  // Opening ⋯ ticks.
-  await page.locator('button[aria-label="Exercise options for Squat (Barbell)"]').click();
   await expect
     .poll(async () => (await cues()).vibrations)
-    .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18], [6], [6]]);
+    .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18], [6]]);
+  // Opening ⋯ is navigation: the menu opens without a cue.
+  await page.locator('button[aria-label="Exercise options for Squat (Barbell)"]').click();
+  await expect(page.getByRole('menu')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('menu')).toHaveCount(0);
-  // The next exercise's scale starts again from the bottom note; Add set ticks.
+  // The next exercise's scale starts again from the bottom note; Add set buzzes lightly.
   await addExercise(page, 'Bench Press (Barbell)');
   await page
     .locator('.exercise-card')
@@ -560,9 +561,10 @@ test('sounds and haptics start on, play when a workout starts, climb within each
   await page.getByRole('button', {name: 'Complete Bench Press (Barbell) set 1'}).click();
   await expect
     .poll(async () => (await cues()).vibrations)
-    .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18], [6], [6], [6], [6], [12]]);
-  // Start swell bells, three climbing checks, the exercise chime, the untick, then set 1 again.
-  expect(await bells()).toEqual([587, 880, 523, 587, 659, 659, 988, 392, 523]);
+    .toEqual([[18, 60, 10], [6], [12], [12], [12], [12, 50, 18], [6], [6], [6], [12]]);
+  // Start swell bells, three climbing checks, the exercise chime, then set 1 again; only
+  // accomplishments sound.
+  expect(await bells()).toEqual([587, 880, 523, 587, 659, 659, 988, 523]);
 
   await openSettings(page);
   const settings = page.getByRole('dialog', {name: 'Settings', exact: true});
@@ -570,7 +572,9 @@ test('sounds and haptics start on, play when a workout starts, climb within each
   const sounds = feedback.getByRole('switch', {name: 'Sounds'});
   const haptics = feedback.getByRole('switch', {name: 'Haptics'});
   await expect(sounds).toHaveAttribute('aria-checked', 'true');
-  await expect(sounds).toHaveAccessibleDescription('Short, quiet cues. They mix with your music.');
+  await expect(sounds).toHaveAccessibleDescription(
+    'Short cues when you log sets and finish. They mix with your music.',
+  );
   await expect(haptics).toHaveAttribute('aria-checked', 'true');
   await expect(haptics).toHaveAccessibleDescription(
     'Physical feedback when you log sets and finish workouts.',
@@ -595,6 +599,16 @@ test('sounds and haptics start on, play when a workout starts, climb within each
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   // Haptics off: the start cue only plays its sound.
   expect(await cues()).toEqual({vibrations: [], audioContexts: 1});
+  // Turning Haptics back on gives a sample buzz; turning Sounds on plays the set-check sound.
+  await openSettings(page);
+  await haptics.click();
+  await expect(haptics).toHaveAttribute('aria-checked', 'true');
+  expect((await cues()).vibrations).toEqual([[6]]);
+  await sounds.click();
+  await expect(sounds).toHaveAttribute('aria-checked', 'false');
+  await sounds.click();
+  await expect(sounds).toHaveAttribute('aria-checked', 'true');
+  expect(await bells()).toEqual([587, 880, 523]);
 });
 
 test('a read-only writer follower can minimize and reach settings and recovery guidance', async ({

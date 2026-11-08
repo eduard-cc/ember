@@ -9,7 +9,6 @@ import {
   useState,
 } from 'react';
 
-import {cue} from '../feedback';
 import {useIsMobile} from '../hooks/use-is-mobile';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
@@ -101,7 +100,6 @@ export const OptionsMenu = forwardRef<
   // The drawer registers its own back layer.
   useBackLayer(open && !mobile, close);
   const toggle = (next: boolean) => {
-    if (next) cue('tick');
     setOpen(next);
   };
   const onMenuKey = (event: KeyboardEvent) => {

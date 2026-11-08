@@ -9,7 +9,6 @@ import {
   sortExerciseNames,
 } from '../domain/model';
 import type {Dataset} from '../domain/types';
-import {cue} from '../feedback';
 import {cn} from '../utils/cn';
 import {plural} from '../utils/plural';
 import {ExerciseThumb} from './ExerciseThumb';
@@ -64,7 +63,6 @@ function ExerciseRow({
         aria-label={name}
         aria-describedby={sessions || unavailable ? id : undefined}
         onClick={() => {
-          cue('tick');
           onSelect(name);
         }}
       >
@@ -188,7 +186,6 @@ export function ExerciseList({
                 key={value}
                 aria-pressed={part === value}
                 onClick={() => {
-                  cue('tick');
                   setPart(value);
                   filtersChanged();
                 }}
@@ -212,7 +209,6 @@ export function ExerciseList({
                   className='min-h-11 min-w-16 border-0 bg-transparent px-3 text-xs font-medium text-muted-foreground not-first:border-l not-first:border-l-border hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground'
                   aria-pressed={sort === value}
                   onClick={() => {
-                    cue('tick');
                     setSort(value);
                   }}
                 >

@@ -340,7 +340,7 @@ test('real touch: hold and drag reorders without scrolling away, and a quick swi
   await expect(page.getByRole('list', {name: 'Reorder exercises'})).toBeVisible();
   await expect(page.locator('.reorder-row[data-held]')).toContainText(demo[0]);
   expect(await page.evaluate(() => (window as unknown as {buzzes: unknown[]}).buzzes)).toEqual([
-    10,
+    [10],
   ]);
   await touch('touchEnd');
   await expect(page.getByRole('list', {name: 'Reorder exercises'})).toHaveCount(0);

@@ -8,7 +8,6 @@ import {EmptyState} from '../components/ui/empty-state';
 import {Input} from '../components/ui/input';
 import {recordsAt} from '../domain/finish-summary';
 import type {Dataset, Workout} from '../domain/types';
-import {cue} from '../feedback';
 import {useIsMobile} from '../hooks/use-is-mobile';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
@@ -159,7 +158,6 @@ export function HistoryView({
                       aria-label={`${workout.name}, ${dateLabel(workout.date)}`}
                       aria-describedby={`stats-${workout.id}`}
                       onClick={() => {
-                        cue('tick');
                         setOpenId(workout.id);
                       }}
                     />

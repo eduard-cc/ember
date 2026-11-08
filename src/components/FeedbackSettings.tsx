@@ -1,7 +1,7 @@
 import {Vibrate, Volume2} from 'lucide-react';
 import {useState} from 'react';
 
-import {cue, setFeedbackPreferences, useFeedbackPreferences} from '../feedback';
+import {previewFeedback, setFeedbackPreferences, useFeedbackPreferences} from '../feedback';
 import {cn} from '../utils/cn';
 import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
 import {InlineError} from './ui/inline-error';
@@ -10,7 +10,7 @@ const options = [
   {
     key: 'sound',
     label: 'Sounds',
-    description: 'Short, quiet cues. They mix with your music.',
+    description: 'Short cues when you log sets and finish. They mix with your music.',
     icon: Volume2,
   },
   {
@@ -55,8 +55,8 @@ export function FeedbackSettings() {
                       ? ''
                       : 'Feedback could not be saved. This choice lasts only while this tab stays open. Workout saving is separate.',
                   );
-                  // Turning one on plays a tick through it, so the change is audible or felt.
-                  if (!on) cue('tick');
+                  // Turning one on plays a sample through it, so the change is heard or felt.
+                  if (!on) previewFeedback(key);
                 }}
               >
                 <Icon size={18} className='shrink-0 text-muted-foreground' aria-hidden='true' />

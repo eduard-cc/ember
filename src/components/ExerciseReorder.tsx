@@ -3,6 +3,7 @@ import {type PointerEvent as ReactPointerEvent, useEffect, useLayoutEffect, useR
 
 import {reorderShift, reorderTarget} from '../domain/reorder';
 import type {ExerciseLog} from '../domain/types';
+import {selectionHaptic} from '../feedback';
 import {reducedMotion} from '../utils/motion';
 import {plural} from '../utils/plural';
 import {ExerciseThumb} from './ExerciseThumb';
@@ -136,7 +137,7 @@ export function useHold(onHold: (start: ReorderStart) => boolean | void) {
         return;
       }
       swallowNextClick(pointerId);
-      navigator.vibrate?.(10);
+      selectionHaptic([10]);
     }, HOLD_MS);
     unblock();
     const block = (e: Event) => {
@@ -297,7 +298,7 @@ export function ReorderList({
       const next = reorderTarget(from * pitch + offset, pitch, count);
       if (next === target) return;
       target = next;
-      navigator.vibrate?.(4);
+      selectionHaptic([4]);
       rows.forEach((row, i) => {
         if (row === held) return;
         const shift = reorderShift(i, from, target);

@@ -21,7 +21,6 @@ import {SectionHeading} from '../components/ui/section-heading';
 import {routineTargets} from '../components/workout-targets';
 import type {Dataset, Workout} from '../domain/types';
 import {estimatedMinutes} from '../domain/workout-duration';
-import {cue} from '../feedback';
 import {useBackLayer} from '../state/back';
 import {newWorkout} from '../state/workout';
 import {relativeDay} from '../utils/date';
@@ -155,7 +154,6 @@ export function TemplatesView({
                       className='template-open absolute inset-0 z-1 focus-visible:outline-none'
                       aria-label={`Open template ${template.name}`}
                       onClick={() => {
-                        cue('tick');
                         setPreviewId(template.id);
                       }}
                     />

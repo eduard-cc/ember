@@ -3,6 +3,7 @@ import {type ReactNode, useEffect, useRef, useState} from 'react';
 
 import {exerciseTypeFor} from '../catalog/catalog';
 import type {Dataset, ExerciseLog} from '../domain/types';
+import {cue} from '../feedback';
 import {useBackLayer} from '../state/back';
 import {ExerciseList} from './ExerciseList';
 import {Button} from './ui/button';
@@ -70,6 +71,7 @@ export function ExercisePicker({
       setError(`${name} is already in this ${scope}.`);
       return;
     }
+    cue('tick');
     onPick(historyTargets(dataset, name, exerciseTypeFor(name, dataset) ?? 'weighted'));
     toggle(false);
   };

@@ -10,7 +10,6 @@ import {MetricExplanation} from '../components/ui/chart';
 import {EmptyState} from '../components/ui/empty-state';
 import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
 import type {Dataset, SetRecord} from '../domain/types';
-import {cue} from '../feedback';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
@@ -348,7 +347,6 @@ export function ExerciseDetail({
   // The tapped row itself: Safari on iPhone does not focus a button it taps.
   const onSource = (workoutId: string, opener: HTMLElement) => {
     trigger.current = opener;
-    cue('tick');
     setOpenId(workoutId);
   };
   return (
@@ -381,7 +379,6 @@ export function ExerciseDetail({
             className='min-h-[46px] min-w-0 flex-1 border-0 bg-transparent text-[14px] font-medium text-muted-foreground focus-visible:-outline-offset-2 aria-selected:text-foreground'
             onClick={(event) => {
               setTabMotion(event.detail > 0);
-              cue('tick');
               setTab(value);
             }}
             onKeyDown={(event) => {

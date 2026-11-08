@@ -1,4 +1,3 @@
-import {cue} from '../feedback';
 import {cn} from '../utils/cn';
 import {ToggleGroup, ToggleGroupItem} from './ui/toggle-group';
 
@@ -27,7 +26,6 @@ export function SegmentToggle<T extends string>({
       onValueChange={(next) => {
         const item = items.find((i) => i.value === next);
         if (item) {
-          cue('tick');
           onChange(item.value);
         }
       }}

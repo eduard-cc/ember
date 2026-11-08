@@ -1,7 +1,7 @@
 import {Ellipsis, Trash2} from 'lucide-react';
 import {type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
-import {cue} from '../feedback';
+import {cue, selectionHaptic} from '../feedback';
 import {useIsMobile} from '../hooks/use-is-mobile';
 import {cn} from '../utils/cn';
 import {reducedMotion} from '../utils/motion';
@@ -232,7 +232,7 @@ export function SetRow({
         if (commit !== 'commit' in row.current!.dataset) {
           if (commit) {
             row.current!.dataset.commit = '';
-            navigator.vibrate?.(8);
+            selectionHaptic([8]);
           } else delete row.current!.dataset.commit;
         }
       }}
@@ -305,10 +305,8 @@ export function SetRow({
           aria-expanded={open || sheet}
           onClick={(event) => {
             if (mobile && !open) {
-              cue('tick');
               return setSheet(true);
             }
-            if (!open) cue('tick');
             settle(!open, event.detail !== 0);
             if (!open && event.detail === 0) deleteAction.current?.focus({preventScroll: true});
           }}

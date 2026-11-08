@@ -1,7 +1,6 @@
 import type {LucideIcon} from 'lucide-react';
 import {type KeyboardEvent, type RefObject, useRef} from 'react';
 
-import {cue} from '../feedback';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
 import {Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle} from './ui/drawer';
@@ -94,7 +93,6 @@ export function ActionSheet({
                 role='menuitem'
                 disabled={a.disabled}
                 onClick={() => {
-                  cue('tick');
                   chosen.current = a.onSelect;
                   onOpenChange(false);
                 }}

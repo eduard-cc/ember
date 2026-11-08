@@ -274,7 +274,6 @@ function CelebrationContent({celebration: {workout, records}}: {celebration: Cel
           <Button
             variant='primary'
             className='celebrate-done mx-auto flex min-h-12 w-full max-w-[560px] text-base desk:max-w-[320px]'
-            onClick={() => cue('tick')}
           >
             Done
           </Button>

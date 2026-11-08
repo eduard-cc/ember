@@ -4,7 +4,6 @@ import {type MouseEvent, type ReactNode, useId, useMemo, useRef, useState} from 
 import {bestComparable, getHistory, nearestRecorded} from '../domain/model';
 import {isTimed} from '../domain/sets';
 import type {Dataset, ExerciseLog, SetRecord} from '../domain/types';
-import {cue} from '../feedback';
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
@@ -117,7 +116,6 @@ export function PreviousSet({
   // The tapped row itself: Safari on iPhone does not focus a button it taps.
   const openSource = (id: string, event: MouseEvent<HTMLButtonElement>) => {
     trigger.current = event.currentTarget;
-    cue('tick');
     setSourceId(id);
   };
   return (

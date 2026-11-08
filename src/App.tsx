@@ -578,7 +578,6 @@ export default function App() {
                     aria-label='Finish workout'
                     disabled={disabled || deletingSets || !completed}
                     onClick={() => {
-                      cue('tick');
                       setConfirmFinish(true);
                     }}
                   >

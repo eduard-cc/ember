@@ -90,7 +90,7 @@ describe('cue', () => {
     expect(() => cue('start')).not.toThrow();
   });
 
-  it('plays the vibration pattern and the sound only while each is switched on', async () => {
+  it('vibrates for every cue, sounds only for accomplishments and plays each only while switched on', async () => {
     vi.stubGlobal('localStorage', memoryStorage());
     const vibrate = vi.fn(() => true);
     vi.stubGlobal('navigator', {vibrate});
@@ -98,15 +98,23 @@ describe('cue', () => {
       throw new Error('stop after construction');
     });
     vi.stubGlobal('AudioContext', audio);
-    const {cue, setFeedbackPreferences} = await load();
+    const {cue, selectionHaptic, setFeedbackPreferences} = await load();
+
+    // Small actions and removals are felt, not heard.
+    for (const name of ['tick', 'unset', 'delete'] as const) cue(name);
+    expect(vibrate.mock.calls).toEqual([[[6]], [[6]], [[24]]]);
+    expect(audio).not.toHaveBeenCalled();
 
     cue('start');
-    expect(vibrate).toHaveBeenCalledWith([18, 60, 10]);
+    expect(vibrate).toHaveBeenLastCalledWith([18, 60, 10]);
     expect(audio).toHaveBeenCalledTimes(1);
+    selectionHaptic([10]);
+    expect(vibrate).toHaveBeenLastCalledWith([10]);
 
     setFeedbackPreferences({sound: false, haptics: false});
     cue('start');
-    expect(vibrate).toHaveBeenCalledTimes(1);
+    selectionHaptic([10]);
+    expect(vibrate).toHaveBeenCalledTimes(5);
     expect(audio).toHaveBeenCalledTimes(1);
   });
 });
