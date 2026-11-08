@@ -510,7 +510,7 @@ test('emptyFramed: the library details state is framed, the logger dialog one is
   await expect(framed).toHaveCSS('border-top-width', '1px');
 });
 
-test('Settings sections are h3 groups under the h2 dialog title; Body weight empties use EmptyState', async ({
+test('Settings sections are h3 groups under the h2 dialog title; no Body weight entries use EmptyState', async ({
   page,
 }) => {
   await page.emulateMedia({colorScheme: 'light'});
@@ -534,20 +534,17 @@ test('Settings sections are h3 groups under the h2 dialog title; Body weight emp
   await expect(empty.locator('h4')).toHaveText('No entries yet');
   await expect(empty).toHaveCSS('border-top-width', '1px');
   await expect(section.locator('.body-weight-chart')).toHaveCount(0);
-  // One entry: the chart card holds an unframed EmptyState.
+  // One entry: the chart card shows it in place of a line.
   await section.getByRole('button', {name: 'Add weight', exact: true}).click();
   await page.getByLabel('Weight in kg', {exact: true}).fill('70');
   await page.getByRole('button', {name: 'Save entry', exact: true}).click();
-  const one = section.locator('.body-weight-chart .empty-state', {hasText: 'One entry so far'});
-  await expect(one).toBeVisible();
-  await expect(one.locator('h4')).toHaveText('One entry so far');
-  await expect(one).toHaveCSS('border-top-width', '0px');
+  await expect(section.locator('.body-weight-chart')).toContainText('Add another entry');
   await expect(section.locator('.empty-state', {hasText: 'No entries yet'})).toHaveCount(0);
-  // Entries are one bordered list of rows, each at least 44px.
+  // Entries are one bordered list of 56px rows.
   const list = section.getByRole('list', {name: 'Body weight history'});
   await expect(list).toHaveCSS('border-top-width', '1px');
   // No global border-colour default exists, so the list must name the token.
   await expect(list).toHaveCSS('border-top-color', await resolve(page, 'hsl(var(--border))'));
   const row = (await list.getByRole('button').first().boundingBox())!;
-  expect(row.height).toBeGreaterThanOrEqual(44);
+  expect(row.height).toBeGreaterThanOrEqual(56);
 });

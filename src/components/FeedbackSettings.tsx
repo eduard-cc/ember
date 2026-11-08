@@ -53,7 +53,7 @@ export function FeedbackSettings() {
                   setError(
                     saved
                       ? ''
-                      : 'Feedback could not be saved. This choice lasts only while this tab stays open. Workout saving is separate.',
+                      : 'Feedback could not be saved. This choice lasts only while this tab stays open.',
                   );
                   // Turning one on plays a sample through it, so the change is heard or felt.
                   if (!on) previewFeedback(key);

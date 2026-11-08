@@ -155,9 +155,15 @@ test('adding an exercise already in the workout explains why and keeps the draft
   await expect(existing).toHaveAccessibleDescription(/Already in workout/);
   await existing.click();
   await expect(picker.getByLabel('Search exercises')).toHaveValue('Bench Press (Barbell)');
-  await expect(picker.getByRole('alert')).toHaveText(
+  await expect(page.locator('[data-sonner-toast] [data-title]')).toHaveText(
     'Bench Press (Barbell) is already in this workout.',
   );
+  // The toast sits under the picker's Back row, which stays reachable.
+  // It slides in from above, so wait for where it settles.
+  const back = (await picker.getByRole('button', {name: 'Back to workout'}).boundingBox())!;
+  await expect
+    .poll(async () => (await page.locator('[data-sonner-toast]').boundingBox())!.y)
+    .toBeGreaterThanOrEqual(back.y + back.height);
   await page.setViewportSize({width: 740, height: 320});
   const area = (await picker.locator('.exercise-results').boundingBox())!;
   expect(area.height).toBeGreaterThanOrEqual(80);
@@ -173,7 +179,7 @@ test('adding an exercise already in the workout explains why and keeps the draft
   await page.setViewportSize({width: 412, height: 915});
   await expect(picker).toBeVisible();
   await picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).click();
-  await expect(picker.getByRole('alert')).toBeVisible();
+  await expect(page.locator('[data-sonner-toast] [data-title]')).toBeVisible();
   await picker.getByLabel('Search exercises').fill('Plank');
   await picker.getByRole('button', {name: 'Plank', exact: true}).click();
   await expect(picker).toBeHidden();
@@ -221,7 +227,7 @@ test('the template editor adds exercises through the same picker', async ({page}
     'Already in template',
   );
   await picker.getByRole('button', {name: 'Squat (Barbell)', exact: true}).click();
-  await expect(picker.getByRole('alert')).toHaveText(
+  await expect(page.locator('[data-sonner-toast] [data-title]')).toHaveText(
     'Squat (Barbell) is already in this template.',
   );
   await picker.getByRole('button', {name: 'Back to template'}).click();

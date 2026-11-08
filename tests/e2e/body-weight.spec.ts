@@ -40,14 +40,12 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   let section = await open(page);
   // No entries: one EmptyState stands in for both the chart and the list.
   await expect(section.locator('.empty-state', {hasText: 'No entries yet'})).toBeVisible();
-  await expect(
-    section.getByRole('heading', {name: 'Weight (kg)', level: 4, exact: true}),
-  ).toHaveCount(0);
+  await expect(section.locator('.body-weight-chart')).toHaveCount(0);
   await expect(section.getByRole('img')).toHaveCount(0);
 
   // A new entry defaults to now.
   await section.getByRole('button', {name: 'Add weight', exact: true}).click();
-  const editor = page.getByRole('dialog', {name: 'New body weight entry', exact: true});
+  const editor = page.getByRole('dialog', {name: 'Add body weight', exact: true});
   await expect(editor).toBeVisible();
   if (page.viewportSize()!.width < 1000)
     await expect(editor).toHaveAttribute('data-vaul-drawer', '');
@@ -66,13 +64,11 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   await section.page().getByLabel('Weight in kg', {exact: true}).fill('70,4');
   await section.page().getByRole('button', {name: 'Save entry', exact: true}).click();
   await expect(rows(section)).toHaveCount(1);
-  // One point: honest single-entry state, no line.
-  await expect(
-    section.getByRole('heading', {name: 'Weight (kg)', level: 4, exact: true}),
-  ).toBeVisible();
-  await expect(section.locator('.empty-state', {hasText: 'One entry so far'})).toBeVisible();
-  await expect(section.getByText('Add another entry', {exact: false})).toBeVisible();
+  // One point: its value and date, an honest single-entry state and no line or range choice.
+  await expect(section.locator('.weight-chart-value')).toHaveText('70.4 kg');
+  await expect(section.getByText('Add another entry to see a trend.')).toBeVisible();
   await expect(section.getByRole('img')).toHaveCount(0);
+  await expect(section.getByRole('radiogroup', {name: 'Time range'})).toHaveCount(0);
 
   await add(section, '71.25', '2019-01-05T08:00');
   await add(section, '69.9', '2023-06-10T07:30');
@@ -83,17 +79,29 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   await expect(rows(section).nth(1)).toContainText('69.9');
   await expect(rows(section).nth(2)).toContainText('5 Jan 2019');
 
-  // The chart shows the whole history, oldest entry included.
+  // The chart shows the whole history, oldest entry included, headed by the latest entry and
+  // the change since the first. The pointer leaves the chart, which the form's buttons covered.
+  await page.mouse.move(0, 0);
+  await expect(section.locator('.weight-chart-value')).toHaveText('70.4 kg');
+  await expect(section.locator('.weight-chart-detail')).toHaveText('−0.85 kg since 5 Jan 2019');
   const chart = section.getByRole('img', {name: /Body weight over time/});
   await expect(chart.locator('.recharts-area-dots circle')).toHaveCount(3);
   await expect(chart.locator('.recharts-area-curve')).toHaveCount(1);
   await expect(chart).toHaveAttribute('aria-label', /5 Jan 2019/);
-  await page.mouse.move(0, 0);
   await chart.locator('.recharts-surface').focus();
   await expect(section.locator('.weight-chart-value')).toContainText('71.25 kg');
   await page.keyboard.press('ArrowRight');
   await expect(section.locator('.weight-chart-value')).toContainText('69.9 kg');
-  await expect(section.locator('.weight-chart-value')).toContainText('10 Jun 2023');
+  await expect(section.locator('.weight-chart-detail')).toContainText('10 Jun 2023 · 07:30');
+  // A shorter range narrows the chart and the list together.
+  let range = section.getByRole('radiogroup', {name: 'Time range'});
+  await range.getByRole('radio', {name: '1Y'}).click();
+  await expect(section.getByRole('img')).toHaveCount(0);
+  await expect(section.getByText('One entry in this range.')).toBeVisible();
+  await expect(rows(section)).toHaveCount(1);
+  await expect(rows(section).nth(0)).toContainText('70.4');
+  await range.getByRole('radio', {name: 'All'}).click();
+  await expect(rows(section)).toHaveCount(3);
 
   // Correct an entry, including moving it in time.
   await section.getByRole('button', {name: /Edit entry 10 Jun 2023 07:30, 69.9 kg/}).click();
@@ -134,6 +142,18 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   await expect(rows(section).nth(1)).toContainText('31 Dec 2018');
   await expect(rows(section).nth(1)).toContainText('68.75');
   await expect(section.getByText('5 Jan 2019')).toHaveCount(0);
+
+  // Deleting the last entry in a narrowed range keeps the range, so older entries stay reachable.
+  // (The reload remounted the section, so the range is All again.)
+  range = section.getByRole('radiogroup', {name: 'Time range'});
+  await range.getByRole('radio', {name: '1M'}).click();
+  await expect(rows(section)).toHaveCount(1);
+  await section.getByRole('button', {name: /Edit entry .*70\.4 kg/}).click();
+  await section.page().getByRole('button', {name: 'Delete entry', exact: true}).click();
+  await expect(section.getByText('No entries in this range.')).toBeVisible();
+  await range.getByRole('radio', {name: 'All'}).click();
+  await expect(rows(section)).toHaveCount(1);
+  await expect(rows(section).nth(0)).toContainText('31 Dec 2018');
 });
 
 test('fits the phone without clipping, with 44px targets, readable labels and keyboard focus', async ({

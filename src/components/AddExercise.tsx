@@ -6,6 +6,7 @@ import type {Dataset, ExerciseLog} from '../domain/types';
 import {cue} from '../feedback';
 import {useBackLayer} from '../state/back';
 import {ExerciseList} from './ExerciseList';
+import {EmberToaster, PICKER_TOASTER, dismissToast, toastRefused} from './toasts';
 import {Button} from './ui/button';
 import {
   Dialog,
@@ -17,6 +18,9 @@ import {
 } from './ui/dialog';
 import {historyTargets} from './workout-targets';
 
+/** One refusal at a time: tapping another present row replaces it. */
+const ALREADY_IN = 'already-in';
+
 /** Single-select library: existing names only, with latest-history targets on selection. */
 export function ExercisePicker({
   dataset,
@@ -25,7 +29,6 @@ export function ExercisePicker({
   onPick,
   title,
   context,
-  description,
   trigger,
   onCloseAutoFocus,
   existingNames = [],
@@ -37,13 +40,11 @@ export function ExercisePicker({
   onPick: (exercise: ExerciseLog) => void;
   title: string;
   context: string;
-  description: string;
   trigger?: ReactNode;
   onCloseAutoFocus?: (event: Event) => void;
   existingNames?: string[];
   scope?: 'workout' | 'template';
 }) {
-  const [error, setError] = useState('');
   const panel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -63,12 +64,15 @@ export function ExercisePicker({
   }, [open]);
   const toggle = (next: boolean) => {
     onOpenChange(next);
-    setError('');
+    if (!next) dismissToast(ALREADY_IN);
   };
   useBackLayer(open, () => toggle(false));
   const pick = (name: string) => {
     if (existingNames.includes(name)) {
-      setError(`${name} is already in this ${scope}.`);
+      toastRefused(`${name} is already in this ${scope}.`, {
+        id: ALREADY_IN,
+        toasterId: PICKER_TOASTER,
+      });
       return;
     }
     cue('tick');
@@ -95,15 +99,9 @@ export function ExercisePicker({
             <DialogTitle>{title}</DialogTitle>
           </div>
           <div className='min-h-0 overflow-y-auto overscroll-contain'>
-            <p className='text-sm font-medium [overflow-wrap:anywhere]'>{context}</p>
-            <DialogDescription className='mt-1 text-sm text-muted-foreground'>
-              {description}
+            <DialogDescription className='mt-0 text-sm font-medium [overflow-wrap:anywhere] text-foreground'>
+              {context}
             </DialogDescription>
-            {error && (
-              <p role='alert' className='mt-2 text-sm [overflow-wrap:anywhere] text-destructive'>
-                {error}
-              </p>
-            )}
           </div>
         </header>
         <ExerciseList
@@ -112,8 +110,8 @@ export function ExercisePicker({
           existingNames={existingNames}
           scope={scope}
           contained
-          onFilterChange={() => setError('')}
         />
+        <EmberToaster id={PICKER_TOASTER} />
       </DialogContent>
     </Dialog>
   );
@@ -144,7 +142,6 @@ export function AddExercise({
       scope={scope}
       title='Add exercise'
       context={`To: ${workoutName.trim() || `Untitled ${scope}`}`}
-      description={`Choose one exercise to add to this ${scope}.`}
       trigger={
         <Button className='add-exercise-button w-full'>
           <Plus size={16} /> Add exercise

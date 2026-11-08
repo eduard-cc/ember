@@ -1,5 +1,5 @@
 import {liveQuery} from 'dexie';
-import {ChartLine, ChevronRight, Plus, Scale} from 'lucide-react';
+import {ChevronRight, Plus, Scale, Trash2} from 'lucide-react';
 import {type FormEvent, useEffect, useEffectEvent, useMemo, useRef, useState} from 'react';
 
 import type {BodyWeight} from '../../shared/contracts';
@@ -14,12 +14,14 @@ import {
 import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {cn} from '../utils/cn';
-import {dateLabel} from '../utils/date';
+import {dateLabel, localDay} from '../utils/date';
+import {SegmentToggle} from './segment-toggle';
 import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
 import {SETTINGS_TOASTER, dismissToast, toastFailed, toastUndo} from './toasts';
 import {TrendArea} from './trend-area';
 import {Button} from './ui/button';
 import {Card} from './ui/card';
+import {EmptyChart} from './ui/chart';
 import {ContentFieldset} from './ui/content-fieldset';
 import {EmptyState} from './ui/empty-state';
 import {fieldLabelClass} from './ui/field-label';
@@ -29,7 +31,6 @@ import {
   ResponsiveDialog,
   ResponsiveDialogBody,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
 } from './ui/responsive-dialog';
@@ -37,30 +38,84 @@ import {
 const time = (date: string) => date.slice(11, 16);
 const describe = (m: BodyWeight) => `${dateLabel(m.date)} ${time(m.date)}, ${formatKg(m.kg)} kg`;
 
+// The exercise charts' ranges, so both trends read the same way.
+const ranges = [
+  {value: '30', label: '1M'},
+  {value: '90', label: '3M'},
+  {value: '180', label: '6M'},
+  {value: '365', label: '1Y'},
+  {value: 'all', label: 'All'},
+];
+/** Entries (newest first) measured on or after the range's first local day. */
+function inRange(entries: BodyWeight[], range: string) {
+  if (range === 'all') return entries;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - Number(range));
+  const firstDay = localDay(cutoff);
+  return entries.filter((m) => m.date.slice(0, 10) >= firstDay);
+}
+
 type WeightPoint = BodyWeight & {t: number; value: number};
 
-/** Exact entries remain below; inspection never implies that a weight change is good or bad. */
-function WeightChart({entries}: {entries: BodyWeight[]}) {
+/**
+ * The exercise charts' headline over the same plot: latest (or inspected) kg, then the change
+ * since the range's first entry. A weight change is never coloured as good or bad.
+ */
+function WeightChart({entries, total}: {entries: BodyWeight[]; total: number}) {
   const data = useMemo(
     () => [...entries].reverse().map((p) => ({...p, t: new Date(p.date).getTime(), value: p.kg})),
     [entries],
   );
   const [hover, setHover] = useState<WeightPoint | null>(null);
-  const shown = hover && data.includes(hover) ? hover : data.at(-1)!;
+  const inspected = hover && data.includes(hover) ? hover : null;
+  const first = data[0];
+  const last = data.at(-1)!;
+  const shown = inspected ?? last;
+  const delta = Number((last.kg - first.kg).toFixed(2));
   return (
-    <div className='mt-3 grid gap-3'>
-      <p className='weight-chart-value numeric text-label font-normal text-muted-foreground'>
-        {formatKg(shown.kg)} kg · {dateLabel(shown.date)} {time(shown.date)}
-      </p>
-      <TrendArea
-        data={data}
-        onInspect={setHover}
-        label={`Body weight over time. ${data.length} entries from ${dateLabel(data[0].date)} to ${dateLabel(data.at(-1)!.date)}. Exact values in the list below.`}
-      />
-      <p className='text-label font-normal text-muted-foreground'>
-        Hold and slide to inspect an entry.
-      </p>
-    </div>
+    <>
+      <div className='chart-headline min-h-[4.25rem]'>
+        <p className='weight-chart-value flex flex-wrap items-baseline gap-1.5 text-foreground'>
+          <span className='numeric text-stat'>{formatKg(shown.kg)}</span>{' '}
+          <span className='text-sm font-medium text-muted-foreground'>kg</span>
+        </p>
+        <p className='weight-chart-detail mt-1 numeric text-label font-normal text-muted-foreground'>
+          {inspected || data.length < 2 ? (
+            <>
+              <span className='text-foreground'>{dateLabel(shown.date)}</span> · {time(shown.date)}
+            </>
+          ) : delta === 0 ? (
+            `No change since ${dateLabel(first.date)}`
+          ) : (
+            <>
+              <span className='font-medium text-foreground'>
+                {delta > 0 ? '+' : '−'}
+                {formatKg(Math.abs(delta))} kg
+              </span>{' '}
+              since {dateLabel(first.date)}
+            </>
+          )}
+        </p>
+      </div>
+      {data.length >= 2 ? (
+        <div className='grid gap-2'>
+          <TrendArea
+            data={data}
+            onInspect={setHover}
+            label={`Body weight over time. ${data.length} entries from ${dateLabel(first.date)} to ${dateLabel(last.date)}. Exact values in the list below.`}
+          />
+          <p className='text-label font-normal text-muted-foreground'>
+            Hold and slide to inspect an entry.
+          </p>
+        </div>
+      ) : (
+        <EmptyChart className='py-8'>
+          <p className='text-sm text-muted-foreground'>
+            {total > 1 ? 'One entry in this range.' : 'Add another entry to see a trend.'}
+          </p>
+        </EmptyChart>
+      )}
+    </>
   );
 }
 
@@ -70,8 +125,9 @@ interface Editing {
   when: string;
 }
 /**
- * Body weight in kg: a chart of the full history above newest-first entries. Entries are
- * device-durable documents that sync on their own; they never touch workouts or imports.
+ * Body weight in kg: a chart above newest-first entries, both narrowed by the selected range.
+ * Entries are device-durable documents that sync on their own; they never touch workouts or
+ * imports.
  * Undo is a short toast for the latest deletion in this mounted Settings view only. It ends
  * when the toast closes, another add/edit form opens or Settings closes; deleted entries remain
  * sync tombstones.
@@ -113,6 +169,8 @@ export function BodyWeightSettings({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [!!editing, editing?.base?.id, !!undo]);
   const entries = sortedMeasurements(stored ?? []);
+  const [range, setRange] = useState('all');
+  const shownEntries = inRange(entries, range);
   const write = async (next: BodyWeight, base: BodyWeight | null) => {
     setSaving(true);
     try {
@@ -223,15 +281,24 @@ export function BodyWeightSettings({
         {/* Phones give the native date and time picker a full-width row under kg. */}
         <div className='grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2.5 max-[480px]:grid-cols-1'>
           <label>
-            <span className={cn(fieldLabelClass, 'mt-0')}>Weight in kg</span>
-            <Input
-              ref={kgRef}
-              aria-label='Weight in kg'
-              inputMode='decimal'
-              autoComplete='off'
-              value={shown.kg}
-              onChange={(e) => setEditing({...shown, kg: e.target.value})}
-            />
+            <span className={cn(fieldLabelClass, 'mt-0')}>Weight</span>
+            <span className='relative block'>
+              <Input
+                ref={kgRef}
+                aria-label='Weight in kg'
+                inputMode='decimal'
+                autoComplete='off'
+                className='pr-10 numeric text-set-value'
+                value={shown.kg}
+                onChange={(e) => setEditing({...shown, kg: e.target.value})}
+              />
+              <span
+                aria-hidden='true'
+                className='pointer-events-none absolute inset-y-0 right-3 grid place-items-center text-sm text-muted-foreground'
+              >
+                kg
+              </span>
+            </span>
           </label>
           <label>
             <span className={cn(fieldLabelClass, 'mt-0')}>Date and time</span>
@@ -248,7 +315,8 @@ export function BodyWeightSettings({
             {error}
           </InlineError>
         )}
-        <div className='mt-5 flex flex-wrap gap-2 max-desk:*:min-h-12 max-desk:*:flex-1'>
+        {/* Phones stack the drawer's actions with Save on top, like its other drawers. */}
+        <div className='mt-5 flex flex-wrap gap-2 max-desk:flex-col max-desk:*:min-h-12'>
           <Button type='submit' variant='primary'>
             Save entry
           </Button>
@@ -258,9 +326,10 @@ export function BodyWeightSettings({
           {shown.base && (
             <Button
               type='button'
-              className='ml-auto text-destructive'
+              className='text-destructive max-desk:mt-3 desk:ml-auto'
               onClick={() => void remove()}
             >
+              <Trash2 size={16} aria-hidden='true' />
               Delete entry
             </Button>
           )}
@@ -269,32 +338,28 @@ export function BodyWeightSettings({
     </form>
   );
   return (
-    <SettingsGroup
-      id='body-weight-heading'
-      titleAs='h3'
-      title='Body weight'
-      description='Separate from workouts and lifted weights.'
-      action={add}
-    >
+    <SettingsGroup id='body-weight-heading' titleAs='h3' title='Body weight' action={add}>
       <div className='flex flex-col gap-3'>
         {!editing && error && <InlineError role='alert'>{error}</InlineError>}
         {stored !== null && entries.length > 0 && (
-          <Card className='body-weight-chart'>
-            {entries.length > 0 && (
-              <div>
-                <h4>Weight (kg)</h4>
-                {entries.length >= 2 ? (
-                  <WeightChart entries={entries} />
-                ) : (
-                  <EmptyState
-                    framed={false}
-                    titleAs='h4'
-                    icon={ChartLine}
-                    title='One entry so far'
-                    description='Add another entry to see a trend.'
-                  />
-                )}
-              </div>
+          <Card className='body-weight-chart grid gap-4'>
+            {shownEntries.length > 0 ? (
+              <WeightChart key={range} entries={shownEntries} total={entries.length} />
+            ) : (
+              <EmptyChart>
+                <p className='text-sm text-muted-foreground'>No entries in this range.</p>
+              </EmptyChart>
+            )}
+            {/* A narrowed range stays switchable even when a delete leaves one entry outside it. */}
+            {(entries.length > 1 || range !== 'all') && (
+              <SegmentToggle
+                value={range}
+                onChange={setRange}
+                label='Time range'
+                items={ranges}
+                className='justify-start'
+                itemClassName='px-2.5'
+              />
             )}
           </Card>
         )}
@@ -306,14 +371,14 @@ export function BodyWeightSettings({
             description='Add your weight to start a chart.'
           />
         )}
-        {entries.length > 0 && (
+        {shownEntries.length > 0 && (
           <SettingsList as='ul' aria-label='Body weight history'>
-            {entries.map((m) => (
+            {shownEntries.map((m) => (
               <li key={m.id}>
                 <button
                   className={cn(
                     settingsRowClass,
-                    'w-full text-left tabular-nums hover:not-disabled:bg-accent focus-visible:-outline-offset-2',
+                    'pressable min-h-14 w-full text-left tabular-nums hover:not-disabled:bg-accent focus-visible:-outline-offset-2',
                   )}
                   aria-label={`Edit entry ${describe(m)}`}
                   disabled={disabled || !!editing}
@@ -324,13 +389,12 @@ export function BodyWeightSettings({
                     setEditing({base: m, kg: formatKg(m.kg), when: toLocalInput(m.date)});
                   }}
                 >
-                  <span className='flex min-w-0 flex-col'>
-                    <span className='text-sm font-medium'>{dateLabel(m.date)}</span>
-                    <span className='mt-0.5 text-sm text-muted-foreground'>{time(m.date)}</span>
+                  <span className='min-w-0 text-sm'>
+                    <span className='font-medium'>{dateLabel(m.date)}</span>
+                    <span className='text-muted-foreground'> · {time(m.date)}</span>
                   </span>
-                  <span className='ml-auto text-base font-semibold'>
-                    {formatKg(m.kg)}{' '}
-                    <small className='text-[12px] font-normal text-muted-foreground'>kg</small>
+                  <span className='ml-auto shrink-0 text-sm font-semibold'>
+                    {formatKg(m.kg)} <span className='font-normal text-muted-foreground'>kg</span>
                   </span>
                   <ChevronRight
                     size={16}
@@ -351,6 +415,7 @@ export function BodyWeightSettings({
       >
         <ResponsiveDialogContent
           className='body-weight-editor dialog-content'
+          aria-describedby={undefined}
           onOpenAutoFocus={(event) => {
             event.preventDefault();
             kgRef.current?.focus();
@@ -362,11 +427,8 @@ export function BodyWeightSettings({
         >
           <ResponsiveDialogHeader className='text-left'>
             <ResponsiveDialogTitle>
-              {shown?.base ? 'Edit body weight entry' : 'New body weight entry'}
+              {shown?.base ? 'Edit body weight' : 'Add body weight'}
             </ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Weight in kg, with the date and time it was measured.
-            </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           <ResponsiveDialogBody className='pb-[calc(1rem+env(safe-area-inset-bottom))] desk:mt-5 desk:pb-0'>
             {form}

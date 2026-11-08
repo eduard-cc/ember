@@ -8,6 +8,10 @@ import {Toaster} from './ui/sonner';
  * toasts (body-weight Undo) render in a toaster inside the panel.
  */
 export const SETTINGS_TOASTER = 'settings';
+/** The full-screen exercise picker's own toaster, under its Back row rather than over it. */
+export const PICKER_TOASTER = 'picker';
+/** Phone top offsets that keep each full-screen surface's title row and dismiss control clear. */
+const phoneTop: Record<string, number> = {[SETTINGS_TOASTER]: 72, [PICKER_TOASTER]: 64};
 
 /**
  * Toasts carry one-off events the screen does not already show; ongoing conditions stay as page
@@ -15,8 +19,7 @@ export const SETTINGS_TOASTER = 'settings';
  */
 export function EmberToaster({id}: {id?: string}) {
   const mobile = useIsMobile();
-  // The full-screen phone Settings keeps its title and Close button clear of the toast.
-  const top = {top: `calc(env(safe-area-inset-top) + ${id === SETTINGS_TOASTER ? 72 : 16}px)`};
+  const top = {top: `calc(env(safe-area-inset-top) + ${(id && phoneTop[id]) ?? 16}px)`};
   return (
     <Toaster
       id={id}
@@ -56,6 +59,10 @@ export const toastUndo = (message: string, undo: () => void, options?: Options) 
     },
     ...options,
   });
+
+/** A tap the screen refuses, with the reason. Nothing to retry, so it closes by itself. */
+export const toastRefused = (message: string, options?: Options) =>
+  toast.error(message, {duration: 3500, ...options});
 
 /** A failed one-off action. It stays until retried or dismissed (swipe or Dismiss). */
 export const toastFailed = (message: string, retry: () => void, options?: Options) =>

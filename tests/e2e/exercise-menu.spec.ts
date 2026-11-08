@@ -100,11 +100,6 @@ test('Replace exercise swaps in the picked exercise at the same position with fr
   await expect(picker).toBeVisible();
   await expect(page.getByRole('menu')).toHaveCount(0);
   await expect(picker.getByText('Replacing: Seated Row (Cable)', {exact: true})).toBeVisible();
-  await expect(
-    picker.getByText('Choose one exercise. This replaces the exercise and its sets.', {
-      exact: true,
-    }),
-  ).toBeVisible();
   await picker.getByLabel('Search exercises').fill('Squat (Barbell)');
   await picker
     .getByRole('region', {name: 'All exercises'})
@@ -202,7 +197,9 @@ test('the template editor offers the same Replace and Remove menu', async ({page
     'Already in template',
   );
   await picker.getByRole('button', {name: 'Plank', exact: true}).click();
-  await expect(picker.getByRole('alert')).toHaveText('Plank is already in this template.');
+  await expect(page.locator('[data-sonner-toast] [data-title]')).toHaveText(
+    'Plank is already in this template.',
+  );
   await picker.getByLabel('Search exercises').fill('Bench Press (Barbell)');
   await picker
     .getByRole('region', {name: 'All exercises'})
@@ -224,6 +221,8 @@ test('the template editor offers the same Replace and Remove menu', async ({page
   await editor
     .getByRole('button', {name: 'Exercise options for Bench Press (Barbell)', exact: true})
     .click();
+  // Escape reaches the menu once it has taken focus.
+  await expect(page.getByRole('menuitem').first()).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(editor).toBeVisible();
   await expect(page.getByRole('menuitem', {name: 'Replace exercise'})).toBeHidden();
@@ -241,7 +240,7 @@ test('replacing with another exercise already in the workout keeps both cards un
   const picker = page.getByRole('dialog', {name: 'Replace exercise', exact: true});
   await picker.getByLabel('Search exercises').fill('Bench Press (Barbell)');
   await picker.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).click();
-  await expect(picker.getByRole('alert')).toHaveText(
+  await expect(page.locator('[data-sonner-toast] [data-title]')).toHaveText(
     'Bench Press (Barbell) is already in this workout.',
   );
   await picker.getByRole('button', {name: 'Back to workout'}).click();
@@ -249,7 +248,8 @@ test('replacing with another exercise already in the workout keeps both cards un
   await expect(page.getByLabel('Weight for Bench Press (Barbell) set 1')).toHaveValue('61');
   await options(page, 'Seated Row (Cable)').click();
   await page.getByRole('menuitem', {name: 'Replace exercise'}).click();
-  await expect(picker.getByRole('alert')).toHaveCount(0);
+  // No refusal carries over to the reopened picker.
+  await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
   // Choosing the card's own exercise is still valid, not a second copy.
   await picker.getByLabel('Search exercises').fill('Seated Row (Cable)');
   await picker.getByRole('button', {name: 'Seated Row (Cable)', exact: true}).click();
@@ -356,21 +356,28 @@ test('after Remove, focus moves to the next card, the previous one, then Add exe
   await expect(page.getByRole('button', {name: 'Add exercise', exact: true})).toBeFocused();
 });
 
-test('the ⋯ dots end flush with the completion boxes, inside the content edge', async ({page}) => {
+test('the ⋯ dots sit centred in their target and end flush with the completion boxes', async ({
+  page,
+}) => {
   const cards = await start(page);
   const card = cards.first();
   const icon = (await options(page, 'Bench Press (Barbell)').locator('svg').boundingBox())!;
   const check = card.getByRole('button', {name: /^Complete .* set 1$/});
-  const target = (await check.boundingBox())!;
   const box = (await check.locator('.check-box').boundingBox())!;
   const trigger = (await options(page, 'Bench Press (Barbell)').boundingBox())!;
   // Lucide's ellipsis draws its last dot ending at 20 of 24 viewBox units.
   const dotsRight = icon.x + (icon.width * 20) / 24;
   expect(Math.abs(dotsRight - (box.x + box.width))).toBeLessThanOrEqual(1);
-  // The 44px target (and its pressed and open wash) stops at the content edge, like the
-  // completion target, so it keeps the card's side margin.
+  // The drawn dots are centred in the 44px target, so its pressed and open wash surrounds them.
   expect(trigger.width).toBeGreaterThanOrEqual(44);
-  expect(trigger.x + trigger.width).toBeCloseTo(target.x + target.width, 0);
+  const dotsLeft = icon.x + (icon.width * 4) / 24;
+  expect(
+    Math.abs(dotsLeft - trigger.x - (trigger.x + trigger.width - dotsRight)),
+  ).toBeLessThanOrEqual(1);
+  // The wash stays on the card.
+  expect(trigger.x + trigger.width).toBeLessThanOrEqual(
+    (await card.boundingBox())!.x + (await card.boundingBox())!.width,
+  );
 });
 
 test('a keyboard-focused menu item keeps its inset focus ring', async ({page}) => {

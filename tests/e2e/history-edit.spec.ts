@@ -294,7 +294,9 @@ test('history editing saves added, replaced and reordered exercises with their o
   const existing = add.getByRole('button', {name: 'Synthetic Press', exact: true});
   await expect(existing).toContainText('Already in workout');
   await existing.click();
-  await expect(add.getByRole('alert')).toHaveText('Synthetic Press is already in this workout.');
+  await expect(page.locator('[data-sonner-toast] [data-title]')).toHaveText(
+    'Synthetic Press is already in this workout.',
+  );
   await add.getByLabel('Search exercises').fill('Plank');
   await add
     .getByRole('region', {name: 'All exercises'})
@@ -318,7 +320,9 @@ test('history editing saves added, replaced and reordered exercises with their o
     'Already in workout',
   );
   await replace.getByRole('button', {name: 'Plank', exact: true}).click();
-  await expect(replace.getByRole('alert')).toHaveText('Plank is already in this workout.');
+  await expect(page.locator('[data-sonner-toast] [data-title]')).toHaveText(
+    'Plank is already in this workout.',
+  );
   await replace.getByLabel('Search exercises').fill('Synthetic Row');
   await replace
     .getByRole('region', {name: 'All exercises'})

@@ -376,11 +376,11 @@ export function WorkoutView({
               <ExerciseThumb name={ex.name} className='size-10' />
               {!targetsOnly && (
                 <span
-                  className='exercise-badge absolute -right-1.5 -bottom-1.5 grid size-5 place-items-center bg-primary text-primary-foreground'
+                  className='exercise-badge absolute -right-1 -bottom-1 grid size-4 place-items-center bg-primary text-primary-foreground'
                   data-shown={done || undefined}
                   aria-hidden='true'
                 >
-                  <Check size={14} strokeWidth={3.5} />
+                  <Check size={12} strokeWidth={3.5} />
                 </span>
               )}
             </span>
@@ -441,10 +441,7 @@ export function WorkoutView({
                     }
                   >
                     {done ? (
-                      <>
-                        <Check size={14} />
-                        Done
-                      </>
+                      'Done'
                     ) : (
                       <>
                         <RollingNumber value={checked} /> / {plural(ex.sets.length, 'set')}
@@ -465,7 +462,7 @@ export function WorkoutView({
                 )}
               </div>
               <ExerciseMenu
-                className='col-3 row-[1/3] [&_svg]:translate-x-[9px]'
+                className='col-3 row-[1/3] -mr-[9px]'
                 name={ex.name}
                 ref={register(menuButtons.current, identity(ex))}
                 onReplace={() => {
@@ -656,7 +653,6 @@ export function WorkoutView({
           .map((exercise) => exercise.name)}
         title='Replace exercise'
         context={`Replacing: ${replacing?.name ?? ''}`}
-        description='Choose one exercise. This replaces the exercise and its sets.'
         scope={exerciseScope}
         onCloseAutoFocus={(event) => {
           event.preventDefault();

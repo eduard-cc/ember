@@ -278,6 +278,10 @@ test('exercise Done survives value edits and reload but a new set needs its own 
     expect(check.x + check.width).toBeCloseTo(head.x + head.width, 0);
   }
   await expect(exercise.locator('.exercise-badge')).toHaveCSS('opacity', '1');
+  // The drawing's badge keeps clear of the name beside it.
+  const badge = (await exercise.locator('.exercise-badge').boundingBox())!;
+  const name = (await exercise.locator('.exercise-title [id$="-name"]').boundingBox())!;
+  expect(name.x - (badge.x + badge.width)).toBeGreaterThanOrEqual(4);
   await expect
     .poll(() => page.evaluate(() => [...(window as unknown as {flashes: string[]}).flashes].sort()))
     .toEqual(['check-pop', 'check-pop', 'check-pop', 'done-flash']);
@@ -695,7 +699,7 @@ test('denied appearance storage leaves workout durability independent and the ch
   await page.getByRole('button', {name: 'Dark', exact: true}).click();
   await expect(
     page.getByRole('status').filter({hasText: 'Appearance could not be saved.'}),
-  ).toContainText('Workout saving is separate');
+  ).toContainText('This choice lasts only while this tab stays open.');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.getByRole('button', {name: 'Close settings'}).click();
   await page

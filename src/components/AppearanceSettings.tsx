@@ -54,9 +54,7 @@ export function useAppearance() {
       localStorage.setItem(key, JSON.stringify(next));
       setError('');
     } catch {
-      setError(
-        'Appearance could not be saved. This choice lasts only while this tab stays open. Workout saving is separate.',
-      );
+      setError('Appearance could not be saved. This choice lasts only while this tab stays open.');
     }
   };
   return {appearance, choose, error};
@@ -67,7 +65,7 @@ export function AppearanceSettings({settings}: {settings: ReturnType<typeof useA
       id='appearance-heading'
       titleAs='h3'
       title='Appearance'
-      description='System follows your device. Workout saving is separate.'
+      description='System follows your device.'
     >
       <div role='group' aria-label='Theme' className='flex gap-2'>
         {(['system', 'light', 'dark'] as const).map((theme) => {

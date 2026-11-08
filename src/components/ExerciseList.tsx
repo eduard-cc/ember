@@ -104,7 +104,6 @@ export function ExerciseList({
   existingNames = [],
   scope = 'workout',
   contained = false,
-  onFilterChange,
 }: {
   dataset: Dataset;
   onSelect: (name: string) => void;
@@ -114,14 +113,12 @@ export function ExerciseList({
   scope?: 'workout' | 'template';
   /** The full-screen picker keeps search/filters above its contained results. */
   contained?: boolean;
-  onFilterChange?: () => void;
 }) {
   const [search, setSearch] = useState('');
   const searchInput = useRef<HTMLInputElement>(null);
   const results = useRef<HTMLDivElement>(null);
   const filtersChanged = () => {
     if (results.current) results.current.scrollTop = 0;
-    onFilterChange?.();
   };
   const [part, setPart] = useState<BodyPart | 'All'>('All');
   const names = useMemo(() => allExerciseNames(dataset), [dataset]);
