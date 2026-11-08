@@ -8,6 +8,8 @@ export const publicShellFiles: readonly string[] = Object.freeze([
 	'manifest.webmanifest',
 	'icons/icon-192.png',
 	'icons/icon-512.png',
+	'icons/apple-touch-icon.png',
+	'icons/favicon.svg',
 ]);
 
 /** `file` is a web-root-relative path without a leading slash, e.g. `assets/index-Ab12.js`. */

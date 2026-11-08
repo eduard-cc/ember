@@ -47,7 +47,7 @@ function LitHeart({still}: {still: boolean}) {
         SPARKS.map(([dx, dy, delay, duration, size], i) => (
           <span
             key={i}
-            className='celebrate-spark absolute top-[30%] left-[62%] rounded-full bg-[#f5b13d] shadow-[0_0_8px_rgb(245_177_61/0.8)]'
+            className='celebrate-spark absolute top-[7%] left-[78%] rounded-full bg-[#f5b13d] shadow-[0_0_8px_rgb(245_177_61/0.8)]'
             style={
               {
                 width: size,

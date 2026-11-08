@@ -35,6 +35,7 @@ async function fixture() {
 	await writeFile(join(root, 'sw.js'), '// Synthetic service worker');
 	await writeFile(join(root, 'assets/index-synthetic.js'), 'console.log("Synthetic shell");');
 	await writeFile(join(root, 'icons/icon-192.png'), 'synthetic icon bytes');
+	await writeFile(join(root, 'icons/favicon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
 	await writeFile(join(root, 'assets/drawing-synthetic-0-Ab_12-cd.webp'), 'synthetic drawing bytes');
 	await mkdir(join(root, 'src'));
 	await mkdir(join(root, 'server'));
@@ -102,8 +103,11 @@ test('compiled trial serves the production shell and API on one loopback listene
 			'/assets/index-synthetic.js',
 			'/assets/drawing-synthetic-0-Ab_12-cd.webp',
 			'/icons/icon-192.png',
+			'/icons/favicon.svg',
 		])
 			assert.equal((await fetch(url + path)).status, 200, path);
+		const favicon = await fetch(url + '/icons/favicon.svg');
+		assert.match(favicon.headers.get('content-type')!, /^image\/svg\+xml/);
 		const drawing = await fetch(url + '/assets/drawing-synthetic-0-Ab_12-cd.webp');
 		assert.equal(drawing.headers.get('content-type'), 'image/webp');
 		const head = await fetch(url + '/sw.js', {method: 'HEAD'});
