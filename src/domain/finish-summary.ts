@@ -69,6 +69,14 @@ export const recordKindLabel: Record<RecordKind, string> = {
   e1rm: 'Est.\u00a01RM\u00a0(Epley)',
 };
 
+/** Short record names for one-line lists, where the trophy already says they are records. */
+export const recordKindShort: Record<RecordKind, string> = {
+  weight: 'Weight',
+  reps: 'Reps',
+  volume: 'Volume',
+  e1rm: 'Est.\u00a01RM',
+};
+
 /** Recorded load × reps over a workout's weighted sets, as in the Records tab. */
 export const workoutVolume = (workout: Workout) =>
   workout.exercises.reduce(

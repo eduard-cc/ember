@@ -13,6 +13,7 @@ import {chartNumber} from '../domain/chart-scale';
 import {
   type PersonalRecord,
   recordKindLabel,
+  recordKindShort,
   recordKinds,
   recordsAt,
 } from '../domain/finish-summary';
@@ -165,7 +166,13 @@ function HistoryTab({
                       aria-label='Personal records'
                       role='img'
                     />
-                    <span>{kinds.map((record) => recordKindLabel[record.kind]).join(', ')}</span>
+                    {/* Short names keep the line to one row; screen readers get the full ones. */}
+                    <span aria-hidden='true'>
+                      {kinds.map((record) => recordKindShort[record.kind]).join(' · ')}
+                    </span>
+                    <span className='sr-only'>
+                      {kinds.map((record) => recordKindLabel[record.kind]).join(', ')}
+                    </span>
                   </span>
                 )}
               </span>

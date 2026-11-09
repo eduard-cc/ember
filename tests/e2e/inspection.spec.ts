@@ -87,6 +87,14 @@ test('progress exposes source sets and selectable metrics', async ({page}) => {
     'on',
   );
   await expect(source).toBeFocused();
+  // History cards name a workout's three records on one short line.
+  await page.getByRole('tab', {name: 'History', exact: true}).click();
+  const records = page
+    .locator('.session-card')
+    .first()
+    .getByText('Weight · Volume · Est. 1RM', {exact: true});
+  await expect(records).toBeVisible();
+  expect((await records.boundingBox())!.height).toBeLessThan(20);
 });
 
 async function evidence(page: Page, workouts: Workout[], name = 'Bench Press (Barbell)') {
@@ -160,6 +168,7 @@ test('exercise history exposes every block and numbered actual set with its sour
   await expect(cards.first()).toContainText('2 sets');
   // The workout's records for this exercise show once, on its first block.
   await expect(cards.first().getByRole('img', {name: 'Personal records'})).toBeVisible();
+  await expect(cards.first().getByText('Volume', {exact: true})).toBeVisible();
   await expect(cards.first()).toContainText('Session volume');
   await expect(cards.nth(1).getByRole('img', {name: 'Personal records'})).toHaveCount(0);
   const rows = (card: typeof cards) =>
