@@ -30,6 +30,41 @@ export function monthTicks(from: number, to: number): number[] {
   return ticks.length ? ticks : [from];
 }
 
+/** Range segments shared by the exercise charts: days back from today, or the whole history. */
+export const chartRanges = [
+  {value: '30', label: '1M'},
+  {value: '90', label: '3M'},
+  {value: '180', label: '6M'},
+  {value: '365', label: '1Y'},
+  {value: 'all', label: 'All'},
+] as const;
+export type ChartRange = (typeof chartRanges)[number]['value'];
+
+/** First local day (`YYYY-MM-DD`) inside a range, or null for the whole history. */
+export function rangeStart(range: ChartRange, today = new Date()) {
+  if (range === 'all') return null;
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - Number(range));
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`;
+}
+
+/**
+ * The range a chart opens on: the last three months, widened to 6M, 1Y and then All until at
+ * least two workouts fall inside it, so an exercise not done lately still draws a line. Repeated
+ * blocks of one workout are one chart session.
+ */
+export function initialRange(
+  sessions: {workoutId: string; date: string}[],
+  today = new Date(),
+): ChartRange {
+  for (const range of ['90', '180', '365'] as const) {
+    const start = rangeStart(range, today)!;
+    const inside = sessions.filter((session) => session.date.slice(0, 10) >= start);
+    if (new Set(inside.map((session) => session.workoutId)).size >= 2) return range;
+  }
+  return 'all';
+}
+
 export const chartNumber = (value: number) =>
   Number(value.toFixed(4)).toLocaleString('en-GB', {maximumFractionDigits: 4});
 /** Match the scale's 12 significant digits; compacting must not collapse adjacent ticks. */

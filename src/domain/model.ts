@@ -315,6 +315,34 @@ export function getRecords(dataset: Dataset, name: string): ExerciseRecords {
               date: session.date,
             });
         }
+  // Most reps names the best-loaded set that reached them: heaviest, or least assistance.
+  let mostReps: RecordEntry | null = null;
+  let mostRepsType: ExerciseType | null = null;
+  for (const session of [...history].reverse())
+    for (const set of session.sets) {
+      const value = isTimed(session.type) ? null : positive(set.reps);
+      if (value === null) continue;
+      // A recorded load beats a missing one; a missing load never replaces a recorded one.
+      const load = set.weight;
+      const current = mostReps?.set.weight ?? null;
+      const better =
+        !mostReps ||
+        value > mostReps.value ||
+        (value === mostReps.value &&
+          session.type === mostRepsType &&
+          load !== null &&
+          (current === null || (session.type === 'assisted' ? load < current : load > current)));
+      if (better) {
+        mostReps = {
+          value,
+          set,
+          workoutId: session.workoutId,
+          workoutName: session.workoutName,
+          date: session.date,
+        };
+        mostRepsType = session.type;
+      }
+    }
   return {
     estimated: best((set, type) => estimate1RM(set, type)),
     heaviest: best((set, type) => (type === 'weighted' && weightedReps(set) ? set.weight : null)),
@@ -327,7 +355,7 @@ export function getRecords(dataset: Dataset, name: string): ExerciseRecords {
           : null,
       (a, b) => a < b,
     ),
-    mostReps: best((set, type) => (isTimed(type) ? null : positive(set.reps))),
+    mostReps,
     repBests: [...reps.values()].sort((a, b) => a.reps - b.reps),
   };
 }

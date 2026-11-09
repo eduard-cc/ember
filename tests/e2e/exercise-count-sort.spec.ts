@@ -53,7 +53,7 @@ test('session count sits at the far right as a bare number, absent when never do
   expect(style.numeric).toContain('tabular-nums');
   await expect(
     page
-      .getByRole('region', {name: 'Recent exercises'})
+      .getByRole('region', {name: 'All exercises'})
       .getByRole('button', {name: 'Plank', exact: true})
       .locator('.exercise-row-count'),
   ).toHaveText('8');

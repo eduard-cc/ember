@@ -56,7 +56,11 @@ describe('exercise records', () => {
   it('reports weighted records with their exact source sets', () => {
     const records = getRecords(
       dataset([
-        session('a', '2026-01-01T10:00:00', 'weighted', [set('a1', 100, 5), set('a2', 110, 1)]),
+        session('a', '2026-01-01T10:00:00', 'weighted', [
+          set('a1', 100, 5),
+          set('a2', 110, 1),
+          set('a3', 60, 12),
+        ]),
         session('b', '2026-02-01T10:00:00', 'weighted', [set('b1', 105, 8), set('b3', 100, 12)]),
       ]),
       'Press',
@@ -67,6 +71,9 @@ describe('exercise records', () => {
     expect(records.bestSetVolume?.set.id).toBe('b3');
     expect(records.sessionVolume?.workoutId).toBe('b');
     expect(records.sessionVolume?.value).toBe(2040);
+    // Most reps names the heaviest set that reached them, not the first.
+    expect(records.mostReps?.value).toBe(12);
+    expect(records.mostReps?.set.id).toBe('b3');
     expect(records.repBests.map((r) => [r.reps, r.set.weight])).toEqual([
       [1, 110],
       [5, 100],
@@ -78,13 +85,15 @@ describe('exercise records', () => {
     const assisted = getRecords(
       dataset([
         session('a', '2026-01-01T10:00:00', 'assisted', [set('a1', 30, 8), set('a2', 20, 6)]),
+        session('b', '2026-02-01T10:00:00', 'assisted', [set('b1', 25, 8)]),
+        session('c', '2026-03-01T10:00:00', 'assisted', [set('c1', null, 8)]),
       ]),
       'Press',
     );
     expect(assisted.estimated).toBeNull();
     expect(assisted.sessionVolume).toBeNull();
     expect(assisted.leastAssistance?.set.id).toBe('a2');
-    expect(assisted.mostReps?.set.id).toBe('a1');
+    expect(assisted.mostReps?.set.id).toBe('b1');
     const bodyweight = getRecords(
       dataset([session('a', '2026-01-01T10:00:00', 'bodyweight', [set('a1', null, 15)])]),
       'Press',

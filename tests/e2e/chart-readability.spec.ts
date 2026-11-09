@@ -112,8 +112,9 @@ test('each repeated exercise block can be inspected at its recorded time, then t
   const chart = page.getByRole('img', {name: /Est\. 1RM for Bench/});
   const headline = page.locator('.chart-headline');
   await expect(headline).toHaveText(/^84\s*kg.*\+20\.7 kg since/);
+  // The oldest row: its estimate, then the actual set it came from.
   await expect(page.getByRole('list', {name: 'Sessions'}).locator('li').last()).toHaveText(
-    /63\.3 kg$/,
+    /63\.3 kg\s*50 kg × 8$/,
   );
   await chart.locator('.recharts-surface').focus();
   await expect(headline).toHaveText(/^63\.3\s*kg.*50 kg × 8$/);

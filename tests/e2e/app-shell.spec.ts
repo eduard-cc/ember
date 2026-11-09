@@ -327,11 +327,19 @@ test('metric explanations are readable', async ({page}) => {
   await page.getByLabel('Search exercises').fill('Bench');
   await page.getByRole('button', {name: 'Bench Press (Barbell)', exact: true}).first().click();
   await page.getByRole('tab', {name: 'Charts', exact: true}).click();
-  const note = page.locator('.metric-explanation').first();
-  await expect(note).toBeVisible();
-  expect(await note.evaluate((el) => getComputedStyle(el).color)).toBe(
+  await page.getByRole('button', {name: 'About Heaviest weight', exact: true}).click();
+  const info = page.getByRole('dialog', {name: 'Reading this chart'});
+  const term = info.locator('dt').first();
+  await expect(term).toHaveText('Heaviest weight');
+  expect(await term.evaluate((el) => getComputedStyle(el).color)).toBe(
     await resolve(page, 'hsl(var(--foreground))'),
   );
+  expect(
+    await info
+      .locator('dd')
+      .first()
+      .evaluate((el) => getComputedStyle(el).color),
+  ).toBe(await resolve(page, 'hsl(var(--muted-foreground))'));
 });
 
 test('selected appearance is an Amber ring on a neutral ground', async ({page}) => {

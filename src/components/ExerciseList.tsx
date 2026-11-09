@@ -96,7 +96,7 @@ function ExerciseRow({
   );
 }
 
-/** Catalog and recorded exercises: search, body-part filter, recent first, then everything most done or A–Z. */
+/** Catalog and recorded exercises: search, body-part filter, then everything most done or A–Z; the picker lists recent ones first. */
 export function ExerciseList({
   dataset,
   onSelect,
@@ -127,10 +127,15 @@ export function ExerciseList({
   const [storedSort, setSort] = useExerciseSort();
   const sort = sortable ? storedSort : 'az';
   const ordered = useMemo(() => sortExerciseNames(names, stats, sort), [names, stats, sort]);
+  // The picker leads with what was done lately; the Exercises tab has its own Most done sort.
   const byRecency = useMemo(
     () =>
-      [...stats.entries()].sort((a, b) => b[1].last.localeCompare(a[1].last)).map(([name]) => name),
-    [stats],
+      sortable
+        ? []
+        : [...stats.entries()]
+            .sort((a, b) => b[1].last.localeCompare(a[1].last))
+            .map(([name]) => name),
+    [stats, sortable],
   );
   const query = search.trim().toLowerCase();
   const filtered = search.length > 0 || part !== 'All';
@@ -225,7 +230,7 @@ export function ExerciseList({
             'min-h-0 flex-1 overflow-y-auto overscroll-contain px-[max(18px,calc((100vw-900px)/2))] pb-[max(24px,env(safe-area-inset-bottom))]',
         )}
       >
-        {!query && part === 'All' && recent.length > 0 && (
+        {!sortable && !query && part === 'All' && recent.length > 0 && (
           <section aria-label='Recent exercises'>
             <ListLabel>Recent</ListLabel>
             <ul>

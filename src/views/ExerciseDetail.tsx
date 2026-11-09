@@ -1,26 +1,32 @@
-import {ArrowLeft, ArrowUpRight, History, Info, Trophy} from 'lucide-react';
+import {ArrowLeft, ChevronRight, History, Info, Trophy} from 'lucide-react';
 import {type ReactElement, type ReactNode, useId, useMemo, useRef, useState} from 'react';
 
 import {bodyPartOf, catalogEntry} from '../catalog/catalog';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
 import {WorkoutDrawer} from '../components/WorkoutDrawer';
 import {Spoken} from '../components/exercise-line';
+import {InfoButton, InfoTerm} from '../components/info-button';
+import {RecordedSets} from '../components/recorded-sets';
 import {Button} from '../components/ui/button';
-import {MetricExplanation} from '../components/ui/chart';
 import {EmptyState} from '../components/ui/empty-state';
-import {estimate1RM, exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
+import {chartNumber} from '../domain/chart-scale';
+import {
+  type PersonalRecord,
+  recordKindLabel,
+  recordKinds,
+  recordsAt,
+} from '../domain/finish-summary';
+import {exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
 import type {Dataset, SetRecord} from '../domain/types';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
 import {plural} from '../utils/plural';
-import {setText} from '../utils/set-label';
+import {type SetText, setText} from '../utils/set-label';
 import {ExerciseCharts} from './ExerciseCharts';
 
 const tabs = ['Charts', 'History', 'Records', 'About'] as const;
 type Tab = (typeof tabs)[number];
-const kg = (n: number) => `${Number(n.toFixed(1))} kg`;
-const kgReps = (n: number) => `${Number(n.toFixed(1))} kg·reps`;
-const sessionHeadClass = 'text-[12px] font-medium text-muted-foreground';
+const kg = (n: number) => `${Number(n.toFixed(1)).toLocaleString('en-GB')} kg`;
 
 function Fact({label, value}: {label: string; value: string}) {
   return (
@@ -91,6 +97,23 @@ function About({name, framed}: {name: string; framed: boolean}) {
   );
 }
 
+/** Workout PRs this exercise set, keyed by workout; only the first block of a workout shows them. */
+function useRecordsByWorkout(dataset: Dataset, name: string, ids: string[]) {
+  return useMemo(() => {
+    const byId = new Map(dataset.workouts.map((workout) => [workout.id, workout]));
+    const found = new Map<string, PersonalRecord[]>();
+    for (const id of new Set(ids)) {
+      const workout = byId.get(id);
+      if (!workout) continue;
+      const records = recordsAt(workout, dataset)
+        .filter((record) => record.exercise === name)
+        .sort((a, b) => recordKinds.indexOf(a.kind) - recordKinds.indexOf(b.kind));
+      if (records.length) found.set(id, records);
+    }
+    return found;
+  }, [dataset, name, ids]);
+}
+
 function HistoryTab({
   dataset,
   name,
@@ -104,6 +127,9 @@ function HistoryTab({
 }) {
   const [limit, setLimit] = useState(10);
   const history = useMemo(() => getHistory(dataset, name), [dataset, name]);
+  const shown = useMemo(() => history.slice(0, limit), [history, limit]);
+  const shownIds = useMemo(() => shown.map((session) => session.workoutId), [shown]);
+  const records = useRecordsByWorkout(dataset, name, shownIds);
   if (!history.length)
     return (
       <EmptyState
@@ -115,69 +141,104 @@ function HistoryTab({
     );
   return (
     <div className='flex flex-col gap-3'>
-      {history.slice(0, limit).map((session, i) => (
-        <article
-          className='session-card min-w-0 rounded-card border border-border bg-card'
-          key={`${session.workoutId}-${i}`}
-        >
-          <header>
-            <Button
-              variant='ghost'
-              className='w-full justify-between gap-3 rounded-t-[calc(var(--radius-card)-1px)] rounded-b-none px-4 py-3 text-left text-foreground'
-              aria-label={`View source workout ${session.workoutName} ${dateLabel(session.date)}`}
-              onClick={(event) => onSource(session.workoutId, event.currentTarget)}
-            >
-              <span className='min-w-0'>
-                <span
-                  role='heading'
-                  aria-level={3}
-                  className='block text-[16px] font-semibold tabular-nums'
-                >
-                  {dateLabel(session.date)}
-                </span>
-                <span className='mt-0.5 block text-[12px] font-normal wrap-anywhere text-muted-foreground'>
+      {shown.map((session, i) => {
+        const kinds =
+          shown[i - 1]?.workoutId === session.workoutId
+            ? undefined
+            : records.get(session.workoutId);
+        return (
+          <article
+            className='session-card relative min-w-0 rounded-card border border-border bg-card px-4 pt-3 pb-1'
+            key={`${session.workoutId}-${i}`}
+          >
+            <header className='flex items-start gap-3'>
+              <span className='min-w-0 flex-1'>
+                <h3 className='text-card-title tabular-nums'>{dateLabel(session.date)}</h3>
+                <span className='mt-0.5 block text-[12px] wrap-anywhere text-muted-foreground'>
                   {session.workoutName} · {plural(session.sets.length, 'set')}
                 </span>
+                {kinds && (
+                  <span className='mt-1 flex items-start gap-1 text-[12px] text-pretty text-primary'>
+                    <Trophy
+                      size={14}
+                      className='mt-px shrink-0'
+                      aria-label='Personal records'
+                      role='img'
+                    />
+                    <span>{kinds.map((record) => recordKindLabel[record.kind]).join(', ')}</span>
+                  </span>
+                )}
               </span>
-              <ArrowUpRight size={16} className='shrink-0 text-muted-foreground' />
-            </Button>
-          </header>
-          <div className='border-t border-border px-4 pb-2'>
-            <div className='flex justify-between gap-3 py-2'>
-              <span className={sessionHeadClass}>Sets performed</span>
-              {session.type === 'weighted' && (
-                <span className={cn(sessionHeadClass, 'text-right')}>Epley est. 1RM</span>
-              )}
-            </div>
-            <ol aria-label='Sets performed' className='m-0 list-none p-0'>
-              {session.sets.map((set, j) => {
-                const e1rm = estimate1RM(set, session.type);
-                const actual = setText(set, session.type);
-                return (
-                  <li
-                    key={set.id}
-                    className='session-set flex min-h-10 items-baseline gap-3 py-2 tabular-nums'
-                  >
-                    <span className='w-5 shrink-0 text-[12px] text-muted-foreground'>{j + 1} </span>
-                    <span className='min-w-0 flex-1 text-[16px] font-medium wrap-anywhere'>
-                      <Spoken value={actual} />{' '}
-                    </span>
-                    {session.type === 'weighted' && (
-                      <span className='max-w-[35%] text-right text-[12px] wrap-anywhere text-muted-foreground'>
-                        {e1rm === null ? '—' : kg(e1rm)}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        </article>
-      ))}
+              {/* The whole card opens the workout; the table stays plain text for reading. */}
+              <button
+                type='button'
+                className='session-source -mr-3.5 flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-1 focus-visible:after:outline-ring'
+                aria-label={`View source workout ${session.workoutName} ${dateLabel(session.date)}`}
+                onClick={(event) => onSource(session.workoutId, event.currentTarget)}
+              >
+                <ChevronRight size={16} aria-hidden />
+              </button>
+            </header>
+            <RecordedSets sets={session.sets} type={session.type} className='mt-2' />
+          </article>
+        );
+      })}
       {history.length > limit && (
         <Button onClick={() => setLimit((n) => n + 20)}>Show more sessions</Button>
       )}
+      {history.some((session) => session.type === 'weighted') && (
+        <p className='text-[12px] text-muted-foreground'>
+          Est. 1RM uses the Epley formula, for weighted sets of 1–10 reps.
+        </p>
+      )}
     </div>
+  );
+}
+
+const sectionHeadingClass =
+  'mb-2 flex min-h-6 items-center justify-between gap-2 text-[14px] font-semibold';
+const sourceRowClass =
+  'pressable grid min-h-14 w-full items-center gap-3 py-2.5 text-left text-foreground hover:bg-accent focus-visible:-outline-offset-2';
+
+type Source = {workoutId: string; workoutName: string; date: string};
+
+/** One record: what it is, its value large, then where it came from. Opens its workout. */
+function RecordRow({
+  label,
+  value,
+  spoken,
+  detail,
+  source,
+  onSource,
+}: {
+  label: string;
+  value: ReactNode;
+  /** The value as read aloud, when it differs from its text. */
+  spoken: string;
+  /** The actual set behind a computed value. */
+  detail?: SetText;
+  source: Source;
+  onSource: (id: string, opener: HTMLElement) => void;
+}) {
+  return (
+    <li>
+      <button
+        type='button'
+        className={cn(sourceRowClass, 'grid-cols-[minmax(0,1fr)_16px]')}
+        aria-label={`View source workout for ${label}: ${spoken}${detail ? `, from ${detail.spoken ?? detail.text}` : ''}, ${dateLabel(source.date)}, ${source.workoutName}`}
+        onClick={(event) => onSource(source.workoutId, event.currentTarget)}
+      >
+        <span className='min-w-0'>
+          <span className='block text-[12px] text-muted-foreground'>{label}</span>
+          <strong className='mt-0.5 block text-set-value tabular-nums'>{value}</strong>
+          <span className='mt-0.5 block text-[12px] wrap-anywhere text-muted-foreground'>
+            {detail && <span className='tabular-nums'>from {detail.text} · </span>}
+            <span className='tabular-nums'>{dateLabel(source.date)}</span> · {source.workoutName}
+          </span>
+        </span>
+        <ChevronRight aria-hidden className='size-4 text-muted-foreground' />
+      </button>
+    </li>
   );
 }
 
@@ -194,51 +255,8 @@ function RecordsTab({
 }) {
   const records = useMemo(() => getRecords(dataset, name), [dataset, name]);
   const history = useMemo(() => getHistory(dataset, name), [dataset, name]);
-  type Entry = {
-    value: number;
-    set?: SetRecord;
-    workoutId: string;
-    workoutName: string;
-    date: string;
-  };
-  const row = (
-    label: string,
-    entry: Entry | null,
-    format: (value: number) => string,
-    showSet = true,
-  ) => {
-    if (!entry) return null;
-    const value = format(entry.value);
-    const set = entry.set;
-    const type = set && history.find((session) => session.sets.includes(set))?.type;
-    const actual = set && type ? setText(set, type) : null;
-    return (
-      <li key={label}>
-        <Button
-          variant='ghost'
-          className='w-full justify-between gap-3 px-0 py-3 text-left text-foreground'
-          aria-label={`View source workout for ${label}: ${value}${showSet && actual ? `, ${actual.spoken ?? actual.text}` : ''}, ${dateLabel(entry.date)}, ${entry.workoutName}`}
-          onClick={(event) => onSource(entry.workoutId, event.currentTarget)}
-        >
-          <span className='min-w-0 flex-1'>
-            <span className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1'>
-              <span className='text-[14px] font-medium'>{label}</span>
-              <strong className='text-[18px] font-semibold tabular-nums'>{value}</strong>
-            </span>
-            {showSet && actual && (
-              <span className='mt-1 block text-[14px] font-normal tabular-nums'>
-                <Spoken value={actual} />
-              </span>
-            )}
-            <span className='mt-1 block text-[12px] font-normal wrap-anywhere text-muted-foreground'>
-              <span className='tabular-nums'>{dateLabel(entry.date)}</span> · {entry.workoutName}
-            </span>
-          </span>
-          <ArrowUpRight size={16} className='shrink-0 text-muted-foreground' />
-        </Button>
-      </li>
-    );
-  };
+  const typeOf = (set: SetRecord) =>
+    history.find((session) => session.sets.includes(set))?.type ?? 'weighted';
   if (
     !records.heaviest &&
     !records.leastAssistance &&
@@ -256,61 +274,134 @@ function RecordsTab({
         framed={framed}
       />
     );
-  const actualRecords = [
-    row('Heaviest weight', records.heaviest, kg),
-    row('Least assistance', records.leastAssistance, kg),
+  const setRow = (label: string, entry: (Source & {set: SetRecord}) | null) => {
+    if (!entry) return null;
+    const actual = setText(entry.set, typeOf(entry.set));
+    return (
+      <RecordRow
+        key={label}
+        label={label}
+        value={<Spoken value={actual} />}
+        spoken={actual.spoken ?? actual.text}
+        source={entry}
+        onSource={onSource}
+      />
+    );
+  };
+  const mostReps = records.mostReps;
+  const mostRepsSet = mostReps && setText(mostReps.set, typeOf(mostReps.set));
+  const best = [
+    setRow('Heaviest weight', records.heaviest),
+    setRow('Least assistance', records.leastAssistance),
+    mostReps && mostRepsSet && (
+      <RecordRow
+        key='Most reps'
+        label='Most reps'
+        value={plural(mostReps.value, 'rep')}
+        spoken={plural(mostReps.value, 'rep')}
+        // A bodyweight set is just its reps; a loaded one names the weight it was done with.
+        detail={mostRepsSet.text === plural(mostReps.value, 'rep') ? undefined : mostRepsSet}
+        source={mostReps}
+        onSource={onSource}
+      />
+    ),
   ].filter(Boolean);
-  const otherRecords = [
-    row('Most reps in a set', records.mostReps, (value) => `${value} reps`),
-    row('Best set volume', records.bestSetVolume, kgReps),
-    row('Best session volume', records.sessionVolume, kgReps),
+  const volume = [
+    records.bestSetVolume && (
+      <RecordRow
+        key='Best set'
+        label='Best set'
+        value={kg(records.bestSetVolume.value)}
+        spoken={kg(records.bestSetVolume.value)}
+        detail={setText(records.bestSetVolume.set, typeOf(records.bestSetVolume.set))}
+        source={records.bestSetVolume}
+        onSource={onSource}
+      />
+    ),
+    records.sessionVolume && (
+      <RecordRow
+        key='Best session'
+        label='Best session'
+        value={kg(records.sessionVolume.value)}
+        spoken={kg(records.sessionVolume.value)}
+        source={records.sessionVolume}
+        onSource={onSource}
+      />
+    ),
   ].filter(Boolean);
   return (
-    <div className='records min-w-0 space-y-7'>
-      {actualRecords.length > 0 && (
+    <div className='records min-w-0 space-y-6'>
+      {best.length > 0 && (
         <section>
-          <h3 className='mb-1 text-[16px] font-semibold'>Recorded performance</h3>
-          <ul
-            className='m-0 list-none divide-y divide-border p-0'
-            aria-label='Recorded performance'
-          >
-            {actualRecords}
+          <h3 className={sectionHeadingClass}>Best sets</h3>
+          <ul className='divide-y divide-border border-y border-border' aria-label='Best sets'>
+            {best}
           </ul>
         </section>
       )}
       {records.repBests.length > 0 && (
         <section>
-          <h3 className='mb-1 text-[16px] font-semibold'>Heaviest weight by reps</h3>
+          <h3 className={sectionHeadingClass}>Heaviest weight for each rep count</h3>
           <ul
-            className='m-0 list-none divide-y divide-border p-0'
-            aria-label='Heaviest weight by reps'
+            className='divide-y divide-border border-y border-border'
+            aria-label='Heaviest weight for each rep count'
           >
-            {records.repBests.map((best) =>
-              row(plural(best.reps, 'rep'), best, () => setText(best.set, 'weighted').text, false),
-            )}
+            {records.repBests.map((entry) => (
+              <li key={entry.reps}>
+                <button
+                  type='button'
+                  className={cn(
+                    sourceRowClass,
+                    'min-h-12 grid-cols-[4.5rem_minmax(0,1fr)_auto_16px] py-2',
+                  )}
+                  aria-label={`View source workout for ${plural(entry.reps, 'rep')}: ${`${chartNumber(entry.value)} kg`}, ${dateLabel(entry.date)}, ${entry.workoutName}`}
+                  onClick={(event) => onSource(entry.workoutId, event.currentTarget)}
+                >
+                  <span className='text-[14px] text-muted-foreground tabular-nums'>
+                    {plural(entry.reps, 'rep')}
+                  </span>
+                  <strong className='text-[16px] font-semibold tabular-nums'>
+                    {`${chartNumber(entry.value)} kg`}
+                  </strong>
+                  <span className='text-[12px] text-muted-foreground tabular-nums'>
+                    {dateLabel(entry.date)}
+                  </span>
+                  <ChevronRight aria-hidden className='size-4 text-muted-foreground' />
+                </button>
+              </li>
+            ))}
           </ul>
         </section>
       )}
-      {otherRecords.length > 0 && (
+      {volume.length > 0 && (
         <section>
-          <h3 className='mb-1 text-[16px] font-semibold'>
-            {actualRecords.length ? 'Other records' : 'Recorded performance'}
-          </h3>
-          <ul className='m-0 list-none divide-y divide-border p-0' aria-label='Other records'>
-            {otherRecords}
+          <h3 className={sectionHeadingClass}>Volume (weight × reps)</h3>
+          <ul className='divide-y divide-border border-y border-border' aria-label='Volume'>
+            {volume}
           </ul>
         </section>
       )}
       {records.estimated && (
         <section>
-          <h3 className='mb-1 text-[16px] font-semibold'>Estimated strength</h3>
-          <ul className='m-0 list-none p-0'>
-            {row('Estimated 1RM (Epley)', records.estimated, kg)}
+          <div className={sectionHeadingClass}>
+            <h3 className='text-[14px]'>Estimated</h3>
+            <InfoButton title='Estimated 1RM' label='About Est. 1RM' className='-my-3 -mr-3'>
+              <InfoTerm term='Est. 1RM (Epley)'>
+                An estimate of the most you could lift once: weight × (1 + reps ÷ 30), from your
+                best weighted set of 1–10 reps. A single rep counts as lifted.
+              </InfoTerm>
+            </InfoButton>
+          </div>
+          <ul className='border-y border-border' aria-label='Estimated'>
+            <RecordRow
+              label='Est. 1RM (Epley)'
+              value={kg(records.estimated.value)}
+              spoken={kg(records.estimated.value)}
+              detail={setText(records.estimated.set, 'weighted')}
+              source={records.estimated}
+              onSource={onSource}
+            />
           </ul>
-          <MetricExplanation>
-            Epley estimate: weight × (1 + reps / 30), for weighted sets of 1–10 reps. One rep uses
-            recorded weight. An estimate, not a tested maximum.
-          </MetricExplanation>
         </section>
       )}
     </div>

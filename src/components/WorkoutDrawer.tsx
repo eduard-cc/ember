@@ -8,18 +8,17 @@ import {
   recordsAt,
   workoutVolume,
 } from '../domain/finish-summary';
-import {estimate1RM} from '../domain/model';
 import {setCount} from '../domain/sets';
-import type {Dataset, ExerciseType, Workout} from '../domain/types';
+import type {Dataset, Workout} from '../domain/types';
 import {durationLabel} from '../domain/workout-duration';
 import {useBackLayer} from '../state/back';
 import {dateLabel, fullDateTime} from '../utils/date';
 import {plural} from '../utils/plural';
-import {setText} from '../utils/set-label';
 import {OptionsMenu} from './ExerciseMenu';
 import {ExerciseThumb} from './ExerciseThumb';
 import {HistoryEditor} from './HistoryEditor';
-import {Spoken, Stat} from './exercise-line';
+import {Stat} from './exercise-line';
+import {RecordedSets} from './recorded-sets';
 import {Button} from './ui/button';
 import {DialogActions} from './ui/dialog';
 import {
@@ -62,14 +61,6 @@ export function WorkoutStats({
   );
 }
 
-const valueHeading: Record<ExerciseType, string> = {
-  weighted: 'Weight × reps',
-  assisted: 'Assistance × reps',
-  bodyweight: 'Reps',
-  duration: 'Time',
-  cardio: 'Distance · time',
-};
-
 /** Every set of every exercise, with its records and the bounded estimate for weighted work. */
 function WorkoutSets({workout, records}: {workout: Workout; records: PersonalRecord[]}) {
   return (
@@ -78,7 +69,6 @@ function WorkoutSets({workout, records}: {workout: Workout; records: PersonalRec
         const kinds = records
           .filter((record) => record.exercise === exercise.name)
           .sort((a, b) => recordKinds.indexOf(a.kind) - recordKinds.indexOf(b.kind));
-        const weighted = exercise.type === 'weighted';
         return (
           <section key={i} className='border-b border-border py-4 last:border-b-0'>
             <div className='flex items-center gap-3'>
@@ -100,41 +90,7 @@ function WorkoutSets({workout, records}: {workout: Workout; records: PersonalRec
                 )}
               </div>
             </div>
-            <table className='recorded-sets mt-2 w-full text-sm tabular-nums'>
-              <thead>
-                <tr className='text-[11px] text-muted-foreground'>
-                  <th scope='col' className='w-12 py-1.5 text-left font-normal'>
-                    Set
-                  </th>
-                  <th scope='col' className='py-1.5 text-left font-normal'>
-                    {valueHeading[exercise.type]}
-                  </th>
-                  {weighted && (
-                    <th scope='col' className='py-1.5 text-right font-normal'>
-                      Est. 1RM
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {exercise.sets.map((set, j) => {
-                  const estimate = weighted ? estimate1RM(set, exercise.type) : null;
-                  return (
-                    <tr key={set.id} className='border-t border-border'>
-                      <td className='h-10 text-muted-foreground'>{j + 1}</td>
-                      <td className='font-semibold [overflow-wrap:anywhere]'>
-                        <Spoken value={setText(set, exercise.type)} />
-                      </td>
-                      {weighted && (
-                        <td className='text-right text-muted-foreground'>
-                          {estimate === null ? '—' : `${Number(estimate.toFixed(1))} kg`}
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <RecordedSets sets={exercise.sets} type={exercise.type} className='mt-2' />
           </section>
         );
       })}

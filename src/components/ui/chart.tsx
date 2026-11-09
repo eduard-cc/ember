@@ -121,15 +121,6 @@ function ChartTooltip(props: React.ComponentProps<typeof RechartsPrimitive.Toolt
 
 export {ChartContainer, ChartStyle, ChartTooltip};
 
-/** The shaded note under a chart or record list that says what the number does and does not mean. */
-export function MetricExplanation({children}: {children: ReactNode}) {
-  return (
-    <p className='metric-explanation mt-4 rounded-md bg-accent p-3 text-[12px] text-foreground'>
-      {children}
-    </p>
-  );
-}
-
 /** The note that stands in for a chart with nothing to plot. Pass the vertical padding to change it. */
 export function EmptyChart({className, children}: {className?: string; children: ReactNode}) {
   return <div className={cn('py-10 text-center', className)}>{children}</div>;
