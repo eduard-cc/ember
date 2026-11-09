@@ -9,7 +9,7 @@ import {
   User,
   X,
 } from 'lucide-react';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 import type {BodyPart} from './catalog/catalog';
 import {AddExercise} from './components/AddExercise';
@@ -130,6 +130,12 @@ export default function App() {
     saveStatus === 'saved',
   );
   const [view, setView] = useState<View>('Workout');
+  // The library shares one scroller across tabs: a tab opens at its top, not at the last tab's
+  // offset (a Profile body-part row would otherwise land deep in Exercises).
+  const libraryScroll = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (libraryScroll.current) libraryScroll.current.scrollTop = 0;
+  }, [view]);
   const [exercise, setExercise] = useState<string | null>(null);
   // A Profile body-part row opens Exercises filtered to it.
   const [exercisePart, setExercisePart] = useState<BodyPart | null>(null);
@@ -426,7 +432,10 @@ export default function App() {
           </header>
           {/* Pinned under the status bar (the app bar on desktop); the title still scrolls. */}
           {pageConditions && <StatusStrips />}
-          <div className='library-scroll min-h-0 flex-1 overflow-auto overscroll-contain px-8 pt-6.5 pb-10 max-desk:px-4.5 max-desk:pt-6 max-desk:pb-7.5'>
+          <div
+            ref={libraryScroll}
+            className='library-scroll min-h-0 flex-1 overflow-auto overscroll-contain px-8 pt-6.5 pb-10 max-desk:px-4.5 max-desk:pt-6 max-desk:pb-7.5'
+          >
             {/* The title row sits outside the content fieldset, so the Profile cog (the phone entry
                 to Settings; desktop has the header gear) also works while edits are disabled. The
                 negative margins keep the 44px target from growing the 32px title row. */}

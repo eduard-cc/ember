@@ -226,7 +226,7 @@ export function TemplatesView({
 
       <ResponsiveDialog open={!!preview} onOpenChange={(open) => !open && setPreviewId(null)}>
         <ResponsiveDialogContent
-          className='template-preview max-desk:max-h-[calc(100dvh-2.5rem)] desk:flex desk:flex-col'
+          className='template-preview max-desk:max-h-[calc(var(--visible-height,100dvh)-2.5rem)] desk:flex desk:flex-col'
           onCloseAutoFocus={(event: Event) => {
             event.preventDefault();
             // Start hands focus to the logger; otherwise it returns to the card.

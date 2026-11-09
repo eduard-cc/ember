@@ -132,7 +132,7 @@ export function PreviousSet({
             )}
           </button>
         </ResponsiveDialogTrigger>
-        <ResponsiveDialogContent className='source-dialog max-desk:max-h-[calc(100dvh-2.5rem)] desk:flex desk:flex-col'>
+        <ResponsiveDialogContent className='source-dialog max-desk:max-h-[calc(var(--visible-height,100dvh)-2.5rem)] desk:flex desk:flex-col'>
           <ResponsiveDialogHeader className='shrink-0 border-b border-border pr-14 pb-3 text-left desk:pr-7'>
             <ResponsiveDialogTitle className='[overflow-wrap:anywhere]'>
               {exercise.name}

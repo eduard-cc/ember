@@ -182,7 +182,6 @@ test("a source link opens a workout's drawer with every set, its records and bou
   await expect(press.getByRole('row').nth(1)).toHaveText('1100 kg × 12—');
   await expect(press.getByRole('row').nth(2)).toHaveText('21250 kg × 11250 kg');
   await expect(press.getByRole('row').nth(3)).toHaveText('3100 kg × 8126.7 kg');
-  await expect(drawer).toContainText('Est. 1RM uses the Epley formula');
   const assisted = drawer.locator('section').nth(1);
   await expect(assisted.getByRole('columnheader')).toHaveText(['Set', 'Assistance × reps']);
   await drawer.getByRole('button', {name: 'Close workout'}).click();

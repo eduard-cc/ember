@@ -11,6 +11,7 @@ import {
   sortedMeasurements,
   toLocalInput,
 } from '../domain/body-weight';
+import {useIsMobile} from '../hooks/use-is-mobile';
 import {useBackLayer} from '../state/back';
 import type {WorkoutRepository} from '../storage/repository';
 import {cn} from '../utils/cn';
@@ -141,6 +142,7 @@ export function BodyWeight({
 }) {
   const [stored, setStored] = useState<BodyWeight[] | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
+  const mobile = useIsMobile();
   const [shown, setShown] = useState<Editing | null>(null);
   if (editing && editing !== shown) setShown(editing);
   const [error, setError] = useState('');
@@ -424,7 +426,10 @@ export function BodyWeight({
           aria-describedby={undefined}
           onOpenAutoFocus={(event) => {
             event.preventDefault();
-            kgRef.current?.focus();
+            // A new entry starts typing; on phones an existing one opens without the keyboard,
+            // so Delete entry stays in view.
+            if (editing?.base && mobile) (event.currentTarget as HTMLElement | null)?.focus();
+            else kgRef.current?.focus();
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();

@@ -181,22 +181,7 @@ function EveryWeek({
     );
   return (
     <Card as='section' className='grid gap-4'>
-      <header className='flex items-center justify-between gap-2'>
-        <h2 className='text-card-title'>Every week</h2>
-        <InfoButton title='Every week' label='About Every week' className='-my-2 -mr-3 shrink-0'>
-          <InfoTerm term='Usual'>
-            The middle value of the full weeks before last week in the chosen range, counted from
-            your first workout. Shown as the dashed line.
-          </InfoTerm>
-          <InfoTerm term='So far'>The striped bar is this week, still running.</InfoTerm>
-          <InfoTerm term='Volume'>
-            Recorded load × reps of weighted sets; dumbbell load is per dumbbell. It is not a
-            measure of strength or muscle growth.
-          </InfoTerm>
-          <InfoTerm term='Time'>Recorded workout minutes; unknown durations add nothing.</InfoTerm>
-          <InfoTerm term='Inspect a week'>Hold and slide along the chart.</InfoTerm>
-        </InfoButton>
-      </header>
+      <h2 className='text-card-title'>Every week</h2>
       <SegmentToggle
         value={metric}
         onChange={(next) => {

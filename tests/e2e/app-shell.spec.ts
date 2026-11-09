@@ -255,12 +255,16 @@ test('Profile weeks, records and body parts open their sources', async ({page}) 
   await page.goBack();
   await expect(exercise).toBeHidden();
   await expect(page.locator('.library-scroll h1')).toHaveText('Profile');
-  // A body part opens Exercises filtered to it.
-  await page
+  // A body part opens Exercises filtered to it, at the top of the list.
+  const scroller = page.locator('.library-scroll');
+  const chest = page
     .getByRole('list', {name: 'Sets per body part'})
-    .getByRole('button', {name: /^Chest: /})
-    .click();
+    .getByRole('button', {name: /^Chest: /});
+  await chest.scrollIntoViewIfNeeded();
+  expect(await scroller.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  await chest.click();
   await expect(page.locator('.library-scroll h1')).toHaveText('Exercises');
+  expect(await scroller.evaluate((el) => el.scrollTop)).toBe(0);
   await expect(
     page.getByRole('group', {name: 'Body part'}).getByRole('button', {name: 'Chest'}),
   ).toHaveAttribute('aria-pressed', 'true');

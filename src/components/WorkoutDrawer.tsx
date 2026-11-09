@@ -94,11 +94,6 @@ function WorkoutSets({workout, records}: {workout: Workout; records: PersonalRec
           </section>
         );
       })}
-      {workout.exercises.some((exercise) => exercise.type === 'weighted') && (
-        <p className='pb-4 text-[12px]'>
-          Est. 1RM uses the Epley formula and is shown for weighted sets of 1–10 reps.
-        </p>
-      )}
     </>
   );
 }
@@ -184,7 +179,7 @@ export function WorkoutDrawer({
         }}
       >
         <ResponsiveDialogContent
-          className='workout-drawer max-desk:max-h-[calc(100dvh-2.5rem)] desk:flex desk:flex-col'
+          className='workout-drawer max-desk:max-h-[calc(var(--visible-height,100dvh)-2.5rem)] desk:flex desk:flex-col'
           onCloseAutoFocus={(event: Event) => {
             event.preventDefault();
             if (handedOff.current) handedOff.current = false;

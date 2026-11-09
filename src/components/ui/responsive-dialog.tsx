@@ -65,7 +65,12 @@ const ResponsiveDialog = ({children, dismissible = true, ...props}: RootResponsi
 
   return (
     <ResponsiveDialogContext.Provider value={{isDesktop}}>
-      <ResponsiveDialog {...props} {...(!isDesktop && {autoFocus: true, dismissible})}>
+      <ResponsiveDialog
+        {...props}
+        // Ember: the phone drawer follows the keyboard itself (ResponsiveDialogContent); vaul's
+        // own repositioning keeps a stretched height after the keyboard hides with focus kept.
+        {...(!isDesktop && {autoFocus: true, dismissible, repositionInputs: false})}
+      >
         {children}
       </ResponsiveDialog>
     </ResponsiveDialogContext.Provider>
@@ -114,12 +119,37 @@ const keepOpenForToasts = (event: {target: EventTarget | null; preventDefault: (
 const ResponsiveDialogContent = ({className, children, ...props}: ResponsiveDialogProps) => {
   const {isDesktop} = useResponsiveDialogContext();
   const ResponsiveDialogContent = isDesktop ? DialogContent : DrawerContent;
+  // Ember: on phones the drawer ends where the on-screen keyboard begins and fits the visible
+  // height, then returns to its own size when the keyboard goes, even if a field keeps focus.
+  const [drawer, setDrawer] = React.useState<HTMLElement | null>(null);
+  React.useEffect(() => {
+    const viewport = window.visualViewport;
+    if (isDesktop || !drawer || !viewport) return;
+    const fit = () => {
+      // Against the layout height: some phones report the visible height as innerHeight too.
+      const layout = document.documentElement.clientHeight;
+      const covered = Math.max(0, layout - viewport.height - viewport.offsetTop);
+      drawer.style.setProperty('--keyboard-inset', `${covered}px`);
+      drawer.style.setProperty('--visible-height', `${viewport.height}px`);
+    };
+    fit();
+    viewport.addEventListener('resize', fit);
+    viewport.addEventListener('scroll', fit);
+    return () => {
+      viewport.removeEventListener('resize', fit);
+      viewport.removeEventListener('scroll', fit);
+    };
+  }, [isDesktop, drawer]);
 
   return (
     <ResponsiveDialogContent
-      className={className}
+      className={cn(
+        !isDesktop &&
+          'bottom-[var(--keyboard-inset,0px)] max-h-[calc(var(--visible-height,100dvh)-1rem)]',
+        className,
+      )}
       onInteractOutside={keepOpenForToasts}
-      {...(isDesktop && {motion: true})}
+      {...(isDesktop ? {motion: true} : {ref: setDrawer})}
       {...props}
     >
       {children}

@@ -417,6 +417,79 @@ test('phone editors give the native date and time a full-width row', async ({pag
   }
 });
 
+test('the phone form opens an entry without the keyboard and stays above it, then fits again', async ({
+  page,
+}) => {
+  // A stand-in visual viewport: the on-screen keyboard covers its bottom without the layout
+  // viewport changing, and can go away while the field keeps focus (a back swipe).
+  await page.addInitScript(() => {
+    let keyboard = 0;
+    const layout = () => document.documentElement.clientHeight;
+    const viewport = new EventTarget();
+    // Chrome on Android reports the visible height as innerHeight too, so innerHeight minus the
+    // visual viewport never shows the keyboard.
+    Object.defineProperty(window, 'innerHeight', {
+      configurable: true,
+      get: () => layout() - keyboard,
+    });
+    Object.defineProperties(viewport, {
+      height: {get: () => layout() - keyboard},
+      width: {get: () => window.innerWidth},
+      offsetTop: {get: () => 0},
+      offsetLeft: {get: () => 0},
+      pageTop: {get: () => window.scrollY},
+      pageLeft: {get: () => window.scrollX},
+      scale: {get: () => 1},
+    });
+    Object.defineProperty(window, 'visualViewport', {configurable: true, get: () => viewport});
+    // Keyboards slide: the viewport changes in small steps, one resize event each.
+    (window as unknown as {keyboard: (px: number) => void}).keyboard = (px) => {
+      while (keyboard !== px) {
+        keyboard += Math.max(-40, Math.min(40, px - keyboard));
+        viewport.dispatchEvent(new Event('resize'));
+      }
+    };
+  });
+  const keyboard = (px: number) =>
+    page.evaluate((px) => (window as unknown as {keyboard: (px: number) => void}).keyboard(px), px);
+  await page.setViewportSize({width: 412, height: 915});
+  await page.goto('/');
+  const section = await open(page);
+  await add(section, '80.5', '2026-01-02T08:00');
+  await section.getByRole('button', {name: /Edit entry/}).click();
+  const editor = page.locator('.body-weight-editor');
+  await editor.evaluate(async (el) => {
+    await Promise.all(el.getAnimations().map((a) => a.finished));
+  });
+  // Opening an entry raises no keyboard, so Delete entry is in view.
+  const kg = page.getByLabel('Weight in kg', {exact: true});
+  await expect(kg).not.toBeFocused();
+  const remove = editor.getByRole('button', {name: 'Delete entry', exact: true});
+  await expect(remove).toBeInViewport({ratio: 1});
+  const natural = (await editor.boundingBox())!;
+  expect(natural.y + natural.height).toBeCloseTo(915, 0);
+  // With the keyboard up the drawer ends at its top edge and scrolls to Delete entry.
+  await kg.focus();
+  await keyboard(400);
+  await expect
+    .poll(async () =>
+      Math.round((await editor.boundingBox())!.y + (await editor.boundingBox())!.height),
+    )
+    .toBeLessThanOrEqual(515);
+  await remove.scrollIntoViewIfNeeded();
+  const raised = (await remove.boundingBox())!;
+  expect(raised.y + raised.height).toBeLessThanOrEqual(515);
+  // The keyboard goes while the field keeps focus: the drawer returns to its own height.
+  await keyboard(0);
+  await expect(kg).toBeFocused();
+  await expect
+    .poll(async () => {
+      const box = (await editor.boundingBox())!;
+      return [Math.round(box.y + box.height), Math.round(box.height)];
+    })
+    .toEqual([915, Math.round(natural.height)]);
+});
+
 test('read-only follower tabs show entries but cannot change them', async ({page, context}) => {
   await page.goto('/');
   await add(await open(page), '80.5', '2022-02-02T08:00');
