@@ -196,14 +196,14 @@ export function ExerciseList({
         {sortable && (
           <div className='mt-3 flex items-center justify-between gap-3'>
             <div
-              className='inline-flex border border-border bg-card'
+              className='inline-flex rounded-md border border-border bg-card'
               role='group'
               aria-label='Sort exercises'
             >
               {sortOptions.map(([value, label]) => (
                 <button
                   key={value}
-                  className='min-h-11 min-w-16 border-0 bg-transparent px-3 text-xs font-medium text-muted-foreground not-first:border-l not-first:border-l-border hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground'
+                  className='min-h-11 min-w-16 border-0 bg-transparent px-3 text-xs font-medium text-muted-foreground not-first:border-l not-first:border-l-border first:rounded-l-md last:rounded-r-md hover:bg-accent aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-secondary-foreground'
                   aria-pressed={sort === value}
                   onClick={() => {
                     setSort(value);

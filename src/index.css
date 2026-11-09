@@ -10,7 +10,8 @@
 @custom-variant logger-open (.workspace:has(.workout-sheet:not([hidden])) &);
 
 :root {
-  --radius: 0;
+  --radius: 0.5rem;
+  --card-radius: 0.75rem;
   --background: 38.6 43.8% 93.7%;
   --foreground: 270 7.5% 15.7%;
   --card: 42 55.6% 96.5%;
@@ -138,10 +139,11 @@
   --text-stat--font-weight: 600;
   --text-stat--letter-spacing: -0.02em;
 
-  /* The radius scale on Ember's 0 radius, so copied `rounded-md` corners stay square. */
+  /* Radius scale: controls `rounded-md` (6px), menu items `rounded-sm` (4px), surfaces `rounded-card` (12px). */
   --radius-lg: var(--radius);
   --radius-md: max(0px, calc(var(--radius) - 2px));
   --radius-sm: max(0px, calc(var(--radius) - 4px));
+  --radius-card: var(--card-radius);
 
   /* Motion curves: strong ease-out for UI, ease-in-out for on-screen moves, iOS drawer. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);

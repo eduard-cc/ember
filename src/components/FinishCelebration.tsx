@@ -80,10 +80,10 @@ function RecordRow({records, delay}: {records: PersonalRecord[]; delay: number})
   const lead = sorted[0];
   return (
     <li
-      className='celebrate-rise flex items-center gap-3 border border-border bg-card p-3'
+      className='celebrate-rise flex items-center gap-3 rounded-card border border-border bg-card p-3'
       style={{animationDelay: `${delay}ms`}}
     >
-      <span className='grid size-10 shrink-0 place-items-center bg-primary-tint text-primary'>
+      <span className='grid size-10 shrink-0 place-items-center rounded-md bg-primary-tint text-primary'>
         <Trophy size={20} aria-hidden='true' />
       </span>
       <div className='min-w-0 flex-1'>

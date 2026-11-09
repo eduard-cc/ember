@@ -195,7 +195,7 @@ export const OptionsMenu = forwardRef<
           aria-label={label}
           // Focusable, so a press on its padding keeps focus inside instead of closing it.
           tabIndex={-1}
-          className='exercise-menu-list absolute top-[calc(100%+4px)] right-0 z-20 flex min-w-[208px] flex-col border border-border bg-card p-1 [box-shadow:var(--shadow)] data-[side=top]:top-auto data-[side=top]:bottom-[calc(100%+4px)]'
+          className='exercise-menu-list absolute top-[calc(100%+4px)] right-0 z-20 flex min-w-[208px] flex-col rounded-md border border-border bg-card p-1 [box-shadow:var(--shadow)] data-[side=top]:top-auto data-[side=top]:bottom-[calc(100%+4px)]'
           data-side={upward ? 'top' : 'bottom'}
           onKeyDown={onMenuKey}
         >
@@ -206,7 +206,7 @@ export const OptionsMenu = forwardRef<
               role='menuitem'
               tabIndex={-1}
               className={cn(
-                'flex min-h-11 items-center gap-2.5 bg-transparent px-3 text-left text-[14px] font-medium transition-[background] duration-[120ms] ease-[ease] hover:bg-accent focus-visible:outline-offset-[-2px]',
+                'flex min-h-11 items-center gap-2.5 rounded-sm bg-transparent px-3 text-left text-[14px] font-medium transition-[background] duration-[120ms] ease-[ease] hover:bg-accent focus-visible:outline-offset-[-2px]',
                 danger && 'exercise-menu-danger text-destructive',
               )}
               onClick={() => choose(onSelect)}

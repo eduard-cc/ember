@@ -38,7 +38,7 @@ const dialogContentVariants = cva('fixed z-50 overflow-auto overscroll-contain b
     variant: {
       /** The centred card: confirms, Previous evidence, the template preview. */
       center:
-        'dialog-content top-1/2 left-1/2 max-h-[calc(100dvh-24px)] w-[min(520px,calc(100%-24px))] border border-border px-6 py-7 [box-shadow:var(--shadow)] -translate-x-1/2 -translate-y-1/2',
+        'dialog-content top-1/2 left-1/2 max-h-[calc(100dvh-24px)] w-[min(520px,calc(100%-24px))] rounded-card border border-border px-6 py-7 [box-shadow:var(--shadow)] -translate-x-1/2 -translate-y-1/2',
       /** The side sheet (Settings, the History editor): full screen on phones. */
       panel:
         'settings-panel inset-0 w-full border-0 border-border p-[18px] [box-shadow:var(--shadow)] desk:inset-[16px_16px_16px_auto] desk:w-[min(520px,calc(100%-32px))] desk:border desk:p-6',

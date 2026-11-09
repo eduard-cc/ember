@@ -335,7 +335,7 @@ export function StatusPill({
         type='button'
         onClick={() => setOpen(true)}
         className={cn(
-          'status-pill press-feedback relative inline-flex h-7 max-w-full min-w-0 shrink-0 items-center gap-1.5 border border-border bg-background px-2 text-[12px] font-medium whitespace-nowrap text-muted-foreground tabular-nums hover:text-foreground',
+          'status-pill press-feedback relative inline-flex h-7 max-w-full min-w-0 shrink-0 items-center gap-1.5 rounded-md border border-border bg-background px-2 text-[12px] font-medium whitespace-nowrap text-muted-foreground tabular-nums hover:text-foreground',
           // A 44px target without growing the line it sits on.
           "after:absolute after:-inset-x-1 after:-inset-y-2 after:content-['']",
           className,

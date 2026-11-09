@@ -39,12 +39,12 @@ export function Drawing({file, className}: {file: string; className?: string}) {
   );
 }
 
-/** The square tile every exercise row, heading and picker row sits on. */
+/** The tile every exercise row, heading and picker row sits on. */
 export function ThumbFrame({className, children}: {className?: string; children: ReactNode}) {
   return (
     <span
       className={cn(
-        'exercise-thumb grid size-11 shrink-0 place-items-center overflow-hidden rounded-none bg-accent text-muted-foreground',
+        'exercise-thumb grid size-11 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-muted-foreground',
         className,
       )}
       aria-hidden='true'

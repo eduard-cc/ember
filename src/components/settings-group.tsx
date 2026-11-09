@@ -35,7 +35,7 @@ export function SettingsGroup({
 
 /**
  * Rows of one group share a single bordered surface. `divide-border` and `border-border` are
- * explicit because Ember has no global border-color default; the radius is 0.
+ * explicit because Ember has no global border-color default.
  */
 export function SettingsList({
   as: Tag = 'div',
@@ -44,7 +44,7 @@ export function SettingsList({
 }: HTMLAttributes<HTMLElement> & {as?: 'div' | 'ul'}) {
   return (
     <Tag
-      className={cn('divide-y divide-border border border-border bg-card', className)}
+      className={cn('divide-y divide-border rounded-card border border-border bg-card', className)}
       {...props}
     />
   );

@@ -142,7 +142,7 @@ export function HistoryView({
                 <li key={workout.id} className={cn(focused && 'focused-history')}>
                   <article
                     className={cn(
-                      'history-card pressable relative grid h-full min-w-0 grid-cols-[2.25rem_minmax(0,1fr)] content-start gap-x-3.5 border bg-card p-4 hover:bg-accent/60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring',
+                      'history-card pressable relative grid h-full min-w-0 grid-cols-[2.25rem_minmax(0,1fr)] content-start gap-x-3.5 rounded-card border bg-card p-4 hover:bg-accent/60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring',
                       focused ? 'border-primary' : 'border-border',
                     )}
                   >
@@ -221,7 +221,7 @@ export function HistoryView({
         ))}
       {/* A partial download never reads as a short or empty history. */}
       {downloading && filtered.length <= limit && (
-        <p className='history-downloading flex items-center justify-center gap-2 border border-dashed border-border px-4 py-4 text-center text-[13px] text-muted-foreground'>
+        <p className='history-downloading flex items-center justify-center gap-2 rounded-card border border-dashed border-border px-4 py-4 text-center text-[13px] text-muted-foreground'>
           <Loader size={14} aria-hidden='true' className='shrink-0 motion-safe:animate-slow-spin' />
           {workouts.length
             ? 'Older workouts are still downloading'

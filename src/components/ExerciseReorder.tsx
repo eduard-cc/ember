@@ -409,7 +409,7 @@ export function ReorderList({
       {exercises.map((ex, i) => (
         <li
           key={identity(ex)}
-          className='reorder-row grid min-h-14 grid-cols-[40px_minmax(0,1fr)_auto_18px] items-center gap-3 border py-0 pr-3 pl-2 [-webkit-tap-highlight-color:transparent]'
+          className='reorder-row grid min-h-14 grid-cols-[40px_minmax(0,1fr)_auto_18px] items-center gap-3 rounded-md border py-0 pr-3 pl-2 [-webkit-tap-highlight-color:transparent]'
           data-held={i === from || undefined}
           aria-current={i === from || undefined}
         >

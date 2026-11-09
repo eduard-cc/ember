@@ -29,9 +29,8 @@ export function EmptyState({
     <div
       className={cn(
         'empty-state flex flex-col items-center px-6 text-center',
-        // `rounded-card` is omitted: Ember's radius is 0. `border-border` is explicit
-        // because Ember has no global border-color default.
-        framed ? 'border border-border bg-card py-16' : 'py-10',
+        // `border-border` is explicit because Ember has no global border-color default.
+        framed ? 'rounded-card border border-border bg-card py-16' : 'py-10',
       )}
     >
       {Icon && (

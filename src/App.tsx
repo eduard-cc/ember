@@ -526,7 +526,7 @@ export default function App() {
           </div>
           {state.active && !showSheet && (
             <Button
-              className='resume-bar group min-h-16 w-full shrink-0 justify-start gap-3 border-0 border-t bg-card px-[18px] py-2.5 text-left text-foreground shadow-[inset_3px_0_0_var(--color-primary)]'
+              className='resume-bar group min-h-16 w-full shrink-0 justify-start gap-3 rounded-none border-0 border-t bg-card px-[18px] py-2.5 text-left text-foreground shadow-[inset_3px_0_0_var(--color-primary)]'
               variant='secondary'
               aria-label={`Resume ${state.active.name}`}
               onClick={() => expand(true)}
@@ -693,7 +693,7 @@ export default function App() {
             </div>
           </SectionHeading>
           <DialogDescription srOnly>Appearance, feedback and app updates.</DialogDescription>
-          <StatusStrips className='border' />
+          <StatusStrips className='rounded-card border not-first:mt-2' />
           {sync.locked && <SyncLockedNotice sync={sync} />}
           <div className='mt-5 space-y-10'>
             <AppearanceSettings settings={appearance} />

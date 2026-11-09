@@ -8,7 +8,7 @@ const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>
     <input
       ref={ref}
       className={cn(
-        'input min-h-11 w-full min-w-0 rounded-none border border-border bg-card px-3 py-[9px] text-base disabled:bg-accent [&::-webkit-inner-spin-button]:appearance-none [&[type=number]]:[appearance:textfield] [&[type=number]]:numeric',
+        'input min-h-11 w-full min-w-0 rounded-md border border-border bg-card px-3 py-[9px] text-base disabled:bg-accent [&::-webkit-inner-spin-button]:appearance-none [&[type=number]]:[appearance:textfield] [&[type=number]]:numeric',
         className,
       )}
       {...props}

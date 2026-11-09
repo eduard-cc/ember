@@ -124,7 +124,9 @@ export {ChartContainer, ChartStyle, ChartTooltip};
 /** The shaded note under a chart or record list that says what the number does and does not mean. */
 export function MetricExplanation({children}: {children: ReactNode}) {
   return (
-    <p className='metric-explanation mt-4 bg-accent p-3 text-[12px] text-foreground'>{children}</p>
+    <p className='metric-explanation mt-4 rounded-md bg-accent p-3 text-[12px] text-foreground'>
+      {children}
+    </p>
   );
 }
 

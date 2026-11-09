@@ -110,7 +110,7 @@ export function ExerciseCharts({
               <span className='numeric text-stat'>{chartNumber(shown.value)}</span>
               <span className='text-sm font-medium text-muted-foreground'>{unit}</span>
               {shown.pr && (
-                <span className='ml-1 inline-flex items-center gap-1 self-center bg-primary-tint px-1.5 py-0.5 text-label text-primary'>
+                <span className='ml-1 inline-flex items-center gap-1 self-center rounded-sm bg-primary-tint px-1.5 py-0.5 text-label text-primary'>
                   <Trophy className='size-3' /> PR
                 </span>
               )}

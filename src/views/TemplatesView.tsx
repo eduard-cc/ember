@@ -139,7 +139,7 @@ export function TemplatesView({
                 const plan = planFor(template);
                 return (
                   <li
-                    className='template-card pressable relative flex min-w-0 flex-col border border-border bg-card hover:bg-accent/60 has-[.template-open:focus-visible]:outline-2 has-[.template-open:focus-visible]:outline-offset-2 has-[.template-open:focus-visible]:outline-ring'
+                    className='template-card pressable relative flex min-w-0 flex-col rounded-card border border-border bg-card hover:bg-accent/60 has-[.template-open:focus-visible]:outline-2 has-[.template-open:focus-visible]:outline-offset-2 has-[.template-open:focus-visible]:outline-ring'
                     key={template.id}
                     data-landed={landed === template.id ? '' : undefined}
                   >

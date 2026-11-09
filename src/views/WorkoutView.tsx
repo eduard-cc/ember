@@ -582,7 +582,7 @@ export function WorkoutView({
                     >
                       <span
                         className={cn(
-                          'check-box grid h-[30px] w-[30px] place-items-center border-[1.5px]',
+                          'check-box grid h-[30px] w-[30px] place-items-center rounded-sm border-[1.5px]',
                           set.completed
                             ? 'border-primary bg-primary text-primary-foreground'
                             : 'unchecked-marker border-muted-foreground bg-card',

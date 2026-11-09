@@ -63,7 +63,7 @@ function About({name, framed}: {name: string; framed: boolean}) {
         </div>
       )}
       {entry.images.length === 0 && (
-        <p className='border border-border bg-card p-4 text-[14px] text-muted-foreground'>
+        <p className='rounded-card border border-border bg-card p-4 text-[14px] text-muted-foreground'>
           No drawing available.
         </p>
       )}
@@ -117,13 +117,13 @@ function HistoryTab({
     <div className='flex flex-col gap-3'>
       {history.slice(0, limit).map((session, i) => (
         <article
-          className='session-card min-w-0 border border-border bg-card'
+          className='session-card min-w-0 rounded-card border border-border bg-card'
           key={`${session.workoutId}-${i}`}
         >
           <header>
             <Button
               variant='ghost'
-              className='w-full justify-between gap-3 px-4 py-3 text-left text-foreground'
+              className='w-full justify-between gap-3 rounded-t-[calc(var(--radius-card)-1px)] rounded-b-none px-4 py-3 text-left text-foreground'
               aria-label={`View source workout ${session.workoutName} ${dateLabel(session.date)}`}
               onClick={(event) => onSource(session.workoutId, event.currentTarget)}
             >
