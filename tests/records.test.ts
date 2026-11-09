@@ -116,10 +116,10 @@ describe('workouts per week', () => {
       new Date(2026, 10, 1, 12),
     );
     expect(weeks).toEqual([
-      {start: '2026-10-05', count: 1, volume: 0, time: 0},
-      {start: '2026-10-12', count: 0, volume: 0, time: 0},
-      {start: '2026-10-19', count: 2, volume: 1160, time: 90},
-      {start: '2026-10-26', count: 1, volume: 0, time: 30},
+      {start: '2026-10-05', count: 1, volume: 0, time: 0, workouts: ['d']},
+      {start: '2026-10-12', count: 0, volume: 0, time: 0, workouts: []},
+      {start: '2026-10-19', count: 2, volume: 1160, time: 90, workouts: ['a', 'b']},
+      {start: '2026-10-26', count: 1, volume: 0, time: 30, workouts: ['c']},
     ]);
   });
 });

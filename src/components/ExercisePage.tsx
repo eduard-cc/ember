@@ -1,7 +1,7 @@
 import {useState} from 'react';
 
 import type {Dataset} from '../domain/types';
-import {ExerciseDetail} from '../views/ExerciseDetail';
+import {ExerciseDetail, type ExerciseTab} from '../views/ExerciseDetail';
 import {ContentFieldset} from './ui/content-fieldset';
 import {Dialog, DialogContent, DialogDescription, DialogTitle} from './ui/dialog';
 
@@ -13,6 +13,8 @@ export function ExercisePage({
   onCloseAutoFocus,
   workout = false,
   disabled = false,
+  backLabel = workout ? 'Back to workout' : 'Back to exercises',
+  initialTab,
 }: {
   name: string | null;
   dataset: Dataset;
@@ -20,6 +22,8 @@ export function ExercisePage({
   onCloseAutoFocus: (event: Event) => void;
   workout?: boolean;
   disabled?: boolean;
+  backLabel?: string;
+  initialTab?: ExerciseTab;
 }) {
   const [shown, setShown] = useState(name);
   if (name && name !== shown) setShown(name);
@@ -46,7 +50,8 @@ export function ExercisePage({
               dataset={dataset}
               name={shown}
               onBack={onClose}
-              backLabel={workout ? 'Back to workout' : 'Back to exercises'}
+              backLabel={backLabel}
+              initialTab={initialTab}
               emptyFramed={!workout}
               renderTitle={(heading) => <DialogTitle asChild>{heading}</DialogTitle>}
             />

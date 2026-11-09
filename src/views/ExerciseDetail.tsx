@@ -26,7 +26,8 @@ import {type SetText, setText} from '../utils/set-label';
 import {ExerciseCharts} from './ExerciseCharts';
 
 const tabs = ['Charts', 'History', 'Records', 'About'] as const;
-type Tab = (typeof tabs)[number];
+export type ExerciseTab = (typeof tabs)[number];
+type Tab = ExerciseTab;
 const kg = (n: number) => `${Number(n.toFixed(1)).toLocaleString('en-GB')} kg`;
 
 function Fact({label, value}: {label: string; value: string}) {
@@ -423,6 +424,7 @@ export function ExerciseDetail({
   backLabel = 'Back to exercises',
   renderTitle = (heading) => heading,
   emptyFramed = true,
+  initialTab = 'Charts',
 }: {
   dataset: Dataset;
   name: string;
@@ -432,10 +434,12 @@ export function ExerciseDetail({
   renderTitle?: (heading: ReactElement) => ReactNode;
   /** False when a dialog hosts the details: empty states then sit on its surface unframed. */
   emptyFramed?: boolean;
+  /** The tab to open on when the exercise has history (Profile's records open on Records). */
+  initialTab?: Tab;
 }) {
   // Unique workouts, matching the Exercises list; History/Charts/Records stay per exercise block.
   const workouts = useMemo(() => exerciseWorkoutCount(dataset, name), [dataset, name]);
-  const [tab, setTab] = useState<Tab>(workouts ? 'Charts' : 'About');
+  const [tab, setTab] = useState<Tab>(workouts ? initialTab : 'About');
   const [tabMotion, setTabMotion] = useState(false);
   // The library and the workout can both show details at once; ids must stay unique.
   const id = useId();

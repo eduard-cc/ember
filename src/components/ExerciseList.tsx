@@ -104,6 +104,7 @@ export function ExerciseList({
   existingNames = [],
   scope = 'workout',
   contained = false,
+  initialPart = 'All',
 }: {
   dataset: Dataset;
   onSelect: (name: string) => void;
@@ -113,6 +114,8 @@ export function ExerciseList({
   scope?: 'workout' | 'template';
   /** The full-screen picker keeps search/filters above its contained results. */
   contained?: boolean;
+  /** The body part to open filtered to (a Profile body-part row). */
+  initialPart?: BodyPart | 'All';
 }) {
   const [search, setSearch] = useState('');
   const searchInput = useRef<HTMLInputElement>(null);
@@ -120,7 +123,7 @@ export function ExerciseList({
   const filtersChanged = () => {
     if (results.current) results.current.scrollTop = 0;
   };
-  const [part, setPart] = useState<BodyPart | 'All'>('All');
+  const [part, setPart] = useState<BodyPart | 'All'>(initialPart);
   const names = useMemo(() => allExerciseNames(dataset), [dataset]);
   const parts = useMemo(() => bodyPartsOf(names), [names]);
   const stats = useMemo(() => exerciseStats(dataset), [dataset]);

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import {useEffect, useMemo, useRef, useState} from 'react';
 
+import type {BodyPart} from './catalog/catalog';
 import {AddExercise} from './components/AddExercise';
 import {AppearanceSettings, useAppearance} from './components/AppearanceSettings';
 import {BodyWeight} from './components/BodyWeight';
@@ -130,6 +131,8 @@ export default function App() {
   );
   const [view, setView] = useState<View>('Workout');
   const [exercise, setExercise] = useState<string | null>(null);
+  // A Profile body-part row opens Exercises filtered to it.
+  const [exercisePart, setExercisePart] = useState<BodyPart | null>(null);
   const [expanded, setExpandedState] = useState(true);
   const [sheetMotionArmed, armSheetMotion] = useState(false);
   /** Every expand/minimize is the owner's action, so from here on the sheet slides. */
@@ -243,6 +246,7 @@ export default function App() {
   const go = (next: View) => {
     setView(next);
     setExercise(null);
+    setExercisePart(null);
     setFinished(null);
     setHistorySearch(false);
     setPendingWorkout(null);
@@ -485,6 +489,7 @@ export default function App() {
                   <div hidden={!!exercise && !mobile}>
                     <ExercisesView
                       dataset={allDataset}
+                      initialPart={exercisePart ?? undefined}
                       onOpen={(name) => {
                         exerciseTrigger.current = document.activeElement as HTMLElement;
                         const scroller = exerciseTrigger.current.closest('.library-scroll');
@@ -515,7 +520,15 @@ export default function App() {
                 </>
               )}
               {view === 'Profile' && (
-                <ProfileView workouts={allDataset.workouts}>
+                <ProfileView
+                  dataset={allDataset}
+                  disabled={disabled}
+                  locked={sync.locked}
+                  onBodyPart={(part) => {
+                    go('Exercises');
+                    setExercisePart(part);
+                  }}
+                >
                   {/* Personal history: unmounted while sync is locked, like other owned data. */}
                   {hydrated && !sync.locked && !recoveryError && (
                     <BodyWeight repository={repository} disabled={disabled} />

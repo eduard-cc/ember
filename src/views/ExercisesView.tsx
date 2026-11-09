@@ -1,3 +1,4 @@
+import type {BodyPart} from '../catalog/catalog';
 import {ExerciseList} from '../components/ExerciseList';
 import type {Dataset} from '../domain/types';
 
@@ -5,9 +6,12 @@ import type {Dataset} from '../domain/types';
 export function ExercisesView({
   dataset,
   onOpen,
+  initialPart,
 }: {
   dataset: Dataset;
   onOpen: (name: string) => void;
+  /** Opens filtered to this body part (a Profile body-part row). */
+  initialPart?: BodyPart;
 }) {
-  return <ExerciseList dataset={dataset} onSelect={onOpen} sortable />;
+  return <ExerciseList dataset={dataset} onSelect={onOpen} sortable initialPart={initialPart} />;
 }

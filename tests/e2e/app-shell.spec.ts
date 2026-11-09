@@ -183,7 +183,7 @@ async function openProfile(page: import('@playwright/test').Page, scheme: 'light
 test('Profile shows totals and selectable weekly metrics', async ({page}) => {
   await openProfile(page, 'light');
   const totals = page.locator('.profile-totals');
-  await expect(totals).toHaveText(/^\d+ workouts? · \d+ sets? · \d+ this week$/);
+  await expect(totals).toHaveText(/^[\d,]+ workouts? · [\d,]+ sets? · since [A-Z][a-z]+\s\d{4}$/);
   expect(await totals.evaluate((el) => el.tagName)).toBe('P');
   await expect(page.getByRole('heading', {name: 'Every week'})).toBeVisible();
   const headline = page.locator('.weekly-headline');
@@ -193,16 +193,20 @@ test('Profile shows totals and selectable weekly metrics', async ({page}) => {
     ['Time', 'min'],
   ]) {
     await page.getByRole('radio', {name: label, exact: true}).click();
-    await expect(headline).toContainText('This week');
-    await expect(headline).toContainText('before this week');
+    await expect(headline).toContainText('Last week, ');
+    await expect(headline).toContainText('usual');
     await expect(headline).toContainText(unit);
     const chart = page.getByRole('img', {name: new RegExp(`${label} per week`)});
     await expect(chart).toBeVisible();
     await chart.locator('.recharts-surface').focus();
     await page.keyboard.press('ArrowRight');
-    await expect(headline).toContainText('Week of');
+    await expect(headline).not.toContainText('Last week');
+    await expect(headline).toContainText(' – ');
     await page.mouse.move(0, 0);
   }
+  // The range widens the chart and the week list together.
+  await page.getByRole('radiogroup', {name: 'Time range'}).getByRole('radio', {name: '1Y'}).click();
+  await expect(page.getByRole('img', {name: /per week, last 52 weeks/})).toBeVisible();
   await page.setViewportSize({width: 320, height: 915});
   await page.evaluate(() => {
     document.documentElement.style.fontSize = '150%';
@@ -219,6 +223,49 @@ test('Profile shows totals and selectable weekly metrics', async ({page}) => {
   }
 });
 
+test('Profile weeks, records and body parts open their sources', async ({page}) => {
+  await openProfile(page, 'dark');
+  // A week opens its workouts; a workout opens its drawer in place and closes back to its row.
+  const weeks = page.getByRole('list', {name: 'Weeks', exact: true});
+  await weeks.locator('button[aria-expanded]').first().click();
+  const source = page.getByRole('button', {name: /^View workout /}).first();
+  await source.click();
+  const drawer = page.locator('.workout-drawer');
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole('button', {name: 'Close workout'}).click();
+  await expect(drawer).toBeHidden();
+  await expect(source).toBeFocused();
+  await expect(page.locator('.library-scroll h1')).toHaveText('Profile');
+  // A record opens its exercise on Records, over Profile.
+  const record = page.getByRole('list', {name: 'New records'}).getByRole('button').first();
+  const name = (await record.getAttribute('aria-label'))!.split(':')[0];
+  await record.click();
+  const exercise = page.locator('.exercise-page');
+  await expect(exercise.getByRole('heading', {name, exact: true})).toBeVisible();
+  await expect(exercise.getByRole('tab', {name: 'Records'})).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await exercise.getByRole('button', {name: 'Back to profile'}).click();
+  await expect(exercise).toBeHidden();
+  await expect(record).toBeFocused();
+  // Phone back closes the exercise page, leaving Profile.
+  await record.click();
+  await expect(exercise).toBeVisible();
+  await page.goBack();
+  await expect(exercise).toBeHidden();
+  await expect(page.locator('.library-scroll h1')).toHaveText('Profile');
+  // A body part opens Exercises filtered to it.
+  await page
+    .getByRole('list', {name: 'Sets per body part'})
+    .getByRole('button', {name: /^Chest: /})
+    .click();
+  await expect(page.locator('.library-scroll h1')).toHaveText('Exercises');
+  await expect(
+    page.getByRole('group', {name: 'Body part'}).getByRole('button', {name: 'Chest'}),
+  ).toHaveAttribute('aria-pressed', 'true');
+});
+
 for (const [weekday, today] of [
   ['Monday', '2026-11-02'],
   ['Sunday', '2026-11-08'],
@@ -227,7 +274,7 @@ for (const [weekday, today] of [
     ['light', 'hsl(37 16% 74%)'],
     ['dark', 'hsl(36 6% 48%)'],
   ] as const) {
-    test(`the week chart is neutral except the current week (${scheme}, ${weekday})`, async ({
+    test(`the week chart is neutral except last week and the running week (${scheme}, ${weekday})`, async ({
       page,
     }) => {
       await page.clock.setFixedTime(new Date(`${today}T20:00:00`));
@@ -277,8 +324,12 @@ for (const [weekday, today] of [
         .getByRole('navigation', {name: 'Main navigation'})
         .getByRole('button', {name: 'Profile', exact: true})
         .click();
-      await expect(page.locator('.profile-totals')).toHaveText('4 workouts · 4 sets · 1 this week');
-      const neutral = page.locator('.week-chart .recharts-bar-rectangle path:not(.current-week)');
+      await expect(page.locator('.profile-totals')).toHaveText(
+        '4 workouts · 4 sets · since Oct\u00a02026',
+      );
+      const neutral = page.locator(
+        '.week-chart .recharts-bar-rectangle path:not(.shown-week):not(.so-far-week)',
+      );
       await expect(neutral).not.toHaveCount(0);
       const fills = await neutral.evaluateAll((els) => els.map((el) => getComputedStyle(el).fill));
       expect(fills.length).toBeGreaterThan(1);
@@ -295,12 +346,17 @@ for (const [weekday, today] of [
         for (const e of edges) expect(e.stroke).toBe(edge);
       }
       for (const e of edges) expect(e.path).toMatch(/^M .* h .* v .* h .* Z$/);
-      const current = page.locator('.week-chart .recharts-bar-rectangle path.current-week');
-      await expect(current).toHaveCount(1);
-      expect(await current.evaluate((el) => getComputedStyle(el).fill)).toBe(
+      // Last full week (26 Oct) leads in Amber; the running week (2 Nov) is hatched.
+      const shown = page.locator('.week-chart .recharts-bar-rectangle path.shown-week');
+      await expect(shown).toHaveCount(1);
+      expect(await shown.evaluate((el) => getComputedStyle(el).fill)).toBe(
         await resolve(page, 'hsl(var(--primary))'),
       );
-      expect(await current.evaluate((el) => getComputedStyle(el).stroke)).toBe('none');
+      expect(await shown.evaluate((el) => getComputedStyle(el).stroke)).toBe('none');
+      await expect(page.locator('.weekly-headline')).toContainText('Last week, 26 Oct – 1 Nov');
+      const soFar = page.locator('.week-chart .recharts-bar-rectangle path.so-far-week');
+      await expect(soFar).toHaveCount(1);
+      expect(await soFar.getAttribute('fill')).toBe('url(#week-so-far)');
     });
   }
 

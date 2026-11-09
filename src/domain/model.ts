@@ -365,17 +365,25 @@ const weekStart = (date: Date) => {
   start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
   return start;
 };
-/** Sessions per Monday-based local week; workout timestamps are local wall time. */
+/** The local Monday (`YYYY-MM-DD`) of the week holding a stored timestamp or day. */
+export function weekStartOf(date: string) {
+  const [y, m, d] = date.slice(0, 10).split('-').map(Number);
+  return localDay(weekStart(new Date(y, m - 1, d)));
+}
+/**
+ * Sessions per Monday-based local week, oldest first, the last being the running week; workout
+ * timestamps are local wall time. `workouts` lists each week's workout ids in input order.
+ */
 export function workoutsPerWeek(
   workouts: Workout[],
   weeks: number,
   now = new Date(),
-): {start: string; count: number; volume: number; time: number}[] {
+): {start: string; count: number; volume: number; time: number; workouts: string[]}[] {
   const current = weekStart(now);
   const buckets = Array.from({length: weeks}, (_, i) => {
     const start = new Date(current);
     start.setDate(start.getDate() - 7 * (weeks - 1 - i));
-    return {start: localDay(start), count: 0, volume: 0, time: 0};
+    return {start: localDay(start), count: 0, volume: 0, time: 0, workouts: [] as string[]};
   });
   const index = new Map(buckets.map((bucket, i) => [bucket.start, i]));
   for (const workout of workouts) {
@@ -384,6 +392,7 @@ export function workoutsPerWeek(
     const i = index.get(localDay(weekStart(new Date(y, m - 1, d))));
     if (i !== undefined) {
       buckets[i].count++;
+      buckets[i].workouts.push(workout.id);
       buckets[i].time += workout.duration;
       buckets[i].volume += workout.exercises.reduce(
         (total, exercise) =>
