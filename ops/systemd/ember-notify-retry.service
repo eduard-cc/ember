@@ -1,0 +1,10 @@
+# Started by ember-notify-retry.path. Sends the queued alerts in order once Hermes takes
+# them again and exits when the queue is empty; it fails (and alerts) if it had to give
+# an alert up. Runs the reviewed installed copy, never the checkout's.
+[Unit]
+Description=Send queued Ember alerts once Hermes is back
+OnFailure=ember-notify-failure@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/lib/ember/notify.sh --flush

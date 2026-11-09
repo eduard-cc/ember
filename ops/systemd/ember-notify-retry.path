@@ -1,0 +1,12 @@
+# User unit installed and enabled by ops/install.sh. Starts ember-notify-retry.service
+# whenever ops/notify.sh has queued an alert that Hermes could not take yet.
+[Unit]
+Description=Watch for queued Ember alerts
+
+[Path]
+DirectoryNotEmpty=%h/.local/state/ember/alert-queue
+MakeDirectory=yes
+DirectoryMode=0700
+
+[Install]
+WantedBy=paths.target

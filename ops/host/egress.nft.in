@@ -7,7 +7,7 @@
 # keep it out of other accounts' files, but every local user can reach loopback services
 # (browser debugging ports, Hermes, other databases), this host's own tailnet address and
 # Docker bridge networks. So the account may reach the internet (GitHub, npm, Docker Hub,
-# Tailscale, Discord), DNS, its own loopback ports (including the owner's Hermes webhook,
+# Tailscale), DNS, its own loopback ports (including the owner's Hermes webhook,
 # which takes only signed alerts), HTTPS on its own tailnet device (the
 # deploy checks the app through Serve), and nothing
 # else on this host, the LAN or the tailnet. Replies on connections other users

@@ -169,7 +169,7 @@ check_config || fail 'check_config should accept the test URLs'
 [[ $(switched harmful true) == 1 ]] || fail 'a switch that breaks the extra endpoints must roll back'
 [[ $(current_release) == bbb ]] && serving bbb || fail 'extra-endpoint breakage should roll back to bbb'
 grep -q 'The extra health endpoints stopped responding after Ember deployed harmful.*rolled back to bbb.*STILL unhealthy' "$alerts" ||
-	fail 'extra-endpoint breakage must alert Discord'
+	fail 'extra-endpoint breakage must alert the owner'
 # Extra endpoints already down before the deploy: they cannot gate the switch.
 [[ $(switched ccc false) == 0 ]] && serving ccc || fail 'unhealthy extra endpoints before the deploy must not block it'
 touch "$sandbox/extra-health"
@@ -177,7 +177,7 @@ touch "$sandbox/extra-health"
 : >"$alerts"
 [[ $(switched bad true) == 1 && $(current_release) == bbb ]] || fail 'a broken release must roll back'
 grep -q 'failed its health check, so it was rolled back to bbb. The extra endpoints are healthy again' "$alerts" ||
-	fail 'a broken release must alert Discord'
+	fail 'a broken release must alert the owner'
 # The server never logs a 404, so the alert itself names the missing offline file.
 : >"$alerts"
 [[ $(switched unserved true) == 1 && $(current_release) == bbb ]] || fail 'an unserved release must roll back'
@@ -185,12 +185,12 @@ grep -q 'unserved failed its health check (Serve did not return /assets/drawing-
 	fail 'the alert must name the unserved file'
 [[ $(switched ccc true) == 0 ]] && serving ccc || fail 'a harmless switch with the extra endpoints healthy should pass'
 # A release that applied migrations is never rolled back onto the old schema for the
-# extra endpoints' sake: it stays live and Discord is asked to check.
+# extra endpoints' sake: it stays live and the owner is asked to check.
 : >"$alerts"
 [[ $(switched harmful true true) == 4 ]] || fail 'a migrated release must not roll back for the extra endpoints'
 [[ $(current_release) == harmful ]] && serving harmful || fail 'the migrated release should stay live'
 grep -q 'NOT rolled back because this release applied database migrations' "$alerts" ||
-	fail 'a migrated release must still alert Discord'
+	fail 'a migrated release must still alert the owner'
 touch "$sandbox/extra-health"
 # A link that cannot be switched changes nothing and does not roll back.
 mkdir -p "$EMBER_HOME/current.tmp/blocker"
