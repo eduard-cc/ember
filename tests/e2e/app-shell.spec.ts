@@ -187,6 +187,12 @@ test('Profile shows totals and selectable weekly metrics', async ({page}) => {
   await expect(totals).toHaveText(/^[\d,]+ workouts? · [\d,]+ sets? · since [A-Z][a-z]+\s\d{4}$/);
   expect(await totals.evaluate((el) => el.tagName)).toBe('P');
   await expect(page.getByRole('heading', {name: 'Every week'})).toBeVisible();
+  await expect(page.locator('.profile-view h2')).toHaveText([
+    'Every week',
+    'Muscles',
+    'New records',
+    'Body weight',
+  ]);
   const headline = page.locator('.weekly-headline');
   for (const [label, unit] of [
     ['Workouts', 'workouts'],

@@ -702,8 +702,8 @@ function Muscles({
 }
 
 /**
- * Profile: lifetime totals, Every week, New records, Muscles, then `children` (body weight).
- * Records open their exercise's Records tab over Profile, Muscles exercises its Charts.
+ * Profile: lifetime totals, Every week, Muscles, New records, then `children` (body weight).
+ * Muscles exercises open their Charts tab over Profile, records their Records tab.
  */
 export function ProfileView({
   dataset,
@@ -742,15 +742,6 @@ export function ProfileView({
         </p>
       )}
       <EveryWeek dataset={dataset} byId={byId} today={today} />
-      <NewRecords
-        records={records}
-        rows={sourceRows}
-        onOpen={(name) => {
-          returnTo.current = name;
-          setExerciseTab('Records');
-          setExercise(name);
-        }}
-      />
       <Muscles
         workouts={workouts}
         today={today}
@@ -758,6 +749,15 @@ export function ProfileView({
         onOpen={(name, key) => {
           returnTo.current = key;
           setExerciseTab('Charts');
+          setExercise(name);
+        }}
+      />
+      <NewRecords
+        records={records}
+        rows={sourceRows}
+        onOpen={(name) => {
+          returnTo.current = name;
+          setExerciseTab('Records');
           setExercise(name);
         }}
       />
