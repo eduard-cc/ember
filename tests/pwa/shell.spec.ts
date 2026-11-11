@@ -1,7 +1,11 @@
 import {expect, test} from '@playwright/test';
 
+import {navigate} from '../navigation';
+
 test('a production installation ignores the demo entry and starts empty', async ({page}) => {
   await page.goto('/?demo=1');
+  await expect(page.getByRole('heading', {name: 'Profile', exact: true})).toBeVisible();
+  await navigate(page, 'Workouts');
   await expect(page.getByRole('heading', {name: 'Quick start', exact: true})).toBeVisible();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await expect(page.getByRole('heading', {name: 'Your workout'})).toHaveCount(0);
@@ -18,13 +22,13 @@ test('production shell reopens offline with a real service worker', async ({page
   await expect
     .poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller)))
     .toBe(true);
-  await expect(page.locator('#root')).not.toHaveText('');
+  await expect(page.getByRole('heading', {name: 'Profile', exact: true})).toBeVisible();
   await context.setOffline(true);
   await page.reload();
-  await expect(page.locator('#root')).not.toBeEmpty();
+  await expect(page.getByRole('heading', {name: 'Profile', exact: true})).toBeVisible();
   await page.close();
   const reopened = await context.newPage();
   await reopened.goto('/');
-  await expect(reopened.locator('#root')).not.toBeEmpty();
+  await expect(reopened.getByRole('heading', {name: 'Profile', exact: true})).toBeVisible();
   expect(await reopened.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
 });

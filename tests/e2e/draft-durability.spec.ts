@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import {demoTemplates} from '../../src/domain/demo';
-import {closeCelebration} from '../navigation';
+import {closeCelebration, navigate} from '../navigation';
 
 const legacy = {
   version: 1,
@@ -199,13 +199,19 @@ test('missing Web Locks blocks editing with a clear error, never a race-prone fa
   await page.addInitScript(() => Object.defineProperty(navigator, 'locks', {value: undefined}));
   await page.goto('/');
   await expect(page.getByRole('alert')).toContainText('Web Locks');
+  await navigate(page, 'Workouts');
   await expect(page.getByRole('button', {name: 'Start empty workout'})).toBeDisabled();
 });
-test('empty installation has no synthetic draft or history', async ({page}) => {
+test('fresh launches open Profile with Workout one tap away', async ({page}) => {
+  await page.setViewportSize({width: 412, height: 915});
   await page.goto('/');
-  await expect(page.getByRole('heading', {name: 'Quick start', exact: true})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'Profile', exact: true})).toBeVisible();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   expect(await page.evaluate(() => localStorage.getItem('ember:v1'))).toBeNull();
+  await navigate(page, 'Workouts');
+  await expect(page.getByRole('button', {name: 'Start empty workout'})).toBeEnabled();
+  await page.reload();
+  await expect(page.getByRole('heading', {name: 'Profile', exact: true})).toBeVisible();
 });
 test('saved edit survives a fresh page and original legacy bytes remain unchanged', async ({
   page,

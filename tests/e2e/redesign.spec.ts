@@ -425,6 +425,7 @@ test('added exercises reuse matching history unchecked and unlogged catalog exer
     seeded,
   );
   await page.goto('/?demo=1');
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await addExercise(page, 'Synthetic Press');
   await expect(page.getByLabel('Weight for Synthetic Press set 1')).toHaveValue('55');
@@ -527,6 +528,7 @@ test('sounds and haptics start on, play when a workout starts, climb within each
     );
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   expect(await cues()).toEqual({vibrations: [[18, 60, 10]], audioContexts: 1});
@@ -599,6 +601,7 @@ test('sounds and haptics start on, play when a workout starts, climb within each
   await page.getByRole('button', {name: 'Cancel workout'}).click();
   await page.getByRole('button', {name: 'Discard workout'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toHaveCount(0);
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   // Haptics off: the start cue only plays its sound.
@@ -666,6 +669,7 @@ test('settings keeps synchronization feedback accessible without duplicate hidde
   );
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
   await page.getByRole('button', {name: 'Settings', exact: true}).last().click();

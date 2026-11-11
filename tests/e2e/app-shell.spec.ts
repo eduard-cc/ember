@@ -16,7 +16,8 @@ test('phones have no top bar and the title scrolls with the page', async ({page}
   await open(page, true);
   await expect(page.locator('.library .topbar')).toHaveCount(0);
   const title = page.locator('.library-scroll h1');
-  await expect(title).toHaveText('Workout');
+  await expect(title).toHaveText('Profile');
+  await navigate(page, 'Workouts');
   await expect(
     page.locator('.library').getByRole('button', {name: 'Settings', exact: true}),
   ).toHaveCount(0);
@@ -112,7 +113,7 @@ async function minimizeIfPossible(page: import('@playwright/test').Page) {
 test('labels are sentence case', async ({page}) => {
   await page.emulateMedia({colorScheme: 'light'});
   await open(page, false);
-  await minimizeIfPossible(page);
+  await navigate(page, 'Workouts');
   const quick = page.getByText('Quick start', {exact: true});
   await expect(quick).toBeVisible();
   expect(await quick.evaluate((el) => getComputedStyle(el).textTransform)).toBe('none');
@@ -149,7 +150,7 @@ test('labels are sentence case', async ({page}) => {
 test('templates are separate flat bordered cards', async ({page}) => {
   await page.emulateMedia({colorScheme: 'light'});
   await open(page, false);
-  await minimizeIfPossible(page);
+  await navigate(page, 'Workouts');
   const grid = page.locator('.template-grid');
   await expect(grid).toBeVisible();
   expect(await grid.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px');
@@ -439,7 +440,7 @@ test('Settings opened from the Profile cog returns focus to the cog', async ({pa
 test('the empty templates state sits outside the bordered grid', async ({page}) => {
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  await minimizeIfPossible(page);
+  await navigate(page, 'Workouts');
   const empty = page.locator('.empty-state', {hasText: 'No templates yet'});
   await expect(empty).toBeVisible();
   await expect(page.locator('.template-grid')).toHaveCount(0);
@@ -450,6 +451,7 @@ test('the tab bar hides while editing a template name', async ({page}) => {
   await open(page, true);
   const bar = page.locator('.app-bar');
   await expect(bar).toHaveCSS('visibility', 'visible');
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template'}).click();
   const name = page.getByLabel('Template name');
   await name.focus();
@@ -523,7 +525,7 @@ test('empty states use the shared EmptyState', async ({page}) => {
     await expect(p).toHaveCSS('font-size', '14px');
     await expect(p).toHaveCSS('color', muted);
   };
-  await minimizeIfPossible(page);
+  await navigate(page, 'Workouts');
   await check('No templates yet');
   await navigate(page, 'History');
   await page.getByRole('button', {name: 'Search history'}).click();

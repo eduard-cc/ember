@@ -1,12 +1,13 @@
 import {devices, expect, test} from '@playwright/test';
 
-import {addExercise, closeCelebration} from '../navigation';
+import {addExercise, closeCelebration, navigate} from '../navigation';
 
 test.use({...devices['Pixel 6']});
 
 test('finishing saves elapsed minutes in history on Pixel 6', async ({page}) => {
   await page.clock.install({time: new Date('2026-01-10T12:00:00')});
   await page.goto('/');
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Synthetic timed workout');
   await addExercise(page, 'Bench Press (Barbell)');
@@ -32,6 +33,7 @@ test('finishing saves elapsed minutes in history on Pixel 6', async ({page}) => 
 test('a workout finished within a minute shows under one minute on Pixel 6', async ({page}) => {
   await page.clock.install({time: new Date('2026-01-10T12:00:00')});
   await page.goto('/');
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout'}).click();
   await page.getByLabel('WORKOUT NAME', {exact: true}).fill('Synthetic quick workout');
   await addExercise(page, 'Bench Press (Barbell)');

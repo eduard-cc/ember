@@ -20,6 +20,7 @@ test('real app-update control confirms activation without reload and defers upda
   await page.goto('/');
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));
   await page.reload();
+  await navigate(page, 'Workouts');
   await expect(page.getByRole('button', {name: 'Start empty workout'})).toBeEnabled();
   await openSettings(page);
   const file = new URL('../../dist/sw.js', import.meta.url);

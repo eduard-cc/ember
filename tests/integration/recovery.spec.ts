@@ -2,12 +2,14 @@ import {expect, test} from '@playwright/test';
 import {createRequire} from 'node:module';
 
 import {demoTemplates} from '../../src/domain/demo';
+import {navigate} from '../navigation';
 import {login} from './helpers';
 
 const completed = (id: string, name: string) => ({
   ...demoTemplates[0],
   id,
   name,
+  date: '2026-01-01T12:00:00',
   exercises: demoTemplates[0].exercises.map((exercise) => ({
     ...exercise,
     sets: exercise.sets.map((set, i) => ({
@@ -93,6 +95,7 @@ test('dataset reset clears stale installed history and outbox without losing the
     try {
       const fresh = await peer.newPage();
       await login(fresh);
+      await navigate(fresh, 'Workouts');
       await expect(fresh.getByRole('button', {name: 'Start empty workout'})).toBeVisible();
       const rows = await database.query('SELECT entity_id FROM records WHERE owner_id=$1', [
         'owner',

@@ -129,7 +129,7 @@ export default function App() {
     refresh,
     saveStatus === 'saved',
   );
-  const [view, setView] = useState<View>('Workout');
+  const [view, setView] = useState<View>('Profile');
   // The library shares one scroller across tabs: a tab opens at its top, not at the last tab's
   // offset (a Profile body-part row would otherwise land deep in Exercises).
   const libraryScroll = useRef<HTMLDivElement>(null);

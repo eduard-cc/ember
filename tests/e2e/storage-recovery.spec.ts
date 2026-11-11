@@ -1,5 +1,7 @@
 import {expect, test} from '@playwright/test';
 
+import {navigate} from '../navigation';
+
 for (const raw of ['{broken-json', JSON.stringify({version: 2, finished: []})]) {
   test(`unreadable saved state is preserved: ${raw}`, async ({page}) => {
     await page.addInitScript((value) => {
@@ -11,6 +13,7 @@ for (const raw of ['{broken-json', JSON.stringify({version: 2, finished: []})]) 
     await page.goto('/');
     await expect(page.getByRole('alert')).toContainText('Saved data could not be read');
     await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
+    await navigate(page, 'Workouts');
     await expect(page.getByRole('button', {name: 'Start empty workout'})).toBeDisabled();
     expect(await page.evaluate(() => localStorage.getItem('ember:v1'))).toBe(raw);
     await page.reload();
@@ -40,6 +43,7 @@ for (const raw of ['{broken-json', JSON.stringify({version: 2, finished: []})]) 
     expect(await page.evaluate(() => localStorage.getItem('ember:v1'))).toBe(raw);
     await page.reload();
     await expect(page.getByRole('alert')).toHaveCount(0);
+    await navigate(page, 'Workouts');
     await expect(page.getByRole('button', {name: 'Start empty workout'})).toBeEnabled();
   });
 }

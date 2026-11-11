@@ -225,7 +225,7 @@ test('a reload with nothing open trims its leftover entry on the first tap', asy
   await page.reload();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await expect(sheet(page)).toHaveCount(0);
-  await page.getByRole('heading', {name: 'Workout', level: 1}).click();
+  await page.getByRole('heading', {name: 'Profile', level: 1}).click();
   await expect.poll(() => depth(page)).toBe(0);
 });
 

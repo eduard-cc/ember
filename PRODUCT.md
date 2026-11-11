@@ -27,7 +27,7 @@ The private mobile trial uses the owner's Tailscale identity with no separate ap
 
 ### Navigation and evidence
 
-The main navigation is **Profile / History / Workout / Exercises**, with Workout selected initially.
+The main navigation is **Profile / History / Workout / Exercises**, with Profile selected initially. An unfinished device-local workout reopens in the expanded logger.
 
 - **Profile:** workout/set totals since the first workout; Every week (Workouts / Volume / Time over 3M / 6M / 1Y) leading with last full week against the usual week (median of earlier full weeks), the running week marked "so far", and a week list whose workouts open in place; New records from the last four weeks, each opening its exercise's Records; recorded sets per body part over the last four weeks against the usual, each opening Exercises filtered to it; body weight; and, from the cog beside its title, Settings (appearance, sounds and haptics, app updates). Settings is full-screen on phones, a side panel on desktop; desktop, logger and locked-state gears remain available.
 - **Feedback:** short synthesised sounds mark accomplishments (starting, checking a set, finishing an exercise or workout, a new PR), loud enough to hear over music; haptics (vibration on Android, the system tick on iPhone) also confirm changes such as unticking, adding or removing. Browsing the app is silent. Both are on by default with their own Settings switches, mix with music instead of pausing it, and never block or fail logging. They are confirmation cues, not alerts or notifications.

@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-import {shownText} from '../navigation';
+import {navigate, shownText} from '../navigation';
 
 test('explicit set completion persists targets, finishes only completed sets and celebrates the records', async ({
   page,
@@ -13,8 +13,14 @@ test('explicit set completion persists targets, finishes only completed sets and
   await weight.fill('70');
   await page.getByRole('button', {name: 'Complete Bench Press (Barbell) set 1'}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await navigate(page, 'Exercises');
   await page.reload();
+  await expect(page.getByRole('region', {name: 'Active workout'})).toBeVisible();
+  await expect(page.getByLabel('WORKOUT NAME', {exact: true})).toHaveValue('Upper body A');
   await expect(weight).toHaveValue('70');
+  await expect(
+    page.getByRole('button', {name: 'Uncomplete Bench Press (Barbell) set 1'}),
+  ).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
   await page.getByRole('button', {name: 'Finish workout'}).click();
   await expect(page.getByRole('dialog')).toContainText('uncompleted sets will be excluded');

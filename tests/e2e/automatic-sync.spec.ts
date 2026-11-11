@@ -79,6 +79,7 @@ test('fresh installation connects automatically, keeps its storage and says hist
     return route.fulfill({json: {changes: [], nextCursor: 2, hasMore: false}});
   });
   await page.goto('/');
+  await navigate(page, 'Workouts');
   await expect(page.getByRole('button', {name: 'Start empty workout', exact: true})).toBeEnabled();
   // Quiet conditions are one small pill beside the page title.
   const pill = page.locator('.status-pill');
@@ -257,6 +258,7 @@ test('unavailable server keeps trusted local drafts and pending edits across reo
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
   unavailable = true;
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Start empty workout', exact: true}).click();
   await page.getByLabel('WORKOUT NAME').fill('Offline retained draft');
   await page.getByLabel('WORKOUT NAME').blur();
@@ -343,6 +345,7 @@ for (const status of ['conflict', 'rejected'] as const) {
     });
     await page.goto('/');
     await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
+    await navigate(page, 'Workouts');
     await page.getByRole('button', {name: 'Create template', exact: true}).click();
     await page.getByLabel('Template name').fill('Retained template');
     await addExercise(page, 'Bench Press (Barbell)');
@@ -413,6 +416,7 @@ test('a new template syncs immediately in the background without a wake or manua
   });
   await page.goto('/');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
+  await navigate(page, 'Workouts');
   await page.getByRole('button', {name: 'Create template', exact: true}).click();
   await page.getByLabel('Template name').fill('Immediate sync template');
   await addExercise(page, 'Bench Press (Barbell)');

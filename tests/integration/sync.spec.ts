@@ -18,6 +18,7 @@ test('template preview is unmounted when local trust is revoked', async ({page})
     );
   }, demoTemplates);
   await login(page);
+  await navigate(page, 'Workouts');
   await page
     .getByRole('button', {name: `Open template ${demoTemplates[0].name}`, exact: true})
     .click();
