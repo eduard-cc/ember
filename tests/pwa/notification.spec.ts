@@ -17,17 +17,17 @@ const shown = (page: Page) =>
 /**
  * An allowing OS and its notification centre. CI's headless Chromium reports notifications as
  * denied and keeps no list, so the permission reads granted and the registration's two
- * notification methods keep a per-tab list that survives reloads and counts shows. The worker
- * and the app are real.
+ * notification methods keep one list for the device that survives reloads and counts shows.
+ * The worker and the app are real.
  */
 const notificationCentre = (context: BrowserContext) =>
   context.addInitScript(() => {
     Object.defineProperty(Notification, 'permission', {configurable: true, get: () => 'granted'});
     type Shown = {title: string; options: NotificationOptions};
-    const read = () => JSON.parse(sessionStorage.getItem('notifications') ?? '[]') as Shown[];
-    const write = (list: Shown[]) => sessionStorage.setItem('notifications', JSON.stringify(list));
+    const read = () => JSON.parse(localStorage.getItem('notifications') ?? '[]') as Shown[];
+    const write = (list: Shown[]) => localStorage.setItem('notifications', JSON.stringify(list));
     ServiceWorkerRegistration.prototype.showNotification = async function (title, options = {}) {
-      sessionStorage.setItem('shows', String(Number(sessionStorage.getItem('shows') ?? 0) + 1));
+      localStorage.setItem('shows', String(Number(localStorage.getItem('shows') ?? 0) + 1));
       write([...read().filter((item) => item.options.tag !== options.tag), {title, options}]);
     };
     ServiceWorkerRegistration.prototype.getNotifications = async function (filter = {}) {
@@ -40,14 +40,28 @@ const notificationCentre = (context: BrowserContext) =>
               body: item.options.body,
               badge: item.options.badge,
               silent: item.options.silent,
+              data: item.options.data as unknown,
               close: () => write(read().filter((other) => other.options.tag !== item.options.tag)),
             }) as unknown as Notification,
         );
     };
   });
-const shows = (page: Page) => page.evaluate(() => Number(sessionStorage.getItem('shows') ?? 0));
+const shows = (page: Page) => page.evaluate(() => Number(localStorage.getItem('shows') ?? 0));
+const dismiss = (page: Page) =>
+  page.evaluate(async (tag) => {
+    for (const item of await (await navigator.serviceWorker.ready).getNotifications({tag}))
+      item.close();
+  }, tag);
+/** Switching to another app and back: headless pages never go hidden on their own. */
+const switchAway = (page: Page, state: 'hidden' | 'visible') =>
+  page.evaluate((state) => {
+    Object.defineProperty(document, 'visibilityState', {configurable: true, get: () => state});
+    document.dispatchEvent(new Event('visibilitychange'));
+  }, state);
+const saved = (page: Page) =>
+  expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
 
-test('an allowed device shows one workout notification that resumes the logger and clears on discard', async ({
+test('an allowed device shows one workout notification, restores it when Ember is reopened, resumes the logger and clears on discard', async ({
   page,
   context,
 }) => {
@@ -67,24 +81,38 @@ test('an allowed device shows one workout notification that resumes the logger a
         silent: true,
       },
     ]);
-  // Editing the workout and relaunching it do not post it again.
+  // Editing the workout and relaunching while it is shown leave it alone.
   await page.getByLabel('WORKOUT NAME').fill('Synthetic push');
-  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await saved(page);
   await page.reload();
   await expect(page.getByLabel('WORKOUT NAME')).toHaveValue('Synthetic push');
+  await saved(page);
   await expect.poll(() => shown(page)).toHaveLength(1);
   expect(await shows(page)).toBe(1);
 
-  // A dismissed notification stays dismissed for this workout.
-  await page.evaluate(async (tag) => {
-    for (const item of await (await navigator.serviceWorker.ready).getNotifications({tag}))
-      item.close();
-  }, tag);
+  // Dismissed, it stays away through edits and autosaves and while Ember is in the background,
+  // then coming back restores it once.
+  await dismiss(page);
+  await page.getByLabel('WORKOUT NAME').fill('Synthetic push day');
+  await saved(page);
+  await switchAway(page, 'hidden');
+  await page.getByLabel('WORKOUT NAME').fill('Synthetic push');
+  await saved(page);
+  expect(await shown(page)).toHaveLength(0);
+  await switchAway(page, 'visible');
+  await expect.poll(() => shown(page)).toHaveLength(1);
+  expect(await shows(page)).toBe(2);
+  await switchAway(page, 'hidden');
+  await switchAway(page, 'visible');
+  await saved(page);
+  expect(await shows(page)).toBe(2);
+
+  // Reopening Ember after a dismissal restores it.
+  await dismiss(page);
   await page.reload();
   await expect(page.getByLabel('WORKOUT NAME')).toHaveValue('Synthetic push');
-  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
-  expect(await shown(page)).toHaveLength(0);
-  expect(await shows(page)).toBe(1);
+  await expect.poll(() => shown(page)).toHaveLength(1);
+  expect(await shows(page)).toBe(3);
 
   // The worker's tap message brings the minimized logger back without a reload, closing a
   // Replace prompt that was open over the page.
@@ -126,6 +154,14 @@ test('an allowed device shows one workout notification that resumes the logger a
       );
     });
   await expect.poll(async () => (await owners()).sort()).toEqual([false, true]);
+  // The read-only tab neither clears the owner's notification nor brings back a dismissed one.
+  expect(await shown(second)).toHaveLength(1);
+  await dismiss(page);
+  await switchAway(second, 'hidden');
+  await switchAway(second, 'visible');
+  await expect(second.locator('.app-shell')).toHaveAttribute('data-save', /^(saved|error)$/);
+  expect(await shown(second)).toHaveLength(0);
+  expect(await shows(page)).toBe(3);
   await second.close();
   await worker.evaluate(async () => {
     const scope = self as unknown as {
@@ -139,11 +175,17 @@ test('an allowed device shows one workout notification that resumes the logger a
   await expect(page.getByLabel('WORKOUT NAME')).toHaveValue('Synthetic push');
   expect(await page.evaluate(() => (window as unknown as {marker?: boolean}).marker)).toBe(true);
 
-  // Turning it off and on in Settings shows it again; discarding the workout clears it.
+  // Switched off in Settings, coming back does not show it; switching it on does, and
+  // discarding the workout clears it.
   await page.getByRole('button', {name: 'Settings'}).last().click();
   const row = page.getByRole('switch', {name: 'Active workout'});
   await row.click();
   await expect(row).toHaveAttribute('aria-checked', 'false');
+  await switchAway(page, 'hidden');
+  await switchAway(page, 'visible');
+  await saved(page);
+  expect(await shown(page)).toHaveLength(0);
+  expect(await shows(page)).toBe(3);
   await row.click();
   await expect(row).toHaveAttribute('aria-checked', 'true');
   await expect.poll(() => shown(page)).toHaveLength(1);

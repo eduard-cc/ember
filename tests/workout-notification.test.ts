@@ -38,8 +38,11 @@ function device({
       const item = {
         title,
         options,
+        data: options.data as unknown,
         close: () => shown.splice(shown.indexOf(item), 1),
       };
+      // The OS replaces a notification with the same tag.
+      shown.splice(0, shown.length, ...shown.filter((other) => other.options.tag !== options.tag));
       shown.push(item);
     }),
     getNotifications: vi.fn(async () => [...shown]),
@@ -58,7 +61,11 @@ function device({
     removeEventListener: vi.fn(),
     matchMedia: () => ({matches: false}),
   });
-  vi.stubGlobal('document', {addEventListener: vi.fn(), removeEventListener: vi.fn()});
+  vi.stubGlobal('document', {
+    visibilityState: 'visible',
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  });
   vi.stubGlobal(
     'navigator',
     supported
@@ -155,11 +162,24 @@ describe('asking on Start', () => {
 });
 
 describe('the active-workout notification', () => {
-  it('shows one silent, content-free notification per workout and not again after it is dismissed', async () => {
+  it('shows one silent, content-free notification per workout, keeps a dismissal for the visit and restores it on reopening', async () => {
     const os = device({permission: 'granted'});
-    const {reconcileWorkoutNotification} = await load();
-    await reconcileWorkoutNotification(workout);
-    await reconcileWorkoutNotification(workout);
+    const app = await load();
+    // App reconciles whenever the notification state changes (its effect).
+    let pass = Promise.resolve();
+    app.subscribeNotificationState(() => {
+      pass = app.reconcileWorkoutNotification(workout);
+    });
+    const onVisibility = vi
+      .mocked(document.addEventListener)
+      .mock.calls.find(([type]) => type === 'visibilitychange')![1] as () => void;
+    const switchTo = async (state: DocumentVisibilityState) => {
+      (document as {visibilityState: DocumentVisibilityState}).visibilityState = state;
+      onVisibility();
+      await pass;
+    };
+    await app.reconcileWorkoutNotification(workout);
+    await app.reconcileWorkoutNotification(workout);
     expect(os.registration.showNotification).toHaveBeenCalledOnce();
     expect(os.shown).toHaveLength(1);
     expect(os.shown[0].title).toBe('Workout active');
@@ -169,13 +189,34 @@ describe('the active-workout notification', () => {
       badge: '/icons/badge-96.png',
       silent: true,
     });
+    // Coming back while it is still shown leaves it alone.
+    await switchTo('hidden');
+    await switchTo('visible');
+    expect(os.registration.showNotification).toHaveBeenCalledOnce();
+
+    // Dismissed, it stays away for the rest of the visit and while Ember is in the background.
     os.shown[0].close();
-    // A relaunch with the same draft keeps the owner's dismissal.
+    await app.reconcileWorkoutNotification(workout);
+    await switchTo('hidden');
+    await app.reconcileWorkoutNotification(workout);
+    expect(os.shown).toHaveLength(0);
+    // Bringing Ember back restores it once.
+    await switchTo('visible');
+    await app.reconcileWorkoutNotification(workout);
+    expect(os.registration.showNotification).toHaveBeenCalledTimes(2);
+    expect(os.shown).toHaveLength(1);
+
+    // A relaunch keeps a notification that is still shown and restores a dismissed one.
     const relaunched = await load();
     await relaunched.reconcileWorkoutNotification(workout);
-    expect(os.registration.showNotification).toHaveBeenCalledOnce();
-    await relaunched.reconcileWorkoutNotification({id: 'w2', date: workout.date});
     expect(os.registration.showNotification).toHaveBeenCalledTimes(2);
+    os.shown[0].close();
+    const reopened = await load();
+    await reopened.reconcileWorkoutNotification(workout);
+    expect(os.registration.showNotification).toHaveBeenCalledTimes(3);
+    await reopened.reconcileWorkoutNotification({id: 'w2', date: workout.date});
+    expect(os.registration.showNotification).toHaveBeenCalledTimes(4);
+    expect(os.shown).toHaveLength(1);
   });
 
   it('clears when the workout ends or the switch is turned off, and turning it on shows it again', async () => {
@@ -205,23 +246,6 @@ describe('the active-workout notification', () => {
       enabled: false,
       asked: false,
     });
-    expect(localStorage.getItem('ember:workout-notification-posted:v1')).toBe('w1');
-  });
-
-  it('shows it again after turning it off and on when the device cannot save changes', async () => {
-    vi.stubGlobal(
-      'localStorage',
-      memoryStorage({'ember:workout-notification-posted:v1': 'w1'}, {denyWrites: true}),
-    );
-    const os = device({permission: 'granted'});
-    const {reconcileWorkoutNotification, setNotificationsEnabled} = await load();
-    await reconcileWorkoutNotification(workout);
-    expect(os.shown).toHaveLength(0);
-    setNotificationsEnabled(false);
-    await reconcileWorkoutNotification(workout);
-    setNotificationsEnabled(true);
-    await reconcileWorkoutNotification(workout);
-    expect(os.shown).toHaveLength(1);
   });
 
   it('shows it again when another tab turns it off and on', async () => {

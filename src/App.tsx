@@ -324,7 +324,8 @@ export default function App() {
     }
   };
   const disabled = !hydrated || readOnly || sync.locked || maintenance || !!recoveryError;
-  // Only the tab that owns the draft, once it is loaded, shows or clears the notification.
+  // Only the tab that owns the draft, once it is loaded, shows or clears the notification, also
+  // each time Ember comes back to the foreground.
   const notification = useNotificationState();
   const notifies = hydrated && !readOnly && !recoveryError && !demo;
   const activeId = state.active?.id;
@@ -334,7 +335,14 @@ export default function App() {
     void reconcileWorkoutNotification(
       activeId && activeStart ? {id: activeId, date: activeStart} : null,
     );
-  }, [notifies, activeId, activeStart, notification.preferences.enabled, notification.permission]);
+  }, [
+    notifies,
+    activeId,
+    activeStart,
+    notification.preferences.enabled,
+    notification.permission,
+    notification.visit,
+  ]);
   // On a notification tap the worker asks which window owns the draft, focuses it and asks it
   // to show the logger.
   const notificationOwner = useRef({owns: false, resume: () => {}});

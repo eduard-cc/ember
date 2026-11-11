@@ -6,9 +6,10 @@ import {useSyncExternalStore} from 'react';
  * through the service worker, so it needs no push server. On by default; the OS permission is
  * asked for once, from a Start workout tap, and Settings can ask again or turn it off.
  *
- * `postedKey` holds the workout it was last shown for, so a dismissed notification is not shown
- * again for that workout on later launches or in another tab. It has its own key so recording a
- * show never writes over the choice in `notificationKey`.
+ * Shown at most once per visit: a visit starts when Ember opens or is brought back to the
+ * foreground. A notification swiped away stays away for the rest of that visit and while Ember is
+ * in the background; the next open or return shows it again. One still shown for the workout is
+ * left alone. Settings is the way to turn it off for good.
  */
 export interface NotificationPreferences {
   version: 1;
@@ -17,7 +18,6 @@ export interface NotificationPreferences {
   asked: boolean;
 }
 export const notificationKey = 'ember:workout-notification:v1';
-export const postedKey = 'ember:workout-notification-posted:v1';
 export const notificationTag = 'ember-active-workout';
 const defaults: NotificationPreferences = {version: 1, enabled: true, asked: false};
 
@@ -64,6 +64,8 @@ export interface NotificationState {
   permission: NotificationPermission | 'unsupported';
   /** The last request or show failure; cleared by the next success. */
   error: string;
+  /** Counts returns to the foreground, so the owner tab reconciles on each one. */
+  visit: number;
 }
 
 let preferences: NotificationPreferences | null = null;
@@ -97,13 +99,15 @@ export function notificationState(): NotificationState {
     preferences: currentPreferences(),
     permission: permission(),
     error: requestError || showError,
+    visit,
   };
   // Permission can change outside the app (system settings), so it is read on every snapshot.
   if (
     !snapshot ||
     snapshot.preferences !== next.preferences ||
     snapshot.permission !== next.permission ||
-    snapshot.error !== next.error
+    snapshot.error !== next.error ||
+    snapshot.visit !== next.visit
   )
     snapshot = next;
   return snapshot;
@@ -121,27 +125,9 @@ function save(patch: Partial<Omit<NotificationPreferences, 'version'>>): boolean
   }
 }
 
-// Read once, then kept by this tab and updated from other tabs' storage events, like the choice.
-let postedWorkout: string | null | undefined;
-function posted(): string | null {
-  if (postedWorkout === undefined) {
-    try {
-      postedWorkout = localStorage.getItem(postedKey);
-    } catch {
-      postedWorkout = null;
-    }
-  }
-  return postedWorkout;
-}
-function setPosted(workout: string | null) {
-  postedWorkout = workout;
-  try {
-    if (workout) localStorage.setItem(postedKey, workout);
-    else localStorage.removeItem(postedKey);
-  } catch {
-    /* Kept for this tab. */
-  }
-}
+// The workout it was shown for in this visit; a new page or a return to the foreground clears it.
+let visit = 0;
+let postedWorkout: string | null = null;
 
 function setRequestError(message: string) {
   requestError = message;
@@ -179,8 +165,6 @@ export function askOnStart() {
 
 /** The Settings switch. Turning it on shows the notification again for a running workout. */
 export function setNotificationsEnabled(enabled: boolean): boolean {
-  // The marker clears first, so a tab that hears the change in write order shows it again.
-  if (enabled) setPosted(null);
   const saved = save({enabled});
   if (enabled && notificationSupport() === 'supported' && Notification.permission === 'default')
     void requestNotificationPermission();
@@ -206,10 +190,14 @@ async function apply(workout: ActiveWorkout | null) {
   const {enabled} = currentPreferences();
   if (!workout || !enabled || Notification.permission !== 'granted') {
     for (const item of shown) item.close();
+    // Turning it back on, or the next workout, shows it again in this visit.
+    postedWorkout = null;
     return;
   }
-  // Shown (or dismissed by the owner) for this workout already.
-  if (posted() === workout.id) return;
+  // Still shown, or shown and dismissed in this visit; in the background it waits for the return.
+  if (shown.some((item) => (item.data as {workout?: unknown} | null)?.workout === workout.id))
+    postedWorkout = workout.id;
+  if (postedWorkout === workout.id || document.visibilityState === 'hidden') return;
   await registration.showNotification('Workout active', {
     body: `Started at ${startTime(workout.date)} · Tap to resume`,
     tag: notificationTag,
@@ -218,7 +206,7 @@ async function apply(workout: ActiveWorkout | null) {
     silent: true,
     data: {workout: workout.id},
   });
-  setPosted(workout.id);
+  postedWorkout = workout.id;
 }
 
 /**
@@ -251,13 +239,16 @@ export function reconcileWorkoutNotification(workout: ActiveWorkout | null): Pro
 
 // Another tab changed the setting, or the owner changed the permission and came back.
 const onStorage = (event: StorageEvent) => {
-  if (event.key === postedKey) postedWorkout = event.newValue;
   if (event.key !== notificationKey) return;
   preferences = parseNotificationPreferences(event.newValue);
   notify();
 };
+// Back in the foreground: a new visit, which may show it again.
 const onVisible = () => {
-  if (document.visibilityState === 'visible') notify();
+  if (document.visibilityState !== 'visible') return;
+  visit++;
+  postedWorkout = null;
+  notify();
 };
 
 export function subscribeNotificationState(listener: () => void) {
@@ -279,6 +270,7 @@ const serverState: NotificationState = {
   preferences: defaults,
   permission: 'unsupported',
   error: '',
+  visit: 0,
 };
 export const useNotificationState = () =>
   useSyncExternalStore(subscribeNotificationState, notificationState, () => serverState);
