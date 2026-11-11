@@ -3,7 +3,7 @@ import {useState} from 'react';
 
 import {previewFeedback, setFeedbackPreferences, useFeedbackPreferences} from '../feedback';
 import {cn} from '../utils/cn';
-import {SettingsGroup, SettingsList, settingsRowClass} from './settings-group';
+import {SettingsGroup, SettingsList, SwitchTrack, settingsRowClass} from './settings-group';
 import {InlineError} from './ui/inline-error';
 
 const options = [
@@ -74,23 +74,7 @@ export function FeedbackSettings() {
                     {description}
                   </span>
                 </span>
-                <span
-                  aria-hidden='true'
-                  className={cn(
-                    'relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200',
-                    // Off keeps a muted-foreground outline and knob, so its shape stays above 3:1.
-                    on
-                      ? 'bg-primary'
-                      : 'bg-muted shadow-[inset_0_0_0_1px_hsl(var(--muted-foreground))]',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'absolute top-0.5 left-0.5 size-6 rounded-full shadow-sm transition-transform duration-200 ease-(--ease-out)',
-                      on ? 'translate-x-5 bg-background' : 'bg-muted-foreground',
-                    )}
-                  />
-                </span>
+                <SwitchTrack on={on} />
               </button>
             </li>
           );

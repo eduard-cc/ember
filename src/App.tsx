@@ -21,6 +21,7 @@ import {ExercisePage} from './components/ExercisePage';
 import {FeedbackSettings} from './components/FeedbackSettings';
 import {type Celebration, FinishCelebration} from './components/FinishCelebration';
 import {LaunchSplash, useLaunchSplash} from './components/LaunchSplash';
+import {NotificationSettings} from './components/NotificationSettings';
 import {ShellUpdatePanel} from './components/ShellUpdatePanel';
 import {StateNotice} from './components/StateNotice';
 import {SyncLockedNotice} from './components/SyncStatus';
@@ -54,6 +55,13 @@ import {countedSets} from './domain/sets';
 import type {Workout} from './domain/types';
 import {cue} from './feedback';
 import {MOBILE_QUERY, useIsMobile} from './hooks/use-is-mobile';
+import {
+  askOnStart,
+  ownerQuery,
+  reconcileWorkoutNotification,
+  resumeMessage,
+  useNotificationState,
+} from './pwa/workout-notification';
 import {useBackLayer} from './state/back';
 import {newWorkout, useWorkoutState} from './state/workout';
 import {useSync} from './sync/use-sync';
@@ -264,9 +272,11 @@ export default function App() {
   };
   const updateActive = (update: (active: Workout) => Workout) =>
     setState((s) => (s.active ? {...s, active: update(s.active)} : s));
+  // Start taps ask for notification permission once, inside the tap; the workout starts anyway.
   const start = (workout: Workout) => {
     if (state.active) setPendingWorkout(workout);
     else {
+      askOnStart();
       cue('start');
       void setState((s) => ({...s, active: newWorkout(workout)}));
       setView('Workout');
@@ -314,6 +324,42 @@ export default function App() {
     }
   };
   const disabled = !hydrated || readOnly || sync.locked || maintenance || !!recoveryError;
+  // Only the tab that owns the draft, once it is loaded, shows or clears the notification.
+  const notification = useNotificationState();
+  const notifies = hydrated && !readOnly && !recoveryError && !demo;
+  const activeId = state.active?.id;
+  const activeStart = state.active?.date;
+  useEffect(() => {
+    if (!notifies) return;
+    void reconcileWorkoutNotification(
+      activeId && activeStart ? {id: activeId, date: activeStart} : null,
+    );
+  }, [notifies, activeId, activeStart, notification.preferences.enabled, notification.permission]);
+  // On a notification tap the worker asks which window owns the draft, focuses it and asks it
+  // to show the logger.
+  const notificationOwner = useRef({owns: false, resume: () => {}});
+  useEffect(() => {
+    notificationOwner.current = {
+      owns: notifies && !!state.active,
+      resume: () => {
+        if (!state.active || sync.locked) return;
+        // Like Resume current workout: the Replace prompt and Settings close over the logger.
+        setPendingWorkout(null);
+        setSettingsOpen(false);
+        showLogger();
+      },
+    };
+  });
+  useEffect(() => {
+    const worker = 'serviceWorker' in navigator ? navigator.serviceWorker : null;
+    const onMessage = (event: MessageEvent<{type?: unknown} | null>) => {
+      if (event.data?.type === ownerQuery && notificationOwner.current.owns)
+        event.ports[0]?.postMessage(true);
+      if (event.data?.type === resumeMessage) notificationOwner.current.resume();
+    };
+    worker?.addEventListener('message', onMessage);
+    return () => worker?.removeEventListener('message', onMessage);
+  }, []);
   const showSheet = !!state.active && expanded && !sync.locked;
   // On phones the sheet slides up when the owner opens it and down when it is minimized. Only
   // user actions animate (`expand`), so a draft restored at launch is simply there. While it
@@ -714,12 +760,15 @@ export default function App() {
               </DialogClose>
             </div>
           </SectionHeading>
-          <DialogDescription srOnly>Appearance, feedback and app updates.</DialogDescription>
+          <DialogDescription srOnly>
+            Appearance, feedback, notification and app updates.
+          </DialogDescription>
           <StatusStrips className='rounded-card border not-first:mt-2' />
           {sync.locked && <SyncLockedNotice sync={sync} />}
           <div className='mt-5 space-y-10'>
             <AppearanceSettings settings={appearance} />
             <FeedbackSettings />
+            <NotificationSettings />
             {!demo && (
               <ShellUpdatePanel
                 repository={repository}
@@ -799,6 +848,7 @@ export default function App() {
               disabled={disabled}
               onClick={() => {
                 if (!pendingWorkout) return;
+                askOnStart();
                 cue('start');
                 void setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
                 setPendingWorkout(null);

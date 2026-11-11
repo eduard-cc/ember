@@ -1,4 +1,5 @@
 import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 import {describe, expect, it} from 'vitest';
 
 import {pwaShell} from '../../scripts/pwa-build';
@@ -71,10 +72,75 @@ describe('finite production shell build', () => {
         '/index.html',
         '/assets/squat-0-Ij78.webp',
         '/manifest.webmanifest',
+        '/icons/badge-96.png',
         ...manifest.icons.map((icon) => icon.src),
       ]),
     );
     for (const url of urls) expect(isServedShellFile(url.slice(1)), url).toBe(true);
+  });
+  it('answers a workout-notification tap by resuming the Ember window that owns the draft, else opening Ember', async () => {
+    const worker = emittedWorker(syntheticBundle(['index.html']));
+    const listeners: Record<string, (event: unknown) => void> = {};
+    /** `owner` answers the worker's question; the other windows stay quiet, like read-only tabs. */
+    const tap = async (windows: {url: string; owner?: boolean}[], tag = 'ember-active-workout') => {
+      const opened: string[] = [];
+      const focused: string[] = [];
+      const resumed: string[] = [];
+      const clients = windows.map(({url, owner}) => ({
+        url,
+        postMessage: (message: {type: string}, ports: MessagePort[] = []) => {
+          if (message.type === 'EMBER_RESUME_WORKOUT') resumed.push(url);
+          else if (message.type === 'EMBER_WORKOUT_OWNER' && owner) ports[0].postMessage(true);
+        },
+        focus: async () => focused.push(url),
+      }));
+      const self = {
+        location: {origin: 'https://ember.example'},
+        addEventListener: (type: string, listener: (event: unknown) => void) =>
+          (listeners[type] = listener),
+        clients: {
+          matchAll: async (options: unknown) => {
+            expect(options).toEqual({type: 'window', includeUncontrolled: true});
+            return clients;
+          },
+          openWindow: async (url: string) => opened.push(url),
+        },
+      };
+      // Runs the build's own emitted worker source against a fake worker global.
+      runInNewContext(worker, {self, URL, MessageChannel, setTimeout});
+      let work: Promise<unknown> = Promise.resolve();
+      listeners.notificationclick({
+        notification: {tag, data: {url: 'https://evil.example/'}},
+        waitUntil: (promise: Promise<unknown>) => (work = promise),
+      });
+      await work;
+      return {opened, focused, resumed};
+    };
+    expect(
+      await tap([
+        {url: 'https://other.example/', owner: true},
+        {url: 'https://ember.example/'},
+        {url: 'https://ember.example/?x=1', owner: true},
+      ]),
+    ).toEqual({
+      opened: [],
+      focused: ['https://ember.example/?x=1'],
+      resumed: ['https://ember.example/?x=1'],
+    });
+    // No window answers in time: the most recent Ember window is focused anyway.
+    expect(await tap([{url: 'https://ember.example/a'}, {url: 'https://ember.example/b'}])).toEqual(
+      {opened: [], focused: ['https://ember.example/a'], resumed: ['https://ember.example/a']},
+    );
+    expect(await tap([{url: 'https://other.example/'}])).toEqual({
+      opened: ['/'],
+      focused: [],
+      resumed: [],
+    });
+    expect(await tap([{url: 'https://ember.example/', owner: true}], 'other')).toEqual({
+      opened: [],
+      focused: [],
+      resumed: [],
+    });
   });
   it('keeps the shared server rule to built shell files only', () => {
     for (const file of [

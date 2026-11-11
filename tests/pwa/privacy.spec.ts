@@ -48,6 +48,7 @@ test('Cache Storage contains only the finite shell allowlist, never API, CSV or 
         '/icons/icon-512.png',
         '/icons/apple-touch-icon.png',
         '/icons/favicon.svg',
+        '/icons/badge-96.png',
       ]),
     );
     expect(
@@ -61,6 +62,7 @@ test('Cache Storage contains only the finite shell allowlist, never API, CSV or 
             '/icons/icon-512.png',
             '/icons/apple-touch-icon.png',
             '/icons/favicon.svg',
+            '/icons/badge-96.png',
           ].includes(path),
       ),
     ).toBe(true);

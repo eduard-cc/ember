@@ -70,6 +70,29 @@ self.addEventListener('fetch', event => {
   if (!URLS.includes(path)) return;
   event.respondWith(caches.open(CACHE).then(cache => cache.match(path)).then(response => response || fetch(event.request)));
 });
+self.addEventListener('notificationclick', event => {
+  if (event.notification.tag !== 'ember-active-workout') return;
+  // It stays up while the workout runs. The target is fixed: the Ember window that owns the
+  // draft (it answers within 300ms), else the most recent Ember window, else Ember's root.
+  event.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(windows => {
+    const ours = windows.filter(client => new URL(client.url).origin === self.location.origin);
+    if (!ours.length) return self.clients.openWindow('/');
+    const channels = [];
+    return new Promise(resolve => {
+      setTimeout(() => resolve(ours[0]), 300);
+      for (const client of ours) {
+        const channel = new MessageChannel();
+        channels.push(channel);
+        channel.port1.onmessage = answer => { if (answer.data === true) resolve(client); };
+        client.postMessage({type: 'EMBER_WORKOUT_OWNER'}, [channel.port2]);
+      }
+    }).then(client => {
+      for (const channel of channels) channel.port1.close();
+      client.postMessage({type: 'EMBER_RESUME_WORKOUT'});
+      return client.focus();
+    });
+  }));
+});
 `,
       });
     },

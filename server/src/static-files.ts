@@ -10,6 +10,8 @@ export const publicShellFiles: readonly string[] = Object.freeze([
 	'icons/icon-512.png',
 	'icons/apple-touch-icon.png',
 	'icons/favicon.svg',
+	// The Android status-bar mark of the active-workout notification.
+	'icons/badge-96.png',
 ]);
 
 /** `file` is a web-root-relative path without a leading slash, e.g. `assets/index-Ab12.js`. */
