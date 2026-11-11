@@ -14,13 +14,35 @@ const shown = (page: Page) =>
       })),
     tag,
   );
-/** Counts real show calls across reloads; the call still reaches the browser. */
-const countShows = (context: BrowserContext) =>
+/**
+ * An allowing OS and its notification centre. CI's headless Chromium reports notifications as
+ * denied and keeps no list, so the permission reads granted and the registration's two
+ * notification methods keep a per-tab list that survives reloads and counts shows. The worker
+ * and the app are real.
+ */
+const notificationCentre = (context: BrowserContext) =>
   context.addInitScript(() => {
-    const show = ServiceWorkerRegistration.prototype.showNotification;
-    ServiceWorkerRegistration.prototype.showNotification = function (...args) {
+    Object.defineProperty(Notification, 'permission', {configurable: true, get: () => 'granted'});
+    type Shown = {title: string; options: NotificationOptions};
+    const read = () => JSON.parse(sessionStorage.getItem('notifications') ?? '[]') as Shown[];
+    const write = (list: Shown[]) => sessionStorage.setItem('notifications', JSON.stringify(list));
+    ServiceWorkerRegistration.prototype.showNotification = async function (title, options = {}) {
       sessionStorage.setItem('shows', String(Number(sessionStorage.getItem('shows') ?? 0) + 1));
-      return show.apply(this, args);
+      write([...read().filter((item) => item.options.tag !== options.tag), {title, options}]);
+    };
+    ServiceWorkerRegistration.prototype.getNotifications = async function (filter = {}) {
+      return read()
+        .filter((item) => !filter.tag || item.options.tag === filter.tag)
+        .map(
+          (item) =>
+            ({
+              title: item.title,
+              body: item.options.body,
+              badge: item.options.badge,
+              silent: item.options.silent,
+              close: () => write(read().filter((other) => other.options.tag !== item.options.tag)),
+            }) as unknown as Notification,
+        );
     };
   });
 const shows = (page: Page) => page.evaluate(() => Number(sessionStorage.getItem('shows') ?? 0));
@@ -29,8 +51,7 @@ test('an allowed device shows one workout notification that resumes the logger a
   page,
   context,
 }) => {
-  await context.grantPermissions(['notifications']);
-  await countShows(context);
+  await notificationCentre(context);
   await page.goto('/');
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));
   await page.reload();
