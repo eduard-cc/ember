@@ -1,7 +1,7 @@
 import {existsSync, readFileSync, statSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 
-import {bodyPartsOf, catalog, catalogEntry} from '../src/catalog/catalog';
+import {bodyPartsOf, catalog, catalogEntry, muscles} from '../src/catalog/catalog';
 
 // Names as a Strong export writes them, so imported history maps 1:1 without renaming.
 const strongNames = [
@@ -33,6 +33,27 @@ describe('bundled exercise catalog', () => {
       'Full body',
     ]);
     expect(bodyPartsOf(['Plank', 'Synthetic Sled Drag'])).toEqual(['Core', 'Other']);
+  });
+  it('tags every exercise with its reviewed primary and secondary muscles', () => {
+    const table = JSON.parse(readFileSync('scripts/catalog/muscles.json', 'utf8')) as Record<
+      string,
+      {primary: string[]; secondary: string[]}
+    >;
+    expect(Object.keys(table).sort()).toEqual(catalog.map((e) => e.name).sort());
+    for (const exercise of catalog) {
+      const {primaryMuscles: primary, secondaryMuscles: secondary} = exercise;
+      expect({primary, secondary}, exercise.name).toEqual(table[exercise.name]);
+      expect(primary.length, exercise.name).toBeGreaterThan(0);
+      for (const muscle of [...primary, ...secondary]) expect(muscles).toContain(muscle);
+      expect(
+        primary.filter((m) => secondary.includes(m)),
+        exercise.name,
+      ).toEqual([]);
+      expect(exercise.sources.map((s) => s.kind)).not.toContain('muscles');
+    }
+    expect(catalogEntry('Hip Adductor (Machine)')?.primaryMuscles).toEqual(['Adductors']);
+    expect(catalogEntry('Shrug (Dumbbell)')?.primaryMuscles).toEqual(['Traps']);
+    expect(catalogEntry('Lateral Raise (Dumbbell)')?.primaryMuscles).toEqual(['Side delts']);
   });
   it('types assisted work as assistance so no strength formula applies', () => {
     for (const name of ['Pull Up (Assisted)', 'Triceps Dip (Assisted)', 'Chest Dip (Assisted)'])

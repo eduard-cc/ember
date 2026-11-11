@@ -5,7 +5,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Lie on a flat bench with your feet flat on the floor, keep your back flat on the bench.",
       "Grasp the bar a little wider than shoulder width apart.",
@@ -44,14 +44,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Bench Press",
-        "author": "sistab2",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/73/view-base"
       }
     ]
   },
@@ -61,7 +53,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "This is an exercise for chest, triceps and shoulder strengthening.",
       "Grasp the dumbbells in each hand and lie on a flat bench with your feet firmly on the ground.",
@@ -102,14 +94,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Benchpress Dumbbells",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/75/view-base"
       }
     ]
   },
@@ -119,7 +103,7 @@
     "equipment": "Smith machine",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Place a flat bench in the middle of the Smith Machine, with the bar in line with the middle of your chest.",
       "Lying on the bench, grasp the bar at shoulder width apart.",
@@ -166,7 +150,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Triceps", "Shoulders"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Lie flat on a bench with your feet flat on the floor.",
       "Place your hands wider than shoulder width apart on the bar and lift it off the rack, this is starting position.",
@@ -214,7 +198,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "Attach the cable pulley to shoulder height.",
       "Grasp the pulley in both hands and stand approximately one foot in front of the weight stacks, with one foot slightly in front of the other.",
@@ -252,14 +236,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Cable Cross-over",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/323/view-base"
       }
     ]
   },
@@ -268,8 +244,8 @@
     "bodyPart": "Chest",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Chest", "Triceps"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Triceps", "Front delts"],
     "instructions": [
       "Stand in between the parallel bars.",
       "Grip the handles of the parallel bars and push yourself up to the starting position with straightened arms.",
@@ -307,14 +283,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dips",
-        "author": "BFad07",
-        "license": "CC0 1.0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-        "url": "https://wger.de/exercise/194/view-base"
       }
     ]
   },
@@ -323,8 +291,8 @@
     "bodyPart": "Chest",
     "equipment": "Assisted bodyweight",
     "type": "assisted",
-    "primaryMuscles": ["Chest", "Triceps"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Triceps", "Front delts"],
     "instructions": [
       "Adjust the seat of the machine so that the handles are equal with your elbows.",
       "Grasping the handles, press down with equal pressure until your arms are fully extended.",
@@ -360,14 +328,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dips",
-        "author": "BFad07",
-        "license": "CC0 1.0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-        "url": "https://wger.de/exercise/194/view-base"
       }
     ]
   },
@@ -377,7 +337,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "Adjust the machine so you are sitting at chest heights with the pads.",
       "Sit on the machine with your back flat.",
@@ -416,14 +376,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Butterfly",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/135/view-base"
       }
     ]
   },
@@ -433,7 +385,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "<h3> Steps</h3>",
       "Lie on flat bench between two cable towers and your feet firmly on the ground.",
@@ -473,14 +425,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Fly With Cable",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/237/view-base"
       }
     ]
   },
@@ -490,7 +434,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "Lie on a flat bench with a dumbbell in each hand and your feet firmly on the ground.",
       "Lift the dumbbells over your chest extending your arms fully with a slight bend in your elbows, this is your starting position.",
@@ -528,14 +472,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Fly With Dumbbells",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/238/view-base"
       }
     ]
   },
@@ -545,7 +481,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Adjust the machine so that you are sitting with the bars at chest height.",
       "Place your hands on the bars and place your feet on the foot rest.",
@@ -582,14 +518,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Chest Press",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/129/view-base"
       }
     ]
   },
@@ -599,7 +527,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Lie on a decline bench with your head lower than your feet.",
       "Grasp the bar at a grip 3-6 inches wider than your shoulders.",
@@ -638,14 +566,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Decline Bench Press Barbell",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/185/view-base"
       }
     ]
   },
@@ -655,7 +575,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Grasp the dumbbells your hands and lie on a decline bench with your head lower than your feet.",
       "Raise the dumbbells above your chest, bringing your elbows close in, this is your starting position.",
@@ -692,14 +612,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Decline Bench Press Dumbbell",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/186/view-base"
       }
     ]
   },
@@ -709,7 +621,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "Lie on a decline bench with your head lower than your body and your feet firmly on the ground.",
       "With dumbbells together above your shoulders and your arms straight out above you as your starting position.",
@@ -747,14 +659,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Fly With Dumbbells, Decline Bench",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/239/view-base"
       }
     ]
   },
@@ -764,7 +668,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Biceps", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Grab your dumbbells and lay flat on your back with your knees bent and your feet flat on the ground (use a bench if you have one).",
       "Press the weights up, locking out your elbows (A).",
@@ -811,7 +715,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Lie flat on an incline bench set at a 45 degree angle, with your feet shoulder width apart.",
       "Grasp the bar a little wider than shoulder width apart.",
@@ -850,14 +754,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Incline Bench Press - Barbell",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/538/view-base"
       }
     ]
   },
@@ -867,7 +763,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Lie on an incline bench which has been set to an incline of 45 degrees.",
       "Start with the dumbbells at shoulder height, your arms wide and elbows pointing down to the floor.",
@@ -905,14 +801,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Incline Bench Press - Dumbbell",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/537/view-base"
       }
     ]
   },
@@ -922,7 +810,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Grasp a dumbbell in each hand and lay on an incline bench set at a 45 degree angle.",
       "Keep your feet flat on the floor and your back against the bench at all times.",
@@ -969,7 +857,7 @@
     "equipment": "Smith machine",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Place an incline bench at a 45 degree angle in the middle of the Smith Machine.",
       "Align the bench so the bar is across the upper portion of your chest.",
@@ -1007,14 +895,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Smith Machine Slight Incline Press",
-        "author": "novadani",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/925/view-base"
       }
     ]
   },
@@ -1024,7 +904,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Biceps", "Triceps", "Forearm"],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "Place an incline bench set at a 45 degree angle between two cable towers.",
       "Grasp a pulley in each hand with your palms facing up.",
@@ -1070,7 +950,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "Lie on an incline bench set a 45 degree angle with a dumbbell in each hand and your feet firmly on the ground.",
       "Lift the dumbbells over your chest extending your arms fully and your palms facing each other.",
@@ -1115,8 +995,8 @@
     "bodyPart": "Chest",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders", "Chest"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Adjust the seat of the machine so that the handles are near the upper portion of your chest.",
       "Slowly press the handles forward until your hands are fully extended, do not lock your elbows.",
@@ -1152,14 +1032,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Machine Incline Chest Press",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/2632/view-base"
       }
     ]
   },
@@ -1168,8 +1040,8 @@
     "bodyPart": "Chest",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Lats"],
+    "primaryMuscles": ["Chest", "Lats"],
+    "secondaryMuscles": ["Triceps"],
     "instructions": [
       "Lie on a flat bench with your feet flat on the floor and your head at the end of the bench.",
       "Grasp a dumbbell and raise it over your chest.",
@@ -1207,14 +1079,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Pullover",
-        "author": "3leh",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1273/view-base"
       }
     ]
   },
@@ -1224,7 +1088,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Abs", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Start with a basic push up, lay face down on the floor, or a mat; with your feet together curled slightly so you rise onto the ball of your feet.",
       "Place you hands shoulder width apart on the either side of your chest.",
@@ -1264,14 +1128,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Push-Up",
-        "author": "Settebello",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1551/view-base"
       }
     ]
   },
@@ -1281,7 +1137,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Chest"],
-    "secondaryMuscles": ["Shoulders", "Triceps"],
+    "secondaryMuscles": ["Front delts", "Triceps"],
     "instructions": [
       "Place your feet on a bench at least 18” off the ground.",
       "Make sure the tops of your feet are flush against the bench.",
@@ -1319,14 +1175,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Push-Ups | Decline",
-        "author": "anon1337",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1112/view-base"
       }
     ]
   },
@@ -1335,8 +1183,8 @@
     "bodyPart": "Back",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Traps"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Glutes", "Hamstrings"],
+    "secondaryMuscles": ["Lower back"],
     "instructions": [
       "Adjust the hyperextension bench so that your ankles are tucked under the footpads and your thighs are flat across the top pad.",
       "With your arms folded across your chest and your back straight, slowly bend at the waist towards the floor, keeping your back flat.",
@@ -1373,14 +1221,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Hyperextensions",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/301/view-base"
       }
     ]
   },
@@ -1389,8 +1229,8 @@
     "bodyPart": "Back",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Lats", "Upper back"],
+    "secondaryMuscles": ["Biceps", "Rear delts", "Lower back"],
     "instructions": [
       "With dumbbells in hand, bend at the hip until hands hang just below the knees (similar to straight-legged-deadlift starting position).",
       "Keep upper body angle constant while contracting your lats to pull you ellbows back pinching the shoulder blades at the top.",
@@ -1434,8 +1274,8 @@
     "bodyPart": "Back",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Shoulders", "Biceps"],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts", "Lower back"],
     "instructions": [
       "Holding a barbell with a pronated grip (palms facing down), bend your knees slightly and bring your torso forward, by bending at the waist, while keeping the back straight until it is almost parallel to the floor. Tip: Make sure that you keep the head up. The barbell should hang directly in front of you as your arms hang perpendicular to the floor and your torso. This is your starting position.",
       "Now, while keeping the torso stationary, breathe out and lift the barbell to you. Keep the elbows close to the body and only use the forearms to hold the weight. At the top contracted position, squeeze the back muscles and hold for a brief pause.",
@@ -1480,8 +1320,8 @@
     "bodyPart": "Back",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Lats", "Traps"],
-    "secondaryMuscles": ["Biceps", "Brachialis"],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts", "Lower back"],
     "instructions": [
       "Hold a dumbbell in each hand with a neutral or overhand grip.",
       "Hinge at the hips, pushing your glutes back, until your torso is roughly 45–75 degrees to the floor. Keep a slight bend in your knees.",
@@ -1534,8 +1374,8 @@
     "bodyPart": "Back",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Shoulders", "Biceps"],
+    "primaryMuscles": ["Lats", "Upper back"],
+    "secondaryMuscles": ["Biceps", "Rear delts", "Lower back"],
     "instructions": [
       "Bend over a barbell at slight angle with your knees bent and your back straight.",
       "Grasp the bar with a reverse grip (palms facing up) and slowly pull the barbell to your abs, keeping your elbows close to your sides.",
@@ -1573,14 +1413,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Bent Over Rowing Reverse",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/84/view-base"
       }
     ]
   },
@@ -1589,8 +1421,8 @@
     "bodyPart": "Back",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Biceps", "Lats", "Traps"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts"],
     "instructions": [
       "Set up an adjustable bench at a 45-degree angle.",
       "Lay on your stomach with your head hanging just above the edge of the bench.",
@@ -1636,8 +1468,8 @@
     "bodyPart": "Back",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Biceps", "Lats"],
-    "secondaryMuscles": ["Brachialis", "Traps"],
+    "primaryMuscles": ["Lats", "Biceps"],
+    "secondaryMuscles": ["Upper back", "Forearms"],
     "instructions": [
       "The chin-up (also known as a chin or chinup) is a strength training exercise.",
       "People frequently do this exercise with the intention of strengthening muscles such as the latissimus dorsi and biceps, which extend the shoulder and flex the elbow, respectively.",
@@ -1682,8 +1514,8 @@
     "bodyPart": "Back",
     "equipment": "Assisted bodyweight",
     "type": "assisted",
-    "primaryMuscles": ["Biceps", "Lats"],
-    "secondaryMuscles": ["Brachialis", "Traps"],
+    "primaryMuscles": ["Lats", "Biceps"],
+    "secondaryMuscles": ["Upper back", "Forearms"],
     "instructions": ["Chin-ups with machine assistance (counterweights)"],
     "images": [
       {
@@ -1723,8 +1555,8 @@
     "bodyPart": "Back",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Glutes"],
+    "primaryMuscles": ["Glutes", "Hamstrings", "Lower back"],
+    "secondaryMuscles": ["Quads", "Traps", "Forearms"],
     "instructions": [
       "Stand with your feet shoulder width apart so that your feet are under the bar.",
       "Keeping your back straight bend at the waist, allow some bend in your knees.",
@@ -1762,14 +1594,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Deadlifts",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/184/view-base"
       }
     ]
   },
@@ -1778,8 +1602,8 @@
     "bodyPart": "Back",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Hamstrings", "Glutes"],
-    "secondaryMuscles": ["Quads", "Traps"],
+    "primaryMuscles": ["Glutes", "Hamstrings", "Lower back"],
+    "secondaryMuscles": ["Quads", "Traps", "Forearms"],
     "instructions": [
       "Grasp 2 dumbbells and stand with your feet shoulder width apart.",
       "Keeping your back straight bend at the waist, allow some bend in your knees.",
@@ -1819,14 +1643,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dumbbell Deadlift",
-        "author": "Anastasious",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1370/view-base"
       }
     ]
   },
@@ -1835,8 +1651,8 @@
     "bodyPart": "Back",
     "equipment": "Smith machine",
     "type": "weighted",
-    "primaryMuscles": ["Lower back"],
-    "secondaryMuscles": ["Hamstrings", "Calves"],
+    "primaryMuscles": ["Glutes", "Hamstrings", "Lower back"],
+    "secondaryMuscles": ["Quads", "Traps", "Forearms"],
     "instructions": [
       "Stand with your feet shoulder width apart so that your feet are under the bar.",
       "Keeping your back straight bend at the waist, allow some bend in your knees.",
@@ -1882,8 +1698,8 @@
     "bodyPart": "Back",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Biceps", "Lats"],
-    "secondaryMuscles": ["Chest", "Abs", "Traps"],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts"],
     "instructions": [
       "Lie under a bar so that the bar is at mid chest level and your feet are firmly on the floor.",
       "Draw your abs in and keep your back flat.",
@@ -1921,14 +1737,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Inverted Rows",
-        "author": "Gavru",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1198/view-base"
       }
     ]
   },
@@ -1937,8 +1745,8 @@
     "bodyPart": "Back",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts"],
     "instructions": [
       "Adjust seat height so that the handles are at the bottom of your pectorals or just below."
     ],
@@ -1981,7 +1789,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Shoulders", "Brachialis", "Serratus", "Traps"],
+    "secondaryMuscles": ["Biceps", "Upper back"],
     "instructions": [
       "Sit at a cable pull down machine fitted with a wide bar.",
       "Grasp the bar with a wide overhand grip (palms facing forward) .",
@@ -2012,14 +1820,6 @@
         "changes": "whitespace normalised"
       },
       {
-        "kind": "muscles",
-        "title": "Wide-grip Pulldown",
-        "author": "tuckerm",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/723/view-base"
-      },
-      {
         "kind": "illustration",
         "title": "Lat Pulldown (Cable)",
         "author": "Ember (AI-assisted, gpt-image-2)",
@@ -2035,8 +1835,8 @@
     "bodyPart": "Back",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Biceps", "Lats"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Lats"],
+    "secondaryMuscles": ["Biceps", "Upper back"],
     "instructions": [
       "Custom description created by the Integrated Conditioning routine importer for wger."
     ],
@@ -2079,7 +1879,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Lats"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Biceps", "Upper back"],
     "instructions": [
       "Attach a V bar to the pull down pulley of a cable machine.",
       "Sitting upright with your abs drawn grasp the bar with an overhand grip, your palms facing in.",
@@ -2117,14 +1917,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Close-grip Lat Pull Down",
-        "author": "tuckerm",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/158/view-base"
       }
     ]
   },
@@ -2133,8 +1925,8 @@
     "bodyPart": "Back",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Biceps"],
+    "primaryMuscles": ["Lats", "Biceps"],
+    "secondaryMuscles": ["Upper back"],
     "instructions": [
       "Sitting upright with your abs drawn in grasp a Pull Down bar with and underhand grip shoulder width apart.",
       "Pull the bar down till the bar reaches your upper chest, keeping your elbows close to your body.",
@@ -2171,14 +1963,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Underhand Lat Pull Down",
-        "author": "tuckerm",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/684/view-base"
       }
     ]
   },
@@ -2187,8 +1971,8 @@
     "bodyPart": "Back",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Lats", "Traps"],
-    "secondaryMuscles": ["Biceps", "Triceps"],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts", "Lower back"],
     "instructions": [
       "Back excercise with a barbell with a starting position which is in a bent over position with the back paralell to the ground.",
       "The barbell is on the ground at chest level.For the movement grab the barbell at shoulder width grip and pull towards your chest without losing the bent over position and without moving anything but your arms"
@@ -2232,7 +2016,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Shoulders", "Biceps", "Traps"],
+    "secondaryMuscles": ["Biceps", "Upper back", "Forearms"],
     "instructions": [
       "Grab the pull-up bar with the palms facing forward using the prescribed grip.",
       "As you have both arms extended in front of you holding the bar at the chosen grip width, bring your torso back around 30 degrees or so while creating a curvature on your lower back and sticking your chest out. This is your starting position.",
@@ -2272,14 +2056,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Pull-ups",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/475/view-base"
       }
     ]
   },
@@ -2289,7 +2065,7 @@
     "equipment": "Assisted bodyweight",
     "type": "assisted",
     "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Shoulders", "Biceps", "Traps"],
+    "secondaryMuscles": ["Biceps", "Upper back", "Forearms"],
     "instructions": [
       "Grab the pull-up bar with the palms facing forward using the prescribed grip.",
       "As you have both arms extended in front of you holding the bar at the chosen grip width, bring your torso back around 30 degrees or so while creating a curvature on your lower back and sticking your chest out. This is your starting position.",
@@ -2320,14 +2096,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Pull Ups on Machine",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/477/view-base"
       },
       {
         "kind": "illustration",
@@ -2386,8 +2154,8 @@
     "bodyPart": "Back",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Glutes"],
-    "secondaryMuscles": ["Biceps"],
+    "primaryMuscles": ["Glutes", "Hamstrings", "Lower back"],
+    "secondaryMuscles": ["Traps", "Forearms", "Upper back"],
     "instructions": [
       "Deadlift to be done using a Smith machine or a free rack.",
       "Bar or barbell hould be just right under the knee cap level.",
@@ -2432,8 +2200,8 @@
     "bodyPart": "Back",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Biceps", "Brachialis"],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts"],
     "instructions": [
       "Sit at a low pulley machine with your feet resting against the footrests and your knees slightly bent.",
       "With your abs drawn in and your back straight lean forward slightly to grasp the pulleys with an overhand grip (palms face downwards).",
@@ -2471,14 +2239,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Long-Pulley (low Row)",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/394/view-base"
       }
     ]
   },
@@ -2487,8 +2247,8 @@
     "bodyPart": "Back",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Shoulders", "Traps"],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts"],
     "instructions": [
       "Keep your chest up and squeeze your shoulder blades at the end.",
       "Don’t hunch forward or round your back during the pull."
@@ -2531,8 +2291,8 @@
     "bodyPart": "Back",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Traps"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Stand on the floor with your abs drawn in and your back straight.",
       "Grasp a barbell with a grip a little wider than shoulder width at arms length.",
@@ -2571,14 +2331,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Shrugs, Barbells",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/571/view-base"
       }
     ]
   },
@@ -2588,7 +2340,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Traps"],
-    "secondaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Attach a pulley to the lowest setting on cable machine.",
       "Stand with your feet shoulder width apart, your abs drawn and your back straight.",
@@ -2634,8 +2386,8 @@
     "bodyPart": "Back",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Traps"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Stand with your feet shoulder width apart and a slight bend in your knees.",
       "Hold a dumbbell in each hand and with your arms at your sides.",
@@ -2673,14 +2425,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Shrugs, Dumbbells",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/572/view-base"
       }
     ]
   },
@@ -2689,8 +2433,8 @@
     "bodyPart": "Back",
     "equipment": "Smith machine",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Traps"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Place the barbell at waist height.",
       "Stand with your feet shoulder width apart and your abs drawn in.",
@@ -2737,7 +2481,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Lats"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Triceps"],
     "instructions": [
       "Grasp wide grip pull down bar with a wide grip so your hands are on the portion of the bar which curves down.",
       "Stand erect with your abs drawn in.",
@@ -2774,14 +2518,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Straight-Arm Pulldown (Cable)",
-        "author": "barry",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1726/view-base"
       }
     ]
   },
@@ -2791,7 +2527,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Lower back"],
-    "secondaryMuscles": ["Core"],
+    "secondaryMuscles": ["Glutes"],
     "instructions": [
       "Lie flat on your stomach with your arms stretched out in front of you.",
       "Raise your arms and legs off the floor and hold this position for 2 seconds.",
@@ -2836,8 +2572,8 @@
     "bodyPart": "Back",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Lats"],
-    "secondaryMuscles": ["Shoulders", "Biceps", "Brachialis"],
+    "primaryMuscles": ["Upper back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Rear delts", "Lower back"],
     "instructions": [
       "Place your feet on either side of a T-Bar Machine.",
       "With your knees slightly bent and abs drawn in, grasp the handles with a narrow grip.",
@@ -2875,14 +2611,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Rowing, T-bar",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/513/view-base"
       }
     ]
   },
@@ -2891,8 +2619,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Traps", "Triceps"],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps"],
     "instructions": [
       "Sit on a flat bench, feet point forward with your abs drawn in.",
       "Grasp a dumbbell in each hand with your palm facing towards your body",
@@ -2931,14 +2659,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Arnold Shoulder Press",
-        "author": "trzr23",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/20/view-base"
       }
     ]
   },
@@ -2947,8 +2667,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Rotator cuff"],
+    "secondaryMuscles": ["Rear delts"],
     "instructions": [
       "Start off placing an extension band around a post or in a secure position where it will not release and is at elbow level.",
       "Position yourself to the side of the band and with your hand that is opposite of the band, reach out and grab the handle.",
@@ -2994,8 +2714,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Traps"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Rear delts"],
+    "secondaryMuscles": ["Upper back", "Rotator cuff"],
     "instructions": [
       "Attach a rope to a pulley station set at about chest level.",
       "Step back so you're supporting the weight with arms completely outstretched and assume a staggered (one foot forward) stance.",
@@ -3043,8 +2763,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Chest", "Forerm"],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Chest"],
     "instructions": [
       "Grasp a barbell with an overhand grip(palms of hands face downwards) .",
       "Stand up-right with your feet shoulder width apart, knees slightly bent and your abs drawn in.",
@@ -3089,8 +2809,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Chest"],
     "instructions": [
       "Place the pulley on the setting just above the floor.",
       "Stand with your feet shoulder width apart, your abs drawn in and your knees slightly bent.",
@@ -3129,14 +2849,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Front Raise (Cable)",
-        "author": "barry",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1731/view-base"
       }
     ]
   },
@@ -3145,8 +2857,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Chest"],
     "instructions": [
       "Stand with a dumbbell in each hand with an overhand grip, your feet shoulder width apart and your abs drawn in.",
       "Keeping each arm straight raise your left arm to just above shoulder height.",
@@ -3183,14 +2895,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Front Raises",
-        "author": "Manu, wikipedia",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/256/view-base"
       }
     ]
   },
@@ -3199,8 +2903,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Chest", "Triceps", "Side delts"],
     "instructions": [
       "Lie down on an incline bench with your feet flat on the floor and grasp the dumbbells.",
       "With your elbows bent raise your arms up until in line with your shoulders this is your starting position.",
@@ -3245,8 +2949,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Rotator cuff"],
+    "secondaryMuscles": ["Chest", "Lats"],
     "instructions": [
       "Sit on the floor with your body close to low cable pulley.",
       "Grasp the pulley with your left arm and position your elbow bent at 90 degree angle.",
@@ -3284,14 +2988,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Shoulder Internal Rotation (Cable)",
-        "author": "barry",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1728/view-base"
       }
     ]
   },
@@ -3300,8 +2996,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Side delts"],
+    "secondaryMuscles": ["Traps"],
     "instructions": [
       "Position a cable at the lowest position possible and attach a single handle.",
       "Reach across your body and grab the handle with a neutral grip.",
@@ -3346,8 +3042,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Side delts"],
+    "secondaryMuscles": ["Traps"],
     "instructions": [
       "Grasp a dumbbell in each hand, palms facing inward towards your body and the dumbbells at your sides.",
       "Standing with your feet shoulder with apart, draw your abs in and bend your knees slightly.",
@@ -3386,14 +3082,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Lateral Raises",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/348/view-base"
       }
     ]
   },
@@ -3402,8 +3090,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Side delts"],
+    "secondaryMuscles": ["Traps"],
     "instructions": [
       "Machine side lateral raises are an isolation exercise for the side (lateral) deltoids, performed on a machine for stability, targeting the outer shoulder by lifting pads or handles out to the sides to shoulder height, then lowering slowly, keeping elbows slightly bent and traps down to focus on the delts.",
       "This exercise helps build shoulder width by preventing swinging and providing constant tension, making it great for beginners or as a finisher.",
@@ -3451,8 +3139,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Rear delts"],
+    "secondaryMuscles": ["Upper back"],
     "instructions": [
       "Place the dumbbells at he head of the bench.",
       "Lie facedown on a raised bench; raised enough for your arms to move freely beneath the bench.",
@@ -3499,8 +3187,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps"],
     "instructions": [
       "Sit on a bench, the back rest should be almost vertical.",
       "Take a barbell with a shoulder wide grip and bring it up to chest height.",
@@ -3545,8 +3233,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Abs", "Serratus", "Traps", "Triceps"],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps", "Obliques"],
     "instructions": [
       "Stand with your feet shoulder width apart, back straight and abs drawn in.",
       "Grasp a dumbbell in your hand and lift it with a bent elbow to your shoulder height to start.",
@@ -3584,14 +3272,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Single-arm dumbbell shoulder press",
-        "author": "evtimovgeorg",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1968/view-base"
       }
     ]
   },
@@ -3600,8 +3280,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Smith machine",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps"],
     "instructions": [
       "The exercise is basically the same as with a free barbell: Sit on a bench, the back rest should be almost vertical.",
       "Take a bar with a shoulder wide grip and bring it down to chest height.",
@@ -3646,8 +3326,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Traps"],
-    "secondaryMuscles": ["Glutes"],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps", "Quads", "Glutes"],
     "instructions": [
       "Clean your dumbbells onto your shoulders, palms facing in.",
       "Take a breath and brace your core. (picture 1)Dip at the knees and use your legs to help (picture 2) press your dumbbells overhead.",
@@ -3691,7 +3371,7 @@
     "bodyPart": "Shoulders",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
+    "primaryMuscles": ["Rear delts", "Upper back"],
     "secondaryMuscles": ["Biceps"],
     "instructions": [
       "Place a barbell on the floor in front of you with the resided weights attached.",
@@ -3739,8 +3419,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders", "Brachialis", "Traps"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Rear delts", "Upper back"],
+    "secondaryMuscles": ["Biceps"],
     "instructions": [
       "Place your right foot on the floor, rest your left knee and hand on a flat bench.",
       "Lean forward so your body’s weight is supported by your left arm and knee.",
@@ -3780,14 +3460,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dumbbell rear delt row",
-        "author": "Lynn_McIntyre",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1227/view-base"
       }
     ]
   },
@@ -3796,8 +3468,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Band",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Triceps", "Lats"],
+    "primaryMuscles": ["Rear delts"],
+    "secondaryMuscles": ["Upper back"],
     "instructions": [
       "Place an exercise band around a post or machine at mid chest height.",
       "Stand with your feet shoulder width apart, abs drawn in and knees slightly bent.",
@@ -3844,8 +3516,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders", "Traps"],
-    "secondaryMuscles": ["Triceps"],
+    "primaryMuscles": ["Rear delts"],
+    "secondaryMuscles": ["Upper back"],
     "instructions": [
       "Grasp the handle of the low pulley with your right hand.",
       "Bend forward from the waist; your upper body should be nearly parallel with the floor. Bend your knees slightly and place your left hand on your left thigh. Let your right arm hang from your shoulder in front of you with your elbow slightly bent. This is your starting position.",
@@ -3884,14 +3556,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Cable Rear Delt Fly",
-        "author": "cshep442",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/822/view-base"
       }
     ]
   },
@@ -3900,8 +3564,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Traps"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Rear delts"],
+    "secondaryMuscles": ["Upper back"],
     "instructions": [
       "Rest your forehead on an incline bench in oder to stabilise your movements so you are bent over with your back parallel to the floor, draw your abs in.",
       "Grasp dumbbells in your hands with your arms straight and elbows slightly bent ensuring they are not locked.",
@@ -3939,14 +3603,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dumbbell Bent-Over Reverse Fly",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/2643/view-base"
       }
     ]
   },
@@ -3955,8 +3611,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Trapezius"],
+    "primaryMuscles": ["Rear delts"],
+    "secondaryMuscles": ["Upper back"],
     "instructions": [
       "Seated rear delt fly on pec deck machine (facing the machine and extending arms backwards, the hands should be at the height of the shoulders)"
     ],
@@ -3998,8 +3654,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps"],
     "instructions": [
       "Sitting on a bench with a barbell rack, grasp the barbell with a grip 3 to 4 inches wider than your shoulders.",
       "Lift the bar off the rack and lower it to just at the height of your shoulders.",
@@ -4036,14 +3692,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Shoulder Press, Barbell",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/566/view-base"
       }
     ]
   },
@@ -4052,8 +3700,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps"],
     "instructions": [
       "Sitting on a bench, with your abs drawn in grasp a dumbbell in each hand, with your palms facing forward.",
       "Begin with your arms at the height of your shoulders.",
@@ -4092,14 +3740,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Shoulder Press, Dumbbells",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/567/view-base"
       }
     ]
   },
@@ -4108,8 +3748,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Rear delts"],
+    "secondaryMuscles": ["Upper back"],
     "instructions": [
       "Sit on the edge of a bench with your feet on the floor in front of you.",
       "Rest your chest on your thighs with your back straight, grasp the cable pulleys with opposite hands.",
@@ -4155,8 +3795,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Triceps"],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps"],
     "instructions": [
       "Sit upright with your back supported by the chair and draw your abs in.",
       "Place your hands on the bars and with smooth even motions press upward extending your arms, but not locking them.",
@@ -4192,14 +3832,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Shoulder Press, on Machine",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/543/view-base"
       }
     ]
   },
@@ -4208,8 +3840,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Front delts"],
+    "secondaryMuscles": ["Side delts", "Triceps"],
     "instructions": [
       "Sit on a bench, the back rest should be almost vertical.",
       "Take a barbell with a shoulder wide grip and bring it up to chest height.",
@@ -4254,8 +3886,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Biceps", "Upper Back"],
+    "primaryMuscles": ["Side delts", "Traps"],
+    "secondaryMuscles": ["Front delts", "Biceps"],
     "instructions": [
       "Stand with your feet shoulder width apart, your abs drawn in and back straight.",
       "Place the bar on rack in the position where your arms are fully extended in front of you with your elbows slightly bent.",
@@ -4302,8 +3934,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Upper Back", "Biceps"],
+    "primaryMuscles": ["Side delts", "Traps"],
+    "secondaryMuscles": ["Front delts", "Biceps"],
     "instructions": [
       "Attach a straight bar to the pulley on the floor.",
       "Stand with your feet shoulder width apart, your abs drawn in and your back straight.",
@@ -4350,8 +3982,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders", "Traps"],
-    "secondaryMuscles": ["Biceps"],
+    "primaryMuscles": ["Side delts", "Traps"],
+    "secondaryMuscles": ["Front delts", "Biceps"],
     "instructions": [
       "Grasp a dumbbell in each hand with an overhand grip (palms facing downwards) and hold them in front of your thighs.",
       "Stand with your feet shoulder width apart, your abs drawn in and your back straight.",
@@ -4390,14 +4022,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Upright Row w/ Dumbbells",
-        "author": "koreyhinton",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/694/view-base"
       }
     ]
   },
@@ -4406,8 +4030,8 @@
     "bodyPart": "Shoulders",
     "equipment": "Smith machine",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders", "Traps"],
-    "secondaryMuscles": ["Biceps"],
+    "primaryMuscles": ["Side delts", "Traps"],
+    "secondaryMuscles": ["Front delts", "Biceps"],
     "instructions": [
       "Stand with your feet shoulder width apart and your abs drawn in.",
       "Place the bar on the Smith Machine in the position where your arms are fully extended in front of you.",
@@ -4445,14 +4069,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Upright Row, on Multi Press",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/691/view-base"
       }
     ]
   },
@@ -4462,7 +4078,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Triceps"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Chest", "Front delts"],
     "instructions": [
       "This exercise is one of the most basic and still one of the best for building the triceps (muscles on the back of the arm).",
       "Place two benches parallel to each other 3-4 feet apart.",
@@ -4502,14 +4118,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dips Between Two Benches",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/197/view-base"
       }
     ]
   },
@@ -4518,8 +4126,8 @@
     "bodyPart": "Arms",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Triceps"],
-    "secondaryMuscles": ["Shoulders", "Chest"],
+    "primaryMuscles": ["Triceps", "Chest"],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "Lie on a flat bench with your feet flat on the floor, keep your back flat on the bench.",
       "Grasp the bar a close grip (approximately 14” apart).",
@@ -4558,14 +4166,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Bench Press Narrow Grip",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/76/view-base"
       }
     ]
   },
@@ -4575,7 +4175,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Brachialis"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "This is a basic exercise for the biceps (arms).",
       "Stand with your feet shoulder width apart, your knees slightly bent and your abs drawn in.",
@@ -4614,14 +4214,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Biceps Curls With Barbell",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/91/view-base"
       }
     ]
   },
@@ -4631,7 +4223,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Attach a short bar to a cable pulley to the bottom of the weight stack.",
       "Stand with your feet shoulder width apart, your knees slightly bent and your abs drawn in.",
@@ -4670,14 +4262,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Biceps Curl With Cable",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/95/view-base"
       }
     ]
   },
@@ -4687,7 +4271,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Brachialis"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Stand with our feet shoulder width apart, your knees slightly bent and your abs drawn in.",
       "Grasp a dumbbell in each hand with your palms facing up.",
@@ -4726,14 +4310,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Biceps Curls With Dumbbell",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/92/view-base"
       }
     ]
   },
@@ -4743,7 +4319,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Brachialis"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Steps",
       "Stand with your feet shoulder width apart, your knees slightly bent and your abs drawn in.",
@@ -4783,14 +4359,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Alternating bicep curls",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1012/view-base"
       }
     ]
   },
@@ -4800,7 +4368,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Brachialis"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Adjust the seat of the machine so your elbows are correctly aligned with the rotation axis.",
       "Press your arms against the pads and keep them stationary throughout the exercise.",
@@ -4837,14 +4405,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Biceps Curl Machine",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1424/view-base"
       }
     ]
   },
@@ -4853,8 +4413,8 @@
     "bodyPart": "Arms",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Triceps"],
-    "secondaryMuscles": ["Chest"],
+    "primaryMuscles": ["Triceps", "Chest"],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "This version of the Pushup isolates the tricep (back of the arm) muscles.",
       "Kneel down on the floor or a mat, placing your hand thumbs together and raise your up on your toes.",
@@ -4901,7 +4461,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Forearm"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Sit on the end of a flat bench with your feet flat and your legs spread apart.",
       "Grasp a dumbbell in your hand, palms facing up.",
@@ -4948,8 +4508,8 @@
     "bodyPart": "Arms",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Forearm"],
+    "primaryMuscles": ["Biceps", "Forearms"],
+    "secondaryMuscles": [],
     "instructions": [
       "While standing, grab a dumbbell in each arm with palms facing in.",
       "Keeping your palms facing in (and not twisting your arms) curl the dumbbell up towards your opposite shoulder.",
@@ -4994,8 +4554,8 @@
     "bodyPart": "Arms",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Forearm"],
+    "primaryMuscles": ["Biceps", "Forearms"],
+    "secondaryMuscles": [],
     "instructions": [
       "This exercise is credited to the late Vince Gironda, the “Iron Guru”. It not only blasts the biceps and works the forearms as well.",
       "Stand with your feet shoulder width apart, your knees slightly bent, and your abs drawn in.",
@@ -5043,7 +4603,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Brachialis"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Stand with your feet shoulder width apart and your knees slightly bent.",
       "Grasp the barbell with palms up.",
@@ -5081,14 +4641,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Biceps Curls With SZ-bar",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/94/view-base"
       }
     ]
   },
@@ -5098,7 +4650,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Brachialis"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Using the rope with the cable machine allows you isolate the biceps with this version of the Hammer Curl. This is a good exercise for beginners.",
       "Attach a rope to a cable pulley to the bottom of the weight stack. Stand with your feet shoulder width apart, your knees slightly bent and your abs drawn in. Grasp the rope with a close underhand grip (palms facing up). Lower your arms fully to above your thighs and bending only your elbows, raise the rope to your upper chest. Pause for a moment and then return to the starting position.",
@@ -5134,14 +4686,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Hammercurls on Cable",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/275/view-base"
       }
     ]
   },
@@ -5150,7 +4694,7 @@
     "bodyPart": "Arms",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Biceps"],
+    "primaryMuscles": ["Biceps", "Forearms"],
     "secondaryMuscles": [],
     "instructions": [
       "This exercise uses a hammering (up and down) motion to isolate the biceps.",
@@ -5191,14 +4735,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Hammer Curls",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/272/view-base"
       }
     ]
   },
@@ -5208,7 +4744,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Adjust an incline bench to a 45 degree angle.",
       "Grasp a dumbbell in each hand and sit back on the bench with your feet firmly planted on the floor.",
@@ -5255,7 +4791,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Triceps"],
-    "secondaryMuscles": ["Biceps", "Chest"],
+    "secondaryMuscles": ["Chest", "Front delts"],
     "instructions": [
       "This exercise is named after the inventor, J.M. Blakley. This is an advanced exercise used by bodybuilders and power lifters to build explosive power in the triceps muscle (back of the arms).",
       "Lay on a flat bench with your head just at the end of the bench.",
@@ -5294,14 +4830,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "JM Press",
-        "author": "Epiphany8424",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1302/view-base"
       }
     ]
   },
@@ -5359,7 +4887,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "By using cable this exercise isolates and defines the biceps (arm) muscles.",
       "Attach a stirrup handle to each side of a high pulley on a cable machine.",
@@ -5454,8 +4982,8 @@
     "bodyPart": "Arms",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Brachialis"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Biceps"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "&nbsp;",
       "Adjust the seat of the bench so that your arms are level with the top of the bench.",
@@ -5495,14 +5023,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Preacher Curls",
-        "author": "cgoob883",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/465/view-base"
       }
     ]
   },
@@ -5512,7 +5032,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Forearm"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Place a padded arm curl bench in front of a cable machine.",
       "Attach a short bar to the bottom pulley.",
@@ -5560,7 +5080,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Forearm"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "A Preacher Curl uses a special bench to support the triceps and isolate the biceps to build the arms. This version of the exercise uses dumbbells.",
       "Adjust the seat of the bench so your arms are level with the top of the bench.",
@@ -5609,7 +5129,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "A Preacher Curl uses a special bench to support the triceps and isolate the biceps to build the arms. This version of the exercises is a machine exercise. This is a good exercise for beginners.",
       "Adjust the seat of the bench so your arms are level with the top of the bench. Rest your arms against the bench and extend them fully. Grasp the bar underhand (palms facing up) and pull it towards your head. Pause for a moment and then lower the bar back to starting position.",
@@ -5645,14 +5165,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Preacher Curl Machine",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/2633/view-base"
       }
     ]
   },
@@ -5661,7 +5173,7 @@
     "bodyPart": "Arms",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Biceps", "Brachialis"],
+    "primaryMuscles": ["Forearms", "Biceps"],
     "secondaryMuscles": [],
     "instructions": [
       "Stand with your feet shoulder width apart, your knees slightly bent and your abs drawn in.",
@@ -5699,14 +5211,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Reverse Curl",
-        "author": "BFad07",
-        "license": "CC0 1.0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-        "url": "https://wger.de/exercise/495/view-base"
       }
     ]
   },
@@ -5809,7 +5313,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": ["Forearm"],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "Sit on bench with your feet firmly on the floor and your back straight.",
       "Grasp a dumbbell in each hand with your palms facing each other.",
@@ -5941,14 +5445,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Skullcrusher SZ-bar",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/246/view-base"
       }
     ]
   },
@@ -5996,14 +5492,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Skullcrusher Dumbbells",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/245/view-base"
       }
     ]
   },
@@ -6013,7 +5501,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Biceps"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Forearms"],
     "instructions": [
       "This exercise uses the straight side of a Preacher Curl bench to increase the range of motion of the exercise.",
       "Turn a Preacher Curl bench around so you are leaning against the angled side.",
@@ -6053,14 +5541,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Spider Curl",
-        "author": "Moffi",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1465/view-base"
       }
     ]
   },
@@ -6115,8 +5595,8 @@
     "bodyPart": "Arms",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Chest", "Triceps"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Triceps"],
+    "secondaryMuscles": ["Chest", "Front delts"],
     "instructions": [
       "Grasp a set of parallel bars and push yourself up to the starting position.",
       "Keeping your elbows close to your body, lower yourself down until your triceps are parallel to the floor.",
@@ -6153,14 +5633,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dips",
-        "author": "BFad07",
-        "license": "CC0 1.0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-        "url": "https://wger.de/exercise/194/view-base"
       }
     ]
   },
@@ -6170,7 +5642,7 @@
     "equipment": "Assisted bodyweight",
     "type": "assisted",
     "primaryMuscles": ["Triceps"],
-    "secondaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Chest", "Front delts"],
     "instructions": [
       "Adjust the seat of the machine so that the handles are equal with your elbows.",
       "Grasping the handles, press down with equal pressure until your arms are fully extended.",
@@ -6206,14 +5678,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Triceps Dips (Assisted)",
-        "author": "matpn",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1372/view-base"
       }
     ]
   },
@@ -6260,14 +5724,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Triceps Overhead (Dumbbell)",
-        "author": "Anastasious",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1336/view-base"
       }
     ]
   },
@@ -6277,7 +5733,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Triceps"],
-    "secondaryMuscles": ["Shoulders", "Chest"],
+    "secondaryMuscles": [],
     "instructions": [
       "Stand with your feet shoulder width apart, your back straight and your abs drawn in.",
       "Hold a barbell or EZ Curl bar about 6-8 inches apart with your palms facing up.",
@@ -6315,14 +5771,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Barbell Triceps Extension",
-        "author": "sevae",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/50/view-base"
       }
     ]
   },
@@ -6370,14 +5818,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Overhead Cable Tricep Extension",
-        "author": "Expenses7000",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1513/view-base"
       }
     ]
   },
@@ -6423,14 +5863,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Triceps on Machine",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/661/view-base"
       }
     ]
   },
@@ -6479,14 +5911,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Tricep Dumbbell Kickback",
-        "author": "http://www.bodybuilding.com/",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/655/view-base"
       }
     ]
   },
@@ -6496,7 +5920,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Triceps"],
-    "secondaryMuscles": ["Lats"],
+    "secondaryMuscles": [],
     "instructions": [
       "Stand in front of a cable machine and attach a rope to a high pulley.",
       "Grasp the rope with palms facing down.",
@@ -6535,14 +5959,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Tricep Rope Pushdowns",
-        "author": "nishant0712",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1900/view-base"
       }
     ]
   },
@@ -6641,14 +6057,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Triceps Pushdown",
-        "author": "anto.kreegyr",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1185/view-base"
       }
     ]
   },
@@ -6703,7 +6111,7 @@
     "bodyPart": "Arms",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Biceps", "Brachialis"],
+    "primaryMuscles": ["Biceps", "Forearms"],
     "secondaryMuscles": [],
     "instructions": [
       "Stand with your feet shoulder width apart, your knees slightly bent and your and your abs drawn in.",
@@ -6742,14 +6150,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Zottman curl",
-        "author": "meldun",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1683/view-base"
       }
     ]
   },
@@ -6758,8 +6158,8 @@
     "bodyPart": "Legs",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": ["Hamstrings"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Belt Squat: a squat variation done with a belt attached to a loading machine or platform so the weight is supported at the hips instead of on the spine.",
       "It mainly trains the quads and glutes, with much less lower-back fatigue than a barbell squat.",
@@ -6803,8 +6203,8 @@
     "bodyPart": "Legs",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Glutes"],
-    "secondaryMuscles": ["Calves"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Calves", "Hamstrings"],
     "instructions": [
       "Jump from a standing position onto the box, stretch your body, then step down again (do not jump)"
     ],
@@ -6846,8 +6246,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Glutes", "Calves", "Hamstrings"],
+    "primaryMuscles": ["Glutes", "Quads"],
+    "secondaryMuscles": ["Adductors", "Lower back"],
     "instructions": [
       "This is s great overall exercise for the lower body. There are many variations on the squat, this one uses a bench to remind you how far down to squat.",
       "Place a bench behind you.",
@@ -6896,8 +6296,8 @@
     "bodyPart": "Legs",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": ["Hamstrings"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "The Bulgarian split squat consists of performing a squat on one leg with the rear foot resting on a raised platform.",
       "Elevating your back leg on a bench creates instability and increases the range of motion of the exercise."
@@ -6980,14 +6380,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Calf Press Using Leg Press Machine",
-        "author": "nate303303",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/146/view-base"
       }
     ]
   },
@@ -7044,8 +6436,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Glutes"],
-    "secondaryMuscles": ["Abs"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors", "Upper back", "Lower back"],
     "instructions": [
       "The Front Squat works the same muscles as the rear squat without placing the weight of the bar on your shoulders. This exercise can be a good substitute for people with back and neck injuries.",
       "Place the barbell on your upper chest, resting it across your front deltoids and holding it with your arms crossed securely.",
@@ -7084,14 +6476,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Front Squats",
-        "author": "sistab2",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/257/view-base"
       }
     ]
   },
@@ -7136,14 +6520,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Glute Bridge",
-        "author": "tdprice12",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/265/view-base"
       }
     ]
   },
@@ -7153,7 +6529,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Glutes"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Hamstrings"],
     "instructions": [
       "Standing at a cable tower attach an ankle cuff to a low pulley.",
       "Facing the weight stack, with a slight bend in your knees and your abs drawn in",
@@ -7190,14 +6566,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Cable glute extension",
-        "author": "Franpol",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1131/view-base"
       }
     ]
   },
@@ -7207,7 +6575,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Glutes"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Hamstrings"],
     "instructions": [
       "Drive through your heel, not your toes, to hit the glute.",
       "Don’t hyperextend your lower back at the top."
@@ -7250,8 +6618,8 @@
     "bodyPart": "Legs",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Grasp dumbbell with both hands at the sides of the upper plates.",
       "Hold dumbbell in front of chest, close to torso.",
@@ -7300,8 +6668,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Hamstrings"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Hamstrings", "Glutes"],
+    "secondaryMuscles": ["Lower back"],
     "instructions": [
       "Place a barbell across your shoulders.",
       "Keeping your head up and your back completely straight, bend at the waist until your back is parallel with the floor.",
@@ -7338,14 +6706,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Good Morning",
-        "author": "captive0592",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1392/view-base"
       }
     ]
   },
@@ -7354,8 +6714,8 @@
     "bodyPart": "Legs",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Hamstrings", "Calves", "Glutes"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "This exercise is a variation of the Squat which uses a machine. This exercise may be preferred by beginners.",
       "Lie face up on a Hack Squat machine with your shoulders against the pad.",
@@ -7395,14 +6755,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Hack Squats",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1414/view-base"
       }
     ]
   },
@@ -7411,8 +6763,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Hamstrings", "Glutes"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "This is another variation of the basic Squat that focuses primarily on the quadriceps or thigh muscles.",
       "Place the barbell on the floor just behind your legs and stand with your feet shoulder width apart with your toes pointing forward.",
@@ -7451,14 +6803,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Barbell Hack Squats",
-        "author": "BePieToday",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/43/view-base"
       }
     ]
   },
@@ -7505,14 +6849,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Machine Hip Abduction",
-        "author": "Tierrasverdes",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1748/view-base"
       }
     ]
   },
@@ -7521,7 +6857,7 @@
     "bodyPart": "Legs",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Glutes"],
+    "primaryMuscles": ["Adductors"],
     "secondaryMuscles": [],
     "instructions": [
       "Sit on the machine and place your knees against the pads.",
@@ -7559,14 +6895,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Seated Hip Adduction",
-        "author": "flori",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/12/view-base"
       }
     ]
   },
@@ -7576,7 +6904,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Glutes"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Hamstrings"],
     "instructions": [
       "The bar should go directly on your upper thigh, directly below your crotch.",
       "Your feet should be directly under your knees.",
@@ -7660,14 +6988,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Leg Extension",
-        "author": "BFad07",
-        "license": "CC0 1.0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-        "url": "https://wger.de/exercise/369/view-base"
       }
     ]
   },
@@ -7676,8 +6996,8 @@
     "bodyPart": "Legs",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Hamstrings", "Calves", "Glutes", "Quads"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Along with the Squat, this exercise is crucial for building and strengthening the legs.",
       "Adjust the seat of the machine so that your feet comfortably reach the crosspiece with a slight bend in your knees.",
@@ -7715,14 +7035,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Leg Press",
-        "author": "BFad07",
-        "license": "CC0 1.0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-        "url": "https://wger.de/exercise/371/view-base"
       }
     ]
   },
@@ -7731,8 +7043,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Glutes"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Start by placing a barbell across your upper back, using a grip slightly wider than your shoulders.",
       "Stand with your feet about 8 inches apart, toes facing forward.",
@@ -7771,14 +7083,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Barbell Lunges Standing",
-        "author": "Mikko Ruohola",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/46/view-base"
       }
     ]
   },
@@ -7787,8 +7091,8 @@
     "bodyPart": "Legs",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": ["Hamstrings"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Take a large step forward with your left leg.",
       "Bring your pelvis down until you almost touch the floor with your right knee.",
@@ -7834,8 +7138,8 @@
     "bodyPart": "Legs",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Glutes"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Grasp a dumbbell in each hand.",
       "Stand with your feet about 8 inches apart, toes facing forward.",
@@ -7874,14 +7178,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dumbbell Lunges Standing",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/205/view-base"
       }
     ]
   },
@@ -7891,7 +7187,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Hamstrings"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Calves"],
     "instructions": [
       "Lie face down on a leg curl machine and place your heels under the roller pad.",
       "Grasp the grips with your hands for support and slowly curl your ankles up towards your back.",
@@ -7928,14 +7224,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Leg Curls (laying)",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/365/view-base"
       }
     ]
   },
@@ -7944,8 +7232,8 @@
     "bodyPart": "Legs",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Glutes"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "This is a variation of the leg press which targets more of the external muscles of the legs by moving your feet closer together.",
       "Sit on a leg press machine with your feet on the crosspiece 6 inches apart, with your toes pointed slightly outward.",
@@ -7984,14 +7272,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Leg Presses (narrow)",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/373/view-base"
       }
     ]
   },
@@ -8000,8 +7280,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": ["Shoulders", "Hamstrings", "Traps"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors", "Upper back"],
     "instructions": [
       "Stand with your feet a bit wider than shoulder width apart with your toes pointed slightly outward.",
       "Grasp a barbell using a wide side snatch grip with your arms and elbows fully extended.",
@@ -8039,14 +7319,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Overhead Squat",
-        "author": "geraldbaeck",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/441/view-base"
       }
     ]
   },
@@ -8055,8 +7327,8 @@
     "bodyPart": "Legs",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Hamstrings", "Glutes"],
-    "secondaryMuscles": ["Shoulders", "Biceps", "Brachialis"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Stand with feet hip-width apart, toes pointed forward, and chest tall.",
       "Extend your leg straight out; extend both arms in front of you, at shoulder level. Brace your core and look straight ahead.",
@@ -8101,8 +7373,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Hip Abductors", "Calves", "Glutes", "Hamstrings"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Place a barbell on a rack at chest height.",
       "Lift the barbell of of the rack and onto your shoulders, gripping the bar slightly wider than shoulder width apart.",
@@ -8149,8 +7421,8 @@
     "bodyPart": "Legs",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": ["Calves"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "This is an advanced version of a lunge.",
       "Grasp a dumbbell in each hand.",
@@ -8189,14 +7461,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dumbbell Rear Lunge",
-        "author": "AlucardEvil40",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1651/view-base"
       }
     ]
   },
@@ -8206,7 +7470,7 @@
     "equipment": "Barbell",
     "type": "weighted",
     "primaryMuscles": ["Hamstrings", "Glutes"],
-    "secondaryMuscles": ["Traps"],
+    "secondaryMuscles": ["Lower back"],
     "instructions": [
       "Place a barbell in front of your feet on the ground.",
       "Grasp the barbell with a grip a bit wider than shoulder width apart.",
@@ -8245,14 +7509,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Romanian Deadlift",
-        "author": "pjwirth",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/507/view-base"
       }
     ]
   },
@@ -8262,7 +7518,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Hamstrings", "Glutes"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Lower back"],
     "instructions": [
       "This exercise involves holding a dumbbell in each hand and bending forward at the hips while keeping the back straight, then returning to a standing position.",
       "It primarily targets the hamstrings and glutes."
@@ -8390,14 +7646,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Machine Seated Calf Raise",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/2628/view-base"
       }
     ]
   },
@@ -8407,7 +7655,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Hamstrings"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Calves"],
     "instructions": [
       "Adjust the machine so that the footpad is just above your heels.",
       "Sit upright with your abs drawn in and your legs in front of you.",
@@ -8444,14 +7692,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Leg Curls (sitting)",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/366/view-base"
       }
     ]
   },
@@ -8460,8 +7700,8 @@
     "bodyPart": "Legs",
     "equipment": "Machine",
     "type": "weighted",
-    "primaryMuscles": ["Hamstrings", "Calves", "Glutes", "Quads"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Along with the Squat, this exercise is crucial for building and strengthening the legs.",
       "Adjust the seat of the machine so that your feet comfortably reach the crosspiece with a slight bend in your knees.",
@@ -8499,14 +7739,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Leg Press",
-        "author": "BFad07",
-        "license": "CC0 1.0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-        "url": "https://wger.de/exercise/371/view-base"
       }
     ]
   },
@@ -8516,7 +7748,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Hamstrings", "Glutes"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Lower back"],
     "instructions": [
       "Starting Position: Stand upright with a slight bend in your knees, holding a dumbbell in one or both hands.",
       "Shift your weight onto your supporting leg (e.g., your right leg) and lift your non-supporting foot slightly off the floor.",
@@ -8613,8 +7845,8 @@
     "bodyPart": "Legs",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": ["Hamstrings", "Calves"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": ["Controlled execution", "No momentum", "Execute slowly"],
     "images": [
       {
@@ -8654,8 +7886,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Hamstrings", "Glutes", "Quads"],
-    "secondaryMuscles": ["Calves", "Abs"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors", "Lower back"],
     "instructions": [
       "This is an exercise for leg strengthening, mainly the quadriceps.",
       "Lifting a barbell off of a weight rack, position it on your shoulders.",
@@ -8694,14 +7926,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Barbell Full Squat",
-        "author": "fabrice",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1801/view-base"
       }
     ]
   },
@@ -8710,8 +7934,8 @@
     "bodyPart": "Legs",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Calves", "Glutes", "Obliques", "Abs"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Squat is a type of bodyweight exercise.",
       "It is one of the most popular exercises for strength and muscle growth.",
@@ -8760,8 +7984,8 @@
     "bodyPart": "Legs",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Hamstrings", "Calves"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "This is a great overall exercise for the lower body that uses dumbbells instead of a barbell. Beginners may find this version easier to perform.",
       "Grasp a dumbbell in each hand.",
@@ -8809,8 +8033,8 @@
     "bodyPart": "Legs",
     "equipment": "Smith machine",
     "type": "weighted",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "This exercise uses the Smith Machine to work the Quadriceps, Hamstrings, Calves and Glutes. A great overall exercise for the lower body. There are many variations on the squat, this is the original version using a Smith Machine for better flow of movement.",
       "Set the height of the barbell to shoulder height.",
@@ -8850,14 +8074,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Smith machine squat",
-        "author": "Tierrasverdes",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1747/view-base"
       }
     ]
   },
@@ -8944,14 +8160,6 @@
         "changes": "whitespace normalised"
       },
       {
-        "kind": "muscles",
-        "title": "Dumbbell Calf Raise",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/2661/view-base"
-      },
-      {
         "kind": "illustration",
         "title": "Standing Calf Raise (Dumbbell)",
         "author": "Ember (AI-assisted, gpt-image-2)",
@@ -9005,14 +8213,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Standing Calf Raises",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/622/view-base"
       }
     ]
   },
@@ -9069,7 +8269,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Hamstrings"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Calves"],
     "instructions": [
       "Standing at a leg curl machine adjust the rear footpad so it is just above your ankle.",
       "Grasp the handles of the machine for support and draw your abs in.",
@@ -9106,14 +8306,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Leg Curls (standing)",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/367/view-base"
       }
     ]
   },
@@ -9122,8 +8314,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Hamstrings", "Calves"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Hamstrings"],
     "instructions": [
       "Place a bench, box or step in front of you.",
       "Grasp a barbell with a wide grip and place it across your shoulders.",
@@ -9170,8 +8362,8 @@
     "bodyPart": "Legs",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": ["Hamstrings", "Calves"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Hamstrings"],
     "instructions": [
       "Place a bench, box or step in front of you.",
       "Grasp a dumbbell in each hand.",
@@ -9210,14 +8402,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Step-ups",
-        "author": "wger.de contributors",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/981/view-base"
       }
     ]
   },
@@ -9226,8 +8410,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Hamstrings"],
-    "secondaryMuscles": ["Glutes"],
+    "primaryMuscles": ["Hamstrings", "Glutes"],
+    "secondaryMuscles": ["Lower back"],
     "instructions": ["Keep legs straight", "Keep back straight"],
     "images": [
       {
@@ -9267,8 +8451,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Hamstrings", "Glutes", "Quads"],
-    "secondaryMuscles": ["Traps"],
+    "primaryMuscles": ["Glutes", "Quads", "Adductors"],
+    "secondaryMuscles": ["Hamstrings", "Lower back", "Traps", "Forearms"],
     "instructions": [
       "Begin with a bar loaded on the ground. Approach the bar so that the bar intersects the middle of the feet. The feet should be set very wide, near the collars. Bend at the hips to grip the bar. The arms should be directly below the shoulders, inside the legs, and you can use a pronated grip, a mixed grip, or hook grip. Relax the shoulders, which in effect lengthens your arms.",
       "Take a breath, and then lower your hips, looking forward with your head with your chest up. Drive through the floor, spreading your feet apart, with your weight on the back half of your feet. Extend through the hips and knees.",
@@ -9313,8 +8497,8 @@
     "bodyPart": "Legs",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Glutes"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors"],
     "instructions": [
       "Start by grasping a dumbbell in each hand.",
       "Stand with your feet about 8 inches apart, toes facing forward.",
@@ -9353,14 +8537,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dumbbell Lunges Walking",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/206/view-base"
       }
     ]
   },
@@ -9369,8 +8545,8 @@
     "bodyPart": "Legs",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Glutes", "Hamstrings", "Calves"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Adductors", "Upper back", "Lower back"],
     "instructions": [
       "This variation of squat is similar to a Front Squat, it works to build the upper muscles of the quadriceps (thighs).",
       "Lift a barbell off of a weight rack and place across your chest. Hold the barbell with your arms crossed.",
@@ -9418,8 +8594,8 @@
     "bodyPart": "Core",
     "equipment": "Barbell",
     "type": "bodyweight",
-    "primaryMuscles": ["Obliques"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": ["Lats", "Obliques", "Hip flexors"],
     "instructions": [
       "Place a barbell on the floor at your feet.",
       "Bending at the waist, grip the barbell with a shoulder with overhand grip.",
@@ -9458,14 +8634,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Barbell Ab Rollout",
-        "author": "sevae",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/41/view-base"
       }
     ]
   },
@@ -9475,7 +8643,7 @@
     "equipment": "Other",
     "type": "bodyweight",
     "primaryMuscles": ["Abs"],
-    "secondaryMuscles": ["Obliques", "Serratus"],
+    "secondaryMuscles": ["Lats", "Obliques"],
     "instructions": [
       "Starting Position : Kneel on the floor with the ab wheel in front of you.",
       "Grip the Wheel : Hold the handles firmly.",
@@ -9521,7 +8689,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Hip flexors", "Obliques"],
     "instructions": [
       "Lie on your back with your arms outstretched to your sides.",
       "Bend your knees at a 60 degree angle and hold your feet up just off the floor.",
@@ -9566,8 +8734,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": ["Obliques"],
+    "primaryMuscles": ["Abs", "Obliques"],
+    "secondaryMuscles": ["Hip flexors"],
     "instructions": [
       "Bicycle crunches are a core exercise performed on the floor.",
       "Lie on your back with your hands behind your head and legs extended.",
@@ -9613,7 +8781,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Obliques"],
     "instructions": [
       "Take the cable on your hands and hold it next to your temples.",
       "Knee down and hold your upper body straight and bend forward.",
@@ -9658,8 +8826,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Obliques"],
-    "secondaryMuscles": ["Abs"],
+    "primaryMuscles": ["Abs", "Obliques"],
+    "secondaryMuscles": ["Hip flexors"],
     "instructions": [
       "Lie on your back and bring your knees up to a 60 degree angle, keep your feet flat on the floor.",
       "Place your hands on either side of your head (over your ears).",
@@ -9697,14 +8865,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Side Crunch",
-        "author": "kwrindy",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/576/view-base"
       }
     ]
   },
@@ -9714,7 +8874,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Abs"],
-    "secondaryMuscles": ["Serratus"],
+    "secondaryMuscles": ["Obliques"],
     "instructions": [
       "This is the most common abdominal exercise and possibly the most often improperly performed. Here is how to perform it correctly.",
       "Lie on your back with your feet up on a bench and your knees bent at a 90 degree angle.",
@@ -9753,14 +8913,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Crunches",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/167/view-base"
       }
     ]
   },
@@ -9770,7 +8922,7 @@
     "equipment": "Machine",
     "type": "weighted",
     "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Obliques"],
     "instructions": [
       "The procedure is very similar as for regular crunches, only with the additional weight of the machine.",
       "Sit on the machine, put both feet firmly on the ground.",
@@ -9856,14 +9008,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Ball crunches",
-        "author": "Konsumopfer",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/165/view-base"
       }
     ]
   },
@@ -9873,7 +9017,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Obliques"],
     "instructions": [
       "Lie on a decline bench face up.",
       "Place your feet securely under the pads.",
@@ -9912,14 +9056,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Incline Crunches",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/171/view-base"
       }
     ]
   },
@@ -9928,8 +9064,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Hip flexors"],
+    "secondaryMuscles": ["Abs"],
     "instructions": [
       "Lie on a flat bench with your hands under your hips supporting your back.",
       "Your legs should be unsupported by the bench from below your knees.",
@@ -9976,8 +9112,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Hamstrings"],
-    "secondaryMuscles": ["Quads"],
+    "primaryMuscles": ["Glutes", "Hamstrings"],
+    "secondaryMuscles": ["Lower back"],
     "instructions": [
       "Lie face down on a bench with your hips on the edge, hold onto the bench with your hands.",
       "Allow your legs and toes hang down.",
@@ -10023,7 +9159,7 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Abs"],
+    "primaryMuscles": ["Abs", "Hip flexors"],
     "secondaryMuscles": ["Obliques"],
     "instructions": [
       "The 90° leg raise on the bar is a very intense exercise that involves all the abdominal muscles."
@@ -10066,8 +9202,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Abs", "Hip flexors"],
+    "secondaryMuscles": ["Obliques"],
     "instructions": ["Hanging from bar or straps, bring legs up with knees extended or flexed"],
     "images": [
       {
@@ -10107,8 +9243,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "duration",
-    "primaryMuscles": ["Obliques", "Abs"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": ["Hip flexors"],
     "instructions": [
       "Get on a mat and lie on your back.",
       "Contract your abs, stretch your arms and legs and raise them (your head and shoulders are also be raised).",
@@ -10152,8 +9288,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": ["Serratus"],
+    "primaryMuscles": ["Hip flexors"],
+    "secondaryMuscles": ["Abs"],
     "instructions": [
       "Lie on a flat bench with your hands under your hips supporting your back.",
       "Your legs should be unsupported by the bench from below your knees.",
@@ -10192,14 +9328,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Leg Raises, Lying",
-        "author": "wger.de",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "url": "https://wger.de/exercise/377/view-base"
       }
     ]
   },
@@ -10208,8 +9336,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": ["Shoulders", "Quads"],
+    "primaryMuscles": ["Abs", "Hip flexors"],
+    "secondaryMuscles": ["Front delts"],
     "instructions": [
       "Move one knee toward the center of your body, towards your elbows, keeping the other leg extended.",
       "In a quick jumping movement, straighten the bent leg out and pull the other knee toward your body.",
@@ -10253,8 +9381,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Obliques"],
+    "secondaryMuscles": ["Abs"],
     "instructions": [
       "This version of a decline crunch isolates the oblique (side) muscles of the abs.",
       "Lie on a decline bench face up.",
@@ -10302,8 +9430,8 @@
     "bodyPart": "Core",
     "equipment": "Cable",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders", "Glutes", "Obliques", "Abs", "Serratus", "Traps"],
-    "secondaryMuscles": ["Chest", "Triceps"],
+    "primaryMuscles": ["Obliques", "Abs"],
+    "secondaryMuscles": [],
     "instructions": [
       "Stand parallel to the cable machine or to the anchor point to the resistance band and clasp with the handle or band with both hands.",
       "Make sure your torso is front on and bring your hands to the center of your chest and slowly press out.",
@@ -10347,8 +9475,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "duration",
-    "primaryMuscles": ["Obliques", "Abs"],
-    "secondaryMuscles": ["Biceps", "Quads", "Triceps"],
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": ["Obliques"],
     "instructions": [
       "Get into a position on the floor supporting your weight on your forearms and toes.",
       "Arms are bent and directly below the shoulder.",
@@ -10388,8 +9516,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Lats", "Obliques", "Abs"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Obliques"],
+    "secondaryMuscles": ["Abs", "Hip flexors"],
     "instructions": [
       "Hold a dumbbell, barbell weight or something else that is heavy with both hands, but make sure it is not too heavy and you are able to keep in form.",
       "Lean back to a 45-degree angle from the floor. For an extra challenge, lift your feet off the floor.",
@@ -10434,7 +9562,7 @@
     "equipment": "Dumbbell",
     "type": "weighted",
     "primaryMuscles": ["Obliques"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Lower back"],
     "instructions": [
       "Stand with your feet shoulder width apart, your knees slightly bent and your abs drawn in.",
       "Grasp a dumbbell in one hand and standing straight upright, bend at the waist as far as possible to one side.",
@@ -10472,14 +9600,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Dumbbell Side Bend",
-        "author": "AlucardEvil40",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/1650/view-base"
       }
     ]
   },
@@ -10488,8 +9608,8 @@
     "bodyPart": "Core",
     "equipment": "Bodyweight",
     "type": "duration",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": ["Obliques"],
+    "primaryMuscles": ["Obliques"],
+    "secondaryMuscles": ["Abs", "Glutes"],
     "instructions": [
       "Lay on one side of your body with your legs straight and your forearm perpendicular to your body in front of you.",
       "Drawing your abs in, slowly raise yourself up so you are balanced on your feet and your forearm.",
@@ -10526,14 +9646,6 @@
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
         "changes": "whitespace normalised"
-      },
-      {
-        "kind": "muscles",
-        "title": "Side Plank",
-        "author": "http://www.bodybuilding.com/",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "url": "https://wger.de/exercise/580/view-base"
       }
     ]
   },
@@ -10543,7 +9655,7 @@
     "equipment": "Bodyweight",
     "type": "bodyweight",
     "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Hip flexors", "Obliques"],
     "instructions": [
       "Sit on a mat, your calves are resting on a bench, the knees make a right angle.",
       "Hold your hands behind your neck.",
@@ -10589,8 +9701,8 @@
     "bodyPart": "Core",
     "equipment": "Other",
     "type": "bodyweight",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Abs", "Hip flexors"],
+    "secondaryMuscles": ["Obliques"],
     "instructions": [
       "Lay down as if you were performing a pushup.",
       "Place your feet and shins over an exercise or stability ball.",
@@ -10637,7 +9749,7 @@
     "equipment": "Cable",
     "type": "weighted",
     "primaryMuscles": ["Obliques"],
-    "secondaryMuscles": [],
+    "secondaryMuscles": ["Abs"],
     "instructions": [
       "Set cable pulley slightly lower than chest height.",
       "Keep body facing forward with hips stable. Grab the pulley handle, fully extend your arms and bring your arms forward and across your body.",
@@ -10681,8 +9793,8 @@
     "bodyPart": "Cardio",
     "equipment": "Cardio machine",
     "type": "cardio",
-    "primaryMuscles": ["Abs"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Abs", "Obliques"],
+    "secondaryMuscles": ["Hip flexors"],
     "instructions": [
       "This exercise works your abs by raising your arms to meet your legs. The movements are similar to riding a bike.",
       "Lie on your back on a mat.",
@@ -10731,8 +9843,8 @@
     "bodyPart": "Cardio",
     "equipment": "Cardio machine",
     "type": "cardio",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": ["Hamstrings", "Calves", "Glutes"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Hamstrings", "Calves"],
     "instructions": ["Ride a Stationary Bike with various tensions."],
     "images": [
       {
@@ -10772,8 +9884,8 @@
     "bodyPart": "Cardio",
     "equipment": "Cardio machine",
     "type": "cardio",
-    "primaryMuscles": ["Glutes", "Quads", "Traps"],
-    "secondaryMuscles": ["Biceps", "Abs", "Triceps"],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Hamstrings", "Calves"],
     "instructions": [
       "It improves muscle toning, strengthens the leg muscles (quads, glutes, calves), helps vascularisation and increases resistance.",
       "The elliptical is also very useful if you aim to lose weight.",
@@ -10818,7 +9930,7 @@
     "equipment": "Other",
     "type": "duration",
     "primaryMuscles": ["Calves"],
-    "secondaryMuscles": ["Shoulders", "Quads"],
+    "secondaryMuscles": ["Quads", "Forearms"],
     "instructions": [
       "Spin only your wrists with enough force to make the rope spin.",
       "Jump just high enough to pass the rope below your feet.",
@@ -10862,8 +9974,8 @@
     "bodyPart": "Cardio",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Quads"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Calves", "Glutes"],
+    "secondaryMuscles": ["Adductors", "Side delts"],
     "instructions": [
       "A jumping jack or star jump, also called side-straddle hop in the US military, is a physical jumping exercise performed by jumping to a position with the legs spread wide and the hands going overhead, sometimes in a clap, and then returning to a position with the feet together and the arms at the sides"
     ],
@@ -10905,21 +10017,8 @@
     "bodyPart": "Cardio",
     "equipment": "Cardio machine",
     "type": "cardio",
-    "primaryMuscles": [
-      "Shoulders",
-      "Biceps",
-      "Hamstrings",
-      "Brachialis",
-      "Calves",
-      "Glutes",
-      "Lats",
-      "Obliques",
-      "Quads",
-      "Abs",
-      "Serratus",
-      "Traps"
-    ],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Quads", "Glutes", "Lats", "Upper back"],
+    "secondaryMuscles": ["Hamstrings", "Biceps", "Rear delts", "Lower back"],
     "instructions": ["Sit on a rowing machine with your back straight."],
     "images": [
       {
@@ -10959,8 +10058,8 @@
     "bodyPart": "Cardio",
     "equipment": "Cardio machine",
     "type": "cardio",
-    "primaryMuscles": ["Quads", "Calves"],
-    "secondaryMuscles": ["Hamstrings", "Glutes"],
+    "primaryMuscles": ["Quads", "Glutes", "Hamstrings", "Calves"],
+    "secondaryMuscles": ["Hip flexors"],
     "instructions": ["Run on a treadmill"],
     "images": [
       {
@@ -11000,8 +10099,8 @@
     "bodyPart": "Cardio",
     "equipment": "Cardio machine",
     "type": "cardio",
-    "primaryMuscles": ["Calves", "Lats", "Traps", "Triceps"],
-    "secondaryMuscles": ["Hamstrings", "Glutes", "Quads", "Abs"],
+    "primaryMuscles": ["Lats", "Triceps", "Abs"],
+    "secondaryMuscles": ["Upper back", "Glutes", "Hamstrings"],
     "instructions": [
       "Start standing on the platform with your feet hip-width apart.",
       "Reach overhead to grip the handles with your palms facing in.",
@@ -11047,8 +10146,8 @@
     "bodyPart": "Cardio",
     "equipment": "Cardio machine",
     "type": "cardio",
-    "primaryMuscles": ["Hamstrings", "Calves", "Glutes", "Quads"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Hamstrings", "Calves"],
     "instructions": [
       "cardio and lower-body strength machine designed to simulate climbing stairs.",
       "It provides a low-impact, high-intensity workout that targets the legs, glutes, and core while improving cardiovascular endurance."
@@ -11091,8 +10190,8 @@
     "bodyPart": "Full body",
     "equipment": "Bodyweight",
     "type": "bodyweight",
-    "primaryMuscles": ["Quads", "Chest"],
-    "secondaryMuscles": ["Shoulders", "Abs", "Triceps"],
+    "primaryMuscles": ["Quads", "Glutes", "Chest"],
+    "secondaryMuscles": ["Front delts", "Triceps", "Abs"],
     "instructions": ["Jump, lay down on your chest, do a pushup then jump, repeat"],
     "images": [
       {
@@ -11132,8 +10231,8 @@
     "bodyPart": "Full body",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Glutes", "Quads"],
-    "secondaryMuscles": ["Hamstrings", "Lats", "Abs"],
+    "primaryMuscles": ["Glutes", "Hamstrings", "Quads", "Traps"],
+    "secondaryMuscles": ["Lower back", "Calves", "Upper back"],
     "instructions": [
       "Regular olympic lift clean.",
       "Pull bar from ground, catch on shoulders performing a front squat."
@@ -11176,8 +10275,8 @@
     "bodyPart": "Full body",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Quads"],
+    "primaryMuscles": ["Glutes", "Hamstrings", "Quads", "Front delts"],
+    "secondaryMuscles": ["Traps", "Triceps", "Lower back", "Side delts"],
     "instructions": [
       "The First Pull: Lift the bar from the floor to knee-height by driving with the legs, keeping the angle of your back constant.",
       "The \"Power\" Position: As the bar reaches mid-thigh, explosively shrug and extend your hips to create vertical momentum.",
@@ -11222,8 +10321,8 @@
     "bodyPart": "Full body",
     "equipment": "Dumbbell",
     "type": "weighted",
-    "primaryMuscles": ["Forearms", "Trapezius"],
-    "secondaryMuscles": ["Abs", "Glutes"],
+    "primaryMuscles": ["Forearms", "Traps"],
+    "secondaryMuscles": ["Abs", "Obliques"],
     "instructions": ["Grab half your body weight in each hand and walk."],
     "images": [
       {
@@ -11263,8 +10362,8 @@
     "bodyPart": "Full body",
     "equipment": "Kettlebell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders", "Glutes"],
-    "secondaryMuscles": ["Quads", "Abs", "Traps"],
+    "primaryMuscles": ["Glutes", "Hamstrings"],
+    "secondaryMuscles": ["Lower back", "Abs", "Forearms"],
     "instructions": [
       "While kettlebell swings are a full-body workout, they mostly target the muscles along the posterior chain (back of the body).",
       "The main muscles used are the glutes, hamstrings, spinal erectors, and muscles of the upper back."
@@ -11307,8 +10406,8 @@
     "bodyPart": "Full body",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Chest"],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Glutes", "Hamstrings", "Quads", "Traps"],
+    "secondaryMuscles": ["Lower back", "Calves", "Upper back"],
     "instructions": ["Olympic weight lifting"],
     "images": [
       {
@@ -11348,8 +10447,8 @@
     "bodyPart": "Full body",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": [],
-    "secondaryMuscles": [],
+    "primaryMuscles": ["Glutes", "Hamstrings", "Quads", "Traps"],
+    "secondaryMuscles": ["Front delts", "Lower back", "Upper back"],
     "instructions": [],
     "images": [
       {
@@ -11380,8 +10479,8 @@
     "bodyPart": "Full body",
     "equipment": "Barbell",
     "type": "weighted",
-    "primaryMuscles": ["Shoulders"],
-    "secondaryMuscles": ["Traps"],
+    "primaryMuscles": ["Quads", "Glutes", "Front delts"],
+    "secondaryMuscles": ["Triceps", "Side delts"],
     "instructions": [
       "Start by doing a front squat",
       "At the top position, push the bar above your head (similar to a press)",

@@ -2,7 +2,8 @@ import {ChevronDown, ChevronRight} from 'lucide-react';
 import {type ReactNode, type RefObject, useMemo, useRef, useState} from 'react';
 import {Bar, BarChart, CartesianGrid, Cell, ReferenceLine, XAxis, YAxis} from 'recharts';
 
-import type {BodyPart} from '../catalog/catalog';
+import type {Muscle} from '../catalog/catalog';
+import {BodyFigure, ToneSwatch} from '../components/BodyFigure';
 import {ExercisePage} from '../components/ExercisePage';
 import {ExerciseThumb} from '../components/ExerciseThumb';
 import {WorkoutDrawer} from '../components/WorkoutDrawer';
@@ -16,10 +17,10 @@ import {EmptyState} from '../components/ui/empty-state';
 import {chartDomain, compactTick} from '../domain/chart-scale';
 import {type RecordKind, recordKindLabel} from '../domain/finish-summary';
 import {weekStartOf, workoutsPerWeek} from '../domain/model';
+import {type Tone, muscleSets, regionTones, regionsOf, toneEdges} from '../domain/muscles';
 import {
   type RecentRecord,
   type WeekMetric,
-  bodyPartSets,
   minutesLabel,
   recentRecords,
   weekComparison,
@@ -498,102 +499,222 @@ function NewRecords({
   );
 }
 
-/** Recorded sets per body part, last four weeks against the usual; a row filters Exercises. */
-function BodyParts({
+const setsText = (n: number) => String(Number(n.toFixed(1)));
+const setWord = (n: number) => (n === 1 ? 'set' : 'sets');
+
+function ToneLegend() {
+  const labels = [
+    '0',
+    `<${toneEdges[0]}`,
+    `${toneEdges[0]}+`,
+    `${toneEdges[1]}+`,
+    `${toneEdges[2]}+`,
+  ];
+  return (
+    <div className='flex justify-end' aria-hidden='true'>
+      <div className='grid grid-cols-[repeat(5,minmax(0,2.25rem))] text-center text-caption text-muted-foreground tabular-nums'>
+        {labels.map((label, tone) => (
+          <span key={label} className='grid justify-items-center gap-1'>
+            <ToneSwatch tone={tone as Tone} />
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Sets per muscle over the last four weeks on a front/back figure, with the exact-value list as
+ * the control: a row expands to the exercises behind it (the figure highlights the muscle), and
+ * an exercise opens its page.
+ */
+function Muscles({
   workouts,
   today,
+  rows: rowRefs,
   onOpen,
 }: {
   workouts: Workout[];
   today: string;
-  onOpen: (part: BodyPart) => void;
+  rows: RefObject<Map<string, HTMLButtonElement>>;
+  /** Opens the exercise; `key` is the row's entry in `rows`, for focus return. */
+  onOpen: (exercise: string, key: string) => void;
 }) {
-  const rows = useMemo(() => bodyPartSets(workouts, noon(today)), [workouts, today]);
-  if (!rows.length) return null;
-  const max = Math.max(...rows.map((row) => Math.max(row.sets, row.usual ?? 0)));
-  const usual = rows.some((row) => row.usual !== null);
+  const {rows, trained} = useMemo(() => muscleSets(workouts, noon(today)), [workouts, today]);
+  // Muscles with no sets now or usually stay off the list (the figure shows them as none).
+  const sorted = useMemo(
+    () =>
+      rows
+        .filter((row) => row.sets > 0 || (row.usual ?? 0) > 0)
+        .sort((a, b) => b.sets - a.sets || (b.usual ?? 0) - (a.usual ?? 0)),
+    [rows],
+  );
+  const [open, setOpen] = useState<Muscle | null>(null);
+  const [all, setAll] = useState(false);
+  if (!trained) return null;
+  const max = Math.max(...rows.map((row) => Math.max(row.sets, row.usual ?? 0)), 1);
+  const grid =
+    'grid min-h-12 w-full grid-cols-[minmax(0,6.25rem)_minmax(1.5rem,1fr)_minmax(max-content,4.5rem)_16px] items-center gap-3 rounded-md px-1 text-left';
   return (
-    <Card as='section' className='grid gap-3' aria-labelledby='body-parts-heading'>
+    <Card as='section' className='muscle-tones grid gap-4' aria-labelledby='muscles-heading'>
       <header className='flex items-start justify-between gap-2'>
         <div className='min-w-0'>
-          <h2 id='body-parts-heading' className='text-card-title'>
-            Body parts
+          <h2 id='muscles-heading' className='text-card-title'>
+            Muscles
           </h2>
           <p className='text-label font-normal text-muted-foreground'>Sets, last 4 weeks</p>
         </div>
-        <InfoButton title='Body parts' label='About Body parts' className='-my-1 -mr-3 shrink-0'>
+        <InfoButton title='Muscles' label='About Muscles' className='-my-1 -mr-3 shrink-0'>
           <InfoTerm term='Sets'>
-            Recorded sets in the last 28 days, by each exercise&apos;s body part. Exercises outside
-            the catalog count as Other.
+            Recorded sets in the last 28 days. A set counts once for an exercise&apos;s primary
+            muscles and half for its secondary muscles: a bench press set adds 1 to chest and ½ to
+            front delts and triceps. Cardio counts toward no muscle.
           </InfoTerm>
           <InfoTerm term='Usual'>
             The middle value of the six 4-week blocks before, among blocks with any training. Shown
             as the tick and after the slash.
           </InfoTerm>
+          <InfoTerm term='Shoulders'>
+            The front figure&apos;s shoulder shows front delts, the back figure&apos;s rear delts;
+            side delts colour both. Hip flexors and rotator cuff appear only in the list.
+          </InfoTerm>
         </InfoButton>
       </header>
-      <ul aria-label='Sets per body part' className='-mx-1 grid'>
-        {rows.map((row) => (
-          <li key={row.part}>
-            <button
-              className='pressable grid min-h-12 w-full grid-cols-[minmax(0,5.5rem)_minmax(1.5rem,1fr)_minmax(2.5rem,auto)] items-center gap-3 rounded-md px-1 text-left hover:bg-accent focus-visible:-outline-offset-2'
-              aria-label={`${row.part}: ${row.sets} ${row.sets === 1 ? 'set' : 'sets'} in the last 4 weeks${row.usual !== null ? `, usual ${Number(row.usual.toFixed(1))}` : ''}. Show ${row.part} exercises`}
-              onClick={() => onOpen(row.part)}
-            >
-              <span className='truncate text-[14px] font-medium'>{row.part}</span>
-              <span className='relative h-2.5 rounded-sm bg-accent' aria-hidden='true'>
-                <span
-                  className='absolute inset-y-0 left-0 rounded-sm border border-chart-secondary-edge bg-chart-secondary'
-                  style={{width: `${(row.sets / max) * 100}%`}}
-                />
-                {row.usual !== null && (
-                  <span
-                    className='usual-tick absolute -inset-y-1 w-0.5 rounded-full bg-foreground'
-                    style={{left: `calc(${(row.usual / max) * 100}% - 1px)`}}
-                  />
-                )}
-              </span>
-              <span className='text-right text-[14px] tabular-nums'>
-                <span className='font-semibold'>{row.sets}</span>
-                {row.usual !== null && (
-                  <span className='text-[12px] text-muted-foreground'>
-                    {' '}
-                    / {Number(row.usual.toFixed(1))}
+      <div className='grid gap-3'>
+        <BodyFigure
+          tones={regionTones(rows)}
+          selected={open ? regionsOf(open) : undefined}
+          className='mx-auto w-full max-w-[19rem]'
+        />
+        <ToneLegend />
+      </div>
+      <div className='grid gap-3'>
+        <ul aria-label='Sets per muscle' className='-mx-1 grid'>
+          {(all ? sorted : sorted.slice(0, LIST)).map((row) => {
+            const expanded = open === row.muscle;
+            const usual = row.usual === null ? null : Math.round(row.usual);
+            const label = `${row.muscle}: ${setsText(row.sets)} ${setWord(row.sets)} in the last 4 weeks${usual !== null ? `, usual ${usual}` : ''}`;
+            const cells = (
+              <>
+                <span className='truncate text-[14px] font-medium'>{row.muscle}</span>
+                <span className='relative h-2.5 rounded-sm bg-accent' aria-hidden='true'>
+                  {row.sets > 0 && (
+                    <span
+                      className='absolute inset-y-0 left-0 rounded-sm border border-chart-secondary-edge bg-chart-secondary'
+                      style={{width: `${(row.sets / max) * 100}%`}}
+                    />
+                  )}
+                  {row.usual !== null && (
+                    <span
+                      className='usual-tick absolute -inset-y-1 w-0.5 rounded-full bg-foreground'
+                      style={{left: `calc(${(row.usual / max) * 100}% - 1px)`}}
+                    />
+                  )}
+                </span>
+                <span className='text-right text-[14px] tabular-nums'>
+                  <span className={cn('font-semibold', !row.sets && 'text-muted-foreground')}>
+                    {setsText(row.sets)}
                   </span>
+                  {usual !== null && (
+                    <span className='text-[12px] text-muted-foreground'> / {usual}</span>
+                  )}
+                </span>
+              </>
+            );
+            return (
+              <li key={row.muscle}>
+                {row.contributions.length ? (
+                  <button
+                    className={cn(
+                      grid,
+                      'pressable hover:bg-accent focus-visible:-outline-offset-2',
+                    )}
+                    aria-expanded={expanded}
+                    aria-label={`${label}. ${expanded ? 'Hide' : 'Show'} exercises`}
+                    onClick={() => setOpen(expanded ? null : row.muscle)}
+                  >
+                    {cells}
+                    <ChevronDown
+                      aria-hidden='true'
+                      className={cn(
+                        'size-4 text-muted-foreground transition-transform duration-200',
+                        expanded && 'rotate-180',
+                      )}
+                    />
+                  </button>
+                ) : (
+                  <div className={grid} role='group' aria-label={label}>
+                    {cells}
+                    <span />
+                  </div>
                 )}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      {usual && (
-        <p
-          className='flex items-center gap-1.5 text-caption text-muted-foreground'
-          aria-hidden='true'
-        >
-          <i className='h-2.5 w-0.5 rounded-full bg-foreground' /> usual 4 weeks
-        </p>
-      )}
+                {expanded && (
+                  <ul aria-label={`Exercises for ${row.muscle}`} className='grid pb-2'>
+                    {row.contributions.map((c) => {
+                      const key = `${row.muscle}|${c.exercise}`;
+                      const counted = c.role === 'primary' ? c.sets : c.sets / 2;
+                      const role =
+                        c.role === 'primary'
+                          ? 'Primary'
+                          : `Secondary · ½ of ${c.sets} ${setWord(c.sets)}`;
+                      return (
+                        <li key={c.exercise}>
+                          <button
+                            ref={(el) => {
+                              if (el) rowRefs.current.set(key, el);
+                              else rowRefs.current.delete(key);
+                            }}
+                            className='pressable grid min-h-12 w-full grid-cols-[minmax(0,1fr)_minmax(max-content,4.5rem)_16px] items-center gap-3 rounded-md px-1 py-1.5 text-left hover:bg-accent focus-visible:-outline-offset-2'
+                            aria-label={`${c.exercise}: ${role.replace('·', ',').replace('½', 'half')}, adds ${setsText(counted)}. Open exercise`}
+                            onClick={() => onOpen(c.exercise, key)}
+                          >
+                            <span className='min-w-0 pl-3'>
+                              <span className='line-clamp-2 text-[14px] [overflow-wrap:anywhere]'>
+                                {c.exercise}
+                              </span>
+                              <span className='block text-[12px] text-muted-foreground tabular-nums'>
+                                {role}
+                              </span>
+                            </span>
+                            <span className='text-right text-[14px] tabular-nums'>
+                              {setsText(counted)}
+                            </span>
+                            <span />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        {sorted.length > LIST && (
+          <Button className='w-full' onClick={() => setAll(!all)}>
+            {all ? 'Show fewer muscles' : `Show all ${sorted.length} muscles`}
+          </Button>
+        )}
+      </div>
     </Card>
   );
 }
 
 /**
- * Profile: lifetime totals, Every week, New records, Body parts, then `children` (body weight).
- * Records open their exercise's Records tab over Profile; body parts open Exercises filtered.
+ * Profile: lifetime totals, Every week, New records, Muscles, then `children` (body weight).
+ * Records open their exercise's Records tab over Profile, Muscles exercises its Charts.
  */
 export function ProfileView({
   dataset,
   disabled,
   locked,
-  onBodyPart,
   children,
 }: {
   dataset: Dataset;
   disabled: boolean;
   /** Sync is locked: the portaled exercise page must unmount. */
   locked: boolean;
-  onBodyPart: (part: BodyPart) => void;
   children?: ReactNode;
 }) {
   const {workouts} = dataset;
@@ -602,7 +723,8 @@ export function ProfileView({
   const sets = useMemo(() => workouts.reduce((n, w) => n + setCount(w), 0), [workouts]);
   const records = useMemo(() => recentRecords(dataset, noon(today)), [dataset, today]);
   const [exercise, setExercise] = useState<string | null>(null);
-  const recordRows = useRef(new Map<string, HTMLButtonElement>());
+  const [exerciseTab, setExerciseTab] = useState<'Records' | 'Charts'>('Records');
+  const sourceRows = useRef(new Map<string, HTMLButtonElement>());
   const returnTo = useRef<string | null>(null);
   useBackLayer(!!exercise && !locked, () => setExercise(null));
   const since = workouts.at(-1)?.date;
@@ -622,13 +744,23 @@ export function ProfileView({
       <EveryWeek dataset={dataset} byId={byId} today={today} />
       <NewRecords
         records={records}
-        rows={recordRows}
+        rows={sourceRows}
         onOpen={(name) => {
           returnTo.current = name;
+          setExerciseTab('Records');
           setExercise(name);
         }}
       />
-      <BodyParts workouts={workouts} today={today} onOpen={onBodyPart} />
+      <Muscles
+        workouts={workouts}
+        today={today}
+        rows={sourceRows}
+        onOpen={(name, key) => {
+          returnTo.current = key;
+          setExerciseTab('Charts');
+          setExercise(name);
+        }}
+      />
       {children}
       {!locked && (
         <ExercisePage
@@ -636,13 +768,13 @@ export function ProfileView({
           dataset={dataset}
           disabled={disabled}
           backLabel='Back to profile'
-          initialTab='Records'
+          initialTab={exerciseTab}
           onClose={() => setExercise(null)}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             const name = returnTo.current;
             returnTo.current = null;
-            if (name) recordRows.current.get(name)?.focus({preventScroll: true});
+            if (name) sourceRows.current.get(name)?.focus({preventScroll: true});
           }}
         />
       )}

@@ -419,6 +419,15 @@ test('About shows facts and drawings without instructions or credit text', async
     await expect(panel.locator('.about-drawings > .drawing').first()).toBeVisible();
     await expect(panel.getByText('Equipment', {exact: true})).toBeVisible();
     await expect(panel.getByText('Primary muscles', {exact: true})).toBeVisible();
+    if (name === 'Bench Press (Barbell)') {
+      // The figure shows primary muscles at full Amber, secondary a step lighter, as listed.
+      await expect(panel.locator('dd')).toContainText(['Chest', 'Front delts, Triceps']);
+      const figure = panel.locator('.muscle-figure');
+      await expect(figure).toHaveAttribute('aria-hidden', 'true');
+      await expect(figure.locator('[data-region="chest"]')).toHaveAttribute('data-tone', '4');
+      await expect(figure.locator('[data-region="frontCap"]')).toHaveAttribute('data-tone', '3');
+      await expect(figure.locator('[data-region="quads"]')).toHaveCount(0);
+    }
     await expect(panel.getByText('Instructions')).toHaveCount(0);
     await expect(panel.locator('ol, .attribution')).toHaveCount(0);
     await expect(panel.getByText(/CC BY|Everkinetic|wger|source/i)).toHaveCount(0);

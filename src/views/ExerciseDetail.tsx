@@ -1,7 +1,8 @@
 import {ArrowLeft, ChevronRight, History, Info, Trophy} from 'lucide-react';
 import {type ReactElement, type ReactNode, useId, useMemo, useRef, useState} from 'react';
 
-import {bodyPartOf, catalogEntry} from '../catalog/catalog';
+import {type Muscle, bodyPartOf, catalogEntry} from '../catalog/catalog';
+import {BodyFigure, ToneSwatch} from '../components/BodyFigure';
 import {Drawing, ExerciseThumb} from '../components/ExerciseThumb';
 import {WorkoutDrawer} from '../components/WorkoutDrawer';
 import {Spoken} from '../components/exercise-line';
@@ -18,6 +19,7 @@ import {
   recordsAt,
 } from '../domain/finish-summary';
 import {exerciseWorkoutCount, getHistory, getRecords} from '../domain/model';
+import {type Region, type Tone, regionMuscles, regions} from '../domain/muscles';
 import type {Dataset, SetRecord} from '../domain/types';
 import {cn} from '../utils/cn';
 import {dateLabel} from '../utils/date';
@@ -36,6 +38,46 @@ function Fact({label, value}: {label: string; value: string}) {
       <dt className='text-[12px] text-muted-foreground'>{label}</dt>
       <dd className='mt-1 text-[14px] font-medium wrap-anywhere'>{value}</dd>
     </div>
+  );
+}
+
+const PRIMARY = 4;
+const SECONDARY = 3;
+
+/** About → Muscles: the figure with primary and secondary muscles, then the same as text. */
+function AboutMuscles({
+  primary,
+  secondary,
+}: {
+  primary: readonly Muscle[];
+  secondary: readonly Muscle[];
+}) {
+  const tones: Partial<Record<Region, Tone>> = {};
+  for (const region of regions) {
+    const shown = regionMuscles[region];
+    if (shown.some((m) => primary.includes(m))) tones[region] = PRIMARY;
+    else if (shown.some((m) => secondary.includes(m))) tones[region] = SECONDARY;
+  }
+  const fact = (label: string, tone: Tone, list: readonly Muscle[]) => (
+    <div>
+      <dt className='flex items-center gap-1.5 text-[12px] text-muted-foreground'>
+        <ToneSwatch tone={tone} />
+        {label}
+      </dt>
+      <dd className='mt-1 text-[14px] font-medium wrap-anywhere'>{list.join(', ')}</dd>
+    </div>
+  );
+  return (
+    <section className='muscle-tones'>
+      <h3 className='mb-3 text-[16px] font-semibold'>Muscles</h3>
+      <div className='grid gap-4 border-t border-border pt-4'>
+        <BodyFigure tones={tones} className='mx-auto w-full max-w-[17rem]' />
+        <dl className='grid grid-cols-2 gap-4'>
+          {fact('Primary muscles', PRIMARY, primary)}
+          {secondary.length > 0 && fact('Secondary muscles', SECONDARY, secondary)}
+        </dl>
+      </div>
+    </section>
   );
 }
 
@@ -82,19 +124,7 @@ function About({name, framed}: {name: string; framed: boolean}) {
           <Fact label='Equipment' value={entry.equipment} />
         </dl>
       </section>
-      {(entry.primaryMuscles.length > 0 || entry.secondaryMuscles.length > 0) && (
-        <section>
-          <h3 className='mb-3 text-[16px] font-semibold'>Muscles</h3>
-          <dl className='grid gap-4 border-t border-border pt-3'>
-            {entry.primaryMuscles.length > 0 && (
-              <Fact label='Primary muscles' value={entry.primaryMuscles.join(', ')} />
-            )}
-            {entry.secondaryMuscles.length > 0 && (
-              <Fact label='Secondary muscles' value={entry.secondaryMuscles.join(', ')} />
-            )}
-          </dl>
-        </section>
-      )}
+      <AboutMuscles primary={entry.primaryMuscles} secondary={entry.secondaryMuscles} />
     </div>
   );
 }

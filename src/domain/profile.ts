@@ -1,10 +1,9 @@
-import {type BodyPart, bodyPartOf, bodyParts} from '../catalog/catalog';
 import {localDay} from '../utils/date';
 import {type RecordKind, recordKinds, recordsAt} from './finish-summary';
 import {weekStartOf, type workoutsPerWeek} from './model';
-import type {Dataset, Workout} from './types';
+import type {Dataset} from './types';
 
-/** Profile's derived views: weekly comparison, recent records and sets per body part. */
+/** Profile's derived views: weekly comparison and recent records (sets per muscle: muscles.ts). */
 
 export type WeekMetric = 'count' | 'volume' | 'time';
 type Week = ReturnType<typeof workoutsPerWeek>[number];
@@ -87,49 +86,4 @@ export function recentRecords(dataset: Dataset, now = new Date(), days = 28): Re
   return [...byExercise.values()]
     .map((kinds) => kinds.get(recordKinds.find((kind) => kinds.has(kind))!)!)
     .sort((a, b) => b.date.localeCompare(a.date));
-}
-
-export interface BodyPartSets {
-  part: BodyPart;
-  /** Recorded sets in the last 28 days, today included. */
-  sets: number;
-  /** Median of the six 28-day blocks before, over blocks with any training; null below two. */
-  usual: number | null;
-}
-
-const DAY = 86_400_000;
-const noon = (day: string) => new Date(`${day.slice(0, 10)}T12:00:00`).getTime();
-
-/**
- * Recorded sets per catalog body part (unlisted names count as Other), in body-part order; empty
- * when the last 28 days have none.
- */
-export function bodyPartSets(
-  workouts: readonly Workout[],
-  now = new Date(),
-  partOf: (name: string) => BodyPart = bodyPartOf,
-): BodyPartSets[] {
-  const today = noon(localDay(now));
-  const blocks = Array.from({length: 7}, () => new Map<BodyPart, number>());
-  for (const workout of workouts) {
-    const age = Math.round((today - noon(workout.date)) / DAY);
-    const block = Math.floor(age / 28);
-    if (age < 0 || block > 6) continue;
-    for (const exercise of workout.exercises) {
-      // Stored history holds only recorded sets (imported ones carry no completed flag).
-      const sets = exercise.sets.length;
-      if (!sets) continue;
-      const part = partOf(exercise.name);
-      blocks[block].set(part, (blocks[block].get(part) ?? 0) + sets);
-    }
-  }
-  if (!blocks[0].size) return [];
-  const trained = blocks.slice(1).filter((block) => block.size > 0);
-  return bodyParts
-    .map((part) => ({
-      part,
-      sets: blocks[0].get(part) ?? 0,
-      usual: trained.length >= 2 ? median(trained.map((block) => block.get(part) ?? 0)) : null,
-    }))
-    .filter((row) => row.sets > 0 || (row.usual ?? 0) > 0);
 }

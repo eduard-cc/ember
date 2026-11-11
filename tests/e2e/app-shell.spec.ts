@@ -215,6 +215,12 @@ test('Profile shows totals and selectable weekly metrics', async ({page}) => {
   expect(
     await page.locator('.library-scroll').evaluate((el) => el.scrollWidth <= el.clientWidth),
   ).toBe(true);
+  // An expanded muscle's exercise rows fit too.
+  await page.getByRole('list', {name: 'Sets per muscle'}).getByRole('button').first().click();
+  await expect(page.getByRole('list', {name: /^Exercises for /})).toBeVisible();
+  expect(
+    await page.locator('.library-scroll').evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
   for (const segment of await page
     .getByRole('radiogroup', {name: 'Show per week'})
     .getByRole('radio')
@@ -224,7 +230,7 @@ test('Profile shows totals and selectable weekly metrics', async ({page}) => {
   }
 });
 
-test('Profile weeks, records and body parts open their sources', async ({page}) => {
+test('Profile weeks, records and muscles open their sources', async ({page}) => {
   await openProfile(page, 'dark');
   // A week opens its workouts; a workout opens its drawer in place and closes back to its row.
   const weeks = page.getByRole('list', {name: 'Weeks', exact: true});
@@ -256,19 +262,31 @@ test('Profile weeks, records and body parts open their sources', async ({page}) 
   await page.goBack();
   await expect(exercise).toBeHidden();
   await expect(page.locator('.library-scroll h1')).toHaveText('Profile');
-  // A body part opens Exercises filtered to it, at the top of the list.
-  const scroller = page.locator('.library-scroll');
-  const chest = page
-    .getByRole('list', {name: 'Sets per body part'})
-    .getByRole('button', {name: /^Chest: /});
-  await chest.scrollIntoViewIfNeeded();
-  expect(await scroller.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  // A muscle expands to the exercises behind it and highlights it on the figure; an exercise
+  // opens on Charts over Profile and closes back to its row.
+  await page.getByRole('button', {name: /^Show all \d+ muscles$/}).click();
+  const muscles = page.getByRole('list', {name: 'Sets per muscle'});
+  const chest = muscles.getByRole('button', {name: /^Chest: /});
   await chest.click();
-  await expect(page.locator('.library-scroll h1')).toHaveText('Exercises');
-  expect(await scroller.evaluate((el) => el.scrollTop)).toBe(0);
-  await expect(
-    page.getByRole('group', {name: 'Body part'}).getByRole('button', {name: 'Chest'}),
-  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(chest).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('.muscle-figure .muscle-region[data-selected]')).toHaveAttribute(
+    'data-region',
+    'chest',
+  );
+  const contribution = page
+    .getByRole('list', {name: 'Exercises for Chest'})
+    .getByRole('button')
+    .first();
+  const contributionName = (await contribution.getAttribute('aria-label'))!.split(':')[0];
+  await contribution.click();
+  await expect(exercise.getByRole('heading', {name: contributionName, exact: true})).toBeVisible();
+  await expect(exercise.getByRole('tab', {name: 'Charts'})).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await exercise.getByRole('button', {name: 'Back to profile'}).click();
+  await expect(exercise).toBeHidden();
+  await expect(contribution).toBeFocused();
 });
 
 for (const [weekday, today] of [

@@ -696,6 +696,69 @@
       transform: scale(0.6);
     }
   }
+
+  /* Muscles figure (BodyFigure). More training reads as more Amber against the card in both
+     themes; plain body and untrained muscles stay neutral and distinct from the first step. */
+  .muscle-tones,
+  .muscle-figure {
+    --muscle-body: color-mix(in oklab, hsl(var(--foreground)) 9%, hsl(var(--card)));
+    --muscle-none: color-mix(in oklab, hsl(var(--foreground)) 21%, hsl(var(--card)));
+    --muscle-1: hsl(38 85% 80%);
+    --muscle-2: hsl(36 90% 64%);
+    --muscle-3: hsl(33 95% 46%);
+    --muscle-4: hsl(var(--primary));
+  }
+  :root[data-theme='dark'] :is(.muscle-tones, .muscle-figure) {
+    --muscle-1: hsl(32 45% 24%);
+    --muscle-2: hsl(34 65% 34%);
+    --muscle-3: hsl(36 80% 45%);
+  }
+  .muscle-figure .muscle-body {
+    fill: var(--muscle-body);
+    /* A thick outline in the body colour joins hands, feet and joints into one silhouette. */
+    stroke: var(--muscle-body);
+    stroke-width: 14;
+    stroke-linejoin: round;
+  }
+  .muscle-figure .muscle-region {
+    stroke: var(--muscle-body);
+    stroke-width: 1px;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    transition: opacity 160ms var(--ease-out);
+  }
+  .muscle-figure[data-selecting] .muscle-region:not([data-selected]) {
+    opacity: 0.2;
+  }
+  .muscle-figure[data-selecting] .muscle-region[data-selected] {
+    stroke: hsl(var(--foreground));
+  }
+  .muscle-swatch {
+    display: inline-block;
+    width: 1.25rem;
+    height: 0.625rem;
+    border-radius: 2px;
+  }
+  :is(.muscle-region, .muscle-swatch)[data-tone='0'] {
+    fill: var(--muscle-none);
+    background: var(--muscle-none);
+  }
+  :is(.muscle-region, .muscle-swatch)[data-tone='1'] {
+    fill: var(--muscle-1);
+    background: var(--muscle-1);
+  }
+  :is(.muscle-region, .muscle-swatch)[data-tone='2'] {
+    fill: var(--muscle-2);
+    background: var(--muscle-2);
+  }
+  :is(.muscle-region, .muscle-swatch)[data-tone='3'] {
+    fill: var(--muscle-3);
+    background: var(--muscle-3);
+  }
+  :is(.muscle-region, .muscle-swatch)[data-tone='4'] {
+    fill: var(--muscle-4);
+    background: var(--muscle-4);
+  }
 }
 
 /* Unlayered on purpose: vaul injects its drawer transition (500ms) as an unlayered style, which

@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
 import {workoutsPerWeek} from '../src/domain/model';
-import {bodyPartSets, minutesLabel, recentRecords, weekComparison} from '../src/domain/profile';
+import {minutesLabel, recentRecords, weekComparison} from '../src/domain/profile';
 import type {Dataset, ExerciseLog, SetRecord, Workout} from '../src/domain/types';
 
 const set = (
@@ -120,50 +120,5 @@ describe('recent records', () => {
         date: '2026-11-05T18:00:00',
       },
     ]);
-  });
-});
-
-describe('sets per body part', () => {
-  const now = new Date(2026, 10, 12, 20);
-  const partOf = (name: string) =>
-    name === 'Press' ? 'Chest' : name === 'Squat' ? 'Legs' : 'Other';
-  const squat = (...sets: SetRecord[]): ExerciseLog => ({name: 'Squat', type: 'weighted', sets});
-  it('counts completed sets in the last 4 weeks against the median of earlier 4-week blocks', () => {
-    const workouts = [
-      // Last 28 days (16 Oct – 12 Nov): a press set, an imported one with no completed flag, and
-      // two squat sets. Stored history keeps only recorded sets, so every stored set counts.
-      workout('a', '2026-11-12T07:00:00', [
-        press(set('a1', 60, 8), {...set('a2', 60, 8), completed: undefined}),
-      ]),
-      workout('b', '2026-10-16T18:00:00', [squat(set('b1', 100, 5), set('b2', 100, 5))]),
-      // 18 Sep – 15 Oct: three press sets.
-      workout('c', '2026-10-15T18:00:00', [
-        press(set('c1', 60, 8), set('c2', 60, 8), set('c3', 60, 8)),
-      ]),
-      // 21 Aug – 17 Sep: one press set and an unknown exercise.
-      workout('d', '2026-09-01T18:00:00', [
-        press(set('d1', 60, 8)),
-        {name: 'Mystery', type: 'weighted', sets: [set('d2', 10, 10)]},
-      ]),
-    ];
-    expect(bodyPartSets(workouts, now, partOf)).toEqual([
-      {part: 'Chest', sets: 2, usual: 2},
-      {part: 'Legs', sets: 2, usual: 0},
-      {part: 'Other', sets: 0, usual: 0.5},
-    ]);
-  });
-  it('has no usual value until two earlier blocks have training', () => {
-    const workouts = [
-      workout('a', '2026-11-10T18:00:00', [press(set('a1', 60, 8))]),
-      workout('b', '2026-10-10T18:00:00', [press(set('b1', 60, 8))]),
-    ];
-    expect(bodyPartSets(workouts, now, partOf)).toEqual([{part: 'Chest', sets: 1, usual: null}]);
-  });
-  it('is empty when the last 4 weeks have no sets, whatever came before', () => {
-    const workouts = [
-      workout('a', '2026-10-10T18:00:00', [press(set('a1', 60, 8))]),
-      workout('b', '2026-09-10T18:00:00', [press(set('b1', 60, 8))]),
-    ];
-    expect(bodyPartSets(workouts, now, partOf)).toEqual([]);
   });
 });

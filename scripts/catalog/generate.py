@@ -31,6 +31,8 @@ from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageOps
 
+import muscles
+
 ROOT = Path(__file__).resolve().parents[2]
 OUT_JSON = ROOT / 'src/catalog/exercises.json'
 OUT_IMAGES = ROOT / 'src/catalog/images'
@@ -40,7 +42,8 @@ LEVELS = 8
 
 # (name, body part, equipment, type, wger id, everkinetic id)
 # Everkinetic id: images and steps come from Everkinetic when it has them.
-# wger id: muscles and fallback instructions; its line drawings when Everkinetic has none.
+# wger id: fallback instructions; its line drawings when Everkinetic has none.
+# Muscles come from muscles.json (reviewed, app-owned), applied by muscles.apply.
 CATALOG = [
     # Chest
     ('Bench Press (Barbell)', 'Chest', 'Barbell', 'weighted', 73, '0042'),
@@ -279,34 +282,6 @@ CATALOG = [
 ]
 
 # Everkinetic ids without a usable drawing in its own dist/ fall back to wger drawings.
-# App-owned muscle tags where no attributable source lists them (facts, not copied text).
-MANUAL_MUSCLES = {
-    'Reverse Fly (Machine)': (['Shoulders'], ['Trapezius']),
-    'Seated Palms Up Wrist Curl (Dumbbell)': (['Forearms'], []),
-    'Wrist Curl (Barbell)': (['Forearms'], []),
-    'Reverse Wrist Curl (Barbell)': (['Forearms'], []),
-    'Mountain Climber': (['Abs'], ['Shoulders', 'Quads']),
-    'Running (Treadmill)': (['Quads', 'Calves'], ['Hamstrings', 'Glutes']),
-    'Cycling (Stationary Bike)': (['Quads'], ['Hamstrings', 'Calves', 'Glutes']),
-    'Jump Rope': (['Calves'], ['Shoulders', 'Quads']),
-    'Burpee': (['Quads', 'Chest'], ['Shoulders', 'Abs', 'Triceps']),
-    "Farmer's Walk (Dumbbell)": (['Forearms', 'Trapezius'], ['Abs', 'Glutes']),
-}
-MUSCLE_NAMES = {
-    # wger Latin -> plain English
-    'Anterior deltoid': 'Shoulders', 'Gluteus maximus': 'Glutes', 'Rectus abdominis': 'Abs',
-    'Latissimus dorsi': 'Lats', 'Quadriceps femoris': 'Quads', 'Triceps brachii': 'Triceps',
-    'Biceps brachii': 'Biceps', 'Pectoralis major': 'Chest', 'Trapezius': 'Traps',
-    'Biceps femoris': 'Hamstrings', 'Obliquus externus abdominis': 'Obliques',
-    'Gastrocnemius': 'Calves', 'Brachialis': 'Brachialis', 'Serratus anterior': 'Serratus',
-    'Soleus': 'Calves',
-    # Everkinetic
-    'biceps brachii': 'Biceps', 'triceps brachii': 'Triceps', 'pectoralis major': 'Chest',
-    'quadriceps': 'Quads', 'deltoid': 'Shoulders', 'abdominals': 'Abs',
-    'latissimus dorsi': 'Lats', 'gastrocnemius': 'Calves', 'soleus': 'Calves',
-    'ischiocrural muscles': 'Hamstrings', 'erector spinae': 'Lower back',
-    'trapezius': 'Traps', 'glutaeus maximus': 'Glutes', 'obliques': 'Obliques',
-}
 LICENSES = {
     'CC-BY-SA 3': ('CC BY-SA 3.0', 'https://creativecommons.org/licenses/by-sa/3.0/'),
     'CC-BY-SA 4': ('CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/'),
@@ -563,19 +538,6 @@ def main():
         elif english and english.get('description') and not unclear(english.get('license_author')):
             steps = text_steps(english['description'])
             steps_source = 'wger'
-        primary, secondary = [], []
-        if w and not unclear(w.get('license_author')):
-            primary = [MUSCLE_NAMES.get(m['name'], m['name_en'] or m['name']) for m in w['muscles']]
-            secondary = [MUSCLE_NAMES.get(m['name'], m['name_en'] or m['name'])
-                         for m in w['muscles_secondary']]
-        if not primary and ek:
-            primary = [MUSCLE_NAMES.get(m, m.title()) for m in ek.get('primary', [])]
-            secondary = [MUSCLE_NAMES.get(m, m.title()) for m in ek.get('secondary', [])]
-        if not primary and name in MANUAL_MUSCLES:
-            primary, secondary = (list(x) for x in MANUAL_MUSCLES[name])
-        primary = list(dict.fromkeys(primary))
-        secondary = [m for m in dict.fromkeys(secondary) if m not in primary]
-
         # Images: Everkinetic start/end drawings, else wger line drawings (style 1, never AI).
         images, image_source = [], None
         ek_source = ek and {
@@ -641,18 +603,13 @@ def main():
                             'license': lic[0], 'licenseUrl': lic[1],
                             'url': f'https://wger.de/exercise/{wger_id}/view-base',
                             'changes': 'converted to plain text'})
-        if w and w['muscles'] and primary and not unclear(w.get('license_author')) \
-                and steps_source != 'wger':
-            lic = LICENSES[WGER_LICENSE_IDS[w['license']['id']]]
-            sources.append({'kind': 'muscles', 'title': english['name'] if english else name,
-                            'author': w['license_author'] or 'wger.de contributors',
-                            'license': lic[0], 'licenseUrl': lic[1],
-                            'url': f'https://wger.de/exercise/{wger_id}/view-base'})
         entries.append({
             'name': name, 'bodyPart': body, 'equipment': equipment, 'type': kind,
-            'primaryMuscles': primary, 'secondaryMuscles': secondary,
+            'primaryMuscles': [], 'secondaryMuscles': [],  # set by muscles.apply
             'instructions': steps[:12], 'images': files_out, 'sources': sources,
         })
+    # Muscles come from the reviewed table, not from wger or Everkinetic tags.
+    muscles.apply(entries)
     OUT_JSON.write_text(json.dumps(entries, indent=1, ensure_ascii=False) + '\n')
     with_images = sum(1 for e in entries if e['images'])
     print(f'{len(entries)} exercises, {with_images} with drawings, '
