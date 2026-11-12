@@ -385,6 +385,20 @@ def unclear(author):
     return bool(author) and any(name in author.lower() for name in ('exrx', 'mens fitness', "men's fitness"))
 
 
+EMAIL = re.compile(r'[\w.+-]+@[\w-]+(?:\.[\w-]+)+')
+
+
+def credit(author):
+    """A wger licence author without contact details. CC BY-SA asks for the creator's name and a
+    link to the source, which `url` gives (the wger page keeps the full credit); an email address
+    is personal data that attribution does not need. An author that was only an address becomes
+    the generic wger credit."""
+    if not author or not EMAIL.search(author):
+        return author or 'wger.de contributors'
+    name = re.sub(r'\s{2,}', ' ', EMAIL.sub('', author)).strip(' ,;:<>()[]')
+    return name or 'wger.de contributors'
+
+
 def line_mask(raw):
     """Crop a line drawing and turn it into an alpha mask (ink opaque, paper transparent)."""
     image = Image.open(io.BytesIO(raw))
@@ -582,7 +596,7 @@ def main():
                 lic = LICENSES[WGER_LICENSE_IDS[drawings[0]['license']]]
                 image_source = {
                     'title': english['name'] if english else name,
-                    'author': drawings[0]['license_author'] or 'wger.de contributors',
+                    'author': credit(drawings[0]['license_author']),
                     'license': lic[0], 'licenseUrl': lic[1],
                     'url': f'https://wger.de/exercise/{wger_id}/view-base',
                 }
@@ -611,7 +625,7 @@ def main():
         elif steps_source == 'wger':
             lic = LICENSES[WGER_LICENSE_IDS[english['license']]]
             sources.append({'kind': 'instructions', 'title': english['name'],
-                            'author': english['license_author'] or 'wger.de contributors',
+                            'author': credit(english['license_author']),
                             'license': lic[0], 'licenseUrl': lic[1],
                             'url': f'https://wger.de/exercise/{wger_id}/view-base',
                             'changes': 'converted to plain text'})

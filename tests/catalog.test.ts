@@ -87,6 +87,8 @@ describe('bundled exercise catalog', () => {
         expect(exercise.sources.some((s) => s.kind === 'illustration')).toBe(true);
       for (const source of exercise.sources) {
         expect(source.author).toBeTruthy();
+        // Attribution names the author and links the source; contact addresses are not needed.
+        expect(source.author).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.-]+/);
         expect(source.license).toMatch(/^(CC BY-SA [34]\.0|CC0 1\.0|app-owned)$/);
         if (source.license === 'app-owned') {
           expect(source.kind).toBe('illustration');
