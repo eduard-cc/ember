@@ -7,7 +7,8 @@
 # Fast-forwards this checkout first, so ops/deploy.sh runs the newest scripts. A commit
 # whose CI or deploy failed, or that ops/rollback.sh rolled back from, is held: it is
 # never retried and the owner is alerted once. The next commit on main replaces the
-# hold. When GitHub cannot be reached, the next run simply tries again.
+# hold. When GitHub cannot be reached, the next run simply tries again; once that has
+# lasted a day, the owner is alerted once, until GitHub is reachable again.
 ACTION=auto-deploy
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 # shellcheck source=ops/lib.sh
@@ -17,6 +18,18 @@ stop() {
 	hold "$1"
 	log "holding ${1:0:12}: $2" >&2
 	notify "$2"
+}
+
+# Created by the first run that cannot read GitHub (its mtime is when that began) and
+# removed by the next run that can; it holds "alerted" once the owner has been told.
+UNREACHABLE=$EMBER_HOME/github-unreachable
+
+github_unreachable() {
+	log "$1; trying again next run" >&2
+	[[ -e $UNREACHABLE ]] || : >"$UNREACHABLE"
+	[[ ! -s $UNREACHABLE ]] && (($(date +%s) - $(stat -c %Y -- "$UNREACHABLE") >= 86400)) || return 0
+	echo alerted >"$UNREACHABLE"
+	notify 'Auto-deploy has not been able to read GitHub for a day, so new commits on main are not deploying. Details: journalctl --user -u ember-auto-deploy -n 80'
 }
 
 # Everything runs from this function, parsed in full before the fast-forward below
@@ -36,15 +49,19 @@ main() {
 		return 0
 	}
 	"${GIT[@]}" fetch --quiet origin main || {
-		log 'could not fetch origin/main; trying again next run' >&2
+		github_unreachable 'could not fetch origin/main'
 		return 0
 	}
 	sha=$("${GIT[@]}" rev-parse origin/main)
-	[[ $sha != "$(current_release)" && $sha != "$(held)" ]] || return 0
+	if [[ $sha == "$(current_release)" || $sha == "$(held)" ]]; then
+		rm -f -- "$UNREACHABLE"
+		return 0
+	fi
 	ci=$(ci_state "$sha") || {
-		log 'could not read CI results from GitHub; trying again next run' >&2
+		github_unreachable 'could not read CI results from GitHub'
 		return 0
 	}
+	rm -f -- "$UNREACHABLE"
 	case $ci in
 	pending)
 		log "waiting for CI on ${sha:0:12}"
