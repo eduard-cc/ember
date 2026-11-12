@@ -89,7 +89,7 @@ check_config() {
 	# switches the guard off.
 	local url urls
 	read -ra urls <<<"$(extra_urls)"
-	((${#urls[@]})) || die "EMBER_EXTRA_HEALTH_URLS in $EMBER_ENV is empty"
+	((${#urls[@]})) || die "EMBER_EXTRA_HEALTH_URLS is missing from $EMBER_ENV or empty"
 	for url in "${urls[@]}"; do
 		[[ $url =~ ^(https?|file)://[^[:space:]\'\"#]+$ ]] || die "invalid extra health URL '$url' in EMBER_EXTRA_HEALTH_URLS"
 	done
@@ -188,12 +188,12 @@ restart_and_check() {
 	healthy
 }
 
-# Read-only probes of the extra health endpoints bracket every Ember switch.
-# runtime.env lists them, space-separated, in
-# EMBER_EXTRA_HEALTH_URLS; the environment variable overrides it for tests.
+# Read-only probes of the extra health endpoints bracket every
+# Ember switch. They are host configuration with no default: runtime.env lists them,
+# space-separated, in EMBER_EXTRA_HEALTH_URLS; the environment variable overrides it
+# for tests.
 extra_urls() {
-	local urls=${EMBER_EXTRA_HEALTH_URLS:-$(setting EMBER_EXTRA_HEALTH_URLS)}
-	echo "${urls:-http://127.0.0.1:<port>/api/health}"
+	echo "${EMBER_EXTRA_HEALTH_URLS:-$(setting EMBER_EXTRA_HEALTH_URLS)}"
 }
 
 extra_healthy() {
@@ -208,8 +208,8 @@ extra_healthy() {
 	done
 }
 
-# An extra endpoint may restart on its own, so give it time to come back before
-# blaming the Ember switch.
+# An extra endpoint may restart at any time, so give it time to come back before blaming
+# the Ember switch.
 extra_recovered() {
 	local deadline=$((SECONDS + ${EMBER_EXTRA_GRACE:-90}))
 	until extra_healthy; do
@@ -236,7 +236,7 @@ switch_release() {
 	if ! restart_and_check; then
 		problem="Deploy of ${sha:0:12} failed its health check${HEALTH_DETAIL:+ ($HEALTH_DETAIL)}"
 	elif [[ $extra_before == true ]] && ! extra_recovered; then
-		# Correlation, not proof: an endpoint may also restart on its own.
+		# Correlation, not proof: an endpoint may have been restarting on its own.
 		problem="The extra health endpoints stopped responding after Ember deployed ${sha:0:12}"
 		if [[ $migrated == true ]]; then
 			notify "$problem. Ember was NOT rolled back because this release applied database migrations the previous one does not know. Check them first; roll Ember back by hand only if it is the cause."

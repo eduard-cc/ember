@@ -21,8 +21,8 @@ trap cleanup EXIT
 
 export EMBER_HOME=$sandbox/home EMBER_ENV=$sandbox/runtime.env EMBER_UNIT=$unit
 mkdir -p "$EMBER_HOME/releases"
-printf 'EMBER_PORT="%s"\nEMBER_ORIGIN="http://127.0.0.1:%s"\nEMBER_WEB_ROOT="%s"\n' \
-	"$port" "$port" "$EMBER_HOME/current/dist" >"$EMBER_ENV"
+printf 'EMBER_PORT="%s"\nEMBER_ORIGIN="http://127.0.0.1:%s"\nEMBER_WEB_ROOT="%s"\nEMBER_EXTRA_HEALTH_URLS="file://%s/extra-health"\n' \
+	"$port" "$port" "$EMBER_HOME/current/dist" "$sandbox" >"$EMBER_ENV"
 
 # A synthetic release serves its own shell and the files its service worker precaches;
 # a broken one exits at startup. Like the real server, it refuses PNGs under assets/, so
@@ -165,6 +165,11 @@ echo "EMBER_EXTRA_HEALTH_URLS=\"file://$sandbox/from-env-file\"" >>"$EMBER_ENV"
 	fail 'check_config must reject a quoted extra health URL'
 (EMBER_EXTRA_HEALTH_URLS='http://127.0.0.1:1/x #note' check_config) 2>/dev/null &&
 	fail 'check_config must reject an extra health URL list with a comment'
+# The URLs are host configuration with no built-in default: a runtime.env without them
+# stops the deploy.
+grep -v '^EMBER_EXTRA_HEALTH_URLS=' "$EMBER_ENV" >"$sandbox/no-extra.env"
+(EMBER_EXTRA_HEALTH_URLS='' EMBER_ENV=$sandbox/no-extra.env check_config) 2>/dev/null &&
+	fail 'check_config must refuse a runtime.env without EMBER_EXTRA_HEALTH_URLS'
 check_config || fail 'check_config should accept the test URLs'
 [[ $(switched harmful true) == 1 ]] || fail 'a switch that breaks the extra endpoints must roll back'
 [[ $(current_release) == bbb ]] && serving bbb || fail 'extra-endpoint breakage should roll back to bbb'
