@@ -39,7 +39,7 @@
 		"eslint-config-prettier": "10.1.8",
 		"supertest": "7.1.4",
 		"tsx": "4.23.15",
-		"typescript": "5.9.3"
+		"typescript": "7.0.2"
 	},
 	"overrides": {
 		"multer": "^2.5.0"
