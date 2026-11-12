@@ -5,7 +5,7 @@
 Every exercise's `primaryMuscles` and `secondaryMuscles` come from `muscles.json`, a
 reviewed, app-owned table in Ember's 20-muscle vocabulary (`muscles.py` and
 `muscles` in `src/catalog/catalog.ts`). wger and Everkinetic muscle tags are not
-used: they were wrong in places (Hip Adductor as Glutes, Shrug as Shoulders, Leg
+used: they mis-tag some exercises (Hip Adductor as Glutes, Shrug as Shoulders, Leg
 Press with Calves as primary). Primary means a prime mover; secondary a
 synergist that gets a real stimulus, not a stabiliser. Tag variants consistently.
 After editing the table, run `python3 scripts/catalog/muscles.py`;
@@ -34,11 +34,12 @@ Some `dist/png` drawings are cut off at the legs, feet or equipment. For the
 exercises in `EK_FULL_FIGURE` (`generate.py`), the artist's full-figure exports
 are used instead. They are cleaned of stray specks, then thickened by whichever
 filter size brings the final mask closest to the measured `dist` stroke width
-(`EK_STROKE_WIDTH`); this measuring makes a full run take about 5 minutes. Each
-pair was reviewed side by side for exercise, pose and start/finish order; some
-exports label start and finish backwards, so the mapping lists files in display
-order. Pairs left on `dist` were near-identical, already uncropped, or no
-better: shrugs lose their visible shoulder lift at full-figure scale.
+(`EK_STROKE_WIDTH`); this measuring makes a full run take about 5 minutes. Review
+each pair side by side for exercise, pose and start/finish order; some exports
+label start and finish backwards, so the mapping lists files in display order.
+Keep an exercise on `dist` when its full-figure export is near-identical, already
+uncropped or no better: shrugs lose their visible shoulder lift at full-figure
+scale.
 
 Dumbbell and cable shrugs are cropped to the upper body (`EK_UPPER_BODY`, the
 same box for start and finish) so the small shoulder lift stays visible;
@@ -64,7 +65,7 @@ SHA-256, attempts, notes) and accepted sources in `accepted/<slug>.png`. Like th
 licensed drawings, each exercise shows a start and a finish pose: a record's ordered
 `poses` list (`accepted/<slug>-0.png` start, `-1.png` finish, each with its SHA-256)
 is bundled as `<slug>-0.webp` and `<slug>-1.webp`. Holds without a progression
-(Plank) keep a single drawing. Pairs were reviewed for movement order,
+(Plank) keep a single drawing. Pairs are reviewed for movement order,
 anatomy and matching equipment; review notes live in `reviews/`. The
 tracked `generated-manifest.json` is written from those records and lists every
 reviewed exercise, its status, attempt count and the SHA-256 of accepted sources:
@@ -98,8 +99,8 @@ Everkinetic or wger work.
 
 ## QA and continuation
 
-Generate with `image_generate` (gpt-image-2) using licensed Everkinetic drawings as
-style references only. Every candidate must pass, on the raw full-size image:
+Generate with gpt-image-2, using licensed Everkinetic drawings as style
+references only. Every candidate must pass, on the raw full-size image:
 
 1. A style audit: faceless egg head without hair or ears, thick uniform outlines,
    no shading or hatching, sparse interior lines.
