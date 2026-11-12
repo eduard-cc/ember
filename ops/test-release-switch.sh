@@ -10,7 +10,6 @@ unit=ember-release-test-$$.service
 units=$HOME/.config/systemd/user
 port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
 cleanup() {
-	[[ -z ${shell_pid:-} ]] || kill "$shell_pid" 2>/dev/null || true
 	systemctl --user stop "$unit" 2>/dev/null || true
 	rm -f -- "$units/$unit"
 	systemctl --user daemon-reload
@@ -21,8 +20,8 @@ trap cleanup EXIT
 
 export EMBER_HOME=$sandbox/home EMBER_ENV=$sandbox/runtime.env EMBER_UNIT=$unit
 mkdir -p "$EMBER_HOME/releases"
-printf 'EMBER_PORT="%s"\nEMBER_ORIGIN="http://127.0.0.1:%s"\nEMBER_WEB_ROOT="%s"\nEMBER_EXTRA_HEALTH_URLS="file://%s/extra-health"\n' \
-	"$port" "$port" "$EMBER_HOME/current/dist" "$sandbox" >"$EMBER_ENV"
+printf 'EMBER_PORT="%s"\nEMBER_ORIGIN="http://127.0.0.1:%s"\nEMBER_WEB_ROOT="%s"\n' \
+	"$port" "$port" "$EMBER_HOME/current/dist" >"$EMBER_ENV"
 
 # A synthetic release serves its own shell and the files its service worker precaches;
 # a broken one exits at startup. Like the real server, it refuses PNGs under assets/, so
@@ -121,84 +120,31 @@ deploy bbb && deploy ccc || fail 'redeploys'
 rm -f -- "$EMBER_HOME/releases/bbb/.complete"
 roll_back >/dev/null && serving aaa || fail 'rollback should skip incomplete bbb'
 
-# Extra-endpoint tripwire. A file stands in for an extra health endpoint; the "harmful" release
-# removes it on startup, as if the Ember switch had taken it down.
+# switch_release rolls a failed switch back and alerts the owner.
 touch "$EMBER_HOME/releases/bbb/.complete"
 deploy bbb || fail 'redeploy bbb'
-export EMBER_EXTRA_HEALTH_URLS="file://$sandbox/extra-health" EMBER_EXTRA_GRACE=4
-release harmful
-sed -i "1i require('node:fs').rmSync('$sandbox/extra-health', {force: true});" \
-	"$EMBER_HOME/releases/harmful/server/dist/trial.js"
 alerts=$sandbox/alerts
 notify() { echo "$1" >>"$alerts"; }
-switched() { # <sha> <extra_before>; prints switch_release's exit status
+switched() { # <sha>; prints switch_release's exit status
 	local rc=0
 	switch_release "$@" >/dev/null 2>&1 || rc=$?
 	echo "$rc"
 }
-touch "$sandbox/extra-health"
-extra_healthy || fail 'the fake extra endpoint should start healthy'
-# A URL that falls through to a web shell (HTML) is not a health check.
-mkdir -p "$sandbox/shell"
-echo '<!doctype html>' >"$sandbox/shell/index.html"
-shell_port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
-python3 -m http.server --bind 127.0.0.1 --directory "$sandbox/shell" "$shell_port" >/dev/null 2>&1 &
-shell_pid=$!
-shell_up=false
-for _ in $(seq 1 50); do
-	curl -fsS -o /dev/null "http://127.0.0.1:$shell_port/" 2>/dev/null && shell_up=true && break
-	sleep 0.1
-done
-[[ $shell_up == true ]] || { kill "$shell_pid" 2>/dev/null; fail 'the fake HTML shell server did not start'; }
-shell_healthy=false
-EMBER_EXTRA_HEALTH_URLS="http://127.0.0.1:$shell_port/" extra_healthy && shell_healthy=true
-kill "$shell_pid" && wait "$shell_pid" 2>/dev/null || true
-[[ $shell_healthy == false ]] || fail 'an HTML page must not count as a healthy endpoint'
-# runtime.env supplies the URLs when the environment does not; the environment wins.
-echo "EMBER_EXTRA_HEALTH_URLS=\"file://$sandbox/from-env-file\"" >>"$EMBER_ENV"
-[[ $(EMBER_EXTRA_HEALTH_URLS='' extra_urls) == "file://$sandbox/from-env-file" ]] ||
-	fail 'extra_urls should read EMBER_EXTRA_HEALTH_URLS from runtime.env'
-[[ $(extra_urls) == "file://$sandbox/extra-health" ]] ||
-	fail 'the EMBER_EXTRA_HEALTH_URLS environment variable should override runtime.env'
-# A malformed list must stop the deploy instead of silently disabling the guard.
-(EMBER_EXTRA_HEALTH_URLS="'http://127.0.0.1:1/x'" check_config) 2>/dev/null &&
-	fail 'check_config must reject a quoted extra health URL'
-(EMBER_EXTRA_HEALTH_URLS='http://127.0.0.1:1/x #note' check_config) 2>/dev/null &&
-	fail 'check_config must reject an extra health URL list with a comment'
-# The URLs are host configuration with no built-in default: a runtime.env without them
-# stops the deploy.
-grep -v '^EMBER_EXTRA_HEALTH_URLS=' "$EMBER_ENV" >"$sandbox/no-extra.env"
-(EMBER_EXTRA_HEALTH_URLS='' EMBER_ENV=$sandbox/no-extra.env check_config) 2>/dev/null &&
-	fail 'check_config must refuse a runtime.env without EMBER_EXTRA_HEALTH_URLS'
-check_config || fail 'check_config should accept the test URLs'
-[[ $(switched harmful true) == 1 ]] || fail 'a switch that breaks the extra endpoints must roll back'
-[[ $(current_release) == bbb ]] && serving bbb || fail 'extra-endpoint breakage should roll back to bbb'
-grep -q 'The extra health endpoints stopped responding after Ember deployed harmful.*rolled back to bbb.*STILL unhealthy' "$alerts" ||
-	fail 'extra-endpoint breakage must alert the owner'
-# Extra endpoints already down before the deploy: they cannot gate the switch.
-[[ $(switched ccc false) == 0 ]] && serving ccc || fail 'unhealthy extra endpoints before the deploy must not block it'
-touch "$sandbox/extra-health"
-# A crashing release still rolls back through the same path, and says so.
+# A crashing release rolls back and says so.
 : >"$alerts"
-[[ $(switched bad true) == 1 && $(current_release) == bbb ]] || fail 'a broken release must roll back'
-grep -q 'failed its health check, so it was rolled back to bbb. The extra endpoints are healthy again' "$alerts" ||
+[[ $(switched bad) == 1 && $(current_release) == bbb ]] || fail 'a broken release must roll back'
+grep -q 'failed its health check, so it was rolled back to bbb. Migrations are not rolled back' "$alerts" ||
 	fail 'a broken release must alert the owner'
 # The server never logs a 404, so the alert itself names the missing offline file.
 : >"$alerts"
-[[ $(switched unserved true) == 1 && $(current_release) == bbb ]] || fail 'an unserved release must roll back'
+[[ $(switched unserved) == 1 && $(current_release) == bbb ]] || fail 'an unserved release must roll back'
 grep -q 'unserved failed its health check (Serve did not return /assets/drawing-unserved.png)' "$alerts" ||
 	fail 'the alert must name the unserved file'
-[[ $(switched ccc true) == 0 ]] && serving ccc || fail 'a harmless switch with the extra endpoints healthy should pass'
-# A release that applied migrations is never rolled back onto the old schema for the
-# extra endpoints' sake: it stays live and the owner is asked to check.
 : >"$alerts"
-[[ $(switched harmful true true) == 4 ]] || fail 'a migrated release must not roll back for the extra endpoints'
-[[ $(current_release) == harmful ]] && serving harmful || fail 'the migrated release should stay live'
-grep -q 'NOT rolled back because this release applied database migrations' "$alerts" ||
-	fail 'a migrated release must still alert the owner'
-touch "$sandbox/extra-health"
+[[ $(switched ccc) == 0 ]] && serving ccc || fail 'a healthy switch should pass'
+[[ ! -s $alerts ]] || fail 'a healthy switch must not alert'
 # A link that cannot be switched changes nothing and does not roll back.
 mkdir -p "$EMBER_HOME/current.tmp/blocker"
-[[ $(switched ccc true) == 3 && $(current_release) == harmful ]] || fail 'a failed link switch must leave the release alone'
+[[ $(switched bbb) == 3 && $(current_release) == ccc ]] || fail 'a failed link switch must leave the release alone'
 rm -rf -- "$EMBER_HOME/current.tmp"
 echo 'release switch checks passed'

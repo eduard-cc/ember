@@ -6,8 +6,8 @@
 # Refuses unless the commit is on origin/main and CI passed for its latest code
 # change. Builds from `git archive`, never from a working tree. A release that adds
 # a migration is preceded by a backup whose restore is tested. If the new release
-# is unhealthy, or the extra endpoints were healthy before the switch and are not after it, the
-# previous release is restored and the owner is alerted. Migrations are never rolled back.
+# is unhealthy, the previous release is restored and the owner is alerted. Migrations
+# are never rolled back.
 ACTION=deploy
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 # shellcheck source=ops/lib.sh
@@ -117,23 +117,13 @@ if [[ -n $pending ]]; then
 		while read -r old; do rm -f -- "${BACKUPS:?}/$old"; done
 fi
 
-# Tripwire: an Ember deploy must not take the extra endpoints down with it.
-if extra_healthy; then
-	extra_before=true
-else
-	extra_before=false
-	log 'the extra endpoints are already unhealthy; they cannot gate this deploy' >&2
-fi
-migrated=false
-[[ -z $pending ]] || migrated=true
 rc=0
-switch_release "$sha" "$extra_before" "$migrated" || rc=$?
+switch_release "$sha" || rc=$?
 case $rc in
 0) ;;
 1) die 'deploy failed; rolled back to the previous release' ;;
 2) die 'ROLLBACK FAILED; the app is unhealthy and needs attention' ;;
 3) die 'could not switch releases; nothing was deployed' ;;
-4) log "$sha is live, but the extra endpoints stopped responding; not rolled back because of migrations" >&2 ;;
 *) die "unexpected switch result $rc" ;;
 esac
 

@@ -85,14 +85,6 @@ check_config() {
 	[[ $(setting EMBER_WEB_ROOT) == "$CURRENT/dist" ]] || die "EMBER_WEB_ROOT in $EMBER_ENV must be $CURRENT/dist"
 	[[ $(setting EMBER_PORT) =~ ^[0-9]+$ ]] || die "EMBER_PORT missing from $EMBER_ENV"
 	[[ -n $(setting EMBER_ORIGIN) ]] || die "EMBER_ORIGIN missing from $EMBER_ENV"
-	# A malformed value would make the extra endpoints look down on every deploy, which silently
-	# switches the guard off.
-	local url urls
-	read -ra urls <<<"$(extra_urls)"
-	((${#urls[@]})) || die "EMBER_EXTRA_HEALTH_URLS is missing from $EMBER_ENV or empty"
-	for url in "${urls[@]}"; do
-		[[ $url =~ ^(https?|file)://[^[:space:]\'\"#]+$ ]] || die "invalid extra health URL '$url' in EMBER_EXTRA_HEALTH_URLS"
-	done
 }
 
 # Atomic: a reader always sees either the old or the new release.
@@ -188,44 +180,11 @@ restart_and_check() {
 	healthy
 }
 
-# Read-only probes of the extra health endpoints bracket every
-# Ember switch. They are host configuration with no default: runtime.env lists them,
-# space-separated, in EMBER_EXTRA_HEALTH_URLS; the environment variable overrides it
-# for tests.
-extra_urls() {
-	echo "${EMBER_EXTRA_HEALTH_URLS:-$(setting EMBER_EXTRA_HEALTH_URLS)}"
-}
-
-extra_healthy() {
-	local url urls type
-	read -ra urls <<<"$(extra_urls)"
-	((${#urls[@]})) || return 1
-	for url in "${urls[@]}"; do
-		type=$(curl -fsS --max-time 10 --output /dev/null --write-out '%{content_type}' "$url" 2>/dev/null) || return 1
-		# A health endpoint answers JSON. An HTML page means the URL fell through to a web
-		# app's shell, which would make a dead API look healthy.
-		[[ $type != text/html* ]] || return 1
-	done
-}
-
-# An extra endpoint may restart at any time, so give it time to come back before blaming
-# the Ember switch.
-extra_recovered() {
-	local deadline=$((SECONDS + ${EMBER_EXTRA_GRACE:-90}))
-	until extra_healthy; do
-		((SECONDS < deadline)) || return 1
-		sleep 5
-	done
-}
-
-# Switch to a built release and check it. If the extra endpoints were healthy before
-# ($2 == true), also check that they still are. A failed check rolls back and sends an alert.
+# Switch to a built release and check it. A failed check rolls back and sends an alert.
 # Returns 0 when live and healthy, 1 after a successful rollback, 2 when the rollback
-# failed too, 3 when the link could not be switched (nothing changed), and 4 when only
-# an extra endpoint failed but the release applied migrations ($3 == true): rolling back would run
-# old code on a newer schema, so it stays live and the owner is alerted instead.
+# failed too, and 3 when the link could not be switched (nothing changed).
 switch_release() {
-	local sha=$1 extra_before=$2 migrated=${3:-false} problem extra_after= now
+	local sha=$1 problem now
 	now=$(current_release)
 	log "switching ${now:-nothing} -> $sha"
 	# Callers test this function, which disables errexit inside it: check each step.
@@ -233,27 +192,14 @@ switch_release() {
 		log 'could not switch the current link; nothing changed' >&2
 		return 3
 	}
-	if ! restart_and_check; then
-		problem="Deploy of ${sha:0:12} failed its health check${HEALTH_DETAIL:+ ($HEALTH_DETAIL)}"
-	elif [[ $extra_before == true ]] && ! extra_recovered; then
-		# Correlation, not proof: an endpoint may have been restarting on its own.
-		problem="The extra health endpoints stopped responding after Ember deployed ${sha:0:12}"
-		if [[ $migrated == true ]]; then
-			notify "$problem. Ember was NOT rolled back because this release applied database migrations the previous one does not know. Check them first; roll Ember back by hand only if it is the cause."
-			return 4
-		fi
-	else
-		return 0
-	fi
+	restart_and_check && return 0
+	problem="Deploy of ${sha:0:12} failed its health check${HEALTH_DETAIL:+ ($HEALTH_DETAIL)}"
 	log "$problem; rolling back" >&2
 	if ! roll_back; then
 		notify "$problem and the ROLLBACK FAILED. Ember needs attention: journalctl --user -u $EMBER_UNIT -n 50"
 		return 2
 	fi
-	if [[ $extra_before == true ]]; then
-		if extra_recovered; then extra_after=' The extra endpoints are healthy again.'; else extra_after=' The extra endpoints are STILL unhealthy and need attention.'; fi
-	fi
-	notify "$problem, so it was rolled back to $(current_release).$extra_after Migrations are not rolled back. Details: journalctl --user -u $EMBER_UNIT -n 50"
+	notify "$problem, so it was rolled back to $(current_release). Migrations are not rolled back. Details: journalctl --user -u $EMBER_UNIT -n 50"
 	return 1
 }
 
