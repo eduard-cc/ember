@@ -42,8 +42,8 @@ lock() {
 
 current_release() { [[ -L $CURRENT ]] && basename -- "$(readlink -- "$CURRENT")" || true; }
 
-# CI result for a commit on main: success, pending or failure. Docs-only commits skip
-# CI and a push runs CI only for its head commit, so any commit from the newest code
+# CI result for a commit on main: success, pending or failure. A push runs CI only for
+# its head commit, and a docs-only run tests no code, so any commit from the newest code
 # change up to $1 has the same code and may carry the run. A cancelled run is not green;
 # a commit with no run yet is pending. Fails when GitHub cannot be read.
 ci_state() {

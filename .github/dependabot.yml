@@ -1,0 +1,53 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      # Radix packages share internals (layers, focus scope); bump them together to keep one copy.
+      radix:
+        patterns:
+          - '@radix-ui/*'
+      typescript-eslint:
+        patterns:
+          - '@typescript-eslint/*'
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Keep Node types on the runtime major in .nvmrc.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: npm
+    directory: /server
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      nestjs:
+        patterns:
+          - '@nestjs/*'
+      typescript-eslint:
+        patterns:
+          - '@typescript-eslint/*'
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Keep Node types on the runtime major in .nvmrc.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  # Workflow actions are pinned by commit SHA with the version in a comment.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        update-types: [minor, patch]

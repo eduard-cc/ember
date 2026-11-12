@@ -553,6 +553,8 @@ test('sounds and haptics start on, play when a workout starts, climb within each
   // Opening ⋯ is navigation: the menu opens without a cue.
   await page.locator('button[aria-label="Exercise options for Squat (Barbell)"]').click();
   await expect(page.getByRole('menu')).toBeVisible();
+  // Escape reaches the menu once it has taken focus.
+  await expect(page.getByRole('menuitem').first()).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('menu')).toHaveCount(0);
   // The next exercise's scale starts again from the bottom note; Add set buzzes lightly.

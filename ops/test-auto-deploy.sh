@@ -95,9 +95,11 @@ run 'held commit'
 [[ $(deploy_count) == 2 && $(held_sha) == "$c2" ]] || fail 'a failed deploy should be held and not retried'
 [[ $(alert_count) == 1 ]] && grep -q "Auto-deploy of ${c2:0:12} failed" "$alerts" || fail 'a failed deploy should alert once'
 
-# A docs-only commit inherits its code commit's CI and replaces the hold.
+# A docs-only commit inherits its code commit's CI, without waiting for its own run, and
+# replaces the hold.
 rm -f -- "$sandbox/deploy-rc"
 c3=$(commit README.md)
+echo "$c3 in_progress " >>"$ci"
 run 'docs-only commit'
 live "$c3" || fail 'a docs-only commit after green code should deploy'
 

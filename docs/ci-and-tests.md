@@ -5,15 +5,33 @@ Read when a local test chain fails or dies mid-run, a port is busy, CI shows a f
 ## What runs where
 
 - `npm run test:run`, `test:e2e`, `test:integration`, `test:pwa` and `npm --prefix server run test:e2e` all go through `ops/limited.sh`, which runs them in `ember-jobs.slice`. Without the installed slice (`ops/install.sh`) or a user systemd session it exits with an error instead of running uncapped. Under `CI=true` it runs the command directly.
-- CI (`.github/workflows/ci.yml`) has three jobs: `checks` (format, lint, typecheck, unit, build), `server-e2e` (`server/test/*.e2e.test.ts` against a disposable PostgreSQL service) and `playwright` (`test:e2e`, then `test:pwa`). The `playwright` job skips both browser suites, still reporting success, when every file changed since the last green main run (or a PR's base) is in `server/`, `ops/`, `tests/integration/`, `scripts/integration.mjs` or Markdown, except `server/src/static-files.ts` and `ops/limited.sh`, which the browser suites load; `ops/browser-tests-needed.sh` decides. Ember is designed for phones, so Playwright has two phone-sized (390×844) projects: `mobile` against the e2e build and `mobile-dev-server` for tests tagged `@dev-server` (see Ports). Run both: `--project=mobile` alone skips the tagged tests. Tests that need Pixel 6 or other phone sizes set them. The root `tests/integration` suite (`npm run test:integration`) is **not** in CI: run it locally whenever sync, imported history or recovery is touched.
-- Pushes run CI only on `main`; PRs run separately. Markdown-only (`**/*.md`) changes skip CI, so run `npm run format:check` locally before pushing docs.
+- Ember is designed for phones, so Playwright has two phone-sized (390×844) projects: `mobile` against the e2e build and `mobile-dev-server` for tests tagged `@dev-server` (see Ports). Run both: `--project=mobile` alone skips the tagged tests. Tests that need Pixel 6 or other phone sizes set them.
+- The root `tests/integration` suite (`npm run test:integration`) is **not** in CI: run it locally whenever sync, imported history or recovery is touched.
 - Lint configs use type-aware `typescript-eslint` and React hooks rules for the web app, `typescript-eslint` recommended for the server; each rule turned off or narrowed carries a one-line reason in the config.
 - Integration harnesses generate synthetic credentials in memory, refuse any admin database other than `ember_dev`, and refuse occupied test ports rather than reusing or killing unrelated processes.
-- PWA reports (`playwright-pwa-report/`, `test-results/pwa/`) are separate from normal E2E diagnostics. CI uploads reports only on failure, with three-day retention. CI does not replace physical Android/iPhone testing.
+- PWA reports (`playwright-pwa-report/`, `test-results/pwa/`) are separate from normal E2E diagnostics. CI does not replace physical Android/iPhone testing.
 
-## Keeping CI lean
+## CI
 
-Linux runners only; superseded runs are cancelled; Markdown-only changes skip CI; dependencies and browsers are cached; every job has a timeout; reports are uploaded only on failure, with short retention. Every job repeats checkout and setup, which is why cheap checks share one job. Measure a change to CI from real job start and completion timestamps, not wall time.
+Workflow: `.github/workflows/ci.yml` (`CI`). It runs for every PR and every push to `main`. A PR keeps only its newest run; every push to `main` runs to completion, because the deploy reads the push run of main's head (`docs/deploy.md`).
+
+| Job                  | Runs                                                                                                                                                       |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Changes`            | Decides whether the change touches code (see below)                                                                                                        |
+| `Lint & format`      | `format:check`, `lint:check` and the server's `lint:check`; runs for every change, since Prettier also checks Markdown                                     |
+| `Build & typecheck`  | Server typecheck and build, then `npm run build` (root typecheck and web build)                                                                            |
+| `Unit tests`         | `npm run test:run`                                                                                                                                         |
+| `Server E2E`         | `server/test/*.e2e.test.ts` against a disposable PostgreSQL service                                                                                        |
+| `Playwright (phone)` | `npm run test:e2e`                                                                                                                                         |
+| `PWA (Pixel 6)`      | `npm run test:pwa` (production offline shell and safe updates)                                                                                             |
+| `Ops checks`         | `shellcheck -x` on the host and install scripts, `ops/test-install.sh`, `ops/test-auto-deploy.sh`, `ops/test-dependency-check.sh`, `ops/test-ember-run.py` |
+| `CI`                 | Needs every job; fails if any failed or was cancelled, skipped jobs pass                                                                                   |
+
+- `CI` is the only required check (the `main` ruleset), so jobs can be renamed or added without touching the ruleset. The ruleset also requires a PR for every change to `main` and blocks force pushes and deletion; nobody bypasses it.
+- A PR compares its merge commit with the base branch. A push to `main` compares with the newest `main` commit whose push run passed, so a Markdown-only commit after a red or cancelled code commit still runs every job. When the change since that base is only Markdown, every job except `Lint & format` is skipped and `CI` still passes; any other file, an empty diff or an unknown base runs everything. Jobs are gated with `if:`, never with `on: paths:`: a workflow that never runs leaves the required check pending.
+- Actions are pinned by commit SHA with the version in a comment; the token is read-only (`contents: read`, plus `actions: read` for `Changes`), checkouts don't keep credentials, and no workflow uses `pull_request_target`. Workflows on PRs from outside contributors wait for approval.
+- Dependencies and the Playwright browser are cached; every job has a timeout. Playwright and PWA reports are uploaded only on failure, with three-day retention.
+- Dependabot (`.github/dependabot.yml`) opens weekly grouped minor/patch PRs for both npm packages and the workflow actions, after a 7-day cooldown, and never bumps `@types/node` past the `.nvmrc` major. Patch and minor PRs with green `CI` are merged by the owner's automation; majors are decided one at a time.
 
 ## Ports
 
@@ -44,7 +62,8 @@ cp -p <main checkout>/server/.env <worktree>/server/      # keep mode 0600
 
 ## GitHub Actions
 
-- A Playwright job that times out inside `playwright install-deps` (apt hang on GitHub's mirror) is an infrastructure flake: rerun only the failed job, don't change code.
+- A Playwright or PWA job that times out inside `playwright install-deps` (apt hang on GitHub's mirror) is an infrastructure flake: rerun only the failed job, don't change code.
 - `cancelled` with all tests passed: check whether the job hit `timeout-minutes` in a post step (cache save) or while still running tests after a slow `install-deps`, before suspecting a superseding push. Cancelled runs are not green, and `ops/deploy.sh` will not deploy them.
 - CI Playwright settings live in `playwright.config.ts`: 4 workers, `retries: 1` with `failOnFlakyTests` (a pass on retry still fails), trace `on-first-retry`, `maxFailures: 10`. Per-test tracing cost about a quarter of the run, which is why it is retry-only.
-- Before adding e2e tests, compare the job's recent duration with its `timeout-minutes` (25 for `playwright`; the `npm run test:e2e` step alone has taken 12-17 minutes, and a slow apt mirror can add 5 to `install-deps`). Test time is evenly spread, so there is no single slow test to cut. Per-page cost is why most tests run against the bundled build: keep new tests off the dev server unless they need source modules.
+- A test that passes only on retry fails the job. Fix the wait, don't raise retries: for example, a menu opened by a click takes focus asynchronously, so assert that its first item is focused before pressing Escape.
+- Before adding e2e tests, compare `Playwright (phone)`'s recent duration with its `timeout-minutes`. Test time is evenly spread, so there is no single slow test to cut. Per-page cost is why most tests run against the bundled build: keep new tests off the dev server unless they need source modules.
