@@ -44,7 +44,7 @@ Dumbbell and cable shrugs are cropped to the upper body (`EK_UPPER_BODY`, the
 same box for start and finish) so the small shoulder lift stays visible;
 barbell and Smith machine shrugs stay whole to keep their plates and rails.
 Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing and
-steps; it used to borrow a standing glute exercise. `EK_TEXT_ONLY` keeps
+steps. `EK_TEXT_ONLY` keeps
 Everkinetic's instructions but not its drawing where that drawing shows a
 different variant: Pull Up (Assisted) shows the approved assisted-machine
 pair (also used by Chin Up (Assisted)) through `generated.py`.

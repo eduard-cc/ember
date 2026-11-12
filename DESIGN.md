@@ -62,9 +62,9 @@ rounded:
 
 ## Scope and character
 
-Ember is a fast workout ledger with its evidence one step away. It is designed for phones. The desktop layouts described below (from 1000px) are legacy: they remain in the code and should not be broken deliberately, but new work is designed, tested and verified at phone sizes only. The shipped redesign uses a restrained shadcn component family, warm Paper/Ink and Night neutrals, bundled Inter and one Amber accent. Soft corners, hairline borders and spacing establish hierarchy; the workout controls are gym-specific and thumb-friendly. Generic logging conventions inform the workflow, not Strong's branding or assets.
+Ember is a fast workout ledger with its evidence one step away. It is designed for phones. The desktop layouts described below (from 1000px) are legacy: they remain in the code and should not be broken deliberately, but new work is designed, tested and verified at phone sizes only. Ember uses a restrained shadcn component family, warm Paper/Ink and Night neutrals, bundled Inter and one Amber accent. Soft corners, hairline borders and spacing establish hierarchy; the workout controls are gym-specific and thumb-friendly. Generic logging conventions inform the workflow, not Strong's branding or assets.
 
-This is the contract for the real application, not the synthetic approval prototype. The IndexedDB writer, local active draft, immutable outbox, authentication/ownership gates, conflict retention and finite PWA shell remain authoritative. A visual change never substitutes prototype storage or rewrites saved history. Synthetic examples are not production data.
+This is the contract for the real application. The IndexedDB writer, local active draft, immutable outbox, authentication/ownership gates, conflict retention and finite PWA shell remain authoritative. A visual change never replaces that storage behaviour or rewrites saved history. Synthetic examples are not production data.
 
 ## Palette, type and shape
 
@@ -127,7 +127,7 @@ Use the established curves: strong ease-out `cubic-bezier(.23,1,.32,1)`, ease-in
 
 Reduced motion removes movement, smooth scrolling and transitions, stops the live ping and number rolling, and keeps only the celebration's gentle 200ms fades. No sparks or growing glow under reduced motion. Content and actions must remain usable while optional motion plays.
 
-`src/feedback/` ports the approved prototype's Web Audio synthesis: start, set (an ascending major-pentatonic step per checked set), unset, exercise, finish, pr, delete and tick. Sounds and Haptics have independent Settings switches, both on by default, persisted as validated `ember:feedback:v1` outside workout data. Failed preference writes keep the tab's choice and say so. Turning Sounds on plays the set-check sound; turning Haptics on gives a tick.
+`src/feedback/` synthesizes the sounds with Web Audio: start, set (an ascending major-pentatonic step per checked set), unset, exercise, finish, pr, delete and tick. Sounds and Haptics have independent Settings switches, both on by default, persisted as validated `ember:feedback:v1` outside workout data. Failed preference writes keep the tab's choice and say so. Turning Sounds on plays the set-check sound; turning Haptics on gives a tick.
 
 Where supported, audio uses an ambient session so music is not paused and the iPhone silent switch is respected. Android haptics use `navigator.vibrate`; iOS 18+ uses the hidden checkbox-switch label tick on touch devices. Unsupported or denied feedback never throws or blocks logging. Do not promise on-device behaviour proven only in Chromium.
 

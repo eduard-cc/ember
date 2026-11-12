@@ -22,7 +22,7 @@ Read before changing the sync feed or outbox, local persistence, recovery export
 
 ## Extending the sync feed
 
-Also follow the sync-protocol-evolution workflow for a new record kind.
+A new record kind ships compatibly:
 
 - Deploy the compatible server bridge before the UI, so a one-command rollback keeps API support.
 - Filter opt-in kinds before pagination for legacy clients (`server/src/sync/service.ts`), so a legacy cursor is always the last change it could see.
