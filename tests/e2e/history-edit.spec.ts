@@ -284,6 +284,8 @@ test('history editing saves added, replaced and reordered exercises with their o
   const options = (name: string) =>
     editor.getByRole('button', {name: `Exercise options for ${name}`, exact: true});
   await options('Synthetic Press').click();
+  // Escape reaches the menu once it has taken focus.
+  await expect(page.getByRole('menuitem').first()).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(options('Synthetic Press')).toBeFocused();
   await expect(page.getByRole('dialog', {name: 'Discard changes?'})).toHaveCount(0);
@@ -308,6 +310,8 @@ test('history editing saves added, replaced and reordered exercises with their o
     editor.locator('.exercise-card', {hasText: 'Plank'}).locator('.exercise-meta'),
   ).toContainText('1 added');
   await options('Synthetic Press').click();
+  // Escape reaches the menu once it has taken focus.
+  await expect(page.getByRole('menuitem').first()).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(options('Synthetic Press')).toBeFocused();
   await expect(page.getByRole('dialog', {name: 'Discard changes?'})).toHaveCount(0);

@@ -183,6 +183,8 @@ test('the template editor offers the same Replace and Remove menu', async ({page
   }
   const editor = page.locator('.template-editor');
   await options(page, 'Squat (Barbell)').click();
+  // Escape reaches the menu once it has taken focus.
+  await expect(page.getByRole('menuitem').first()).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(editor).toBeVisible();
   await expect(page.getByRole('menuitem', {name: 'Replace exercise'})).toBeHidden();
