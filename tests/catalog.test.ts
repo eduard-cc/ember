@@ -12,10 +12,22 @@ const strongNames = [
   'Lat Pulldown (Cable)',
   'Plank',
 ];
+const entryFields = [
+  'name',
+  'bodyPart',
+  'equipment',
+  'type',
+  'primaryMuscles',
+  'secondaryMuscles',
+  'instructions',
+  'images',
+  'sources',
+];
 
 describe('bundled exercise catalog', () => {
-  it('contains the Strong names exactly once and a curated common set', () => {
+  it('names exercises as a Strong export does, each once, with the same fields on every entry', () => {
     for (const name of strongNames) expect(catalogEntry(name)?.name).toBe(name);
+    for (const entry of catalog) expect(Object.keys(entry).sort()).toEqual([...entryFields].sort());
     expect(new Set(catalog.map((e) => e.name)).size).toBe(catalog.length);
     expect(catalog.length).toBeGreaterThanOrEqual(150);
     expect(catalog.length).toBeLessThanOrEqual(300);

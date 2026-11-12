@@ -49,7 +49,6 @@ export interface CatalogExercise {
   instructions: string[];
   images: {file: string; width: number; height: number}[];
   sources: CatalogSource[];
-  history?: boolean | null;
 }
 export const bodyParts: BodyPart[] = [
   'Chest',
