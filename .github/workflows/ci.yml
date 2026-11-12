@@ -1,25 +1,69 @@
 name: CI
 
-on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - '**/*.md'
-  pull_request:
-    paths-ignore:
-      - '**/*.md'
-
 permissions:
   contents: read
 
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+on:
+  push:
+    branches: [main]
+  pull_request:
 
-# Jobs are billed per started minute, so cheap checks share one job and setup.
+# A PR keeps only its newest run. Every push to main runs to completion: the deploy reads
+# the push run of main's head commit.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Jobs are gated with `if:` on what a change touches, never with `on: paths:`: a skipped job
+# counts as passing, while a workflow that never runs leaves the required check pending. `CI`
+# is the only required check.
 jobs:
-  checks:
-    name: Format, lint, typecheck, unit tests and build
+  changes:
+    name: Changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      code: ${{ steps.paths.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      # A PR compares its merge commit with the base branch (the merge commit's first parent).
+      # A push to main compares with the newest main commit whose push run passed, so a
+      # Markdown-only commit after a failed or cancelled code commit still runs every job. An
+      # unknown base runs everything.
+      - name: Detect code changes
+        id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ $GITHUB_EVENT_NAME == pull_request ]]; then
+            base=$(git rev-parse HEAD^1)
+          else
+            base=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&event=push&status=success&per_page=1" \
+              --jq '.workflow_runs[0].head_sha // ""') || base=''
+          fi
+          echo "base: ${base:-unknown}"
+          if [[ -z $base ]] || ! git cat-file -e "$base^{commit}" 2>/dev/null ||
+            ! git merge-base --is-ancestor "$base" HEAD; then
+            code=true
+          else
+            # Assigned first, so a failing diff stops the step instead of reading as no changes.
+            files=$(git diff --name-only --no-renames "$base" HEAD)
+            # Markdown needs only Lint & format; ops/lib.sh uses the same rule. An empty diff
+            # runs everything.
+            if grep -qv '\.md$' <<<"$files"; then code=true; else code=false; fi
+          fi
+          echo "code=$code" | tee -a "$GITHUB_OUTPUT"
+
+  # Prettier also checks Markdown, so this one runs for every change.
+  lint-format:
+    name: Lint & format
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -38,19 +82,57 @@ jobs:
       - run: npm run format:check
       - run: npm run lint:check
       - run: npm --prefix server run lint:check
-      - run: npm --prefix server run typecheck
-      # Synthetic install/notification and deploy decisions, with no live units or services.
-      - run: shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh ops/notify.sh ops/test-install.sh ops/browser-tests-needed.sh ops/test-browser-tests-needed.sh
-      - run: bash ops/test-install.sh && bash ops/test-auto-deploy.sh && bash ops/test-dependency-check.sh && bash ops/test-browser-tests-needed.sh
-      - run: python3 -B ops/test-ember-run.py
-      - run: npm run test:run
-      # The web build typechecks the root first. The server build runs in server-e2e.
-      - run: npm run build
 
-  server-e2e:
-    name: Server build and E2E (disposable PostgreSQL)
+  build:
+    name: Build & typecheck
     runs-on: ubuntu-24.04
     timeout-minutes: 8
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+      - run: npm ci --include=dev && npm --prefix server ci --include=dev
+      - run: npm --prefix server run typecheck
+      - run: npm --prefix server run build
+      # The web build typechecks the root first.
+      - run: npm run build
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+      # Some unit tests import server modules.
+      - run: npm ci --include=dev && npm --prefix server ci --include=dev
+      - run: npm run test:run
+
+  server-e2e:
+    name: Server E2E
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     services:
       postgres:
         image: postgres:17.11-bookworm
@@ -110,74 +192,115 @@ jobs:
   playwright:
     name: Playwright (phone)
     runs-on: ubuntu-24.04
-    # Phone E2E has taken up to 18 minutes on the dev server, and apt's install-deps up to 5 on a
-    # slow mirror; the serial production PWA suite reuses setup. Leave headroom for both suites.
-    timeout-minutes: 25
-    permissions:
-      contents: read
-      actions: read
+    # A slow apt mirror has added up to 5 minutes to install-deps.
+    timeout-minutes: 20
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          fetch-depth: 0
-      # Skips the browser suites, not the job, so the check still reports success. A main push
-      # compares with the last green main run, so a change whose run was cancelled is still
-      # tested by the next push; a PR compares with its base.
-      - name: Find the last green main commit
-        id: base
-        if: github.event_name == 'push'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: >-
-          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&event=push&status=success&per_page=1"
-          --jq '"sha=" + (.workflow_runs[0].head_sha // "")' >> "$GITHUB_OUTPUT" || true
-      - name: Decide whether browser tests are needed
-        env:
-          BASE: ${{ github.event_name == 'push' && steps.base.outputs.sha || '' }}
-        run: |
-          if [[ $GITHUB_EVENT_NAME == pull_request ]]; then BASE=$(git rev-parse HEAD^1); fi
-          needed=$(bash ops/browser-tests-needed.sh "$BASE")
-          echo "base=${BASE:-unknown} browser tests needed: $needed"
-          echo "RUN_BROWSER_TESTS=$needed" >> "$GITHUB_ENV"
-      - if: env.RUN_BROWSER_TESTS == 'true'
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .nvmrc
           cache: npm
-      - if: env.RUN_BROWSER_TESTS == 'true'
-        run: npm ci --include=dev
+      - run: npm ci --include=dev
       - name: Read Playwright version
-        if: env.RUN_BROWSER_TESTS == 'true'
         id: playwright
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright Chromium
-        if: env.RUN_BROWSER_TESTS == 'true'
         id: playwright-cache
         uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-chromium-shell
       - name: Install Playwright Chromium
-        if: env.RUN_BROWSER_TESTS == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps --only-shell chromium
       - name: Install Playwright system dependencies
-        if: env.RUN_BROWSER_TESTS == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
-      - if: env.RUN_BROWSER_TESTS == 'true'
-        run: npm run test:e2e
-      - name: Production offline shell and safe updates (Pixel 6)
-        if: env.RUN_BROWSER_TESTS == 'true'
-        run: npm run test:pwa
-      # Separate HTML reports embed failure screenshots and retry traces. Timeouts count as
-      # cancelled, not failed, so they upload nothing.
+      - run: npm run test:e2e
+      # The HTML report embeds failure screenshots and retry traces. A timeout counts as
+      # cancelled, not failed, so it uploads nothing.
       - name: Retain synthetic browser diagnostics only on failure
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: playwright-failure-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            playwright-report/
-            playwright-pwa-report/
+          path: playwright-report/
           retention-days: 3
           if-no-files-found: ignore
+
+  pwa:
+    name: PWA (Pixel 6)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --include=dev
+      - name: Read Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright Chromium
+        id: playwright-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-chromium-shell
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Production offline shell and safe updates
+        run: npm run test:pwa
+      - name: Retain synthetic browser diagnostics only on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pwa-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: playwright-pwa-report/
+          retention-days: 3
+          if-no-files-found: ignore
+
+  ops:
+    name: Ops checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # Synthetic install, notification and deploy decisions, with no live units or services.
+      - run: shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh ops/notify.sh ops/test-install.sh
+      - run: bash ops/test-install.sh
+      - run: bash ops/test-auto-deploy.sh
+      - run: bash ops/test-dependency-check.sh
+      - run: python3 -B ops/test-ember-run.py
+
+  ci:
+    # The only required check. Skipped jobs pass; a failed or cancelled one fails CI.
+    name: CI
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: [changes, lint-format, build, unit, server-e2e, playwright, pwa, ops]
+    if: ${{ always() }}
+    steps:
+      - name: Require every needed job to pass or be skipped
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          echo "$RESULTS"
+          jq -e 'all(. == "success" or . == "skipped")' <<<"$RESULTS" >/dev/null

@@ -1,6 +1,6 @@
 # Shipping, deploy and live checks
 
-Read before squashing onto `main`, deploying, adding a static asset type, touching the app shell or service worker, or checking the live app.
+Read before merging to `main`, deploying, adding a static asset type, touching the app shell or service worker, or checking the live app.
 
 ## Release layout
 
@@ -14,20 +14,21 @@ The live app runs from built releases, never from a checkout, so source can be e
 - The server applies migrations on startup. When a release adds migrations, the deploy first runs `ops/backup.sh` into `~/.local/share/ember-backups/`, restores it into a validation database, compares record and migration counts with `ember` and drops the copy; any failure cancels the deploy. Writes between the backup and the restart are not in it. The newest three pre-deploy backups are kept; manual archives there are never rotated.
 - `ops/test-release-switch.sh` exercises the switch, health check and rollback against synthetic releases and a throwaway unit; it needs systemd and is local-only.
 
-## Squashing onto main
+## Shipping through a PR
 
-- Fetch and merge the newest `origin/main` into the branch first. `git reset --soft origin/main` after a stale merge silently reverts commits that landed meanwhile; compare `git diff --stat HEAD~1 HEAD` with the other commits' files before pushing.
-- Right before `git reset --soft origin/main`, hard-gate on `git merge-base --is-ancestor origin/main HEAD || exit 1`. `test … && echo` is not a guard: under `set -e` a failing command on the left of `&&` does not abort.
+- Every change reaches `main` through a PR; the `main` ruleset refuses direct pushes, force pushes and deletion, and requires the `CI` check (`docs/ci-and-tests.md`). Work on a short-lived branch, push it and open a PR whose description is one to three plain sentences on what it changes and why.
+- Merge with `gh pr merge <n> --squash --auto --match-head-commit <sha>`, where `<sha>` is the head you verified and had reviewed: GitHub squashes once `CI` passes on that exact head (the repository allows auto-merge and squash merges only) and refuses if the branch moved meanwhile. Merging is shipping.
+- If `main` moved after the PR's CI ran, merge `origin/main` into the branch (never force-push a pushed branch) and let CI run on the new head.
 
 ## Deploying
 
 - Main deploys itself. `ember-auto-deploy.timer` (installed and started by `ops/install.sh`) runs `ops/auto-deploy.sh` five minutes after each run ends. Once CI has passed for the head of `origin/main`, it fast-forwards `~/src/ember` and runs `ops/deploy.sh` on it. While CI is pending or GitHub is unreachable, it waits for the next run. The account reads GitHub with its own read-only token; if that token expires, every run waits, so the timer log shows "could not read CI results" until it is replaced.
 - A head commit whose CI fails, whose deploy fails, or which `~/src/ember` cannot fast-forward to (not on `main`) is held in `~/.local/share/ember/auto-deploy.hold`: the owner is alerted once and it is never retried. A commit is held while it deploys too, so a run killed by the unit's 30-minute timeout is not retried (systemd's failure alert reports it); `ops/deploy.sh` exits 69 when GitHub is unreachable or CI is still running, which the timer retries instead. `ops/rollback.sh` holds main's head, so the timer does not put it straight back, however many rollbacks follow. The next commit on main replaces the hold; to retry a held commit, run `ops/deploy.sh <commit>` by hand as the service account (`docs/operations.md`). A failed health check alerts twice: once from the rollback, once from the hold.
-- Merging is shipping: a green merge to main is live within about five minutes plus build time. Still check the live app after each change ships.
+- Merging is shipping: a merged PR is live within about five minutes after `main`'s push CI passes, plus build time. Still check the live app after each change ships.
 - `ops/test-auto-deploy.sh` checks those decisions, and the alert route, against a throwaway git origin, a fake `gh`, `hermes` and `curl` and a stub deploy; it is local-only.
 - `ops/deploy.sh <commit>` sources `ops/lib.sh` from the checkout it is run from (the service account's `~/src/ember`); the release it builds with `git archive` never updates those scripts. Fast-forward that checkout first (`git fetch && git merge --ff-only origin/main`, keeping untracked files), or the deploy runs an old health check.
 - Never build, install or run dev servers in either `~/src/ember`: the service account's must stay a clean `main` for `ops/deploy.sh`, and the owner's is the base for worktrees.
-- The deploy refuses commits not on `origin/main` or whose latest code commit has no successful push CI run (docs-only commits inherit their code ancestor's run; cancelled runs don't count).
+- The deploy refuses commits not on `origin/main` or whose latest code commit has no successful push CI run (a docs-only commit inherits its code ancestor's run without waiting for its own; cancelled runs don't count).
 - A release that adds migrations is preceded by `ops/backup.sh` plus `ops/restore-check.sh`, and a count comparison against `ember`. Migrations are never rolled back, and a release lacking migrations the database already has is refused.
 - Undo with `ops/rollback.sh` (previous healthy release from `~/.local/share/ember/history`).
 
