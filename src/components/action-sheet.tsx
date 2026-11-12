@@ -1,5 +1,5 @@
 import type {LucideIcon} from 'lucide-react';
-import {type KeyboardEvent, type RefObject, useRef} from 'react';
+import {type KeyboardEvent, type RefObject, useLayoutEffect, useRef} from 'react';
 
 import {useBackLayer} from '../state/back';
 import {cn} from '../utils/cn';
@@ -19,6 +19,11 @@ export interface SheetAction {
  * starts on the first row and returns to the control that opened it. A chosen action runs once
  * the drawer has gone, after focus is back on that control, so an action that opens another
  * layer or moves focus (Replace, Remove) never fights the closing drawer.
+ *
+ * While open, the sheet takes Escape before any dialog does. The drawer only becomes the top
+ * layer one update after it opens; a key pressed before then would otherwise go to the editor
+ * or workout drawer underneath, which ignored it (an editor leaves menu keys to the menu) or
+ * closed itself instead of the sheet.
  */
 export function ActionSheet({
   open,
@@ -40,6 +45,22 @@ export function ActionSheet({
   trigger: RefObject<HTMLElement | null>;
 }) {
   useBackLayer(open, () => onOpenChange(false));
+  const latest = useRef(onOpenChange);
+  useLayoutEffect(() => {
+    latest.current = onOpenChange;
+  });
+  useLayoutEffect(() => {
+    if (!open) return;
+    const escape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      latest.current(false);
+    };
+    // Window capture runs before the document-level Escape listeners of every open dialog.
+    window.addEventListener('keydown', escape, true);
+    return () => window.removeEventListener('keydown', escape, true);
+  }, [open]);
   const list = useRef<HTMLUListElement>(null);
   const chosen = useRef<(() => void) | null>(null);
   const items = () =>

@@ -144,6 +144,34 @@ export async function templateAction(page: Page, action: string, name?: string) 
   else await expect(page.getByRole('dialog', {name: 'Delete this template?'})).toBeVisible();
 }
 
+/**
+ * Press Escape the instant the next opened menu's first item takes focus, as a fast key press
+ * would, before the menu's drawer has settled. Fails unless that Escape was sent.
+ */
+export async function escapeAsMenuTakesFocus(page: Page, open: () => Promise<void>) {
+  await page.evaluate(() => {
+    const flag = window as unknown as {escapeSent?: boolean};
+    flag.escapeSent = false;
+    document.addEventListener(
+      'focusin',
+      function once(event) {
+        const item = event.target;
+        if (!(item instanceof HTMLElement) || item.getAttribute('role') !== 'menuitem') return;
+        document.removeEventListener('focusin', once, true);
+        item.dispatchEvent(
+          new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}),
+        );
+        flag.escapeSent = true;
+      },
+      true,
+    );
+  });
+  await open();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as {escapeSent?: boolean}).escapeSent))
+    .toBe(true);
+}
+
 /** Close the finish celebration with Done, onto History. */
 export async function closeCelebration(page: Page) {
   const celebration = page.getByRole('dialog', {name: 'Workout complete'});

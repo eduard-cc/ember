@@ -1,6 +1,12 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate, openWorkout, workoutAction, workoutCard} from '../navigation';
+import {
+  escapeAsMenuTakesFocus,
+  navigate,
+  openWorkout,
+  workoutAction,
+  workoutCard,
+} from '../navigation';
 
 // Synthetic fixture only.
 const set = (id: string, weight: number, reps: number) => ({
@@ -274,6 +280,29 @@ for (const dismissal of ['Back button', 'Escape']) {
     await expect(page.getByRole('heading', {name: 'Push day'}).first()).toBeVisible();
   });
 }
+
+test('Escape pressed as a menu takes focus closes only that menu', async ({page}) => {
+  await open(page);
+  const drawer = await openWorkout(page, 'Push day');
+  const workoutOptions = drawer.getByRole('button', {name: /^Workout options for Push day/});
+  await escapeAsMenuTakesFocus(page, () => workoutOptions.click());
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(drawer).toBeVisible();
+  await expect(workoutOptions).toBeFocused();
+  await workoutOptions.click();
+  await page.getByRole('menuitem', {name: 'Edit workout'}).click();
+  const editor = page.locator('.history-editor');
+  await editor.getByLabel('Workout name').fill('Changed');
+  const options = editor.getByRole('button', {
+    name: 'Exercise options for Synthetic Press',
+    exact: true,
+  });
+  await escapeAsMenuTakesFocus(page, () => options.click());
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(options).toBeFocused();
+  await expect(page.getByRole('dialog', {name: 'Discard changes?'})).toHaveCount(0);
+  await expect(editor.getByLabel('Workout name')).toHaveValue('Changed');
+});
 
 test('history editing saves added, replaced and reordered exercises with their own fields', async ({
   page,
