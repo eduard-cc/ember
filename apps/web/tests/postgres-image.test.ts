@@ -15,6 +15,7 @@ describe('PostgreSQL image pin', () => {
       'ops/compose.local.yml',
       'ops/backup.sh',
       'ops/restore-check.sh',
+      'ops/image-smoke.sh',
       '.github/workflows/ci.yml',
     ]) {
       expect(pins(path), path).toEqual([live]);

@@ -14,6 +14,8 @@ The live app runs from built releases as a dedicated service account, never from
 | `limited.sh`                                      | Runs the npm test scripts in the capped `ember-jobs.slice`                                                       |
 | `dependency-check.sh`, `postgres-update-check.sh` | Monthly checks that queue an update card for npm advisories, Node releases or a new PostgreSQL minor             |
 | `isolation-check.sh`                              | Shows what the service account can and cannot reach                                                              |
+| `image-smoke.sh`                                  | Runtime smoke test of a built image with synthetic settings (`docs/ci-and-tests.md`)                             |
+| `ghcr-retention.sh`                               | Lists, or with `--delete` deletes, old versions of the GHCR image; CI runs it as a dry run                       |
 | `host/`                                           | Root-run account setup, the egress firewall, the user-manager drop-in and the `ember-run` entry point            |
 | `systemd/`                                        | The app, Docker daemon, Tailscale device, auto-deploy timer, notifier units and slices                           |
 | `test-*.sh`, `test-ember-run.py`                  | Synthetic checks of install, auto-deploy, release switch, dependency check and `ember-run`                       |

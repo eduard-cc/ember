@@ -1,0 +1,31 @@
+name: GHCR retention
+
+# Weekly report of the image versions ops/ghcr-retention.sh would delete. It is a dry run
+# only: it never passes --delete, and its token can only read packages. Deleting needs both
+# changed (packages: write and --delete).
+on:
+  schedule:
+    - cron: '41 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency: ghcr-retention
+
+jobs:
+  retention:
+    name: GHCR retention (dry run)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: ops/ghcr-retention.sh
+          sparse-checkout-cone-mode: false
+      - name: List versions retention would delete
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash ops/ghcr-retention.sh "$GITHUB_REPOSITORY"

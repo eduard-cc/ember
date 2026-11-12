@@ -1,0 +1,17 @@
+# An allowlist: the image is built from the two apps' sources only. Local installs, build
+# and test output and every env file stay out of the build context.
+*
+!apps/web
+!apps/api
+**/node_modules
+**/dist
+**/dist-e2e
+**/coverage
+**/test-results
+**/playwright-report
+**/playwright-pwa-report
+**/.env*
+**/.postgres.env
+**/*.csv
+**/*.dump
+**/*.sql

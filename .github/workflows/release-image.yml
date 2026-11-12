@@ -1,0 +1,72 @@
+name: Release main image
+
+# Moves `:main` to the image of a main commit once that commit's CI run passed. A separate
+# workflow, so its result never changes the CI run's conclusion, which deploys read. `:main`
+# is a pointer for people; nothing deploys from it. It retags the tested `:sha-<commit>`
+# without rebuilding, and only when no newer code change is on main, so it never goes back.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: release-main-image
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release main image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success'
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      IMAGE: ghcr.io/${{ github.repository }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Decide
+        id: decide
+        run: |
+          set -euo pipefail
+          # A docs-only commit publishes nothing; `:main` stays on its code ancestor's image.
+          published=$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs?per_page=100" \
+            --jq '.jobs[] | select(.name == "Publish image") | .conclusion')
+          if [[ $published != success ]]; then
+            echo "no image was published for $SHA (Publish image: ${published:-absent})"
+            echo "release=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Only Markdown may have landed on main since this commit, as in CI's Changes job.
+          compare=$(gh api "repos/$GITHUB_REPOSITORY/compare/$SHA...main")
+          status=$(jq -r .status <<<"$compare")
+          newer=$(jq -r 'first(.files[]?.filename | select(endswith(".md") | not)) // empty' <<<"$compare")
+          # The compare API lists at most 300 files; a list that long counts as a code change.
+          [[ $(jq '.files | length' <<<"$compare") -lt 300 ]] || newer=many
+          if [[ ! $status =~ ^(ahead|identical)$ || -n $newer ]]; then
+            echo "main has a newer code change than $SHA ($status); not tagging"
+            echo "release=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "release=true" >>"$GITHUB_OUTPUT"
+      - if: steps.decide.outputs.release == 'true'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - if: steps.decide.outputs.release == 'true'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tag the tested image as main
+        if: steps.decide.outputs.release == 'true'
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create --tag "$IMAGE:main" "$IMAGE:sha-$SHA"
+          echo "\`$IMAGE:main\` is now \`sha-$SHA\`." >>"$GITHUB_STEP_SUMMARY"
