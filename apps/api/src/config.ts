@@ -5,8 +5,17 @@ import {z} from 'zod';
 // the Ember service account's own Docker daemon (docs/operations.md), and only as `ember`.
 const LIVE_ONLY_PORT = '55438';
 
-export function validateDatabaseUrl(url: string) {
+// The image sets EMBER_CONTAINER=1. Inside it the database is the `ember-postgres` container
+// on its own port, reached over the Compose network, and the app listens on every interface
+// of its container; the host publishes that port on loopback only.
+const inContainer = (env: NodeJS.ProcessEnv) => env.EMBER_CONTAINER === '1';
+
+export function validateDatabaseUrl(url: string, env: NodeJS.ProcessEnv = process.env) {
 	const db = new URL(url);
+	const endpoint = inContainer(env)
+		? db.hostname === 'ember-postgres' && db.port === '5432'
+		: db.hostname === '127.0.0.1' &&
+			(db.port === '55439' || (db.port === LIVE_ONLY_PORT && db.pathname === '/ember'));
 	// pg interprets URL query parameters as connection options, including host
 	// and port overrides. This isolated-endpoint contract permits neither query
 	// nor fragment delimiters (including empty ones).
@@ -14,8 +23,7 @@ export function validateDatabaseUrl(url: string) {
 		db.href.includes('?') ||
 		db.href.includes('#') ||
 		!['postgres:', 'postgresql:'].includes(db.protocol) ||
-		db.hostname !== '127.0.0.1' ||
-		!(db.port === '55439' || (db.port === LIVE_ONLY_PORT && db.pathname === '/ember')) ||
+		!endpoint ||
 		!/^\/ember(?:_[a-z0-9_]+)?$/.test(db.pathname)
 	)
 		throw new Error('This local API requires the isolated Ember PostgreSQL endpoint');
@@ -24,7 +32,7 @@ export function validateDatabaseUrl(url: string) {
 export function config() {
 	const e = z
 		.object({
-			EMBER_HOST: z.literal('127.0.0.1'),
+			EMBER_HOST: z.literal(inContainer(process.env) ? '0.0.0.0' : '127.0.0.1'),
 			EMBER_PORT: z.coerce.number().int().min(1024).max(65535),
 			EMBER_ORIGIN: z.url(),
 			EMBER_DATABASE_URL: z.url(),
