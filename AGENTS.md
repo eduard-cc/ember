@@ -1,18 +1,17 @@
 # Ember agent instructions
 
-Ember is a self-hosted, local-first workout tracker for phones: a React PWA with a NestJS and PostgreSQL sync API. This repository holds the app, the API and their deployment tooling. Rules and non-obvious traps only; product scope is in PRODUCT.md, the visual system in DESIGN.md, setup and commands in README.md; derive everything else from the code.
+Ember is a self-hosted, local-first workout tracker for phones: a React PWA with a NestJS and PostgreSQL sync API. This repository holds the app, the API and their deployment tooling. Rules and non-obvious traps only; product scope is in PRODUCT.md, the visual system in `apps/web/DESIGN.md`, setup and commands in README.md; derive everything else from the code.
 
 ## Layout
 
-- `src/`: the React app (views, components, local storage, sync client, PWA shell). Metrics and analytics are pure functions in `src/domain/`, separate from UI and state.
-- `server/`: the NestJS API, with its own `package.json`, lockfile and ESLint config. Read `server/README.md` before touching it.
-- `shared/`: contracts and backup formats used by both the app and the API.
-- `tests/`: Vitest unit tests at the top level, Playwright suites in `tests/e2e/` and `tests/pwa/`, and the local-only `tests/integration/`.
-- `ops/`: deploy, backup, install and host-setup scripts, systemd units and the local Compose file.
-- `scripts/`: the exercise catalog pipeline, the integration harness and the PWA build. `.github/`: one CI workflow.
+- `apps/web`: the React PWA (views, components, local storage, sync client, PWA shell), its tests, the exercise catalog pipeline and the document schemas in `apps/web/shared/`. Read `apps/web/AGENTS.md` before touching it.
+- `apps/api`: the NestJS sync API and its tests. Read `apps/api/AGENTS.md` before touching it.
+- `ops/`: deploy, backup, install and host-setup scripts, systemd units and the local Compose file. Read `ops/README.md` before touching it.
+- `.github/`: the CI workflow and Dependabot config. `docs/`: topics that span both apps.
+- Each app has its own `package.json`, lockfile and ESLint config; run npm commands inside the app (`npm --prefix apps/web …`, `npm --prefix apps/api …`). Prettier runs once from `apps/web` over the whole repository, with each area's config (API: tabs; everything else: two spaces). The Node major is in the root `.nvmrc`.
 - Read before touching:
   - CI, local test runs, ports, Playwright: `docs/ci-and-tests.md`
-  - Squash, deploy, rollback, live checks, static assets and the precache: `docs/deploy.md`
+  - PRs and merging, deploy, rollback, live checks, static assets and the precache: `docs/deploy.md`
   - Backups, restore drills, the service account, Docker daemon, PostgreSQL pin, slices: `docs/operations.md`
   - Sync feed, outbox, local storage, recovery, history editing and aggregates: `docs/sync-and-history.md`
   - UI, layout, accessibility, phone gestures, installed PWA: `docs/phone-and-pwa.md`
@@ -26,8 +25,8 @@ Ember is a self-hosted, local-first workout tracker for phones: a React PWA with
 - Workouts use existing catalog or recorded exercises only; no custom-exercise creation. Reject adding or replacing with an exercise already in that workout, with a clear message. Keep exercise variants distinct and preserve imported repeated blocks.
 - Dumbbell weight is per dumbbell; barbell weight includes the bar; assisted pull-up/dip load means assistance.
 - PRODUCT.md's exclusions (rest timers, alerts, nutrition, social, watch, etc.) hold unless the owner changes them. Do not promise native ongoing-service behavior from web notifications.
-- DESIGN.md is the visual contract: a restrained shadcn style with Ember's own amber color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support. Ember is designed for phones: design, test and verify at phone sizes; the desktop layouts are legacy and get no new work.
-- Work on a short-lived branch and squash onto `main`. Use Conventional Commit-style messages such as `feat: ...` and `fix: ...`. Preserve unrelated work.
+- `apps/web/DESIGN.md` is the visual contract: a restrained shadcn style with Ember's own amber color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support. Ember is designed for phones: design, test and verify at phone sizes; the desktop layouts are legacy and get no new work.
+- Work on a short-lived branch and open a PR; it is squash-merged once the `CI` check passes (`docs/deploy.md`). Use Conventional Commit-style messages such as `feat: ...` and `fix: ...`. Preserve unrelated work. A change that touches both apps is one PR.
 - Merging to `main` ships: the live instance deploys a green `main` within minutes, and the app's update gate never reloads an open workout. Every deploy has a one-command rollback (`docs/deploy.md`).
 
 ## Analytics invariants
@@ -61,12 +60,12 @@ This repository and everything attached to it (commits, PRs, comments, issues, C
 - Never put real personal data in code, tests, fixtures, docs, commits, PR descriptions or comments: names, emails, locations, workout history (exercises done, loads, reps, dates, durations), body weight, device models, host names, IPs, account ids or home-directory paths.
 - Use obviously fake values: `owner@example.test`, `example.ts.net`, workouts and body-weight entries built from scratch with round numbers and "Synthetic" names.
 - Build fixtures from scratch; never copy an export, a dump or a production row. Refer to production rows by id only.
-- Personal history, exports, backups, credentials and personal screenshots stay out of tracked source, `public/`, build output, CI and external services. No telemetry or cloud processing of workout data.
+- Personal history, exports, backups, credentials and personal screenshots stay out of tracked source, `apps/web/public/`, build output, CI and external services. No telemetry or cloud processing of workout data.
 - If you find real personal data, stop and tell the owner instead of fixing it in a PR: the diff would publish it again.
 
 ## Verification
 
-- Commands are in package.json and README.md. Before handoff: `format:check`, `lint:check` (CI runs both, also for `server/`), typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched, and `npm --prefix server run typecheck/build/test:e2e` when `server/` changed. `test:integration` is not in CI: run it locally whenever sync, imported history or recovery is touched.
+- Commands are in each app's `package.json` and in README.md; each app's `AGENTS.md` lists its checks. Before handoff: the web app's `format:check` (whole repository), `lint:check` for each app you touched, then that app's checks: for `apps/web` typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched; for `apps/api` typecheck, build and `test:e2e`. `test:integration` is not in CI: run it locally whenever sync, imported history or recovery is touched.
 - Prefer tests before domain behavior; verify observable Playwright flows at phone size and typecheck/build before handoff.
 - Local test stacks use fixed container names and ports shared by every worktree: never run fixed-port suites concurrently, and check for another run before starting one (`docs/ci-and-tests.md`). Fixtures are synthetic and databases disposable.
 - Do not invent successful check output; state production gaps explicitly. Remaining release gates are listed in PRODUCT.md.
@@ -80,4 +79,4 @@ This repository and everything attached to it (commits, PRs, comments, issues, C
 
 ## Docs
 
-Living docs (`README.md`, `AGENTS.md`, `PRODUCT.md`, `DESIGN.md`, `docs/`, `server/README.md`, `scripts/catalog/README.md`) state current durable facts: no dates, decision history or rename narration. Edit Markdown by hand.
+Living docs (`README.md`, `AGENTS.md` files, `PRODUCT.md`, `apps/web/DESIGN.md`, `docs/`, `ops/README.md`, `apps/api/README.md`, `apps/web/scripts/catalog/README.md`) state current durable facts: no dates, decision history or rename narration. Edit Markdown by hand.
