@@ -111,16 +111,36 @@ run 'red CI again'
 [[ $(deploy_count) == 3 && $(held_sha) == "$c4" ]] && live "$c3" || fail 'red CI must not deploy'
 [[ $(alert_count) == 2 ]] && grep -q "CI failed on main at ${c4:0:12}" "$alerts" || fail 'red CI should alert once'
 
-# GitHub or the origin being unreachable is not a failure: no hold, no alert.
+# GitHub or the origin being unreachable only waits: no hold, and no alert until it has
+# lasted a day, then one alert. The first run that reaches GitHub again resets that.
 c5=$(commit app.txt)
-echo "$c5 completed success" >>"$ci"
+unreachable=$EMBER_HOME/github-unreachable
 touch "$sandbox/gh-down"
 run 'GitHub down'
 rm -f -- "$sandbox/gh-down"
 git -C "$sandbox/checkout" remote set-url origin "$sandbox/missing.git"
 run 'origin unreachable'
-git -C "$sandbox/checkout" remote set-url origin "$sandbox/origin.git"
 [[ $(deploy_count) == 3 && $(alert_count) == 2 && $(held_sha) == "$c4" ]] || fail 'an unreachable GitHub must only wait'
+touch -d '-25 hours' -- "$unreachable"
+run 'origin unreachable for a day'
+git -C "$sandbox/checkout" remote set-url origin "$sandbox/origin.git"
+touch "$sandbox/gh-down"
+run 'GitHub still down'
+rm -f -- "$sandbox/gh-down"
+[[ $(alert_count) == 3 ]] && grep -q 'not been able to read GitHub for a day' "$alerts" ||
+	fail 'a day without GitHub should alert once'
+run 'GitHub reachable again, CI not started'
+[[ ! -e $unreachable ]] || fail 'reaching GitHub should reset the unreachable clock'
+touch "$sandbox/gh-down"
+run 'GitHub down again'
+[[ $(alert_count) == 3 ]] || fail 'a new stall should start a fresh clock'
+touch -d '-25 hours' -- "$unreachable"
+run 'GitHub down for a day again'
+rm -f -- "$sandbox/gh-down"
+[[ $(alert_count) == 4 && $(deploy_count) == 3 && $(held_sha) == "$c4" ]] ||
+	fail 'a new day without GitHub should alert again, without deploying or holding'
+sed -i '/read GitHub for a day/d' -- "$alerts"
+echo "$c5 completed success" >>"$ci"
 
 # A deploy or rollback already running, or GitHub failing during the deploy's own
 # checks: try again next run, keeping the earlier hold and without an alert.
