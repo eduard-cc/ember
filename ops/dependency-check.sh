@@ -12,17 +12,17 @@ repo=${EMBER_REPO:-$(dirname -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0
 node_bin=${EMBER_NODE:-$HOME/.local/bin/node}
 findings=()
 
-# Dev dependencies only run in CI and builds; what ships is the server's production tree and
-# the web bundle built from the root's production dependencies.
-for dir in . server; do
+# Dev dependencies only run in CI and builds; what ships is the API's production tree and
+# the web bundle built from the web app's production dependencies.
+for app in web api; do
 	# npm audit exits non-zero whenever it finds anything, so judge it by its JSON.
-	json=$(cd -- "$repo/$dir" && npm audit --omit=dev --json 2>/dev/null) || true
+	json=$(cd -- "$repo/apps/$app" && npm audit --omit=dev --json 2>/dev/null) || true
 	jq -e '.metadata.vulnerabilities' <<<"$json" >/dev/null 2>&1 || {
-		echo "npm audit failed in ${dir/#./the app}" >&2
+		echo "npm audit failed in apps/$app" >&2
 		exit 1
 	}
 	while IFS= read -r line; do
-		findings+=("npm (${dir/#./app}): $line")
+		findings+=("npm ($app): $line")
 	done < <(jq -r '.vulnerabilities[] | select(.severity == "high" or .severity == "critical")
 		| "\(.name) has a \(.severity) advisory"' <<<"$json" | sort)
 done
@@ -71,7 +71,7 @@ Automated monthly check (ops/dependency-check.sh) found:
 $list
 
 Fix what applies and ship per AGENTS.md:
-- npm: in-major updates only, never \`npm audit fix --force\`. For anything that cannot be fixed safely, record why and whether production can reach it. Re-check the \`overrides\` in package.json and server/package.json and drop any no longer needed.
+- npm: in-major updates only, never \`npm audit fix --force\`. For anything that cannot be fixed safely, record why and whether production can reach it. Re-check the \`overrides\` in apps/web/package.json and apps/api/package.json and drop any no longer needed.
 - Node: ember.service runs $node_bin (resolves to $(readlink -f -- "$node_bin")). Move it to the newest $want.x, restart ember.service and run the live checks. If it resolves outside Ember's own files, other tools share it: change how Ember gets its Node rather than updating the shared one.
 EOF
 ) || {

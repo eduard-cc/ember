@@ -7,8 +7,8 @@ import {config} from './config';
 import {isServedShellFile} from './static-files';
 
 async function main() {
-	// tsc emits server/dist/trial.js; two levels up is the repository root.
-	const configuredRoot = process.env.EMBER_WEB_ROOT ?? resolve(__dirname, '../../dist');
+	// tsc emits apps/api/dist/trial.js; the web build is apps/web/dist. Releases set EMBER_WEB_ROOT.
+	const configuredRoot = process.env.EMBER_WEB_ROOT ?? resolve(__dirname, '../../web/dist');
 	if (!isAbsolute(configuredRoot)) throw new Error('EMBER_WEB_ROOT must be absolute');
 	const root = await realpath(configuredRoot);
 	for (const file of ['index.html', 'manifest.webmanifest']) {

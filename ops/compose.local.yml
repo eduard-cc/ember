@@ -6,7 +6,7 @@ services:
     container_name: ember-postgres
     # The live app depends on it: start with ember-docker.service after a reboot.
     restart: unless-stopped
-    env_file: ../server/.postgres.env
+    env_file: ../apps/api/.postgres.env
     ports:
       # 55439 on the owner's development daemon; 55438 for the live database in the
       # service account's daemon (docs/operations.md).

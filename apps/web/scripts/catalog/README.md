@@ -1,5 +1,7 @@
 # Exercise catalog
 
+Paths and commands below are relative to `apps/web`.
+
 ## Muscles
 
 Every exercise's `primaryMuscles` and `secondaryMuscles` come from `muscles.json`, a

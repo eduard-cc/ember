@@ -106,7 +106,7 @@ test('Tailscale reconnect automatically renews an expired session and sends offl
     !/^\/ember_browser_test_\d+_\d+$/.test(url.pathname)
   )
     throw new Error('Session expiry fixture requires a disposable browser-test database');
-  const require = createRequire(new URL('../../server/package.json', import.meta.url));
+  const require = createRequire(new URL('../../../api/package.json', import.meta.url));
   const {Pool} = require('pg');
   const database = new Pool({connectionString: url.toString()});
   try {

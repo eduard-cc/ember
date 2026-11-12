@@ -4,14 +4,12 @@
 	"version": "0.1.0",
 	"scripts": {
 		"pretest:e2e": "npm run build",
-		"test:e2e": "../ops/limited.sh node scripts/test-e2e.mjs",
+		"test:e2e": "../../ops/limited.sh node scripts/test-e2e.mjs",
 		"typecheck": "tsc --noEmit",
 		"build": "tsc -p tsconfig.build.json",
 		"dev": "tsx src/main.ts",
 		"start:trial": "node dist/trial.js",
 		"migration": "tsx src/migrate.ts",
-		"format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-		"format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
 		"lint": "eslint \"{src,test}/**/*.ts\" --report-unused-disable-directives --max-warnings 0 --fix",
 		"lint:check": "eslint \"{src,test}/**/*.ts\" --report-unused-disable-directives --max-warnings 0"
 	},

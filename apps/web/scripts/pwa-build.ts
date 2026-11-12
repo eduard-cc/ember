@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {Plugin} from 'vite';
 
-import {isServedShellFile, publicShellFiles} from '../server/src/static-files.ts';
+import {isServedShellFile, publicShellFiles} from '../../api/src/static-files.ts';
 
 /** Build-only, finite app-shell allowlist. Never discovers or caches user data. */
 export function pwaShell(): Plugin {

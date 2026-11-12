@@ -7,6 +7,7 @@ part, without prior written permission.
 Exception: third-party content in this repository keeps its own license and
 is not covered by the notice above. This includes the exercise catalog's
 drawings and instructions from Everkinetic and wger, each credited with its
-license in src/catalog/exercises.json (see scripts/catalog/README.md), and
-the body figure path data from react-native-body-highlighter (MIT, notice
-kept in src/catalog/body-paths.ts).
+license in apps/web/src/catalog/exercises.json (see
+apps/web/scripts/catalog/README.md), and the body figure path data from
+react-native-body-highlighter (MIT, notice kept in
+apps/web/src/catalog/body-paths.ts).

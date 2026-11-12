@@ -97,7 +97,7 @@ test('accepted local timestamps and empty legacy dates round-trip unchanged into
 				'-e',
 				"import {WorkoutSchema} from './shared/contracts.ts'; let input=''; for await (const chunk of process.stdin) input+=chunk; for (const payload of JSON.parse(input)) WorkoutSchema.parse(payload);",
 			],
-			{cwd: resolve('..'), input: JSON.stringify(payloads), encoding: 'utf8'},
+			{cwd: resolve('../web'), input: JSON.stringify(payloads), encoding: 'utf8'},
 		);
 		assert.equal(parity.status, 0, parity.stderr);
 	} finally {

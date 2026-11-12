@@ -3,7 +3,7 @@ import {describe, expect, it} from 'vitest';
 
 // The backup scripts refuse to run unless the live container uses exactly the pinned image,
 // so every pin must move together, and CI must test the image that production runs.
-const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.meta.url), 'utf8');
 const pins = (path: string) =>
   [...read(path).matchAll(/postgres:(\d+\.\d+-bookworm)/g)].map((m) => m[1]);
 

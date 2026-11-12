@@ -11,14 +11,14 @@ import {database} from '../src/db/database';
 import {SyncService} from '../src/sync/service';
 
 function run(script: string, ...args: string[]) {
-	return spawnSync('bash', [resolve('../ops', script), ...args], {encoding: 'utf8', env: process.env});
+	return spawnSync('bash', [resolve('../../ops', script), ...args], {encoding: 'utf8', env: process.env});
 }
 // restore-check.sh restores as the container superuser, like a real drill, so the unprivileged
 // development role needs explicit read access to compare and cannot drop the copy itself.
 function asSuperuser(name: string, command: string, ...args: string[]) {
 	assert.match(name, /^ember_restore_validation_[0-9]+$/);
 	const result = spawnSync(
-		resolve('../ops/docker.sh'),
+		resolve('../../ops/docker.sh'),
 		['exec', 'ember-postgres', 'sh', '-c', command, 'sh', name, ...args],
 		{encoding: 'utf8'},
 	);

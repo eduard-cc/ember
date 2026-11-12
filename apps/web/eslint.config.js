@@ -11,16 +11,12 @@ import globals from 'globals';
 
 export default [
   {
-    // server/ has its own config.
     ignores: [
       'dist/**',
       'dist-e2e/**',
       'coverage/**',
       'playwright-report/**',
       'test-results/**',
-      'server/**',
-      // Other agents' worktrees live here in the main checkout; --fix must never touch them.
-      '.worktrees/**',
       '.local/**',
       '.impeccable/**',
       '.hermes/**',

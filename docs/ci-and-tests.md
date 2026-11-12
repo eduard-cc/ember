@@ -4,12 +4,12 @@ Read when a local test chain fails or dies mid-run, a port is busy, CI shows a f
 
 ## What runs where
 
-- `npm run test:run`, `test:e2e`, `test:integration`, `test:pwa` and `npm --prefix server run test:e2e` all go through `ops/limited.sh`, which runs them in `ember-jobs.slice`. Without the installed slice (`ops/install.sh`) or a user systemd session it exits with an error instead of running uncapped. Under `CI=true` it runs the command directly.
+- Run npm scripts inside the app they belong to (`npm --prefix apps/web …`, `npm --prefix apps/api …`). The web app's `test:run`, `test:e2e`, `test:integration` and `test:pwa` and the API's `test:e2e` all go through `ops/limited.sh`, which runs them in `ember-jobs.slice`. Without the installed slice (`ops/install.sh`) or a user systemd session it exits with an error instead of running uncapped. Under `CI=true` it runs the command directly.
 - Ember is designed for phones, so Playwright has two phone-sized (390×844) projects: `mobile` against the e2e build and `mobile-dev-server` for tests tagged `@dev-server` (see Ports). Run both: `--project=mobile` alone skips the tagged tests. Tests that need Pixel 6 or other phone sizes set them.
-- The root `tests/integration` suite (`npm run test:integration`) is **not** in CI: run it locally whenever sync, imported history or recovery is touched.
-- Lint configs use type-aware `typescript-eslint` and React hooks rules for the web app, `typescript-eslint` recommended for the server; each rule turned off or narrowed carries a one-line reason in the config.
+- The web app's `apps/web/tests/integration` suite (`test:integration`) is **not** in CI: run it locally whenever sync, imported history or recovery is touched.
+- Each app has its own ESLint config: type-aware `typescript-eslint` and React hooks rules for the web app, `typescript-eslint` recommended for the API; each rule turned off or narrowed carries a one-line reason in the config.
 - Integration harnesses generate synthetic credentials in memory, refuse any admin database other than `ember_dev`, and refuse occupied test ports rather than reusing or killing unrelated processes.
-- PWA reports (`playwright-pwa-report/`, `test-results/pwa/`) are separate from normal E2E diagnostics. CI does not replace physical Android/iPhone testing.
+- PWA reports (`apps/web/playwright-pwa-report/`, `apps/web/test-results/pwa/`) are separate from normal E2E diagnostics. CI does not replace physical Android/iPhone testing.
 
 ## CI
 
@@ -18,12 +18,12 @@ Workflow: `.github/workflows/ci.yml` (`CI`). It runs for every PR and every push
 | Job                  | Runs                                                                                                                                                       |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Changes`            | Decides whether the change touches code (see below)                                                                                                        |
-| `Lint & format`      | `format:check`, `lint:check` and the server's `lint:check`; runs for every change, since Prettier also checks Markdown                                     |
-| `Build & typecheck`  | Server typecheck and build, then `npm run build` (root typecheck and web build)                                                                            |
-| `Unit tests`         | `npm run test:run`                                                                                                                                         |
-| `Server E2E`         | `server/test/*.e2e.test.ts` against a disposable PostgreSQL service                                                                                        |
-| `Playwright (phone)` | `npm run test:e2e`                                                                                                                                         |
-| `PWA (Pixel 6)`      | `npm run test:pwa` (production offline shell and safe updates)                                                                                             |
+| `Lint & format`      | The web app's `format:check` (Prettier over the whole repository), both apps' `lint:check`; runs for every change, since Prettier also checks Markdown     |
+| `Build & typecheck`  | API typecheck and build, then the web app's `build` (typecheck and web build)                                                                              |
+| `Unit tests`         | The web app's `test:run`                                                                                                                                   |
+| `Server E2E`         | `apps/api/test/*.e2e.test.ts` against a disposable PostgreSQL service                                                                                      |
+| `Playwright (phone)` | The web app's `test:e2e`                                                                                                                                   |
+| `PWA (Pixel 6)`      | The web app's `test:pwa` (production offline shell and safe updates)                                                                                       |
 | `Ops checks`         | `shellcheck -x` on the host and install scripts, `ops/test-install.sh`, `ops/test-auto-deploy.sh`, `ops/test-dependency-check.sh`, `ops/test-ember-run.py` |
 | `CI`                 | Needs every job; fails if any failed or was cancelled, skipped jobs pass                                                                                   |
 
@@ -35,17 +35,17 @@ Workflow: `.github/workflows/ci.yml` (`CI`). It runs for every PR and every push
 
 ## Ports
 
-- Playwright e2e builds the app in `e2e` mode into `dist-e2e/` (a production build that keeps the `?demo=1` entry; service workers are blocked, since `test:pwa` covers them) and previews it on its own strict-port server on `EMBER_E2E_PORT` (default 5188, `reuseExistingServer: false`). Tests tagged `@dev-server` run against a Vite dev server on the next port (5189) instead: only the dev server serves source modules by URL, which those tests import (`/src/storage/repository.ts`) or patch with `page.route('**/src/...')`. A test that is timing-sensitive on the build may also carry the tag, with a comment saying why. Tag every new test that does either; against the build such an import fails and a route matches nothing, so an aborting route passes without testing anything. Never point either server at another checkout's, or the tests run the wrong source.
-- `scripts/integration.mjs` always binds Vite to 5188; only the API port is configurable (`EMBER_TEST_API_PORT`, default 5190). It refuses with "Port 5188 is occupied" while another worktree's e2e or integration run holds the port. Find the owner with `ss -ltnp 'sport = :5188'` and `pstree -aps <pid>`; if it is another worktree's test run, wait for it to finish rather than killing it, then rerun only the remaining stages.
-- `test:pwa` builds production and previews on 5193, serially (`workers: 1`); its lifecycle tests rewrite `dist/sw.js`, so never run it in parallel with another suite sharing that build.
+- Playwright e2e builds the app in `e2e` mode into `apps/web/dist-e2e/` (a production build that keeps the `?demo=1` entry; service workers are blocked, since `test:pwa` covers them) and previews it on its own strict-port server on `EMBER_E2E_PORT` (default 5188, `reuseExistingServer: false`). Tests tagged `@dev-server` run against a Vite dev server on the next port (5189) instead: only the dev server serves source modules by URL, which those tests import (`/src/storage/repository.ts`) or patch with `page.route('**/src/...')`. A test that is timing-sensitive on the build may also carry the tag, with a comment saying why. Tag every new test that does either; against the build such an import fails and a route matches nothing, so an aborting route passes without testing anything. Never point either server at another checkout's, or the tests run the wrong source.
+- `apps/web/scripts/integration.mjs` always binds Vite to 5188; only the API port is configurable (`EMBER_TEST_API_PORT`, default 5190). It refuses with "Port 5188 is occupied" while another worktree's e2e or integration run holds the port. Find the owner with `ss -ltnp 'sport = :5188'` and `pstree -aps <pid>`; if it is another worktree's test run, wait for it to finish rather than killing it, then rerun only the remaining stages.
+- `test:pwa` builds production and previews on 5193, serially (`workers: 1`); its lifecycle tests rewrite `apps/web/dist/sw.js`, so never run it in parallel with another suite sharing that build.
 
 ## Fresh worktree setup for integration tests
 
-`scripts/integration.mjs` loads `pg`, `argon2` and `dotenv` from the server package and reads the git-ignored `server/.env`, which must point at the isolated `ember_dev` database on 127.0.0.1:55439 (the script refuses anything else). Before starting the full check chain in a new worktree:
+`apps/web/scripts/integration.mjs` loads `pg`, `argon2` and `dotenv` from the API package and reads the git-ignored `apps/api/.env`, which must point at the isolated `ember_dev` database on 127.0.0.1:55439 (the script refuses anything else). Before starting the full check chain in a new worktree:
 
 ```sh
-NODE_ENV=development npm --prefix server ci --include=dev   # else "Cannot find module 'pg'"
-cp -p <main checkout>/server/.env <worktree>/server/      # keep mode 0600
+NODE_ENV=development npm --prefix apps/api ci --include=dev   # else "Cannot find module 'pg'"
+cp -p <main checkout>/apps/api/.env <worktree>/apps/api/      # keep mode 0600
 ```
 
 ## Flaky or killed local runs

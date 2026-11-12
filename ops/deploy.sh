@@ -60,23 +60,25 @@ if [[ ! -f $release/.complete ]]; then
 	(
 		cd "$build" &&
 			# Shells may export NODE_ENV=production, which makes npm ci skip the build tools.
-			NODE_ENV=development npm ci --include=dev --no-audit --no-fund --loglevel=error &&
-			NODE_ENV=development npm --prefix server ci --include=dev --no-audit --no-fund --loglevel=error &&
+			NODE_ENV=development npm --prefix apps/web ci --include=dev --no-audit --no-fund --loglevel=error &&
+			NODE_ENV=development npm --prefix apps/api ci --include=dev --no-audit --no-fund --loglevel=error &&
 			# Vite derives import.meta.env.PROD from NODE_ENV.
-			NODE_ENV=production npm run build &&
-			NODE_ENV=production npm --prefix server run build &&
-			npm --prefix server prune --omit=dev --no-audit --no-fund --loglevel=error &&
-			[[ -f dist/index.html && -f server/dist/trial.js ]]
+			NODE_ENV=production npm --prefix apps/web run build &&
+			NODE_ENV=production npm --prefix apps/api run build &&
+			npm --prefix apps/api prune --omit=dev --no-audit --no-fund --loglevel=error &&
+			[[ -f apps/web/dist/index.html && -f apps/api/dist/trial.js ]] &&
+			# Keep only what runs, in the release layout ember.service and EMBER_WEB_ROOT expect:
+			# the web shell in dist/ and the compiled server with its runtime dependencies in server/.
+			mv -T apps/web/dist dist &&
+			mkdir server &&
+			mv -t server apps/api/dist apps/api/node_modules apps/api/package.json
 	) >"$build.log" 2>&1 || {
 		tail -n 40 -- "$build.log" >&2
 		rm -f -- "$build.log"
 		die 'build failed; nothing was deployed'
 	}
 	rm -f -- "$build.log"
-	# Keep only what runs: the web shell and the compiled server with its runtime dependencies.
 	find "$build" -mindepth 1 -maxdepth 1 ! -name dist ! -name server -exec rm -rf -- {} +
-	find "$build/server" -mindepth 1 -maxdepth 1 ! -name dist ! -name node_modules ! -name package.json \
-		-exec rm -rf -- {} +
 	echo "$sha" >"$build/REVISION"
 	touch "$build/.complete"
 	mv -T -- "$build" "$release"

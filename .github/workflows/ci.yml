@@ -75,13 +75,13 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: |
-            package-lock.json
-            server/package-lock.json
-      - run: npm ci --include=dev && npm --prefix server ci --include=dev
-      # Root Prettier also reads server/.prettierrc for server files.
-      - run: npm run format:check
-      - run: npm run lint:check
-      - run: npm --prefix server run lint:check
+            apps/web/package-lock.json
+            apps/api/package-lock.json
+      - run: npm --prefix apps/web ci --include=dev && npm --prefix apps/api ci --include=dev
+      # One Prettier run from apps/web checks the whole repository with each area's config.
+      - run: npm --prefix apps/web run format:check
+      - run: npm --prefix apps/web run lint:check
+      - run: npm --prefix apps/api run lint:check
 
   build:
     name: Build & typecheck
@@ -98,13 +98,13 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: |
-            package-lock.json
-            server/package-lock.json
-      - run: npm ci --include=dev && npm --prefix server ci --include=dev
-      - run: npm --prefix server run typecheck
-      - run: npm --prefix server run build
-      # The web build typechecks the root first.
-      - run: npm run build
+            apps/web/package-lock.json
+            apps/api/package-lock.json
+      - run: npm --prefix apps/web ci --include=dev && npm --prefix apps/api ci --include=dev
+      - run: npm --prefix apps/api run typecheck
+      - run: npm --prefix apps/api run build
+      # The web build typechecks apps/web first.
+      - run: npm --prefix apps/web run build
 
   unit:
     name: Unit tests
@@ -121,11 +121,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: |
-            package-lock.json
-            server/package-lock.json
-      # Some unit tests import server modules.
-      - run: npm ci --include=dev && npm --prefix server ci --include=dev
-      - run: npm run test:run
+            apps/web/package-lock.json
+            apps/api/package-lock.json
+      # Some unit tests import API modules.
+      - run: npm --prefix apps/web ci --include=dev && npm --prefix apps/api ci --include=dev
+      - run: npm --prefix apps/web run test:run
 
   server-e2e:
     name: Server E2E
@@ -167,8 +167,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: |
-            package-lock.json
-            server/package-lock.json
+            apps/web/package-lock.json
+            apps/api/package-lock.json
       # The backup/restore regression test deliberately verifies this exact name,
       # image and loopback port. Do not weaken the host-side isolation checks.
       - name: Name the isolated test service
@@ -182,10 +182,10 @@ jobs:
           docker exec ember-postgres psql -U ember_ci -d postgres -v ON_ERROR_STOP=1
           -c "CREATE ROLE ember_dev LOGIN CREATEDB PASSWORD 'synthetic-ci-only'"
           -c "ALTER DATABASE ember_dev OWNER TO ember_dev"
-      # The server date-contract tests also exercise shared frontend schemas.
-      - run: npm ci --include=dev && npm --prefix server ci --include=dev
-      # pretest:e2e builds the server first.
-      - run: npm --prefix server run test:e2e
+      # The API date-contract tests also exercise the web app's shared schemas.
+      - run: npm --prefix apps/web ci --include=dev && npm --prefix apps/api ci --include=dev
+      # pretest:e2e builds the API first.
+      - run: npm --prefix apps/api run test:e2e
         env:
           TMPDIR: ${{ runner.temp }}
 
@@ -196,6 +196,9 @@ jobs:
     timeout-minutes: 20
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
+    defaults:
+      run:
+        working-directory: apps/web
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -204,6 +207,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+          cache-dependency-path: apps/web/package-lock.json
       - run: npm ci --include=dev
       - name: Read Playwright version
         id: playwright
@@ -228,7 +232,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: playwright-failure-${{ github.run_id }}-${{ github.run_attempt }}
-          path: playwright-report/
+          path: apps/web/playwright-report/
           retention-days: 3
           if-no-files-found: ignore
 
@@ -238,6 +242,9 @@ jobs:
     timeout-minutes: 15
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
+    defaults:
+      run:
+        working-directory: apps/web
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -246,6 +253,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+          cache-dependency-path: apps/web/package-lock.json
       - run: npm ci --include=dev
       - name: Read Playwright version
         id: playwright
@@ -269,7 +277,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pwa-failure-${{ github.run_id }}-${{ github.run_attempt }}
-          path: playwright-pwa-report/
+          path: apps/web/playwright-pwa-report/
           retention-days: 3
           if-no-files-found: ignore
 

@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 
-import {inlineScriptHashes, securityHeaders} from '../server/src/security-headers';
+import {inlineScriptHashes, securityHeaders} from '../../api/src/security-headers';
 
 const sha = (text: string) => `'sha256-${createHash('sha256').update(text).digest('base64')}'`;
 

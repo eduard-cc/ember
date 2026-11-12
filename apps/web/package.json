@@ -5,17 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development vite --host 127.0.0.1 --port 5188 --strictPort",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --write --ignore-path ../../.gitignore --ignore-path ../../.prettierignore ../..",
+    "format:check": "prettier --check --ignore-path ../../.gitignore --ignore-path ../../.prettierignore ../..",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0 --fix",
     "lint:check": "eslint . --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5188 --strictPort",
-    "test:run": "NODE_ENV=test ops/limited.sh vitest run",
-    "test:e2e": "ops/limited.sh playwright test",
-    "test:integration": "ops/limited.sh node scripts/integration.mjs",
-    "test:pwa": "ops/limited.sh playwright test --config playwright.pwa.config.ts"
+    "test:run": "NODE_ENV=test ../../ops/limited.sh vitest run",
+    "test:e2e": "../../ops/limited.sh playwright test",
+    "test:integration": "../../ops/limited.sh node scripts/integration.mjs",
+    "test:pwa": "../../ops/limited.sh playwright test --config playwright.pwa.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.0",

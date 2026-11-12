@@ -11,13 +11,13 @@ Run from repository root:
 ```sh
 ops/docker.sh compose -f ops/compose.local.yml up -d --wait
 # Once: the unprivileged development role and database (Compose itself only creates the
-# live ember database). Generate the role password locally; it goes only in server/.env.
+# live ember database). Generate the role password locally; it goes only in apps/api/.env.
 ops/docker.sh exec -it ember-postgres sh -c 'createuser -U "$POSTGRES_USER" --createdb --pwprompt ember_dev &&
   createdb -U "$POSTGRES_USER" -O ember_dev ember_dev &&
   psql -U "$POSTGRES_USER" -d postgres -c "REVOKE CONNECT, TEMPORARY ON DATABASE ember FROM PUBLIC"'
-npm --prefix server ci --include=dev
-npm --prefix server run migration
-npm --prefix server run dev
+npm --prefix apps/api ci --include=dev
+npm --prefix apps/api run migration
+npm --prefix apps/api run dev
 ```
 
 Development API binds **127.0.0.1:5190 only** and uses the `ember_dev` database; the live
@@ -29,13 +29,13 @@ image `postgres:17.11-bookworm`; port `127.0.0.1:55439`; named volume
 rootless Docker daemon (`ember-docker.service`, reached through `ops/docker.sh`).
 
 ```sh
-npm --prefix server run test:e2e
-npm --prefix server run test:e2e -- test/auth.e2e.test.ts
-npm --prefix server run test:e2e -- test/sync.e2e.test.ts
-npm --prefix server run test:e2e -- test/process.e2e.test.ts
-npm --prefix server run lint:check
-npm --prefix server run typecheck
-npm --prefix server run build
+npm --prefix apps/api run test:e2e
+npm --prefix apps/api run test:e2e -- test/auth.e2e.test.ts
+npm --prefix apps/api run test:e2e -- test/sync.e2e.test.ts
+npm --prefix apps/api run test:e2e -- test/process.e2e.test.ts
+npm --prefix apps/api run lint:check
+npm --prefix apps/api run typecheck
+npm --prefix apps/api run build
 ```
 
 Tests compile first, enumerate actual test files, and fail on a missing file.
@@ -55,9 +55,9 @@ reserved characters in the role password when writing the URL.
 
 ## Secret provisioning
 
-`server/.env` contains the nonsecret settings in `.env.example` plus the `ember_dev` role's
+`apps/api/.env` contains the nonsecret settings in `.env.example` plus the `ember_dev` role's
 database URL and externally provisioned encoded Argon2id hash; it never holds the superuser
-password. `server/.postgres.env` contains only
+password. `apps/api/.postgres.env` contains only
 `POSTGRES_USER=ember`, `POSTGRES_DB=ember`, and the generated database password.
 Both are ignored and mode 0600. No plaintext owner password is stored.
 The initial local hash was generated from a discarded random synthetic password;
@@ -106,7 +106,7 @@ explicitly revoke existing sessions when transferring ownership.
 
 Tests synthesize proxy identity only on real loopback HTTP requests against
 migrated disposable PostgreSQL databases. To avoid a fixed-port process test and
-avoid rebuilding shared `dist`, run from `server/`:
+avoid rebuilding shared `dist`, run from `apps/api/`:
 
 ```sh
 node scripts/test-e2e.mjs test/tailscale-config.e2e.test.ts test/tailscale-auth.e2e.test.ts test/auth.e2e.test.ts test/config.e2e.test.ts test/sync.e2e.test.ts
