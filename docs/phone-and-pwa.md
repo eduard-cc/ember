@@ -11,7 +11,7 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. DESIGN.md 
 
 ## Layout and rendered size
 
-- Verify SVG label sizes in rendered CSS pixels on Pixel 6, not only their declared font-size: a wide fixed viewBox can shrink labels below readable size.
+- Verify SVG label sizes in rendered CSS pixels in the Pixel 6 Playwright device, not only their declared font-size: a wide fixed viewBox can shrink labels below readable size.
 - End the exercise-header ⋯ dots flush with the drawn 30px completion box's right edge, not its centre, and keep them centred in their 44px target so its pressed/open wash surrounds them: the target is shifted 9px into the card's side padding instead of nudging the icon inside it. Measure the drawn dots, not the 18px icon box: Lucide's ellipsis spans 4 to 20 of 24 viewBox units. Assert dots/column geometry on phone.
 
 ## Dialogs, prompts and accessibility

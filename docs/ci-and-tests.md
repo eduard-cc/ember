@@ -5,7 +5,7 @@ Read when a local test chain fails or dies mid-run, a port is busy, CI shows a f
 ## What runs where
 
 - `npm run test:run`, `test:e2e`, `test:integration`, `test:pwa` and `npm --prefix server run test:e2e` all go through `ops/limited.sh`, which runs them in `ember-jobs.slice`. Without the installed slice (`ops/install.sh`) or a user systemd session it exits with an error instead of running uncapped. Under `CI=true` it runs the command directly.
-- CI (`.github/workflows/ci.yml`) has three jobs: `checks` (format, lint, typecheck, unit, build), `server-e2e` (`server/test/*.e2e.test.ts` against a disposable PostgreSQL service) and `playwright` (`test:e2e`, then `test:pwa`). The `playwright` job skips both browser suites, still reporting success, when every file changed since the last green main run (or a PR's base) is in `server/`, `ops/`, `tests/integration/`, `scripts/integration.mjs` or Markdown, except `server/src/static-files.ts` and `ops/limited.sh`, which the browser suites load; `ops/browser-tests-needed.sh` decides. Ember is phone-only, so Playwright has two phone-sized (390×844) projects: `mobile` against the e2e build and `mobile-dev-server` for tests tagged `@dev-server` (see Ports). Run both: `--project=mobile` alone skips the tagged tests. Tests that need Pixel 6 or other phone sizes set them. The root `tests/integration` suite (`npm run test:integration`) is **not** in CI: run it locally whenever sync, imported history or recovery is touched.
+- CI (`.github/workflows/ci.yml`) has three jobs: `checks` (format, lint, typecheck, unit, build), `server-e2e` (`server/test/*.e2e.test.ts` against a disposable PostgreSQL service) and `playwright` (`test:e2e`, then `test:pwa`). The `playwright` job skips both browser suites, still reporting success, when every file changed since the last green main run (or a PR's base) is in `server/`, `ops/`, `tests/integration/`, `scripts/integration.mjs` or Markdown, except `server/src/static-files.ts` and `ops/limited.sh`, which the browser suites load; `ops/browser-tests-needed.sh` decides. Ember is designed for phones, so Playwright has two phone-sized (390×844) projects: `mobile` against the e2e build and `mobile-dev-server` for tests tagged `@dev-server` (see Ports). Run both: `--project=mobile` alone skips the tagged tests. Tests that need Pixel 6 or other phone sizes set them. The root `tests/integration` suite (`npm run test:integration`) is **not** in CI: run it locally whenever sync, imported history or recovery is touched.
 - Pushes run CI only on `main`; PRs run separately. Markdown-only (`**/*.md`) changes skip CI, so run `npm run format:check` locally before pushing docs.
 - Lint configs use type-aware `typescript-eslint` and React hooks rules for the web app, `typescript-eslint` recommended for the server; each rule turned off or narrowed carries a one-line reason in the config.
 - Integration harnesses generate synthetic credentials in memory, refuse any admin database other than `ember_dev`, and refuse occupied test ports rather than reusing or killing unrelated processes.
@@ -27,7 +27,7 @@ Linux runners only; superseded runs are cancelled; Markdown-only changes skip CI
 
 ```sh
 NODE_ENV=development npm --prefix server ci --include=dev   # else "Cannot find module 'pg'"
-cp -p ~/src/ember/server/.env <worktree>/server/          # keep mode 0600
+cp -p <main checkout>/server/.env <worktree>/server/      # keep mode 0600
 ```
 
 ## Flaky or killed local runs

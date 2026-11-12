@@ -8,9 +8,9 @@ Inputs (downloaded once, never fetched at runtime):
 Usage:
   python3 scripts/catalog/generate.py --wger exerciseinfo.json --everkinetic ./everkinetic-data
 
-Every catalog entry below is an explicit, reviewed mapping. Names follow the
-"Exercise (Equipment)" convention and Strong's export spelling character for
-character, so imported history maps 1:1. Nothing is matched by fuzzy name at
+Every catalog entry below is an explicit, reviewed mapping. Names follow Strong's
+"Exercise (Equipment)" convention; imported history maps to an entry only when
+the names match character for character. Nothing is matched by fuzzy name at
 runtime.
 
 Only line drawings are bundled (Everkinetic, or wger drawings in the Everkinetic
