@@ -1,6 +1,6 @@
 import {type Page, expect, test} from '@playwright/test';
 
-import {navigate, templateAction} from '../navigation';
+import {escapeAsMenuTakesFocus, navigate, templateAction} from '../navigation';
 
 const demo = [
   'Bench Press (Barbell)',
@@ -188,6 +188,12 @@ test('the template editor offers the same Replace and Remove menu', async ({page
   await page.keyboard.press('Escape');
   await expect(editor).toBeVisible();
   await expect(page.getByRole('menuitem', {name: 'Replace exercise'})).toBeHidden();
+  expect(await page.getByRole('dialog', {name: 'Discard changes?'}).count()).toBe(0);
+  await expect(options(page, 'Squat (Barbell)')).toBeFocused();
+  // An Escape pressed as the menu takes focus also closes only the menu.
+  await escapeAsMenuTakesFocus(page, () => options(page, 'Squat (Barbell)').click());
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(editor).toBeVisible();
   expect(await page.getByRole('dialog', {name: 'Discard changes?'}).count()).toBe(0);
   await expect(options(page, 'Squat (Barbell)')).toBeFocused();
   await options(page, 'Squat (Barbell)').click();
