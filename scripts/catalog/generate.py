@@ -39,11 +39,15 @@ OUT_IMAGES = ROOT / 'src/catalog/images'
 CACHE = Path.home() / '.cache/ember-catalog'
 MAX_SIDE = 240
 LEVELS = 8
+# Display order of body parts; keep in sync with `bodyParts` in src/catalog/catalog.ts.
+BODY_PARTS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core', 'Cardio', 'Full body']
 
 # (name, body part, equipment, type, wger id, everkinetic id)
 # Everkinetic id: images and steps come from Everkinetic when it has them.
 # wger id: fallback instructions; its line drawings when Everkinetic has none.
 # Muscles come from muscles.json (reviewed, app-owned), applied by muscles.apply.
+# Rows sit under their body part in alphabetical order; the output is sorted the same way
+# (BODY_PARTS, then name), so neither reflects when or why an exercise was added.
 CATALOG = [
     # Chest
     ('Bench Press (Barbell)', 'Chest', 'Barbell', 'weighted', 73, '0042'),
@@ -352,6 +356,11 @@ EK_UPPER_BODY = {
 EK_TEXT_ONLY = {'Pull Up (Assisted)'}
 
 
+def catalog_order(entry):
+    """Sort key of a catalog entry: body part in display order, then name."""
+    return BODY_PARTS.index(entry['bodyPart']), entry['name']
+
+
 def slug(name):
     return re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
 
@@ -514,6 +523,9 @@ def main():
     duplicates = {n for n in names if names.count(n) > 1}
     if duplicates:
         sys.exit(f'duplicate catalog names: {sorted(duplicates)}')
+    unknown = sorted({entry[1] for entry in CATALOG} - set(BODY_PARTS))
+    if unknown:
+        sys.exit(f'unknown body parts: {unknown}')
 
     if OUT_IMAGES.exists():
         for old in OUT_IMAGES.glob('*.webp'):
@@ -610,6 +622,7 @@ def main():
         })
     # Muscles come from the reviewed table, not from wger or Everkinetic tags.
     muscles.apply(entries)
+    entries.sort(key=catalog_order)
     OUT_JSON.write_text(json.dumps(entries, indent=1, ensure_ascii=False) + '\n')
     with_images = sum(1 for e in entries if e['images'])
     print(f'{len(entries)} exercises, {with_images} with drawings, '

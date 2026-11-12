@@ -1,7 +1,7 @@
 import {existsSync, readFileSync, statSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 
-import {bodyPartsOf, catalog, catalogEntry, muscles} from '../src/catalog/catalog';
+import {bodyParts, bodyPartsOf, catalog, catalogEntry, muscles} from '../src/catalog/catalog';
 
 // Names as a Strong export writes them, so imported history maps 1:1 without renaming.
 const strongNames = [
@@ -31,6 +31,16 @@ describe('bundled exercise catalog', () => {
     expect(new Set(catalog.map((e) => e.name)).size).toBe(catalog.length);
     expect(catalog.length).toBeGreaterThanOrEqual(150);
     expect(catalog.length).toBeLessThanOrEqual(300);
+  });
+  it('lists exercises by body part, then name, and the muscle table by name', () => {
+    const key = (e: (typeof catalog)[number]) =>
+      `${String(bodyParts.indexOf(e.bodyPart)).padStart(2, '0')} ${e.name}`;
+    const keys = catalog.map(key);
+    expect(keys).toEqual([...keys].sort());
+    const table = Object.keys(
+      JSON.parse(readFileSync('scripts/catalog/muscles.json', 'utf8')) as object,
+    );
+    expect(table).toEqual([...table].sort());
   });
   it('offers only the body parts its exercises belong to, Other only for names outside the catalog', () => {
     const parts = bodyPartsOf(catalog.map((e) => e.name));
