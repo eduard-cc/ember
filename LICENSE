@@ -1,0 +1,12 @@
+Copyright (c) 2026 eduard-cc. All rights reserved.
+
+This source code is published for viewing only. No license is granted to
+use, copy, modify, distribute, or create derivative works, in whole or in
+part, without prior written permission.
+
+Exception: third-party content in this repository keeps its own license and
+is not covered by the notice above. This includes the exercise catalog's
+drawings and instructions from Everkinetic and wger, each credited with its
+license in src/catalog/exercises.json (see scripts/catalog/README.md), and
+the body figure path data from react-native-body-highlighter (MIT, notice
+kept in src/catalog/body-paths.ts).
