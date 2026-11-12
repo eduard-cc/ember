@@ -27,7 +27,6 @@ Ember is a self-hosted, local-first workout tracker for phones: a React PWA with
 - Dumbbell weight is per dumbbell; barbell weight includes the bar; assisted pull-up/dip load means assistance.
 - PRODUCT.md's exclusions (rest timers, alerts, nutrition, social, watch, etc.) hold unless the owner changes them. Do not promise native ongoing-service behavior from web notifications.
 - DESIGN.md is the visual contract: a restrained shadcn style with Ember's own amber color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support. Ember is designed for phones: design, test and verify at phone sizes; the desktop layouts are legacy and get no new work.
-- Keep structure, tooling and UI primitives conventional (shadcn-style primitives, type-aware ESLint, Prettier). Do not add infrastructure (Redis, queues, email) without an actual need.
 - Work on a short-lived branch and squash onto `main`. Use Conventional Commit-style messages such as `feat: ...` and `fix: ...`. Preserve unrelated work.
 - Merging to `main` ships: the live instance deploys a green `main` within minutes, and the app's update gate never reloads an open workout. Every deploy has a one-command rollback (`docs/deploy.md`).
 
