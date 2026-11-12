@@ -116,7 +116,7 @@ shell_served() {
 		unhealthy 'this release has no dist/sw.js'
 		return
 	}
-	# The URLS line is written by scripts/pwa-build.ts.
+	# The URLS line is written by apps/web/scripts/pwa-build.ts.
 	mapfile -t urls < <(node -e '
 		const match = /^const URLS = (\[.*\]);$/m.exec(require("node:fs").readFileSync(process.argv[1], "utf8"));
 		if (!match) throw new Error("no URLS list");

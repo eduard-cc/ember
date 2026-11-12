@@ -2,8 +2,8 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {describe, expect, it} from 'vitest';
 
+import {isServedShellFile} from '../../../api/src/static-files';
 import {pwaShell} from '../../scripts/pwa-build';
-import {isServedShellFile} from '../../server/src/static-files';
 
 function emittedWorker(bundle: Record<string, unknown>): string {
   const plugin = pwaShell();

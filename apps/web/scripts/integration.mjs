@@ -4,12 +4,13 @@ import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {createServer} from 'node:net';
 
-const require = createRequire(new URL('../server/package.json', import.meta.url));
+const require = createRequire(new URL('../../api/package.json', import.meta.url));
 const {Pool} = require('pg'),
   argon2 = require('argon2'),
   dotenv = require('dotenv');
 const root = new URL('../', import.meta.url).pathname;
-const config = dotenv.parse(readFileSync(root + 'server/.env'));
+const apiRoot = new URL('../../api/', import.meta.url).pathname;
+const config = dotenv.parse(readFileSync(apiRoot + '.env'));
 const url = new URL(config.EMBER_DATABASE_URL);
 if (
   url.href.includes('?') ||
@@ -64,7 +65,7 @@ for (const port of [5188, Number(apiPort)])
   });
 let created = null;
 try {
-  const build = spawn('npm', ['--prefix', 'server', 'run', 'build'], {cwd: root, stdio: 'inherit'});
+  const build = spawn('npm', ['run', 'build'], {cwd: apiRoot, stdio: 'inherit'});
   if (await new Promise((r) => build.once('exit', r))) throw Error('API build failed');
   const password = randomBytes(32).toString('hex');
   const env = {
@@ -106,7 +107,7 @@ try {
     created = name;
     url.pathname = '/' + name;
     const api = spawn(process.execPath, ['dist/main.js'], {
-      cwd: root + 'server',
+      cwd: apiRoot,
       env: {
         ...env,
         EMBER_DATABASE_URL: url.toString(),

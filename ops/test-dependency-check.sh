@@ -13,12 +13,12 @@ fail() {
 
 # The cron runs an installed copy outside the checkout and points it at the checkout.
 repo=$sandbox/repo
-mkdir -p "$repo/server" "$sandbox/bin" "$sandbox/installed"
+mkdir -p "$repo/apps/web" "$repo/apps/api" "$sandbox/bin" "$sandbox/installed"
 cp -- "$SCRIPT_DIR/dependency-check.sh" "$sandbox/installed/"
 echo 26 >"$repo/.nvmrc"
 clean='{"vulnerabilities":{},"metadata":{"vulnerabilities":{"high":0,"critical":0}}}'
-echo "$clean" >"$repo/audit.json"
-echo "$clean" >"$repo/server/audit.json"
+echo "$clean" >"$repo/apps/web/audit.json"
+echo "$clean" >"$repo/apps/api/audit.json"
 echo v26.12.1 >"$sandbox/node-version"
 cat >"$sandbox/index.json" <<'EOF'
 [{"version":"v27.1.0","security":true},{"version":"v26.13.0","security":false},
@@ -62,11 +62,11 @@ run() { "$sandbox/installed/dependency-check.sh" 2>"$sandbox/err"; }
 out=$(run) && [[ -z $out && ! -e $sandbox/keys ]] || fail "clean run: $out"
 
 # A high production advisory and a Node security release queue one card naming both.
-echo '{"vulnerabilities":{"qs":{"name":"qs","severity":"high"},"x":{"name":"x","severity":"moderate"}},"metadata":{"vulnerabilities":{}}}' >"$repo/server/audit.json"
+echo '{"vulnerabilities":{"qs":{"name":"qs","severity":"high"},"x":{"name":"x","severity":"moderate"}},"metadata":{"vulnerabilities":{}}}' >"$repo/apps/api/audit.json"
 echo v26.8.1 >"$sandbox/node-version"
 out=$(run) || fail "findings run: $(cat "$sandbox/err")"
 [[ $out == *'found 2 issue(s)'* ]] || fail "findings output: $out"
-grep -qF 'npm (server): qs has a high advisory' "$sandbox/body" || fail 'advisory missing from card'
+grep -qF 'npm (api): qs has a high advisory' "$sandbox/body" || fail 'advisory missing from card'
 grep -qF 'security release 26.12.1 is out' "$sandbox/body" || fail 'Node release missing from card'
 grep -qF -- "--workspace worktree:$repo" "$sandbox/args" || fail 'card not anchored to the checkout'
 ! grep -qF 'x has' "$sandbox/body" || fail 'moderate advisory on card'
@@ -89,11 +89,11 @@ mv "$sandbox/index.json" "$sandbox/index.json.off"
 mv "$sandbox/index.json.off" "$sandbox/index.json"
 
 # A Node major behind .nvmrc is a finding of its own.
-echo "$clean" >"$repo/server/audit.json"
+echo "$clean" >"$repo/apps/api/audit.json"
 echo v25.9.0 >"$sandbox/node-version"
 out=$(run) && grep -qF 'runs 25.9.0 but .nvmrc (and CI) use 26' "$sandbox/body" || fail "major drift: $out"
 
 # An audit that cannot reach the registry fails loudly instead of reporting clean.
-rm "$repo/audit.json"
-! out=$(run) && grep -qF 'npm audit failed in the app' "$sandbox/err" || fail "audit failure: $out"
+rm "$repo/apps/web/audit.json"
+! out=$(run) && grep -qF 'npm audit failed in apps/web' "$sandbox/err" || fail "audit failure: $out"
 echo 'dependency check test passed'

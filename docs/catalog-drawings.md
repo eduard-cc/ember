@@ -1,15 +1,15 @@
 # Catalog drawings
 
-Read before proposing, generating, editing, QA-ing or bundling exercise catalog drawings. `scripts/catalog/README.md` documents the pipeline and attribution; this file holds the working rules and failure modes.
+Read before proposing, generating, editing, QA-ing or bundling exercise catalog drawings. `apps/web/scripts/catalog/README.md` documents the pipeline and attribution; this file holds the working rules and failure modes.
 
 ## Current state and sources
 
-- Every catalog exercise has a drawing (`tests/catalog.test.ts`, "gives every exercise a drawing"); a new exercise needs one before it ships.
-- Before proposing new drawing work, read the QA records in `~/.cache/ember-catalog/generated/qa/*.json` (status, attempts, notes) and `scripts/catalog/generated-manifest.json`.
+- Every catalog exercise has a drawing (`apps/web/tests/catalog.test.ts`, "gives every exercise a drawing"); a new exercise needs one before it ships.
+- Before proposing new drawing work, read the QA records in `~/.cache/ember-catalog/generated/qa/*.json` (status, attempts, notes) and `apps/web/scripts/catalog/generated-manifest.json`.
 - Licensed sources first: re-check wger (`/api/v2/exerciseimage/?exercise=<id>`) for new licensed drawings. Everkinetic `src/images-ai/<id>-S/-F.ai.png` exports (Illustrator, same CC BY-SA licence) hold finished drawings missing from `dist/`; `generate.py` falls back to them. free-exercise-db has only photos, which the catalog excludes.
 - Missing drawings come from reference-guided generation plus review rounds. Generic unguided attempts do not converge, and targeted edits of near-misses rarely fix structural problems (floating pads, safety-filter blocks).
 
-## Everkinetic mappings (`scripts/catalog/generate.py`)
+## Everkinetic mappings (`apps/web/scripts/catalog/generate.py`)
 
 - `dist/png` drawings are artist-cropped (legs, feet, plates cut off). `EK_FULL_FIGURE` maps exercises to the uncropped `src/images-ai` exports, ordered (start, finish) for display; some exports label S/F backwards, so review order by eye.
 - `thicken()` strips specks and picks the `MinFilter` size that brings the final mask closest to `EK_STROKE_WIDTH`; fixed sizes left large/small sources too faint or heavy.
@@ -21,10 +21,10 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 
 ## App-owned (AI-assisted) drawings
 
-- Generate them as app-owned assets with explicit AI-assisted attribution (`Ember (AI-assisted, gpt-image-2)`, enforced by `tests/catalog.test.ts`). Preserve every licensed asset and source. Cache raw PNGs outside git, record source hashes and QA decisions, and reuse `generate.line_mask`.
+- Generate them as app-owned assets with explicit AI-assisted attribution (`Ember (AI-assisted, gpt-image-2)`, enforced by `apps/web/tests/catalog.test.ts`). Preserve every licensed asset and source. Cache raw PNGs outside git, record source hashes and QA decisions, and reuse `generate.line_mask`.
 - Every app-owned drawing is an approved start/finish pair (`qa/<slug>.json` `poses` list, `accepted/<slug>-0/-1.png`), except holds without a progression (Plank, a single drawing). Generate the second pose by editing the approved first so person, machine and angle match. Check which pose the approved drawing actually shows before labelling it start or finish.
 - When a pose keeps failing against an approved partner whose machine is wrong, redraw both poses from one real-machine reference (video frames) instead of forcing it.
-- Bundle with `scripts/catalog/generated.py`: it reads `qa/<slug>.json` status and removes app-owned drawings that are no longer accepted.
+- Bundle with `apps/web/scripts/catalog/generated.py`: it reads `qa/<slug>.json` status and removes app-owned drawings that are no longer accepted.
 - Successful generation is not approval: a drawing ships only once it has passed review.
 
 ## Style

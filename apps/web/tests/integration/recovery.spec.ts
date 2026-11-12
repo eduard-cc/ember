@@ -44,7 +44,7 @@ test('dataset reset clears stale installed history and outbox without losing the
     !/^\/ember_browser_test_\d+_\d+$/.test(url.pathname)
   )
     throw new Error('Reset fixture requires a disposable browser-test database');
-  const require = createRequire(new URL('../../server/package.json', import.meta.url));
+  const require = createRequire(new URL('../../../api/package.json', import.meta.url));
   const {Pool} = require('pg');
   const {resetDataset} = require('./dist/sync/reset.js');
   const database = new Pool({connectionString: url.toString()});

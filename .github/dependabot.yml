@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: /
+    directory: /apps/web
     schedule:
       interval: weekly
     cooldown:
@@ -22,7 +22,7 @@ updates:
         update-types: ['version-update:semver-major']
 
   - package-ecosystem: npm
-    directory: /server
+    directory: /apps/api
     schedule:
       interval: weekly
     cooldown:

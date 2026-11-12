@@ -8,7 +8,7 @@ The live app runs from built releases, never from a checkout, so source can be e
 
 ## What `ops/deploy.sh` checks
 
-- It builds a `git archive` export of the commit, keeping only the web shell and the compiled server with production dependencies, then switches `current` atomically and restarts the unit.
+- It builds `apps/web` and `apps/api` from a `git archive` export of the commit and keeps only what runs, in the release layout `ember.service` and `EMBER_WEB_ROOT` expect: the web shell in `dist/` and the compiled API with its production dependencies in `server/`. Then it switches `current` atomically and restarts the unit.
 - After the switch it checks that the unit's own process owns the port, `/api/v1/health` on loopback (waiting up to two minutes for startup migrations) and through Serve, and that Serve returns this release's `index.html`, `sw.js`, `manifest.webmanifest` and every precached file byte for byte. Any failure rolls back automatically and alerts the owner.
 - A lock prevents overlapping deploys and rollbacks. `ops/auto-deploy.sh` holds it for its whole run and `ops/deploy.sh` reuses it, so a rollback started meanwhile refuses with "another deploy or rollback is running"; run it again once the timer's run ends. The newest five releases are kept, and `history` records healthy deploys for rollback.
 - The server applies migrations on startup. When a release adds migrations, the deploy first runs `ops/backup.sh` into `~/.local/share/ember-backups/`, restores it into a validation database, compares record and migration counts with `ember` and drops the copy; any failure cancels the deploy. Writes between the backup and the restart are not in it. The newest three pre-deploy backups are kept; manual archives there are never rotated.
@@ -41,7 +41,7 @@ The live app runs from built releases, never from a checkout, so source can be e
 
 ## Static assets and the precache
 
-The production server sends only files allowed by `server/src/static-files.ts` (`index.html`, `sw.js`, the public shell files, and `assets/*.{js,css,woff2,webp}`). `scripts/pwa-build.ts` imports the same rule and fails the build if the service worker would precache a file the server refuses, and `ops/deploy.sh`'s health check fetches `sw.js`, the manifest and every precached URL through Serve byte for byte, rolling back and naming the file on a mismatch. A single missing file makes the service worker's `cache.addAll` fail, leaving installed apps on the old shell while the API looks healthy. A new asset type means widening that one rule. After deploys that touch the shell, still check that the service worker activates on a phone.
+The production server sends only files allowed by `apps/api/src/static-files.ts` (`index.html`, `sw.js`, the public shell files, and `assets/*.{js,css,woff2,webp}`). `apps/web/scripts/pwa-build.ts` imports the same rule and fails the build if the service worker would precache a file the server refuses, and `ops/deploy.sh`'s health check fetches `sw.js`, the manifest and every precached URL through Serve byte for byte, rolling back and naming the file on a mismatch. A single missing file makes the service worker's `cache.addAll` fail, leaving installed apps on the old shell while the API looks healthy. A new asset type means widening that one rule. After deploys that touch the shell, still check that the service worker activates on a phone.
 
 ## Read-only live offline-shell check
 
