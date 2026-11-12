@@ -4,13 +4,12 @@
 # it). Idempotent.
 #
 #   sudo ops/host/setup-account.sh <account> <loopback-ports> <tailnet-https-addresses>
-#   sudo ops/host/setup-account.sh ember 5191,55438,<health-port>,<webhook-port> 100.64.0.10,fd7a:115c:a1e0::a,100.64.0.11,fd7a:115c:a1e0::b
+#   sudo ops/host/setup-account.sh ember 5191,55438,<webhook-port> 100.64.0.10,fd7a:115c:a1e0::a
 #
 # <loopback-ports> are the only 127.0.0.1 TCP ports the account may connect to: the app,
-# its database, a neighbouring app's local health endpoint and the owner's alert webhook. <tailnet-https-addresses> (IPv4 and IPv6)
+# its database and the owner's alert webhook. <tailnet-https-addresses> (IPv4 and IPv6)
 # are the only tailnet destinations it may reach, on HTTPS only: Ember's own tailnet device
-# (the deploy health check goes through its Serve origin) and the neighbouring app's
-# (its health probe).
+# (the deploy health check goes through its Serve origin).
 #
 # The account gets no password, no login shell and no supplementary groups (sudo, docker,
 # lxd or adm would each be a way back to root or to other accounts), a private home,

@@ -9,8 +9,8 @@
 # Docker bridge networks. So the account may reach the internet (GitHub, npm, Docker Hub,
 # Tailscale), DNS, its own loopback ports (including the owner's alert webhook,
 # which takes only signed alerts), HTTPS on its own tailnet device (the
-# deploy checks the app through Serve) and a neighbouring app's (read-only health probes), and nothing
-# else on this host, the LAN or the tailnet. Replies on connections other users
+# deploy checks the app through Serve), and nothing else
+# on this host, the LAN or the tailnet. Replies on connections other users
 # opened to it are allowed. Other accounts are not affected, and neither are packets the
 # kernel sends without a socket (IPv6 neighbor and router discovery, IGMP/MLD reports, TCP
 # resets): they have no owner, so only a positive uid match may send traffic into the
