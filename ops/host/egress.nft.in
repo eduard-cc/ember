@@ -5,11 +5,11 @@
 # The Ember service account (uid @UID@, and the subordinate uids @SUBUIDS@ it can switch to
 # inside its own user namespaces, e.g. `rootlesskit --net=host`) runs code from main and npm. Unix permissions
 # keep it out of other accounts' files, but every local user can reach loopback services
-# (browser debugging ports, Hermes, other databases), this host's own tailnet address and
+# (browser debugging ports, agent gateways, other databases), this host's own tailnet address and
 # Docker bridge networks. So the account may reach the internet (GitHub, npm, Docker Hub,
-# Tailscale), DNS, its own loopback ports (including the owner's Hermes webhook,
+# Tailscale), DNS, its own loopback ports (including the owner's alert webhook,
 # which takes only signed alerts), HTTPS on its own tailnet device (the
-# deploy checks the app through Serve), and nothing
+# deploy checks the app through Serve) and a neighbouring app's (read-only health probes), and nothing
 # else on this host, the LAN or the tailnet. Replies on connections other users
 # opened to it are allowed. Other accounts are not affected, and neither are packets the
 # kernel sends without a socket (IPv6 neighbor and router discovery, IGMP/MLD reports, TCP

@@ -1,6 +1,7 @@
-# User unit installed by ops/install.sh: Ember's own rootless Docker daemon. It runs only ember-postgres; nothing using its socket
-# (ops/docker.sh) can see other daemons' containers. The daemon and its containers live in
-# ember-live.slice, which caps their CPU and memory.
+# User unit installed by ops/install.sh: Ember's own rootless Docker daemon. It runs only
+# ember-postgres; nothing using its socket (ops/docker.sh) can see other daemons'
+# containers. The daemon and its containers live in ember-live.slice, which caps their CPU
+# and memory.
 [Unit]
 Description=Ember rootless Docker daemon
 # Five starts within five minutes means it is crash-looping: give up and alert.
@@ -20,7 +21,8 @@ Environment=DOCKERD_ROOTLESS_ROOTLESSKIT_STATE_DIR=%t/ember/rootlesskit
 ExecStartPre=/usr/bin/mkdir -p %t/ember %h/.local/share/ember-docker
 ExecStartPre=/usr/bin/chmod 700 %t/ember %h/.local/share/ember-docker
 # Raw database files copied mid-write are no backup, and the image can be pulled again:
-# the nightly off-device backup skips this tagged folder (it excludes caches) and takes a consistent ember.dump through pg_dump instead.
+# the nightly off-device backup skips this tagged folder (it excludes caches) and takes
+# a consistent ember.dump through pg_dump instead.
 ExecStartPre=/usr/bin/sh -c 'printf "Signature: 8a477f597d28d172789f06886806bc55\\n# Ember Docker data: backed up as the nightly ember.dump, not as files.\\n" >%h/.local/share/ember-docker/CACHEDIR.TAG'
 ExecStart=%h/bin/dockerd-rootless.sh --host=unix://%t/ember/docker.sock --data-root=%h/.local/share/ember-docker --exec-root=%t/ember/exec --pidfile=%t/ember/docker.pid --storage-driver=fuse-overlayfs --cgroup-parent=ember-live.slice
 ExecReload=/bin/kill -s HUP $MAINPID

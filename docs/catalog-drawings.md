@@ -7,7 +7,7 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 - Every catalog exercise has a drawing (`tests/catalog.test.ts`, "gives every exercise a drawing"); a new exercise needs one before it ships.
 - Before proposing new drawing work, read the QA records in `~/.cache/ember-catalog/generated/qa/*.json` (status, attempts, notes) and `scripts/catalog/generated-manifest.json`.
 - Licensed sources first: re-check wger (`/api/v2/exerciseimage/?exercise=<id>`) for new licensed drawings. Everkinetic `src/images-ai/<id>-S/-F.ai.png` exports (Illustrator, same CC BY-SA licence) hold finished drawings missing from `dist/`; `generate.py` falls back to them. free-exercise-db has only photos, which the catalog excludes.
-- Missing drawings come from reference-guided generation plus owner review rounds. Generic unguided attempts do not converge, and targeted edits of near-misses rarely fix structural problems (floating pads, safety-filter blocks).
+- Missing drawings come from reference-guided generation plus review rounds. Generic unguided attempts do not converge, and targeted edits of near-misses rarely fix structural problems (floating pads, safety-filter blocks).
 
 ## Everkinetic mappings (`scripts/catalog/generate.py`)
 
@@ -22,10 +22,10 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 ## App-owned (AI-assisted) drawings
 
 - Generate them as app-owned assets with explicit AI-assisted attribution (`Ember (AI-assisted, gpt-image-2)`, enforced by `tests/catalog.test.ts`). Preserve every licensed asset and source. Cache raw PNGs outside git, record source hashes and QA decisions, and reuse `generate.line_mask`.
-- Every app-owned drawing is an owner-approved start/finish pair (`qa/<slug>.json` `poses` list, `accepted/<slug>-0/-1.png`), except holds without a progression (Plank, a single drawing). Generate the second pose by editing the approved first so person, machine and angle match. Check which pose the approved drawing actually shows before labelling it start or finish.
+- Every app-owned drawing is an approved start/finish pair (`qa/<slug>.json` `poses` list, `accepted/<slug>-0/-1.png`), except holds without a progression (Plank, a single drawing). Generate the second pose by editing the approved first so person, machine and angle match. Check which pose the approved drawing actually shows before labelling it start or finish.
 - When a pose keeps failing against an approved partner whose machine is wrong, redraw both poses from one real-machine reference (video frames) instead of forcing it.
 - Bundle with `scripts/catalog/generated.py`: it reads `qa/<slug>.json` status and removes app-owned drawings that are no longer accepted.
-- If vision QA hits its provider limit, stop accepting new assets and report the unreviewed queue; successful generation is not approval.
+- Successful generation is not approval: a drawing ships only once it has passed review.
 
 ## Style
 
@@ -42,7 +42,7 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 ## QA and fixing defects
 
 - Style QA misses physics errors. Before showing or accepting any AI drawing, run a separate strict physical-logic audit on the raw full-size image: cables are one straight continuous line, fully visible, never hidden behind legs; every machine part connects to the base (no floating pads or pulleys); the handle is attached and gripped; the body isn't twisted; limb counts are right.
-- A single physics audit is noisy. Accept only after two independent physics passes plus style, break ties with a targeted yes/no question about the specific defect, and re-audit subagent acceptances yourself before bundling.
+- A single physics audit is noisy. Accept only after two independent physics passes plus style, and break ties with a targeted yes/no question about the specific defect.
 - Fix a single defect with a targeted image edit; regenerate when there are several. If the provider's safety filter blocks an edit (wording like "crunched down" or "kneeling" can trip it), a local luminance threshold removes grey specks without changing geometry.
 - When a whole-image edit won't fix a small local defect and breaks other parts, edit a crop around the defect, binarise it, and paste it back with a tight hard-edged mask covering only the changed region; re-audit the seam.
 - Re-audit after any edit or post-processing.

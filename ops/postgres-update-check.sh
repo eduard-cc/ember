@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Monthly Hermes cron check (script-only): has a newer PostgreSQL
-# minor of the pinned major been released? If so, put one Ember kanban card on the board to
-# bump it; the dispatcher picks it up and its worker ships and reports the change. Prints
-# nothing when there is nothing to do or the card already exists. Read-only on the
-# repository, the container and the database.
+# Monthly scheduled check (script-only): has a newer PostgreSQL minor of the pinned major
+# been released? If so, put one Ember kanban card on the board to bump it. Prints nothing
+# when there is nothing to do or the card already exists. Read-only on the repository, the
+# container and the database.
 set -Eeuo pipefail
 # The owner's cron runs a reviewed copy installed outside the checkout, with EMBER_REPO set to
 # the owner's checkout, which it only reads: code from main never runs as the owner.

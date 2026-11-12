@@ -4,7 +4,7 @@
 # including the Tailscale device that serves the app's address; systemd restarts it.
 # System services sit outside the user manager, whose CPU weights do not reach them, so
 # the hard caps are what protect them; the low weight only yields to other user work.
-# I/O weights need the io controller, which this host does not delegate to user units.
+# I/O weights need the io controller, which systemd does not delegate to user units by default.
 # Most of the memory in use is reclaimable page cache; the app and database need ~200 MB.
 [Unit]
 Description=Ember live app and database (capped)

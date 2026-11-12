@@ -1,6 +1,6 @@
 # Ember
 
-A local-first mobile workout tracker with inspectable history, editable templates, and a separate privately hosted API. Ember is the source of truth for the owner's training history: their Strong history was imported once and Strong import is retired.
+A local-first mobile workout tracker with inspectable history, editable templates, and a separate privately hosted API. It keeps history imported from Strong exports with its source cells; the app itself has no import flow.
 
 ## Run locally
 
@@ -61,7 +61,7 @@ How releases are laid out and what the deploy checks: `docs/deploy.md`.
 - `DESIGN.md`: the visual system
 - `AGENTS.md`: rules for agents working in this repository
 - `server/README.md`: local API, secrets, Tailscale owner mode, API contract
-- `docs/ci-and-tests.md`: CI, its budget, local test runs, ports
+- `docs/ci-and-tests.md`: CI, local test runs, ports
 - `docs/deploy.md`: release layout, deploy checks, live-app checks
 - `docs/operations.md`: backups, restore drills, host isolation, resource limits
 - `docs/sync-and-history.md`: saving guarantees, sync, recovery, history data
@@ -69,3 +69,7 @@ How releases are laid out and what the deploy checks: `docs/deploy.md`.
 - `docs/catalog-drawings.md` and `scripts/catalog/README.md`: exercise catalog, drawings and licensing
 
 Personal history, private exports, credentials, database dumps and personal screenshots never enter tracked source, `public/`, build output or external services. Tests use synthetic fixtures only.
+
+## License
+
+View only; see `LICENSE`. Third-party catalog content keeps its own licenses.

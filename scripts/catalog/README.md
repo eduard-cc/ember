@@ -46,7 +46,7 @@ barbell and Smith machine shrugs stay whole to keep their plates and rails.
 Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing and
 steps; it used to borrow a standing glute exercise. `EK_TEXT_ONLY` keeps
 Everkinetic's instructions but not its drawing where that drawing shows a
-different variant: Pull Up (Assisted) shows the owner-approved assisted-machine
+different variant: Pull Up (Assisted) shows the approved assisted-machine
 pair (also used by Chin Up (Assisted)) through `generated.py`.
 
 ## App-owned illustrations
@@ -64,7 +64,7 @@ SHA-256, attempts, notes) and accepted sources in `accepted/<slug>.png`. Like th
 licensed drawings, each exercise shows a start and a finish pose: a record's ordered
 `poses` list (`accepted/<slug>-0.png` start, `-1.png` finish, each with its SHA-256)
 is bundled as `<slug>-0.webp` and `<slug>-1.webp`. Holds without a progression
-(Plank) keep a single drawing. Pairs were owner-reviewed for movement order,
+(Plank) keep a single drawing. Pairs were reviewed for movement order,
 anatomy and matching equipment; review notes live in `reviews/`. The
 tracked `generated-manifest.json` is written from those records and lists every
 reviewed exercise, its status, attempt count and the SHA-256 of accepted sources:

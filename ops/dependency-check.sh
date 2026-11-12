@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Monthly Hermes cron check (script-only): do the production npm
+# Monthly scheduled check (script-only): do the production npm
 # dependencies have high or critical advisories, or does the Node that runs the live app miss
-# a security release or the .nvmrc major? If so, put one Ember kanban card on the board; the
-# dispatcher picks it up and its worker ships and reports the fix. Prints nothing when there
-# is nothing to do or a card for the same findings already exists. Read-only on the
-# repository, the live app and the database.
+# a security release or the .nvmrc major? If so, put one Ember kanban card on the board.
+# Prints nothing when there is nothing to do or a card for the same findings already exists.
+# Read-only on the repository, the live app and the database.
 set -Eeuo pipefail
 # The owner's cron runs a reviewed copy installed outside the checkout, with EMBER_REPO set to
 # the owner's checkout, which it only reads: code from main never runs as the owner.

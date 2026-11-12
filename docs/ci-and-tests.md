@@ -1,6 +1,6 @@
 # CI and local test runs
 
-Read when a local test chain fails or dies mid-run, a port is busy, CI shows a flake, timeout or `cancelled`, or when writing a Playwright test. The CI budget rules live in AGENTS.md.
+Read when a local test chain fails or dies mid-run, a port is busy, CI shows a flake, timeout or `cancelled`, or when writing a Playwright test.
 
 ## What runs where
 
@@ -11,9 +11,9 @@ Read when a local test chain fails or dies mid-run, a port is busy, CI shows a f
 - Integration harnesses generate synthetic credentials in memory, refuse any admin database other than `ember_dev`, and refuse occupied test ports rather than reusing or killing unrelated processes.
 - PWA reports (`playwright-pwa-report/`, `test-results/pwa/`) are separate from normal E2E diagnostics. CI uploads reports only on failure, with three-day retention. CI does not replace physical Android/iPhone testing.
 
-## Measuring CI cost
+## Keeping CI lean
 
-Total month-to-date Actions minutes by repository with the account's billing usage API. Aim for under 15 aggregate runner-minutes per code push, measured from real job start/completion timestamps, not wall time; GitHub bills each job per started minute, which is why cheap checks share one job. The last measurement (3 October 2026, before the PWA checks joined the browser job) was 4m50s of runner time billed as 6 minutes; re-measure from recent runs before relying on it.
+Linux runners only; superseded runs are cancelled; Markdown-only changes skip CI; dependencies and browsers are cached; every job has a timeout; reports are uploaded only on failure, with short retention. Every job repeats checkout and setup, which is why cheap checks share one job. Measure a change to CI from real job start and completion timestamps, not wall time.
 
 ## Ports
 

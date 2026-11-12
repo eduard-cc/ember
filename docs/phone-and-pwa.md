@@ -8,7 +8,6 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. DESIGN.md 
 - Amber is the only accent. Every border names a token (`border-border`); there is no global border colour.
 - Shared primitives live in `src/components/ui/`.
 - Keep hook classes such as `app-shell`, `settings-panel` and `nav-item`: tests and JS select on them.
-- Other agents also open PRs against this repo (`claude/*` branches). Check open PRs and those branches before starting UI work.
 
 ## Layout and rendered size
 
@@ -36,7 +35,7 @@ A release between a hold timer and the React effect that attaches listeners is l
 - Production builds include a manifest, icons and a finite service-worker app-shell cache. After one successful online load the shell reopens offline on IndexedDB. API responses, exports, JSON payloads and arbitrary runtime requests are never cached. No native background sync is implied.
 - The active-workout notification (`src/pwa/workout-notification.ts`) uses `registration.showNotification` with no push server, so it needs an active service worker: none in dev or the e2e build, which is why `tests/e2e/workout-notification.spec.ts` stubs only `Notification` and the real show/tap path lives in `tests/pwa/notification.spec.ts` and `tests/pwa/build.test.ts`. Only the tab that owns the draft shows or clears it, after hydration; a read-only tab leaves it to the owner tab. It is shown at most once per visit (a page load or a return to the foreground, which App reconciles through the state's `visit` count): a dismissed notification stays away through edits, autosaves and the background, and the next open or return shows it again; one still shown for the workout is left alone. Nothing about a dismissal is stored, and only Settings turns it off for good. The worker's `notificationclick` only focuses an open Ember window (posting `EMBER_RESUME_WORKOUT` so the logger opens without a reload) or opens `/`; it never reads notification data or workout storage.
 - Ask for notification permission only inside a Start tap (`askOnStart`) or a Settings tap: browsers ignore or penalise requests without a user gesture. iPhone Safari tabs have no `Notification`; only the Home Screen app on iOS 16.4+ can notify. Physical Android and iPhone behaviour (badge rendering, tap after the app was killed, `getNotifications` returning `data`, which keeps a shown notification from being replaced on each return) is not yet verified.
-- Chromium touch/viewport tests don't prove comfort on the real phone keyboard; on-device validation is still outstanding.
-- Chrome fills the bottom gesture-bar strip from the manifest `theme_color`/`background_color` only; page `meta theme-color` and CSS can't reach it. The manifest uses Night `#17161b` by owner choice.
+- Chromium touch/viewport tests don't prove comfort on a real phone keyboard; on-device validation is still outstanding.
+- Chrome fills the bottom gesture-bar strip from the manifest `theme_color`/`background_color` only; page `meta theme-color` and CSS can't reach it. The manifest uses Night `#17161b`.
 - Manifest changes reach the phone only after the service-worker shell update is applied and Chrome's periodic WebAPK update check runs.
 - Updates require explicit confirmation and a saved, draft-free transition; never reload an active logger silently. The production shell precaches only a finite allowlist (see docs/deploy.md).
