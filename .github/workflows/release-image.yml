@@ -48,6 +48,8 @@ jobs:
           compare=$(gh api "repos/$GITHUB_REPOSITORY/compare/$SHA...main")
           status=$(jq -r .status <<<"$compare")
           newer=$(jq -r 'first(.files[]?.filename | select(endswith(".md") | not)) // empty' <<<"$compare")
+          # The compare API lists at most 300 files; a list that long counts as a code change.
+          [[ $(jq '.files | length' <<<"$compare") -lt 300 ]] || newer=many
           if [[ ! $status =~ ^(ahead|identical)$ || -n $newer ]]; then
             echo "main has a newer code change than $SHA ($status); not tagging"
             echo "release=false" >>"$GITHUB_OUTPUT"
