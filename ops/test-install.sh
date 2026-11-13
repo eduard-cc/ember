@@ -8,7 +8,7 @@ sandbox=$(mktemp -d "${TMPDIR:-/tmp}/ember-install-test.XXXXXX")
 trap 'rm -rf -- "$sandbox"' EXIT
 export HOME=$sandbox/home
 mkdir -p "$HOME/src/ember/ops" "$HOME/.local/bin" "$sandbox/bin"
-cp "$here/install.sh" "$here/notify.sh" "$HOME/src/ember/ops/"
+cp "$here/install.sh" "$here/notify.sh" "$here/start.sh" "$HOME/src/ember/ops/"
 cp -r "$here/systemd" "$HOME/src/ember/ops/"
 printf '#!/bin/sh\nexit 0\n' >"$sandbox/bin/systemctl"
 cat >"$HOME/.local/bin/hermes" <<'EOF'
@@ -160,4 +160,100 @@ PY
 cp "$here/notify.sh" "$HOME/src/ember/ops/notify.sh"
 "$HOME/src/ember/ops/install.sh" >/dev/null
 cmp "$here/notify.sh" "$HOME/.local/lib/ember/notify.sh"
-echo 'installation and owner-side failure notification checks passed'
+
+# ember.service runs the installed launcher, never the checkout's copy, and the launcher
+# starts either kind of release. Fake node and docker record how they were started.
+cmp "$here/start.sh" "$HOME/.local/lib/ember/start.sh"
+# shellcheck disable=SC2016 # the installed child shell expands HOME
+printf '#!/bin/sh\ntouch "$HOME/checkout-code-ran"\n' >"$HOME/src/ember/ops/start.sh"
+fail() {
+	echo "install check failed: $*" >&2
+	exit 1
+}
+started=$sandbox/started
+cat >"$HOME/.local/bin/node" <<EOF
+#!/usr/bin/env bash
+{ echo "node \$PWD"; printf '%s\n' "\$@"; } >"$started"
+EOF
+cat >"$sandbox/bin/docker" <<EOF
+#!/usr/bin/env bash
+{
+	echo docker
+	printf '%s\n' "\$@"
+	for name in EMBER_HOST EMBER_WEB_ROOT EMBER_DATABASE_URL EMBER_ORIGIN DOTENV_CONFIG_PATH; do
+		echo "env \$name=\${!name-}"
+	done
+} >"$started"
+EOF
+chmod 755 "$HOME/.local/bin/node" "$sandbox/bin/docker"
+export XDG_RUNTIME_DIR=$sandbox/run
+ember=$HOME/.local/share/ember
+mkdir -p "$ember/releases/host/server/dist" "$ember/releases/image/dist"
+digest=$(printf 'a%.0s' {1..64})
+echo "ghcr.io/eduard-cc/ember@sha256:$digest" >"$ember/releases/image/IMAGE"
+# The synthetic runtime.env, with the database on the live loopback port.
+env_file=$HOME/.config/ember/runtime.env
+cat >"$env_file" <<EOF
+EMBER_PORT=5191
+EMBER_ORIGIN="https://ember.example.invalid"
+EMBER_WEB_ROOT=$ember/current/dist
+EMBER_DATABASE_URL=postgres://ember:synthetic@127.0.0.1:55438/ember
+EOF
+# Runs the unit's ExecStart as systemd would: specifiers expanded, runtime.env loaded.
+launch() {
+	local command
+	command=$(sed -nE 's/^ExecStart=//p' "$HOME/.config/systemd/user/ember.service")
+	command=${command//%h/$HOME}
+	command=${command//%t/$XDG_RUNTIME_DIR}
+	rm -f -- "$started"
+	# shellcheck disable=SC1090,SC2086 # synthetic env file; the command line is split like systemd does
+	(set -a && source "$env_file" && set +a && exec $command) 2>"$sandbox/launch.err"
+}
+ln -sfn releases/host "$ember/current"
+launch || fail 'a host-built release should start'
+[[ $(<"$started") == "node $ember/current/server"$'\n'"$ember/current/server/dist/trial.js" ]] ||
+	fail "a host-built release must run its server with the account's Node: $(<"$started")"
+[[ ! -e $HOME/checkout-code-ran ]] || fail 'ember.service executed checkout code'
+
+ln -sfn releases/image "$ember/current"
+launch || fail "an image release should start: $(<"$sandbox/launch.err")"
+mapfile -t args <"$started"
+expected=(docker --host "unix://$XDG_RUNTIME_DIR/ember/docker.sock" run --rm --init --name ember-app
+	--pull never --network ember-local_default --publish 127.0.0.1:5191:5191
+	--read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges
+	--memory 768m --pids-limit 256 --cpus 1.5
+	--env EMBER_PORT --env EMBER_ORIGIN --env EMBER_WEB_ROOT --env EMBER_DATABASE_URL
+	--env EMBER_HOST --env DOTENV_CONFIG_PATH "ghcr.io/eduard-cc/ember@sha256:$digest"
+	env\ EMBER_HOST=0.0.0.0 env\ EMBER_WEB_ROOT=/app/web
+	env\ EMBER_DATABASE_URL=postgres://ember:synthetic@ember-postgres:5432/ember
+	'env EMBER_ORIGIN=https://ember.example.invalid' env\ DOTENV_CONFIG_PATH=/dev/null)
+[[ ${args[*]} == "${expected[*]}" ]] || fail "unexpected container start: ${args[*]}"
+
+# Anything but one image by digest, or a database other than ember-postgres's published
+# port, is refused before docker runs.
+refused() {
+	launch && fail "$1 must be refused"
+	[[ ! -e $started ]] || fail "$1 must not start anything"
+}
+for bad in 'ghcr.io/eduard-cc/ember:main' "ghcr.io/other/ember@sha256:$digest" "ghcr.io/eduard-cc/ember@sha256:${digest}0" \
+	"ghcr.io/eduard-cc/ember@sha256:$digest --privileged" ''; do
+	echo "$bad" >"$ember/releases/image/IMAGE"
+	refused "IMAGE '$bad'"
+done
+printf 'ghcr.io/eduard-cc/ember@sha256:%s\n\n' "$digest" >"$ember/releases/image/IMAGE"
+refused 'an IMAGE with a second line'
+ln -sf /dev/null "$ember/releases/image/IMAGE"
+refused 'an IMAGE symlink'
+ln -sf "$sandbox/missing" "$ember/releases/image/IMAGE"
+refused 'a dangling IMAGE symlink'
+rm -- "$ember/releases/image/IMAGE"
+echo "ghcr.io/eduard-cc/ember@sha256:$digest" >"$ember/releases/image/IMAGE"
+cp "$env_file" "$sandbox/runtime.env.good"
+for url in postgres://ember:synthetic@db.example.invalid:5432/ember postgres://ember:synthetic@127.0.0.1:5432/ember \
+	'postgres://ember:synthetic@127.0.0.1:55438/ember?host=elsewhere'; do
+	sed -i "s|^EMBER_DATABASE_URL=.*|EMBER_DATABASE_URL=$url|" "$env_file"
+	refused "database $url"
+done
+cp "$sandbox/runtime.env.good" "$env_file"
+launch || fail "the good release should start again: $(<"$sandbox/launch.err")"
+echo 'installation, launcher and owner-side failure notification checks passed'

@@ -291,9 +291,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      # Synthetic install, notification and deploy decisions, with no live units or services.
-      - run: shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh ops/notify.sh ops/test-install.sh ops/image-smoke.sh ops/ghcr-retention.sh
+      # Synthetic install, launcher, notification and deploy decisions, with no live units or services.
+      - run: >-
+          shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh
+          ops/notify.sh ops/test-install.sh ops/image-smoke.sh ops/ghcr-retention.sh ops/start.sh ops/lib.sh
+          ops/docker-host.sh ops/deploy.sh ops/rollback.sh ops/auto-deploy.sh ops/test-deploy.sh ops/test-auto-deploy.sh
+          ops/test-release-switch.sh
       - run: bash ops/test-install.sh
+      - run: bash ops/test-deploy.sh
       - run: bash ops/test-auto-deploy.sh
       - run: bash ops/test-dependency-check.sh
       - run: python3 -B ops/test-ember-run.py
