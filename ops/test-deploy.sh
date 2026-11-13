@@ -64,6 +64,7 @@ pull)
 	d=\$(digest "\${@: -1}")
 	echo "pull \$d" >>"$log"
 	[[ ! -e $sandbox/registry-down ]] || { echo 'dial tcp: connection refused' >&2; exit 1; }
+	[[ ! -e $sandbox/pull-error ]] || { cat -- "$sandbox/pull-error" >&2; exit 1; }
 	[[ -d $sandbox/registry/\$d ]] || { echo "manifest unknown" >&2; exit 1; }
 	touch "$sandbox/local/\$d"
 	echo "\${@: -1}"
@@ -161,8 +162,9 @@ cp -- "$SCRIPT_DIR"/{deploy.sh,rollback.sh,docker-host.sh,start.sh} "$ops/"
 	cat <<EOF
 restart_and_check() {
 	echo "restart \$(current_release)" >>"$log"
-	[[ ! -e $sandbox/unhealthy/\$(current_release) ]]
+	healthy
 }
+healthy() { [[ ! -e $sandbox/unhealthy/\$(current_release) ]]; }
 EOF
 } >"$ops/lib.sh"
 printf '#!/usr/bin/env bash\necho "$2" >>%q\n' "$alerts" >"$ops/notify.sh"
@@ -250,12 +252,16 @@ green_run "$c1" "$i1 $c0\n"
 : >"$runs"
 i_missing=ghcr.io/eduard-cc/ember@sha256:$(sha256sum <<<missing | cut -c1-64)
 green_run "$c1" "$i_missing $c1\n"
-[[ $(deploy "$c1") == 1 ]] && said 'the registry has no' || fail 'a missing image must refuse'
+[[ $(deploy "$c1") == 1 ]] && said 'could not pull' || fail 'a missing image must refuse'
 : >"$runs"
 green_run "$c1" "$i1 $c1\n"
 touch "$sandbox/registry-down"
-[[ $(deploy "$c1") == 69 ]] && said 'could not pull' || fail 'an unreachable registry must retry later'
+[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' || fail 'an unreachable registry must retry later'
 rm -- "$sandbox/registry-down"
+# A pull that fails on this host (a full disk, say) is a failed deploy, not a retry.
+echo 'write /var/lib/docker: no space left on device' >"$sandbox/pull-error"
+[[ $(deploy "$c1") == 1 ]] && said 'no space left on device' || fail 'a local pull failure must fail the deploy'
+rm -- "$sandbox/pull-error"
 d=${i1#*@sha256:}
 for labels in "$c0 https://github.com/eduard-cc/ember" "$c1 https://github.com/someone/ember" ' '; do
 	echo "$labels" >"$sandbox/registry/$d/labels"
@@ -372,27 +378,40 @@ releases=$(find "$EMBER_HOME/releases" -mindepth 1 -maxdepth 1 -type d | wc -l)
 ! grep -v '^image rm [0-9a-f]\{64\}$' "$log" | grep -q '^image rm' || fail 'images must be removed by digest'
 newest=$c
 
-# A newer green run of the same code that recorded another image replaces a kept release's
-# image instead of reusing it, and the image it replaced goes.
+# Deploying the live commit again is a no-op while it is what the deploy would make.
+[[ $(deploy "$newest") == 0 ]] && said 'already live and healthy' || fail 'the live release should be left alone'
+
+# A release rollback can return to is never replaced: not by a newer record of the same
+# code, not by --host-build, and not while it is live.
 mapfile -t kept < <(tail -n 3 "$EMBER_HOME/history")
-old=$(cut -d: -f3 <"$EMBER_HOME/releases/${kept[0]}/IMAGE")
-: >"$log"
 green_run "${kept[0]}" "$(SALT=rerun image "${kept[0]}" Second2) ${kept[0]}\n"
-[[ $(deploy "${kept[0]}") == 0 ]] && live "${kept[0]}" && said 'pulling' || fail 'a newer image record must be pulled'
-[[ $(<"$EMBER_HOME/releases/${kept[0]}/IMAGE") == *"$(sha256sum <<<"image ${kept[0]} rerun" | cut -c1-64)" ]] ||
-	fail 'the release must name the newer image'
+before=$(<"$EMBER_HOME/releases/${kept[0]}/IMAGE")
+[[ $(deploy "${kept[0]}") == 1 ]] && said 'that ops/rollback.sh can return to; refusing to replace it' || fail 'a history release must not be replaced'
+[[ $(<"$EMBER_HOME/releases/${kept[0]}/IMAGE") == "$before" ]] && live "$newest" || fail 'a refused replacement must change nothing'
+[[ $(deploy --host-build "${kept[1]}") == 1 ]] && said 'refusing to replace it' || fail '--host-build must not replace a history release'
+[[ $(deploy --host-build "$newest") == 1 ]] && said 'the live release' && live "$newest" || fail '--host-build must not replace the live release'
+
+# A release no rollback can return to (one whose health check failed) is replaced by a newer
+# record of its code, and the image it named goes.
+c=$(commit app.txt)
+green_run "$c" "$(image "$c" Second2) $c\n"
+touch "$sandbox/unhealthy/$c"
+[[ $(deploy "$c") == 1 ]] && live "$newest" || fail 'an unhealthy release must roll back'
+rm -- "$sandbox/unhealthy/$c"
+old=$(cut -d: -f3 <"$EMBER_HOME/releases/$c/IMAGE")
+green_run "$c" "$(SALT=rerun image "$c" Second2) $c\n"
+: >"$log"
+[[ $(deploy "$c") == 0 ]] && live "$c" && said 'pulling' || fail 'a newer record should replace a rejected release'
+[[ $(<"$EMBER_HOME/releases/$c/IMAGE") == *"$(sha256sum <<<"image $c rerun" | cut -c1-64)" ]] || fail 'the release must name the newer image'
 logged "image rm $old" || fail 'the replaced image should be removed'
 
-# --host-build never reuses an image release of the same commit, and the image it no longer
-# needs goes too.
-old=$(cut -d: -f3 <"$EMBER_HOME/releases/$newest/IMAGE")
+# --host-build makes a host-built release of a commit no rollback can return to, reuses it
+# later, and never pulls.
+c=$(commit app.txt)
+green_run "$c" "$(image "$c" Second2) $c\n"
 : >"$log"
-[[ $(deploy --host-build "$newest") == 0 ]] && live "$newest" && said "building $newest on this host" ||
-	fail '--host-build should build, not reuse an image release'
-[[ -d $EMBER_HOME/releases/$newest/server && ! -e $EMBER_HOME/releases/$newest/IMAGE ]] || fail '--host-build should make a host-built release'
-! logged pull && logged "image rm $old" || fail 'a host build must not pull, and should drop the image it replaced'
-: >"$log"
-[[ $(deploy --host-build "${kept[0]}") == 0 ]] && live "${kept[0]}" && said 'building' || fail '--host-build of another kept commit'
-[[ $(deploy --host-build "$newest") == 0 ]] && live "$newest" && said 'reusing the release' ||
-	fail '--host-build should reuse a host-built release'
+[[ $(deploy --host-build "$c") == 0 ]] && live "$c" && said "building $c on this host" && ! logged pull || fail '--host-build should build'
+[[ -d $EMBER_HOME/releases/$c/server && ! -e $EMBER_HOME/releases/$c/IMAGE ]] || fail '--host-build should make a host-built release'
+[[ $(deploy "$c") == 1 ]] && said 'the live release' || fail 'an image deploy must not replace a live host-built release'
+rollback && [[ $(deploy --host-build "$c") == 0 ]] && live "$c" && said 'reusing the release' || fail '--host-build should reuse its release'
 echo 'deploy checks passed'

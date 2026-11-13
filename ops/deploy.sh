@@ -47,13 +47,6 @@ ci=$(ci_state "$sha") || retry_later 'could not read CI results from GitHub'
 [[ $ci != pending ]] || retry_later "CI is still running for ${sha:0:12}"
 [[ $ci == success ]] || die "CI failed for ${sha:0:12}"
 
-previous=$(current_release)
-if [[ $previous == "$sha" ]]; then
-	healthy || die "$sha is already current but unhealthy; run ops/rollback.sh"
-	log "$sha is already live and healthy"
-	exit 0
-fi
-
 # The image a green push run of this code published, as "<image by digest> <commit>", from
 # the run's ember-image artifact. The newest green run that has one counts, and its record
 # must name that run's own commit. Runs in a command substitution: exit codes pass through.
@@ -88,29 +81,58 @@ image_record() {
 	die "no green CI run of ${sha:0:12}'s code recorded an image; refusing"
 }
 
+# Pulls an image by digest, then checks that its own labels name this repository and the
+# commit. Only an unreachable registry is retried later; anything else fails the deploy.
+fetch_image() {
+	local image=$1 commit=$2 pulled labels
+	log "pulling $image, the CI image of ${commit:0:12}"
+	pulled=$(docker pull --quiet "$image" 2>&1) || {
+		if grep -qiE 'dial tcp|connection (refused|reset)|i/o timeout|TLS handshake|no such host|temporary failure in name resolution|network is unreachable|toomanyrequests|too many requests|(502|503|504) |bad gateway|service unavailable|gateway time-?out|unexpected EOF' <<<"$pulled"; then
+			retry_later "could not reach the registry for $image ($(tail -n 1 <<<"$pulled"))"
+		fi
+		die "could not pull $image ($(tail -n 1 <<<"$pulled"))"
+	}
+	labels=$(docker image inspect --format \
+		'{{index .Config.Labels "org.opencontainers.image.revision"}} {{index .Config.Labels "org.opencontainers.image.source"}}' \
+		"$image") || die "could not inspect $image"
+	[[ $labels == "$commit $IMAGE_SOURCE" ]] ||
+		die "$image is labelled '$labels', not commit ${commit:0:12} of $IMAGE_SOURCE; refusing"
+}
+
 # Leftovers of interrupted builds; the lock guarantees no build is running.
 find "$RELEASES" -mindepth 1 -maxdepth 1 \( -name '.build-*' -o -name '.image-record.*' \) -exec rm -rf -- {} +
 release=$RELEASES/$sha
-# A release kept from an earlier deploy (a roll-forward after a rollback) is reused only when
-# it is what this deploy would make: a host-built release for --host-build, otherwise an image
-# release naming exactly the image CI recorded, still in Ember's Docker daemon.
+previous=$(current_release)
+# What this deploy makes: a host-built release for --host-build, otherwise an image release
+# naming exactly the image the newest green run of this code recorded. A complete release of
+# that kind (a roll-forward after a rollback, or the live one) is reused; its image is pulled
+# again by the same digest if it has left the daemon.
 reuse=false
 if [[ $host_build == true ]]; then
 	[[ -f $release/.complete ]] && ! is_image_release "$release" && reuse=true
 else
 	record=$(image_record)
 	image=${record% *} commit=${record#* }
-	if [[ -f $release/.complete && $(release_image "$release" || true) == "$image" ]] &&
-		docker image inspect "$image" >/dev/null 2>&1; then
+	if [[ -f $release/.complete && $(release_image "$release" || true) == "$image" ]]; then
 		reuse=true
+		docker image inspect "$image" >/dev/null 2>&1 || fetch_image "$image" "$commit"
 	fi
+fi
+if [[ $previous == "$sha" ]]; then
+	[[ $reuse == true ]] || die "the live release of ${sha:0:12} is not the one this deploy would make; refusing to replace it"
+	healthy || die "$sha is already current but unhealthy; run ops/rollback.sh"
+	log "$sha is already live and healthy"
+	exit 0
+fi
+# A release rollback can return to is never replaced, so a failed replacement cannot lose it.
+if [[ $reuse != true && -e $release ]] && grep -qx -- "$sha" "$HISTORY" 2>/dev/null; then
+	die "releases/$sha is a different release that ops/rollback.sh can return to; refusing to replace it"
 fi
 
 if [[ $reuse == true ]]; then
 	log "reusing the release of $sha"
 elif [[ $host_build == true ]]; then
 	log "building $sha on this host"
-	rm -rf -- "$release"
 	build=$(mktemp -d "$RELEASES/.build-$sha.XXXXXX")
 	trap 'rm -rf -- "$build"' EXIT
 	"${GIT[@]}" archive --format=tar "$sha" | tar -x -C "$build"
@@ -139,25 +161,12 @@ elif [[ $host_build == true ]]; then
 	find "$build" -mindepth 1 -maxdepth 1 ! -name dist ! -name server -exec rm -rf -- {} +
 	echo "$sha" >"$build/REVISION"
 	touch "$build/.complete"
+	# Only a release no rollback can return to is replaced (checked above).
+	rm -rf -- "$release"
 	mv -T -- "$build" "$release"
 	trap - EXIT
 else
-	log "pulling $image, the CI image of ${commit:0:12}"
-	pulled=$(docker pull --quiet "$image" 2>&1) || {
-		# A registry that answers that the image does not exist is final; anything else (no
-		# network, an outage) is retried by the next timer run.
-		if grep -qiE 'manifest unknown|not found|denied' <<<"$pulled"; then
-			die "the registry has no $image ($(tail -n 1 <<<"$pulled"))"
-		fi
-		retry_later "could not pull $image ($(tail -n 1 <<<"$pulled"))"
-	}
-	# The digest fixes the content; its own labels must name this repository and the commit.
-	labels=$(docker image inspect --format \
-		'{{index .Config.Labels "org.opencontainers.image.revision"}} {{index .Config.Labels "org.opencontainers.image.source"}}' \
-		"$image") || die "could not inspect $image"
-	[[ $labels == "$commit $IMAGE_SOURCE" ]] ||
-		die "$image is labelled '$labels', not commit ${commit:0:12} of $IMAGE_SOURCE; refusing"
-	rm -rf -- "$release"
+	fetch_image "$image" "$commit"
 	build=$(mktemp -d "$RELEASES/.build-$sha.XXXXXX")
 	container=
 	trap 'rm -rf -- "$build"; [[ -z $container ]] || docker rm "$container" >/dev/null 2>&1 || true' EXIT
@@ -171,6 +180,8 @@ else
 	echo "$image" >"$build/IMAGE"
 	echo "$sha" >"$build/REVISION"
 	touch "$build/.complete"
+	# Only a release no rollback can return to is replaced (checked above).
+	rm -rf -- "$release"
 	mv -T -- "$build" "$release"
 	trap - EXIT
 fi
