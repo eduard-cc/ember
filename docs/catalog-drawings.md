@@ -14,7 +14,7 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 - `dist/png` drawings are artist-cropped (legs, feet, plates cut off). `EK_FULL_FIGURE` maps exercises to the uncropped `src/images-ai` exports, ordered (start, finish) for display; some exports label S/F backwards, so review order by eye.
 - `thicken()` strips specks and picks the `MinFilter` size that brings the final mask closest to `EK_STROKE_WIDTH`; fixed sizes left large/small sources too faint or heavy.
 - Keep shrugs on `dist`: at full-figure scale the shoulder lift is invisible. `EK_UPPER_BODY` crops only the narrow dumbbell/cable shrugs (same box for both poses, hands and weight fully in frame); cropping barbell/Smith shrugs strips plates and rails.
-- `EK_TEXT_ONLY` keeps Everkinetic steps but drops its drawing when it shows another variant (Pull Up (Assisted) reuses the chin-up-assisted QA poses; redrawing that pair means updating both records' hashes).
+- `EK_NO_DRAWING` drops Everkinetic's drawing when it shows another variant (Pull Up (Assisted) reuses the chin-up-assisted QA poses; redrawing that pair means updating both records' hashes).
 - Check that an Everkinetic id's title matches the exercise before mapping it.
 - A full `generate.py` run takes several minutes.
 - A fresh worktree needs `NODE_ENV=development npm ci --include=dev` before `generated.py` (it runs the repo's Prettier).

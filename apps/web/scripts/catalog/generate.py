@@ -21,7 +21,6 @@ theme colour. Those modifications are stated on the Credits screen.
 Requires Pillow with WebP support.
 """
 import argparse
-import html
 import io
 import json
 import re
@@ -43,8 +42,8 @@ LEVELS = 8
 BODY_PARTS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core', 'Cardio', 'Full body']
 
 # (name, body part, equipment, type, wger id, everkinetic id)
-# Everkinetic id: images and steps come from Everkinetic when it has them.
-# wger id: fallback instructions; its line drawings when Everkinetic has none.
+# Everkinetic id: drawings come from Everkinetic when it has them.
+# wger id: its line drawings when Everkinetic has none.
 # Muscles come from muscles.json (reviewed, app-owned), applied by muscles.apply.
 # Rows sit under their body part in alphabetical order; the output is sorted the same way
 # (BODY_PARTS, then name), so neither reflects when or why an exercise was added.
@@ -351,9 +350,9 @@ EK_UPPER_BODY = {
     '0005': (0, 0, 1, 0.73),  # Shrug (Dumbbell)
     '0009': (0, 0, 1, 0.72),  # Shrug (Cable)
 }
-# Exercises that keep their Everkinetic instructions but not its drawing, because the drawing
-# shows a different variant; an app-owned drawing (generated.py) fills the image instead.
-EK_TEXT_ONLY = {'Pull Up (Assisted)'}
+# Exercises that skip Everkinetic's drawing because it shows a different variant; an
+# app-owned drawing (generated.py) fills the image instead.
+EK_NO_DRAWING = {'Pull Up (Assisted)'}
 
 
 def catalog_order(entry):
@@ -365,23 +364,8 @@ def slug(name):
     return re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
 
 
-def text_steps(description):
-    """wger HTML description -> list of plain sentences/steps."""
-    items = re.findall(r'<li>(.*?)</li>', description, flags=re.S)
-    if not items:
-        plain = re.sub(r'<[^>]+>', ' ', description)
-        items = re.split(r'(?<=[.!?])\s+(?=[A-Z])', plain)
-    out = []
-    for item in items:
-        item = html.unescape(re.sub(r'<[^>]+>', ' ', item))
-        item = re.sub(r'\s+', ' ', item).strip()
-        if len(item) > 3:
-            out.append(item)
-    return out
-
-
 def unclear(author):
-    """Exclude prose attributed to external fitness publishers without a verified open grant."""
+    """Exclude content attributed to external fitness publishers without a verified open grant."""
     return bool(author) and any(name in author.lower() for name in ('exrx', 'mens fitness', "men's fitness"))
 
 
@@ -557,13 +541,7 @@ def main():
         english = None
         if w:
             english = next((t for t in w['translations'] if t['language'] == 2), None)
-        sources, steps, steps_source = [], [], None
-        if ek and ek.get('steps'):
-            steps = [re.sub(r'\s+', ' ', s).strip() for s in ek['steps'] if s.strip()]
-            steps_source = 'everkinetic'
-        elif english and english.get('description') and not unclear(english.get('license_author')):
-            steps = text_steps(english['description'])
-            steps_source = 'wger'
+        sources = []
         # Images: Everkinetic start/end drawings, else wger line drawings (style 1, never AI).
         images, image_source = [], None
         ek_source = ek and {
@@ -571,7 +549,7 @@ def main():
             'licenseUrl': EK_LICENSE[1],
             'url': 'https://github.com/everkinetic/data',
         }
-        if ek_id in EK_FULL_FIGURE and name not in EK_TEXT_ONLY:
+        if ek_id in EK_FULL_FIGURE and name not in EK_NO_DRAWING:
             files = [ek_root / 'src/images-ai' / f for f in EK_FULL_FIGURE[ek_id]]
             missing = [str(f) for f in files if not f.exists()]
             if missing:
@@ -580,14 +558,14 @@ def main():
             # to the same stroke weight before the shared crop and resize.
             images = [thicken(f.read_bytes()) for f in files]
             image_source = ek_source
-        if not images and ek_id and name not in EK_TEXT_ONLY:
+        if not images and ek_id and name not in EK_NO_DRAWING:
             files = [ek_root / f'dist/png/{ek_id}-relaxation.png', ek_root / f'dist/png/{ek_id}-tension.png']
             if all(f.exists() for f in files):
                 images = [f.read_bytes() for f in files]
                 if ek_id in EK_UPPER_BODY:
                     images = [match_stroke(crop_fraction(raw, EK_UPPER_BODY[ek_id])) for raw in images]
                 image_source = ek_source
-        if not images and w and name not in EK_TEXT_ONLY:
+        if not images and w and name not in EK_NO_DRAWING:
             drawings = [i for i in w['images'] if i['style'] == '1' and not i['is_ai_generated']
                         and not unclear(i.get('license_author'))]
             drawings.sort(key=lambda i: i['image'])
@@ -602,7 +580,7 @@ def main():
                 }
         # Some Everkinetic drawings exist only as finished source exports (src/images-ai,
         # start "-S" then finish "-F"), not in dist/. Same artist, licence and attribution.
-        if not images and ek_id and name not in EK_TEXT_ONLY:
+        if not images and ek_id and name not in EK_NO_DRAWING:
             files = [ek_root / f'src/images-ai/{ek_id}-S.ai.png', ek_root / f'src/images-ai/{ek_id}-F.ai.png']
             if all(f.exists() for f in files):
                 images = [f.read_bytes() for f in files]
@@ -617,22 +595,10 @@ def main():
         if image_source:
             sources.append({'kind': 'illustration', **image_source,
                             'changes': 'cropped, resized and recoloured'})
-        if steps_source == 'everkinetic':
-            sources.append({'kind': 'instructions', 'title': ek['title'], 'author': 'Everkinetic',
-                            'license': EK_LICENSE[0], 'licenseUrl': EK_LICENSE[1],
-                            'url': 'https://github.com/everkinetic/data',
-                            'changes': 'whitespace normalised'})
-        elif steps_source == 'wger':
-            lic = LICENSES[WGER_LICENSE_IDS[english['license']]]
-            sources.append({'kind': 'instructions', 'title': english['name'],
-                            'author': credit(english['license_author']),
-                            'license': lic[0], 'licenseUrl': lic[1],
-                            'url': f'https://wger.de/exercise/{wger_id}/view-base',
-                            'changes': 'converted to plain text'})
         entries.append({
             'name': name, 'bodyPart': body, 'equipment': equipment, 'type': kind,
             'primaryMuscles': [], 'secondaryMuscles': [],  # set by muscles.apply
-            'instructions': steps[:12], 'images': files_out, 'sources': sources,
+            'images': files_out, 'sources': sources,
         })
     # Muscles come from the reviewed table, not from wger or Everkinetic tags.
     muscles.apply(entries)
