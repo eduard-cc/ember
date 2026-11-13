@@ -261,7 +261,8 @@ launch || fail "the good release should start again: $(<"$sandbox/launch.err")"
 # A runtime.env whose last line has no newline still passes every variable by its name.
 printf 'EMBER_PORT=5191\nEMBER_DATABASE_URL=postgres://ember:synthetic@127.0.0.1:55438/ember\nEMBER_SESSION_SECURE=true' >"$env_file"
 launch || fail "a runtime.env without a final newline should start: $(<"$sandbox/launch.err")"
-grep -qx 'EMBER_SESSION_SECURE' "$started" && grep -qx 'EMBER_HOST' "$started" ||
+if ! grep -qx 'EMBER_SESSION_SECURE' "$started" || ! grep -qx 'EMBER_HOST' "$started"; then
 	fail "every variable must be passed by its own name: $(tr '\n' ' ' <"$started")"
+fi
 cp "$sandbox/runtime.env.good" "$env_file"
 echo 'installation, launcher and owner-side failure notification checks passed'
