@@ -63,7 +63,6 @@ case \$command in
 pull)
 	d=\$(digest "\${@: -1}")
 	echo "pull \$d" >>"$log"
-	[[ ! -e $sandbox/registry-down ]] || { echo 'dial tcp: connection refused' >&2; exit 1; }
 	[[ ! -e $sandbox/pull-error ]] || { cat -- "$sandbox/pull-error" >&2; exit 1; }
 	[[ -d $sandbox/registry/\$d ]] || { echo "manifest unknown" >&2; exit 1; }
 	touch "$sandbox/local/\$d"
@@ -255,9 +254,11 @@ green_run "$c1" "$i_missing $c1\n"
 [[ $(deploy "$c1") == 1 ]] && said 'could not pull' || fail 'a missing image must refuse'
 : >"$runs"
 green_run "$c1" "$i1 $c1\n"
-touch "$sandbox/registry-down"
-[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' || fail 'an unreachable registry must retry later'
-rm -- "$sandbox/registry-down"
+for error in 'dial tcp: connection refused' 'net/http: request canceled (Client.Timeout exceeded while awaiting headers)' \
+	'received unexpected HTTP status: 503 Service Unavailable' 'toomanyrequests: retry later'; do
+	echo "$error" >"$sandbox/pull-error"
+	[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' || fail "an unreachable registry must retry later: $error"
+done
 # A pull that fails on this host (a full disk, say) is a failed deploy, not a retry.
 echo 'write /var/lib/docker: no space left on device' >"$sandbox/pull-error"
 [[ $(deploy "$c1") == 1 ]] && said 'no space left on device' || fail 'a local pull failure must fail the deploy'

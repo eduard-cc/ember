@@ -87,7 +87,7 @@ fetch_image() {
 	local image=$1 commit=$2 pulled labels
 	log "pulling $image, the CI image of ${commit:0:12}"
 	pulled=$(docker pull --quiet "$image" 2>&1) || {
-		if grep -qiE 'dial tcp|connection (refused|reset)|i/o timeout|TLS handshake|no such host|temporary failure in name resolution|network is unreachable|toomanyrequests|too many requests|(502|503|504) |bad gateway|service unavailable|gateway time-?out|unexpected EOF' <<<"$pulled"; then
+		if grep -qiE 'dial tcp|connection (refused|reset)|time-?out|timed out|deadline exceeded|TLS handshake|no such host|temporary failure in name resolution|network is unreachable|toomanyrequests|too many requests|(502|503|504) |bad gateway|service unavailable|unexpected EOF' <<<"$pulled"; then
 			retry_later "could not reach the registry for $image ($(tail -n 1 <<<"$pulled"))"
 		fi
 		die "could not pull $image ($(tail -n 1 <<<"$pulled"))"

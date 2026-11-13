@@ -54,7 +54,12 @@ while read -r name; do
 	[[ -z ${seen[$name]:-} && $name != EMBER_CONTAINER ]] || continue
 	seen[$name]=1
 	forward+=(--env "$name")
-done < <(sed -nE 's/^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=.*/\1/p' -- "$env_file"
+# awk ends every name with a newline, even when the file's last line has none.
+done < <(awk 'match($0, /^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*=/) {
+		name = substr($0, 1, RLENGTH - 1)
+		sub(/^[[:space:]]+/, "", name)
+		print name
+	}' "$env_file"
 	printf '%s\n' EMBER_HOST EMBER_WEB_ROOT DOTENV_CONFIG_PATH EMBER_DATABASE_URL)
 
 exec docker --host "unix://${XDG_RUNTIME_DIR:?}/ember/docker.sock" run --rm --init --name ember-app \
