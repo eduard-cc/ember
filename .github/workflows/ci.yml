@@ -135,7 +135,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     services:
       postgres:
-        image: postgres:17.11-bookworm
+        image: postgres:17.12-bookworm
         env:
           POSTGRES_USER: ember_ci
           POSTGRES_PASSWORD: synthetic-ci-only

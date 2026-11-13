@@ -2,7 +2,7 @@
 name: ember-local
 services:
   postgres:
-    image: postgres:17.11-bookworm
+    image: postgres:17.12-bookworm
     container_name: ember-postgres
     # The live app depends on it: start with ember-docker.service after a reboot.
     restart: unless-stopped

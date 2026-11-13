@@ -16,7 +16,7 @@ here=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 source "$here/docker-host.sh"
 
 # The same pin as ops/compose.local.yml (checked by apps/web/tests/postgres-image.test.ts).
-postgres=postgres:17.11-bookworm
+postgres=postgres:17.12-bookworm
 run=ember-image-smoke-$$-$RANDOM
 db=$run-db
 app=$run-app

@@ -24,7 +24,7 @@ Development API binds **127.0.0.1:5190 only** and uses the `ember_dev` database;
 app (`ember.service`) uses port 5191 and the `ember` database from external config. Origin is `http://127.0.0.1:5188`;
 frontend must proxy `/api/v1` to the API or access it same-origin. No CORS is enabled.
 Compose project `ember-local`; container `ember-postgres`;
-image `postgres:17.11-bookworm`; port `127.0.0.1:55439`; named volume
+image `postgres:17.12-bookworm`; port `127.0.0.1:55439`; named volume
 `ember-data`; independent project network `ember-local_default`; all inside Ember's own
 rootless Docker daemon (`ember-docker.service`, reached through `ops/docker.sh`).
 
