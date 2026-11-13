@@ -1,4 +1,10 @@
-import {CircleAlert, CircleCheck, Info, Loader, TriangleAlert} from 'lucide-react';
+import {
+  CircleCheck,
+  CircleExclamationPoint,
+  Info,
+  Loader,
+  TriangleExclamationPoint,
+} from 'lucide-react';
 import {Toaster as Sonner} from 'sonner';
 
 import {useTheme} from '../../hooks/use-theme';
@@ -37,8 +43,8 @@ const Toaster = ({...props}: ToasterProps) => {
       icons={{
         success: <CircleCheck className='w-5' />,
         info: <Info className='w-5' />,
-        warning: <TriangleAlert className='w-5' />,
-        error: <CircleAlert className='w-5' />,
+        warning: <TriangleExclamationPoint className='w-5' />,
+        error: <CircleExclamationPoint className='w-5' />,
         loading: <Loader className='w-5 animate-slow-spin' />,
       }}
       {...props}

@@ -2,8 +2,8 @@ import {
   ChevronDown,
   ChevronUp,
   Dumbbell,
-  History,
   Plus,
+  RotateCcwClock,
   Search,
   Settings,
   User,
@@ -99,7 +99,7 @@ const activeNavItemClass =
   'active font-medium text-primary max-desk:border-t-primary max-desk:font-semibold desk:border-b-primary desk:text-foreground';
 const navigation = [
   {name: 'Profile', icon: User},
-  {name: 'History', icon: History},
+  {name: 'History', icon: RotateCcwClock},
   {name: 'Workout', icon: Plus},
   {name: 'Exercises', icon: Dumbbell},
 ] as const;

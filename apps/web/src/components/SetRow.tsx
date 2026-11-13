@@ -1,4 +1,4 @@
-import {Ellipsis, Trash2} from 'lucide-react';
+import {Ellipsis, Trash} from 'lucide-react';
 import {type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
 import {cue, selectionHaptic} from '../feedback';
@@ -325,7 +325,7 @@ export function SetRow({
             onDelete();
           }}
         >
-          <Trash2 size={14} />
+          <Trash size={14} />
         </Button>
       </div>
       <div className='set-swipe-actions'>
@@ -338,7 +338,7 @@ export function SetRow({
           aria-label={`Delete ${label}`}
           onClick={(event) => remove(event.detail !== 0)}
         >
-          <Trash2 size={18} aria-hidden='true' />
+          <Trash size={18} aria-hidden='true' />
           <span>Delete</span>
         </button>
       </div>
@@ -349,7 +349,7 @@ export function SetRow({
           title={label}
           label={`Actions for ${label}`}
           trigger={action}
-          actions={[{label: 'Delete set', icon: Trash2, danger: true, onSelect: () => remove()}]}
+          actions={[{label: 'Delete set', icon: Trash, danger: true, onSelect: () => remove()}]}
         />
       )}
     </div>

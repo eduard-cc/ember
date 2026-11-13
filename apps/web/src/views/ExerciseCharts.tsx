@@ -1,4 +1,4 @@
-import {ChevronRight, LineChart, Trophy} from 'lucide-react';
+import {ChartLine, ChevronRight, Trophy} from 'lucide-react';
 import {useMemo, useState} from 'react';
 
 import {InfoButton, InfoTerm} from '../components/info-button';
@@ -107,7 +107,7 @@ export function ExerciseCharts({
   if (!history.length)
     return (
       <EmptyState
-        icon={LineChart}
+        icon={ChartLine}
         title='No history yet'
         description='Charts appear after you log this exercise.'
         framed={framed}
