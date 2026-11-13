@@ -1,6 +1,6 @@
 # Ember API agent instructions
 
-NestJS 11 sync API with TypeORM and explicit PostgreSQL migrations. Paths below are relative to `apps/api` unless they start at the repository root. Repo-wide rules (architecture, production data, privacy, writing tests) are in the root `AGENTS.md`.
+NestJS 12 sync API with TypeORM and explicit PostgreSQL migrations. Paths below are relative to `apps/api` unless they start at the repository root. Repo-wide rules (architecture, production data, privacy, writing tests) are in the root `AGENTS.md`.
 
 ## Read before touching
 
