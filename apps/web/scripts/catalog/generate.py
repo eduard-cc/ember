@@ -359,8 +359,11 @@ EK_UPPER_BODY = {
 # the exercise variant and is listed (start, finish); its source title names the drawing number.
 EK_UNRELEASED = {
     'Ab Wheel': ('728a.svg.png', '728b.svg.png'),
+    'Bicycle Crunch': ('723b.svg.png', '723a.svg.png'),  # the clearer frame first
     'Cable Crunch': ('732a.svg.png', '732b.svg.png'),
     'Hanging Knee Raise': ('753a.svg.png', '753b.svg.png'),
+    'Hanging Leg Raise': ('690a.svg.png', '690b.svg.png'),  # toes to bar
+    'Pendlay Row (Barbell)': ('809a.svg.png', '809b.svg.png'),  # bent-over barbell row
     'Russian Twist': ('740b.svg.png', '740a.svg.png'),
     'Woodchopper (Cable)': ('949a.svg.png', '949b.svg.png'),
 }

@@ -39,11 +39,8 @@
     },
     {
       "name": "Bicycle Crunch",
-      "status": "accepted",
-      "attempts": 3,
-      "sha256": "626c177227fffe148ee1ea7571e0c24d962046e7ed3b2cadb8cbaedb30c77cb8",
-      "startSha256": "f51ec964bde80fa927343af1e557aa079e93dd01504c04eca97936e7af1cbf28",
-      "postProcessed": "local line cleanup or thickening, re-audited"
+      "status": "replaced",
+      "attempts": 3
     },
     {
       "name": "Box Jump",
@@ -174,10 +171,8 @@
     },
     {
       "name": "Hanging Leg Raise",
-      "status": "accepted",
-      "attempts": 11,
-      "sha256": "813035102524009e59665920e56074fcb882f0798b49b6af263db8b109e5dafa",
-      "startSha256": "e7aaf86b22ae73a7ac44f1e97061ce9de6c041fe073da586f2207813cb77ecaa"
+      "status": "replaced",
+      "attempts": 11
     },
     {
       "name": "Hip Thrust (Barbell)",
@@ -294,10 +289,8 @@
     },
     {
       "name": "Pendlay Row (Barbell)",
-      "status": "accepted",
-      "attempts": 5,
-      "sha256": "d9e7e30e329491d0ed619a0c0ce5cd9e7475475d44c4f4fdc0158f6ccf828c5d",
-      "startSha256": "d227bfdd519fc86237758c9e0a09e9a94a800b1041010bb214851a0697c18145"
+      "status": "replaced",
+      "attempts": 5
     },
     {
       "name": "Pistol Squat",
