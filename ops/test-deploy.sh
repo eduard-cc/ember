@@ -68,6 +68,7 @@ pull)
 	d=\$(digest "\${@: -1}")
 	echo "pull \$d" >>"$log"
 	[[ ! -e $sandbox/pull-error ]] || { cat -- "$sandbox/pull-error" >&2; exit 1; }
+	[[ ! -e $sandbox/pull-error-once ]] || { cat -- "$sandbox/pull-error-once" >&2 && rm -- "$sandbox/pull-error-once"; exit 1; }
 	[[ -d $sandbox/registry/\$d ]] || { echo "manifest unknown" >&2; exit 1; }
 	touch "$sandbox/local/\$d"
 	echo "\${@: -1}"
@@ -103,6 +104,7 @@ cp)
 	cp -r -- "$sandbox/registry/\$d/web" "\$2"
 	;;
 rm) ;;
+version) cat -- "$sandbox/daemon-arch" 2>/dev/null || echo amd64 ;;
 run)
 	# Only the release's migration list runs a container here.
 	for ((i = 1; i <= \$#; i++)); do
@@ -130,12 +132,51 @@ cat >"$sandbox/bin/systemctl" <<EOF
 #!/usr/bin/env bash
 echo "{ path=$HOME/.local/lib/ember/start.sh ; argv[]=$HOME/.local/lib/ember/start.sh ... }"
 EOF
-# curl answers only the registry probe: 401 (reachable), or registry-status ("down" fails).
+# curl: the registry's side of a pull. /v2/ answers 401 and a token request a pull token;
+# a manifest or blob by digest answers that token from $sandbox/manifests or $sandbox/blobs,
+# 404 when absent. registry-status overrides every answer, registry-status-<kind> (token,
+# manifest, blob) one kind's and registry-status-<digest> one part's: a status, "down" (no
+# connection), "cut" (a 200 whose body breaks off) or "local" (a 200 curl cannot write out).
+# Writes what deploy.sh's --write-out '\n%{http_code}' asks for, or the status alone.
 cat >"$sandbox/bin/curl" <<EOF
 #!/usr/bin/env bash
-status=\$(cat -- "$sandbox/registry-status" 2>/dev/null || echo 401)
-[[ \$status != down ]] || { printf 000; exit 7; }
-printf '%s' "\$status"
+out=/dev/stdout config= accept= format='%{http_code}'
+while ((\$#)); do
+	case \$1 in
+	--output) out=\$2 && shift ;;
+	--write-out) format=\$2 && shift ;;
+	--config) config=\$(cat) && shift ;;
+	-H) [[ \$2 != Accept:* ]] || accept=\$2 && shift ;;
+	--max-time | --range) shift ;;
+	-*) ;;
+	*) url=\$1 ;;
+	esac
+	shift
+done
+digest=\${url##*/sha256:}
+case \$url in
+*/v2/) kind=root status=401 body= ;;
+*/token\?*) kind=token status=200 body='{"token":"synthetic"}' ;;
+*/manifests/sha256:*)
+	kind=manifest status=404 body='{"errors":[{"code":"MANIFEST_UNKNOWN"}]}'
+	[[ ! -e $sandbox/manifests/\$digest || \$accept != *manifest.v2+json* ]] ||
+		{ status=200 && body=\$(<"$sandbox/manifests/\$digest"); }
+	;;
+*/blobs/sha256:*) kind=blob status=404 body= && [[ ! -e $sandbox/blobs/\$digest ]] || status=206 body=x ;;
+*) exit 6 ;;
+esac
+[[ \$kind == root || \$kind == token || \$config == 'header = "Authorization: Bearer synthetic"' ]] ||
+	status=401 body=
+for f in "registry-status-\$digest" "registry-status-\$kind" registry-status; do
+	[[ ! -e $sandbox/\$f ]] || { status=\$(<"$sandbox/\$f") && break; }
+done
+answer() { printf '%s' "\$1" >"\$out" && printf "\${format//'%{http_code}'/\$2}"; }
+case \$status in
+down) answer '' 000 && exit 7 ;;
+cut) answer "\${body:0:2}" 200 && exit 18 ;;
+local) printf "\${format//'%{http_code}'/200}" && exit 23 ;;
+*) answer "\$body" "\$status" ;;
+esac
 EOF
 # npm makes the files a host build keeps; the account's Node lists its migrations.
 cat >"$sandbox/bin/npm" <<'EOF'
@@ -199,7 +240,31 @@ image() { # <commit> [migrations...]; prints the image by digest (another one wi
 	echo "<!doctype html><title>$sha</title>" >"$sandbox/registry/$d/web/index.html"
 	echo "const URLS = [];" >"$sandbox/registry/$d/web/sw.js"
 	printf '%s\n' Initial1 "$@" >"$sandbox/registry/$d/migrations"
+	registry_manifest "$d"
 	echo "ghcr.io/eduard-cc/ember@sha256:$d"
+}
+# What the registry serves for an image: its manifest, a config and two layers. With INDEX
+# set, the digest names an index of an arm64 image and the image of the daemon's amd64.
+registry_manifest() { # <digest>
+	local d=$1 m blobs=() b
+	mkdir -p "$sandbox/manifests" "$sandbox/blobs"
+	for b in config layer1 layer2; do blobs+=("$(sha256sum <<<"$b $d" | cut -c1-64)"); done
+	touch "${blobs[@]/#/$sandbox/blobs/}"
+	m='{"schemaVersion":2,"mediaType":"application/vnd.docker.distribution.manifest.v2+json",'
+	m+="\"config\":{\"digest\":\"sha256:${blobs[0]}\"},"
+	m+="\"layers\":[{\"digest\":\"sha256:${blobs[1]}\"},{\"digest\":\"sha256:${blobs[2]}\"}]}"
+	if [[ -z ${INDEX:-} ]]; then
+		echo "$m" >"$sandbox/manifests/$d"
+		return
+	fi
+	local amd64 arm64
+	amd64=$(sha256sum <<<"amd64 $d" | cut -c1-64) arm64=$(sha256sum <<<"arm64 $d" | cut -c1-64)
+	echo "$m" >"$sandbox/manifests/$amd64"
+	echo '{"schemaVersion":2,"mediaType":"application/vnd.oci.image.manifest.v1+json"}' >"$sandbox/manifests/$arm64"
+	printf '%s' '{"schemaVersion":2,"mediaType":"application/vnd.oci.image.index.v1+json","manifests":[' \
+		"{\"digest\":\"sha256:$arm64\",\"platform\":{\"architecture\":\"arm64\",\"os\":\"linux\"}}," \
+		"{\"digest\":\"sha256:$amd64\",\"platform\":{\"architecture\":\"amd64\",\"os\":\"linux\"}}]}" \
+		>"$sandbox/manifests/$d"
 }
 next_run=100
 # A green push run of <commit> whose ember-image artifact holds <record> (printf format,
@@ -273,17 +338,57 @@ green_run "$c1" "$i_missing $c1\n"
 [[ $(deploy "$c1") == 1 ]] && said 'could not pull' || fail 'a missing image must refuse'
 : >"$runs"
 green_run "$c1" "$i1 $c1\n"
-# Whether a failed pull is retried depends on the registry's own answer, never the message.
+# A failed pull is judged by what the registry answers along the pull's own path, never by
+# the message: no answer, 429 or 5xx for the token, the manifest or a blob retries later,
+# even while /v2/ answers normally.
 echo 'pull failed' >"$sandbox/pull-error"
 for status in down 503 429; do
 	echo "$status" >"$sandbox/registry-status"
 	[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' || fail "an unavailable registry ($status) must retry later"
 done
 rm -- "$sandbox/registry-status"
-# A pull that fails on this host (a full disk, say) is a failed deploy, not a retry, even when
-# the message mentions a timeout.
+: >"$runs"
+i_index=$(INDEX=1 SALT=index image "$c1")
+green_run "$c1" "$i_index $c1\n"
+for kind in token manifest blob; do
+	for status in 503 502 429 408 down cut; do
+		echo "$status" >"$sandbox/registry-status-$kind"
+		[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' ||
+			fail "an unavailable $kind ($status) must retry later"
+		rm -- "$sandbox/registry-status-$kind"
+	done
+done
+# The image's own parts: the manifest of this platform and its last layer.
+amd64=$(sha256sum <<<"amd64 ${i_index#*@sha256:}" | cut -c1-64)
+layer2=$(sha256sum <<<"layer2 ${i_index#*@sha256:}" | cut -c1-64)
+for part in "$amd64" "$layer2"; do
+	echo 503 >"$sandbox/registry-status-$part"
+	[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' || fail "an unavailable part ($part) must retry later"
+	echo 404 >"$sandbox/registry-status-$part"
+	[[ $(deploy "$c1") == 1 ]] && said "could not pull $i_index (HTTP 404" || fail "a missing part ($part) must fail the deploy"
+	rm -- "$sandbox/registry-status-$part"
+done
+# The registry's definite answer that the image is missing or not ours to pull is final, and
+# so is a curl failure on this host.
+for refusal in manifest:404 blob:404 token:403 manifest:401 blob:403 token:local blob:local; do
+	echo "${refusal#*:}" >"$sandbox/registry-status-${refusal%:*}"
+	[[ $(deploy "$c1") == 1 ]] && said "could not pull $i_index" || fail "a registry refusal ($refusal) must fail the deploy"
+	rm -- "$sandbox/registry-status-${refusal%:*}"
+done
+echo riscv64 >"$sandbox/daemon-arch"
+[[ $(deploy "$c1") == 1 ]] && said 'HTTP 404 manifest for linux/riscv64' || fail 'an index without this platform must fail the deploy'
+rm -- "$sandbox/daemon-arch"
+# A pull that fails while the registry serves every part is tried once more, and fails the
+# deploy if it fails again: the failure is on this host (a full disk, say), even when the
+# message mentions a timeout.
 echo 'write /app/server/node_modules/rxjs/internal/operators/timeout.js: no space left on device' >"$sandbox/pull-error"
-[[ $(deploy "$c1") == 1 ]] && said 'no space left on device' || fail 'a local pull failure must fail the deploy'
+for record in "$i_index $c1\n" "$i1 $c1\n"; do
+	: >"$runs"
+	green_run "$c1" "$record"
+	: >"$log"
+	[[ $(deploy "$c1") == 1 ]] && said 'no space left on device' || fail 'a local pull failure must fail the deploy'
+	[[ $(grep -c '^pull ' "$log") == 2 ]] || fail "a local pull failure must be pulled twice: $(<"$log")"
+done
 rm -- "$sandbox/pull-error"
 d=${i1#*@sha256:}
 for labels in "$c0 https://github.com/eduard-cc/ember" "$c1 https://github.com/someone/ember" ' '; do
@@ -291,6 +396,12 @@ for labels in "$c0 https://github.com/eduard-cc/ember" "$c1 https://github.com/s
 	[[ $(deploy "$c1") == 1 ]] && said 'is labelled' || fail "wrong labels must refuse: $labels"
 done
 echo "$c1 https://github.com/eduard-cc/ember" >"$sandbox/registry/$d/labels"
+# A pull that fails once while the registry serves every part succeeds when tried again
+# (here up to the launcher check below).
+echo 'unexpected EOF' >"$sandbox/pull-error-once"
+: >"$log"
+[[ $(deploy "$c1") == 1 ]] && said 'run ops/install.sh' || fail 'a pull that succeeds when tried again must deploy'
+[[ $(grep -c '^pull ' "$log") == 2 ]] || fail "a failed pull must be tried once more: $(<"$log")"
 live "$c0" || fail 'nothing may have switched yet'
 
 # The installed launcher must be this checkout's before an image release can start.

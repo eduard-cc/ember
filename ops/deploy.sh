@@ -89,21 +89,89 @@ image_record() {
 	die "no green CI run of ${sha:0:12}'s code recorded an image; refusing"
 }
 
-# Pulls an image by digest, then checks that its own labels name this repository and the
-# commit. A failed pull is retried later only when the registry itself cannot be reached or
-# answers 429 or 5xx, judged by asking it, never by the error text; anything else (an image
-# it does not have, a full disk) fails the deploy.
-fetch_image() {
-	local image=$1 commit=$2 pulled labels status
-	log "pulling $image, the CI image of ${commit:0:12}"
-	pulled=$(docker pull --quiet "$image" 2>&1) || {
-		status=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 15 "https://${image%%/*}/v2/") ||
-			status=000
-		if [[ $status == 000 || $status == 429 || $status == 5?? ]]; then
-			retry_later "could not reach the registry for $image (HTTP $status; $(tail -n 1 <<<"$pulled"))"
+# One registry request for registry_failure. Sets $status to "HTTP <code>"; "no answer
+# (curl exit <n>)" when the network failed: no connection, a time-out, a body that broke off;
+# or "curl exit <n>" for any other curl failure, which is this host's (it never fails
+# like that for the registry's sake). The body stays in memory, in $body. With a token (the
+# caller's $token), it goes through curl's stdin config, never its arguments.
+registry_ask() {
+	local out rc=0
+	out=$(curl --silent --max-time 15 --write-out '\n%{http_code}' "$@") || rc=$?
+	body=${out%$'\n'*} status="HTTP ${out##*$'\n'}"
+	case $rc in
+	0) [[ $status =~ ^HTTP\ [0-9]{3}$ ]] || status='no answer (no HTTP status)' ;;
+	5 | 6 | 7 | 16 | 18 | 28 | 35 | 52 | 55 | 56 | 92) status="no answer (curl exit $rc)" ;;
+	*) status="curl exit $rc" ;;
+	esac
+}
+registry_get() { registry_ask --config - "$@" <<<"header = \"Authorization: Bearer $token\""; }
+
+# After a failed pull, asks the registry for each part the pull fetches, in order: a pull
+# token, the manifest by digest (for an index, the manifest of the daemon's platform), then
+# the config and every layer, one byte each, following the redirect to blob storage. Prints
+# the first answer that is not a success as "<status> <part>", and nothing when the registry
+# serves every part.
+registry_failure() {
+	local registry=${1%%/*} name=${1#*/} digest=${1#*@} body status token arch part blobs accept
+	name=${name%@*}
+	accept='Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json'
+	accept+=', application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json'
+	part=token
+	registry_ask "https://$registry/token?scope=repository:$name:pull&service=$registry"
+	if [[ $status == 'HTTP 200' ]]; then
+		token=$(jq -er '.token | strings' <<<"$body" 2>/dev/null) || status='no answer (no token in the reply)'
+	fi
+	if [[ $status == 'HTTP 200' ]]; then
+		part=manifest
+		registry_get -H "$accept" "https://$registry/v2/$name/manifests/$digest"
+	fi
+	if [[ $status == 'HTTP 2'?? ]] && jq -e '.manifests | arrays' <<<"$body" >/dev/null 2>&1; then
+		# An index: docker pulls the manifest of its own platform.
+		arch=$(docker version --format '{{.Server.Arch}}') || arch=amd64
+		part="manifest for linux/$arch"
+		digest=$(jq -r --arg arch "$arch" 'first(.manifests[] |
+			select(.platform.os == "linux" and .platform.architecture == $arch) | .digest) // empty' <<<"$body")
+		if [[ $digest =~ ^sha256:[0-9a-f]{64}$ ]]; then
+			registry_get -H "$accept" "https://$registry/v2/$name/manifests/$digest"
+		else
+			status='HTTP 404'
 		fi
-		die "could not pull $image ($(tail -n 1 <<<"$pulled"))"
-	}
+	fi
+	if [[ $status == 'HTTP 2'?? ]]; then
+		# A manifest that does not list its parts is a broken answer, not a refusal.
+		blobs=$(jq -er '.config.digest, .layers[].digest' <<<"$body" 2>/dev/null) ||
+			status='no answer (no parts in the manifest)'
+		for digest in $blobs; do
+			part="blob $digest"
+			[[ $digest =~ ^sha256:[0-9a-f]{64}$ ]] || { status='no answer (no parts in the manifest)' && break; }
+			registry_get --location --range 0-0 "https://$registry/v2/$name/blobs/$digest"
+			[[ $status == 'HTTP 2'?? ]] || break
+		done
+	fi
+	[[ $status == 'HTTP 2'?? ]] || echo "$status $part"
+}
+
+# Pulls an image by digest, then checks that its own labels name this repository and the
+# commit. A failed pull is judged by the registry's answers along the pull's path, never by
+# the error text: no answer, 408, 429 or 5xx is retried later; any other refusal (an image
+# it does not have, no access) or a local curl failure fails the deploy. When the registry
+# serves every part, the pull is tried once more, and a second failure is this host's (a
+# full disk) and fails the deploy.
+fetch_image() {
+	local image=$1 commit=$2 pulled labels failed tries=0
+	log "pulling $image, the CI image of ${commit:0:12}"
+	until pulled=$(docker pull --quiet "$image" 2>&1); do
+		failed=$(registry_failure "$image")
+		case $failed in
+		'') ;;
+		'no answer '* | 'HTTP 408 '* | 'HTTP 429 '* | 'HTTP 5'[0-9][0-9]' '*)
+			retry_later "could not reach the registry for $image ($failed; $(tail -n 1 <<<"$pulled"))"
+			;;
+		*) die "could not pull $image ($failed; $(tail -n 1 <<<"$pulled"))" ;;
+		esac
+		((++tries < 2)) || die "could not pull $image although the registry serves all of it ($(tail -n 1 <<<"$pulled"))"
+		log "the registry serves all of $image; pulling it again"
+	done
 	labels=$(docker image inspect --format \
 		'{{index .Config.Labels "org.opencontainers.image.revision"}} {{index .Config.Labels "org.opencontainers.image.source"}}' \
 		"$image") || die "could not inspect $image"
