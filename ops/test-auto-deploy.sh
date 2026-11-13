@@ -49,7 +49,7 @@ git clone --quiet "$sandbox/origin.git" "$sandbox/checkout"
 # The scripts under test live in the checkout, as on the host; deploy.sh is a stub that
 # records the commit and switches `current` unless told to fail with a given exit code.
 mkdir -p "$sandbox/checkout/ops"
-cp -- "$SCRIPT_DIR/auto-deploy.sh" "$SCRIPT_DIR/lib.sh" "$SCRIPT_DIR/notify.sh" "$sandbox/checkout/ops/"
+cp -- "$SCRIPT_DIR"/{auto-deploy.sh,lib.sh,docker-host.sh,notify.sh} "$sandbox/checkout/ops/"
 # Told "killed", it terminates auto-deploy mid-deploy, as a systemd timeout would. Like
 # the real one it takes the deploy lock first, which it inherits from auto-deploy.
 cat >"$sandbox/checkout/ops/deploy.sh" <<EOF
@@ -169,6 +169,7 @@ c5=$c5b
 # rollbacks follow, until a newer commit lands.
 rm -f -- "$EMBER_HOME/auto-deploy.hold"
 ln -sfn "releases/$c3" "$EMBER_HOME/current"
+# shellcheck source=/dev/null # the sandbox copy of ops/lib.sh
 for _ in 1 2; do (SCRIPT_DIR=$sandbox/checkout/ops && source "$SCRIPT_DIR/lib.sh" && hold_main); done
 run 'after rollbacks'
 [[ $(held_sha) == "$c5" && $(deploy_count) == 7 ]] && live "$c3" || fail 'main must stay off after a rollback'

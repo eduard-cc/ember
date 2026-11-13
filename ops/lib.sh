@@ -2,24 +2,38 @@
 # Shared by deploy.sh and rollback.sh; not executable on its own.
 #
 # Layout (EMBER_HOME, default ~/.local/share/ember):
-#   releases/<sha>/   built web shell (dist/) and server (server/dist, production node_modules)
+#   releases/<sha>/   a release, one of two kinds:
+#                     image: IMAGE (the image by digest) and dist/, the web shell copied out of it
+#                     host-built: dist/ and server/ (server/dist, production node_modules)
 #   current           symlink to the serving release; ember.service and EMBER_WEB_ROOT use it
 #   history           healthy deploys, oldest first; rollback pops it like a stack
 #   deploy.lock       held by every deploy or rollback
 #   auto-deploy.hold  a main commit ops/auto-deploy.sh must not deploy
 set -Eeuo pipefail
 shopt -s inherit_errexit
+# Byte-wise matching: the image and digest patterns below must only ever match ASCII.
+export LC_ALL=C
 
 export PATH=$HOME/.local/bin:$PATH
 EMBER_HOME=${EMBER_HOME:-$HOME/.local/share/ember}
 EMBER_ENV=${EMBER_ENV:-$HOME/.config/ember/runtime.env}
 EMBER_UNIT=${EMBER_UNIT:-ember.service}
+# The unit whose rootlesskit publishes container ports on loopback.
+EMBER_DOCKER_UNIT=${EMBER_DOCKER_UNIT:-ember-docker.service}
 RELEASES=$EMBER_HOME/releases
 CURRENT=$EMBER_HOME/current
 HISTORY=$EMBER_HOME/history
 HOLD=$EMBER_HOME/auto-deploy.hold
 REPO=${EMBER_GITHUB_REPO:-eduard-cc/ember}
 GIT=(git -C "$SCRIPT_DIR/..")
+# The only image a release may name, always by digest; ops/start.sh checks the same pattern.
+IMAGE_PATTERN='^ghcr\.io/eduard-cc/ember@sha256:[0-9a-f]{64}$'
+# shellcheck disable=SC2034 # used by ops/deploy.sh
+IMAGE_SOURCE=https://github.com/eduard-cc/ember
+# The container ember.service runs for an image release (ops/start.sh).
+APP_CONTAINER=ember-app
+# shellcheck source=ops/docker-host.sh
+source "$SCRIPT_DIR/docker-host.sh"
 
 log() { echo "ember-${ACTION:-ops}: $*"; }
 die() {
@@ -40,22 +54,44 @@ lock() {
 	}
 }
 
-current_release() { [[ -L $CURRENT ]] && basename -- "$(readlink -- "$CURRENT")" || true; }
+current_release() { if [[ -L $CURRENT ]]; then basename -- "$(readlink -- "$CURRENT")"; fi; }
 
-# CI result for a commit on main: success, pending or failure. A push runs CI only for
-# its head commit, and a docs-only run tests no code, so any commit from the newest code
-# change up to $1 has the same code and may carry the run. A cancelled run is not green;
-# a commit with no run yet is pending. Fails when GitHub cannot be read.
-ci_state() {
+# An image release has an IMAGE entry, whatever it is; a host-built release has none.
+is_image_release() { [[ -e $1/IMAGE || -L $1/IMAGE ]]; }
+
+# The image a release folder names, when it is an image release: IMAGE holds exactly one
+# line, the image by digest. Fails for a host-built release and for anything malformed.
+release_image() {
+	local file=$1/IMAGE image
+	[[ -f $file && ! -L $file ]] || return 1
+	image=$(<"$file") 2>/dev/null
+	# Byte for byte, so no NUL or other byte the substitution drops can pass.
+	[[ $image =~ $IMAGE_PATTERN ]] && cmp -s -- "$file" <(printf '%s\n' "$image") || return 1
+	echo "$image"
+}
+
+# Push runs of CI for a commit on main, newest first, as "<head sha> <status> <conclusion>
+# <run id>". A push runs CI only for its head commit, and a docs-only run tests no code, so
+# any commit from the newest code change up to $1 has the same code and may carry the run.
+# Fails when GitHub cannot be read.
+ci_runs() {
 	local code_sha same_code runs
 	code_sha=$("${GIT[@]}" log -1 --format=%H "$1" -- . ':(exclude,glob)**/*.md') || return 1
 	same_code=$({ echo "$code_sha"; "${GIT[@]}" rev-list "$code_sha..$1"; }) || return 1
 	runs=$(gh run list -R "$REPO" --workflow CI --event push --branch main --limit 100 \
-		--json headSha,status,conclusion --jq '.[] | "\(.headSha) \(.status) \(.conclusion)"') || return 1
-	runs=$(grep -Ff <(echo "$same_code") <<<"$runs" || true)
-	if grep -q ' success$' <<<"$runs"; then
+		--json headSha,status,conclusion,databaseId \
+		--jq '.[] | "\(.headSha) \(.status) \(.conclusion) \(.databaseId)"') || return 1
+	awk 'NR == FNR { same[$1]; next } $1 in same' <(echo "$same_code") <(echo "$runs")
+}
+
+# CI result for a commit on main: success, pending or failure. A cancelled run is not
+# green; a commit with no run yet is pending. Fails when GitHub cannot be read.
+ci_state() {
+	local runs
+	runs=$(ci_runs "$1") || return 1
+	if awk '$3 == "success" { found = 1 } END { exit !found }' <<<"$runs"; then
 		echo success
-	elif [[ -z $runs ]] || grep -qv ' completed ' <<<"$runs"; then
+	elif [[ -z $runs ]] || awk '$2 != "completed" { found = 1 } END { exit !found }' <<<"$runs"; then
 		echo pending
 	else
 		echo failure
@@ -117,13 +153,13 @@ shell_served() {
 		return
 	}
 	# The URLS line is written by apps/web/scripts/pwa-build.ts.
-	mapfile -t urls < <(node -e '
-		const match = /^const URLS = (\[.*\]);$/m.exec(require("node:fs").readFileSync(process.argv[1], "utf8"));
+	mapfile -t urls < <(release_node "$CURRENT" -e '
+		const match = /^const URLS = (\[.*\]);$/m.exec(require("node:fs").readFileSync(0, "utf8"));
 		if (!match) throw new Error("no URLS list");
 		const urls = JSON.parse(match[1]);
 		if (!urls.length) throw new Error("empty URLS list");
 		for (const url of new Set(["/sw.js", "/manifest.webmanifest", ...urls])) console.log(url);
-	' "$dist/sw.js" 2>/dev/null || echo ERROR)
+	' <"$dist/sw.js" 2>/dev/null || echo ERROR)
 	[[ ${#urls[@]} -gt 2 && ${urls[-1]} != ERROR ]] || {
 		unhealthy 'could not read the precache list from dist/sw.js'
 		return
@@ -141,11 +177,70 @@ shell_served() {
 	done
 }
 
-# The unit's own process owns the port (not a leftover one), the API answers on
-# loopback and through Serve, and Serve returns this release's shell and every file its
-# service worker precaches. Startup runs migrations, so the first answer may take a while.
+# Runs the Node of a release with the given arguments and stdin: the image's own Node, with
+# no network or capabilities, for an image release; the account's Node in server/ otherwise.
+release_node() {
+	local release=$1 image
+	shift
+	if image=$(release_image "$release"); then
+		docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+			--entrypoint node "$image" "$@"
+	elif is_image_release "$release"; then
+		log "$release/IMAGE does not name the image by digest" >&2
+		return 1
+	else
+		(cd "$release/server" && node "$@")
+	fi
+}
+
+# The process listening on the port is the serving release's, not a leftover one: for a
+# host-built release the unit's own process; for an image release the container
+# ember.service started from exactly that image, published on loopback only by the
+# daemon's rootlesskit.
+owns_port() {
+	local port=$1 image want got pid pids
+	if ! is_image_release "$CURRENT"; then
+		pid=$(systemctl --user show --property MainPID --value "$EMBER_UNIT")
+		ss -ltnpH "sport = :$port" | grep -q "pid=$pid," || {
+			log "port $port is not served by $EMBER_UNIT (pid $pid)" >&2
+			return 1
+		}
+		return 0
+	fi
+	image=$(release_image "$CURRENT") || {
+		log "$CURRENT/IMAGE does not name the image by digest" >&2
+		return 1
+	}
+	want=$(docker image inspect --format '{{.Id}}' "$image") || {
+		log "$image is not in Ember's Docker daemon" >&2
+		return 1
+	}
+	got=$(docker inspect --format \
+		"{{.State.Running}} {{.Image}} {{range (index .NetworkSettings.Ports \"$port/tcp\")}}{{.HostIp}}:{{.HostPort}} {{end}}" \
+		"$APP_CONTAINER" 2>/dev/null) || got=
+	[[ $got == "true $want 127.0.0.1:$port " ]] || {
+		log "$APP_CONTAINER is not running $image on 127.0.0.1:$port only" >&2
+		return 1
+	}
+	mapfile -t pids < <(ss -ltnpH "sport = :$port" | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u)
+	((${#pids[@]})) || {
+		log "nothing listens on port $port" >&2
+		return 1
+	}
+	for pid in "${pids[@]}"; do
+		[[ $(cat "/proc/$pid/comm" 2>/dev/null) == rootlesskit &&
+			$(cat "/proc/$pid/cgroup" 2>/dev/null) == */"$EMBER_DOCKER_UNIT" ]] || {
+			log "port $port is not published by $EMBER_DOCKER_UNIT (pid $pid)" >&2
+			return 1
+		}
+	done
+}
+
+# The serving release owns the port (owns_port), the API answers on loopback and through
+# Serve, and Serve returns this release's shell and every file its service worker
+# precaches. Startup runs migrations, so the first answer may take a while.
 healthy() {
-	local port origin pid deadline=$((SECONDS + ${EMBER_START_TIMEOUT:-120}))
+	local port origin deadline=$((SECONDS + ${EMBER_START_TIMEOUT:-120}))
 	HEALTH_DETAIL=
 	port=$(setting EMBER_PORT)
 	origin=$(setting EMBER_ORIGIN)
@@ -160,11 +255,7 @@ healthy() {
 		}
 		sleep 2
 	done
-	pid=$(systemctl --user show --property MainPID --value "$EMBER_UNIT")
-	ss -ltnpH "sport = :$port" | grep -q "pid=$pid," || {
-		log "port $port is not served by $EMBER_UNIT (pid $pid)" >&2
-		return 1
-	}
+	owns_port "$port" || return 1
 	fetch --output /dev/null "$origin/api/v1/health" || return 1
 	fetch "$origin/" | cmp -s - "$CURRENT/dist/index.html" || {
 		log 'Tailscale Serve did not return the current release shell' >&2

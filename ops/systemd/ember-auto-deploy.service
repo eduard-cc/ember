@@ -1,5 +1,5 @@
 # User unit installed by ops/install.sh, started by ember-auto-deploy.timer: deploys
-# the head of main once its CI has passed (ops/auto-deploy.sh). The build runs in the
+# the head of main once its CI has passed (ops/auto-deploy.sh). The deploy runs in the
 # capped jobs slice; ops/deploy.sh restarts ember.service in its own slice.
 [Unit]
 Description=Ember auto-deploy of main
