@@ -4567,12 +4567,12 @@
       {
         "file": "hip-thrust-barbell-0.webp",
         "width": 240,
-        "height": 95
+        "height": 163
       },
       {
         "file": "hip-thrust-barbell-1.webp",
         "width": 240,
-        "height": 108
+        "height": 153
       }
     ],
     "sources": [
@@ -6576,12 +6576,12 @@
     "images": [
       {
         "file": "jump-rope-0.webp",
-        "width": 133,
+        "width": 128,
         "height": 240
       },
       {
         "file": "jump-rope-1.webp",
-        "width": 155,
+        "width": 144,
         "height": 240
       }
     ],
@@ -6639,12 +6639,12 @@
       {
         "file": "rowing-machine-0.webp",
         "width": 240,
-        "height": 129
+        "height": 141
       },
       {
         "file": "rowing-machine-1.webp",
         "width": 240,
-        "height": 126
+        "height": 132
       }
     ],
     "sources": [
@@ -6700,12 +6700,12 @@
     "images": [
       {
         "file": "ski-erg-0.webp",
-        "width": 237,
+        "width": 154,
         "height": 240
       },
       {
         "file": "ski-erg-1.webp",
-        "width": 238,
+        "width": 163,
         "height": 240
       }
     ],
@@ -6949,12 +6949,12 @@
       {
         "file": "snatch-barbell-0.webp",
         "width": 240,
-        "height": 143
+        "height": 163
       },
       {
         "file": "snatch-barbell-1.webp",
-        "width": 240,
-        "height": 197
+        "width": 225,
+        "height": 240
       }
     ],
     "sources": [

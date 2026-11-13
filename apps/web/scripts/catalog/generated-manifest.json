@@ -177,9 +177,9 @@
     {
       "name": "Hip Thrust (Barbell)",
       "status": "accepted",
-      "attempts": 8,
-      "sha256": "3545482194fca78b9b3412dc3eff409f647cefff4400763df7d23103b88cf0a7",
-      "startSha256": "b386331fc90bec8ba3dc20a0c49b8a8faef5d5212e4efd501c86bfd20a2a9875"
+      "attempts": 21,
+      "sha256": "f05b90587ea51bc4a4143e3afbbef9f1c9b3939c2babd581068e24b15a683694",
+      "startSha256": "dd3ee24f220fc9b2f3ae60f28a5075e228af531b528c9782828ea9dc15b2bc93"
     },
     {
       "name": "Hollow Hold",
@@ -203,9 +203,9 @@
     {
       "name": "Jump Rope",
       "status": "accepted",
-      "attempts": 3,
-      "sha256": "9551152e8c667269534a3c666a488b87f9f1acabd33dfc84edb8c502880120be",
-      "startSha256": "04cf08906a86090f1c020c5463c2a83fce8e570c9309047e6c27c297a1bccd47"
+      "attempts": 15,
+      "sha256": "5b06aa59bcd3ed808ec912c5e62c5406f36f4428abd2b4873f4012f5b9041adb",
+      "startSha256": "c184b72ee0d585a6e0491bd256359ec4064a1e0a261aa3f3f0d721621cab45f8"
     },
     {
       "name": "Jumping Jack",
@@ -357,9 +357,9 @@
     {
       "name": "Rowing (Machine)",
       "status": "accepted",
-      "attempts": 11,
-      "sha256": "233a94c1c6509063b3f668099a919a66362bcf6aaefb390f32ab7556ca3fc4ce",
-      "startSha256": "1ec919f04cee0682959cf698fad7dd6cdf148d44b5a94bc6f476fc6067b8a9f8"
+      "attempts": 17,
+      "sha256": "fcaa8341a8ff976b06ff932c9cf58ff945837e26a34cb11cfb7fc6c1d7a5cc92",
+      "startSha256": "ef9e6794fdb3d4f1f0c757851c72f19b9a839e419fa256029bf8b83f8383bc66"
     },
     {
       "name": "Running (Treadmill)",
@@ -404,16 +404,16 @@
     {
       "name": "Ski Erg",
       "status": "accepted",
-      "attempts": 7,
-      "sha256": "207c16588bb0b16ddd0e0d59694d068cd5e9436a5eba055b43a6bdd637ff9f75",
-      "startSha256": "2944d569bedccf16d136857d341dd2afbc05386eff247f048f42451ec839790d"
+      "attempts": 13,
+      "sha256": "36e4d2e52807ca8644e14a825dc8541334bf4e810209be10c56cc2ac42eb2a19",
+      "startSha256": "1a37b926e0931da1b650d35a8d7a8286829ee42fbe3a43e9ba79471c3a010622"
     },
     {
       "name": "Snatch (Barbell)",
       "status": "accepted",
-      "attempts": 1,
-      "sha256": "fe4c44b3b1fa8cba136ffb07fe748c3ecda40c96884068d285ee434fe700bf59",
-      "startSha256": "1447d1a3325c0bdd2db084bf9cd1af64c2899ba668856a2b35d1fab4e69785f8"
+      "attempts": 9,
+      "sha256": "7a153f4980172c4fa2753c785e2d4222243095db144714c53be486f39af5dc35",
+      "startSha256": "10b93c5c94ce37f172247ebfdb48d0c806751a3175e73e311a4a5f2420c5c90c"
     },
     {
       "name": "Split Squat (Dumbbell)",
