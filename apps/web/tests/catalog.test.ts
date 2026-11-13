@@ -191,7 +191,24 @@ describe('bundled exercise catalog', () => {
     const licensed = catalog.filter((e) =>
       e.sources.some((s) => s.kind === 'illustration' && s.license !== 'app-owned'),
     );
-    expect(licensed.length).toBeGreaterThanOrEqual(159);
+    // Everkinetic's unpublished drawings (same artist and licence) cover these exercises.
+    for (const name of [
+      'Ab Wheel',
+      'Cable Crunch',
+      'Hanging Knee Raise',
+      'Russian Twist',
+      'Woodchopper (Cable)',
+    ])
+      expect(catalogEntry(name)?.sources, name).toEqual([
+        expect.objectContaining({
+          kind: 'illustration',
+          author: 'Everkinetic',
+          license: 'CC BY-SA 4.0',
+          url: 'https://github.com/everkinetic/data',
+          changes: 'cropped, resized, recoloured and line width normalised',
+        }),
+      ]);
+    expect(licensed.length).toBeGreaterThanOrEqual(164);
     for (const entry of licensed)
       expect(entry.sources.some((s) => s.license === 'app-owned')).toBe(false);
   });
