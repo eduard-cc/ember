@@ -71,6 +71,10 @@ pull)
 image)
 	sub=\$1
 	shift
+	if [[ \$sub == ls ]]; then
+		for f in "$sandbox/local"/*; do [[ ! -e \$f ]] || echo "ghcr.io/eduard-cc/ember@sha256:\${f##*/}"; done
+		exit
+	fi
 	d=\$(digest "\${@: -1}")
 	[[ -e $sandbox/local/\$d ]] || { echo "No such image" >&2; exit 1; }
 	case \$sub in
@@ -122,7 +126,18 @@ cat >"$sandbox/bin/systemctl" <<EOF
 #!/usr/bin/env bash
 echo "{ path=$HOME/.local/lib/ember/start.sh ; argv[]=$HOME/.local/lib/ember/start.sh ... }"
 EOF
-chmod +x "$sandbox/bin"/*
+# npm makes the files a host build keeps; the account's Node lists its migrations.
+cat >"$sandbox/bin/npm" <<'EOF'
+#!/usr/bin/env bash
+app=$2
+case $3 in
+ci) mkdir -p "$app/node_modules" && touch "$app/package.json" ;;
+run) mkdir -p "$app/dist" && touch "$app/dist/index.html" "$app/dist/trial.js" ;;
+esac
+EOF
+mkdir -p "$HOME/.local/bin"
+printf '#!/usr/bin/env bash\nprintf "Initial1\\nSecond2\\n"\n' >"$HOME/.local/bin/node"
+chmod +x "$sandbox/bin"/* "$HOME/.local/bin/node"
 export PATH=$sandbox/bin:$PATH
 
 git init --quiet --bare --initial-branch=main "$sandbox/origin.git"
@@ -163,10 +178,10 @@ ln -s "releases/$c0" "$EMBER_HOME/current"
 echo "$c0" >"$EMBER_HOME/history"
 
 # An image CI published for a commit: digest, labels, web shell and migrations.
-image() { # <commit> [migrations...]; prints the image by digest
+image() { # <commit> [migrations...]; prints the image by digest (another one with SALT set)
 	local sha=$1 d
 	shift
-	d=$(sha256sum <<<"image $sha" | cut -c1-64)
+	d=$(sha256sum <<<"image $sha ${SALT:-}" | cut -c1-64)
 	mkdir -p "$sandbox/registry/$d/web"
 	echo "$sha https://github.com/eduard-cc/ember" >"$sandbox/registry/$d/labels"
 	echo "<!doctype html><title>$sha</title>" >"$sandbox/registry/$d/web/index.html"
@@ -179,16 +194,17 @@ next_run=100
 # so a test can write a malformed one); no record means no artifact.
 green_run() { # <commit> [record]
 	next_run=$((next_run + 1))
-	echo "$1 completed success $next_run" >>"$runs"
+	# gh lists the newest run first.
+	{ echo "$1 completed success $next_run" && cat -- "$runs"; } >"$runs.new" && mv -- "$runs.new" "$runs"
 	(($# > 1)) || return 0
 	echo "$((next_run * 10))" >"$sandbox/artifacts/$next_run"
 	python3 -c 'import sys, zipfile
 with zipfile.ZipFile(sys.argv[1], "w") as z: z.writestr("ember-image", sys.argv[2].encode().decode("unicode_escape"))' \
 		"$sandbox/artifacts/$((next_run * 10)).zip" "$2"
 }
-deploy() { # <commit>; prints the exit code
+deploy() { # [--host-build] <commit>; prints the exit code
 	local rc=0
-	"$ops/deploy.sh" "$1" >"$sandbox/out" 2>&1 || rc=$?
+	"$ops/deploy.sh" "$@" >"$sandbox/out" 2>&1 || rc=$?
 	echo "$rc"
 }
 live() { [[ $(readlink -- "$EMBER_HOME/current") == "releases/$1" ]]; }
@@ -218,7 +234,7 @@ rm -- "$sandbox/artifacts-down"
 
 # Records that are not exactly one image by digest and the run's commit are refused.
 for record in "ghcr.io/eduard-cc/ember:main $c1\n" "${i1/eduard-cc/someone} $c1\n" "$i1 $c1\n$i1 $c1\n" \
-	"$i1 $c1" "$i1  $c1\n" "${i1}0 $c1\n"; do
+	"$i1 $c1" "$i1 $c1\0" "$i1 $c1\0\n" "$i1  $c1\n" "${i1}0 $c1\n"; do
 	: >"$runs"
 	green_run "$c1" "$record"
 	[[ $(deploy "$c1") == 1 ]] && said 'is not one image by digest and its commit' ||
@@ -339,7 +355,7 @@ logged "image rm $d1" || fail "a removed release's image should be removed"
 rollback && live "$c0" || fail 'rollback to the host-built release again'
 rm -- "$sandbox/local/$d3"
 : >"$log"
-[[ $(deploy "$c4") == 0 ]] && live "$c4" && said 'fetching the release again' && logged "pull $d3" ||
+[[ $(deploy "$c4") == 0 ]] && live "$c4" && said 'pulling' && logged "pull $d3" ||
 	fail 'a kept release without its image should be fetched again'
 
 # Five releases are kept from history, always including the host-built one until it
@@ -354,4 +370,29 @@ releases=$(find "$EMBER_HOME/releases" -mindepth 1 -maxdepth 1 -type d | wc -l)
 	fail "the five newest releases should be kept, found $releases"
 [[ -e $sandbox/local/$d3 ]] || fail 'the image of a kept release must stay in the daemon'
 ! grep -v '^image rm [0-9a-f]\{64\}$' "$log" | grep -q '^image rm' || fail 'images must be removed by digest'
+newest=$c
+
+# A newer green run of the same code that recorded another image replaces a kept release's
+# image instead of reusing it, and the image it replaced goes.
+mapfile -t kept < <(tail -n 3 "$EMBER_HOME/history")
+old=$(cut -d: -f3 <"$EMBER_HOME/releases/${kept[0]}/IMAGE")
+: >"$log"
+green_run "${kept[0]}" "$(SALT=rerun image "${kept[0]}" Second2) ${kept[0]}\n"
+[[ $(deploy "${kept[0]}") == 0 ]] && live "${kept[0]}" && said 'pulling' || fail 'a newer image record must be pulled'
+[[ $(<"$EMBER_HOME/releases/${kept[0]}/IMAGE") == *"$(sha256sum <<<"image ${kept[0]} rerun" | cut -c1-64)" ]] ||
+	fail 'the release must name the newer image'
+logged "image rm $old" || fail 'the replaced image should be removed'
+
+# --host-build never reuses an image release of the same commit, and the image it no longer
+# needs goes too.
+old=$(cut -d: -f3 <"$EMBER_HOME/releases/$newest/IMAGE")
+: >"$log"
+[[ $(deploy --host-build "$newest") == 0 ]] && live "$newest" && said "building $newest on this host" ||
+	fail '--host-build should build, not reuse an image release'
+[[ -d $EMBER_HOME/releases/$newest/server && ! -e $EMBER_HOME/releases/$newest/IMAGE ]] || fail '--host-build should make a host-built release'
+! logged pull && logged "image rm $old" || fail 'a host build must not pull, and should drop the image it replaced'
+: >"$log"
+[[ $(deploy --host-build "${kept[0]}") == 0 ]] && live "${kept[0]}" && said 'building' || fail '--host-build of another kept commit'
+[[ $(deploy --host-build "$newest") == 0 ]] && live "$newest" && said 'reusing the release' ||
+	fail '--host-build should reuse a host-built release'
 echo 'deploy checks passed'

@@ -64,8 +64,9 @@ is_image_release() { [[ -e $1/IMAGE || -L $1/IMAGE ]]; }
 release_image() {
 	local file=$1/IMAGE image
 	[[ -f $file && ! -L $file ]] || return 1
-	image=$(<"$file")
-	[[ $image =~ $IMAGE_PATTERN && $(stat -c %s -- "$file") == $((${#image} + 1)) ]] || return 1
+	image=$(<"$file") 2>/dev/null
+	# Byte for byte, so no NUL or other byte the substitution drops can pass.
+	[[ $image =~ $IMAGE_PATTERN ]] && cmp -s -- "$file" <(printf '%s\n' "$image") || return 1
 	echo "$image"
 }
 

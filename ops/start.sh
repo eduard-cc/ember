@@ -34,11 +34,11 @@ refuse() {
 	exit 1
 }
 [[ -f $current/IMAGE && ! -L $current/IMAGE ]] || refuse "$current/IMAGE is not a file"
-image=$(<"$current/IMAGE")
-# The same pattern as IMAGE_PATTERN in ops/lib.sh.
-[[ $image =~ ^ghcr\.io/eduard-cc/ember@sha256:[0-9a-f]{64}$ &&
-	$(stat -c %s -- "$current/IMAGE") == $((${#image} + 1)) ]] ||
+image=$(<"$current/IMAGE") 2>/dev/null
+# The same check as release_image in ops/lib.sh: one line, byte for byte.
+if ! [[ $image =~ ^ghcr\.io/eduard-cc/ember@sha256:[0-9a-f]{64}$ ]] || ! cmp -s -- "$current/IMAGE" <(printf '%s\n' "$image"); then
 	refuse "$current/IMAGE does not name the image by digest"
+fi
 [[ ${EMBER_PORT:-} =~ ^[0-9]+$ ]] || refuse 'EMBER_PORT is not set'
 # The live database's published port, or the development daemon's.
 database='^(postgres(ql)?://[^@/]+@)127\.0\.0\.1:5543[89](/[A-Za-z0-9_]+)$'

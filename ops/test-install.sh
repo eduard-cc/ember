@@ -242,6 +242,8 @@ for bad in 'ghcr.io/eduard-cc/ember:main' "ghcr.io/other/ember@sha256:$digest" "
 done
 printf 'ghcr.io/eduard-cc/ember@sha256:%s\n\n' "$digest" >"$ember/releases/image/IMAGE"
 refused 'an IMAGE with a second line'
+printf 'ghcr.io/eduard-cc/ember@sha256:%s\0' "$digest" >"$ember/releases/image/IMAGE"
+refused 'an IMAGE ending in a NUL byte'
 ln -sf /dev/null "$ember/releases/image/IMAGE"
 refused 'an IMAGE symlink'
 ln -sf "$sandbox/missing" "$ember/releases/image/IMAGE"

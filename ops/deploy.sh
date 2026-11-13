@@ -73,10 +73,12 @@ image_record() {
 			retry_later "could not download the image record of CI run $run"
 		# At most one short line; anything else is refused below.
 		unzip -p "$record.zip" ember-image 2>/dev/null | head -c 200 >"$record" || true
-		line=$(<"$record")
-		[[ $line =~ ^(ghcr\.io/eduard-cc/ember@sha256:[0-9a-f]{64})\ ([0-9a-f]{40})$ &&
-			$(stat -c %s -- "$record") == $((${#line} + 1)) ]] ||
+		line=$(<"$record") 2>/dev/null
+		# Byte for byte, so no NUL or other byte the substitution drops can pass.
+		if ! [[ $line =~ ^(ghcr\.io/eduard-cc/ember@sha256:[0-9a-f]{64})\ ([0-9a-f]{40})$ ]] ||
+			! cmp -s -- "$record" <(printf '%s\n' "$line"); then
 			die "the image record of CI run $run is not one image by digest and its commit; refusing"
+		fi
 		rm -f -- "$record" "$record.zip"
 		[[ ${BASH_REMATCH[2]} == "$head" ]] ||
 			die "the image record of CI run $run names commit ${BASH_REMATCH[2]:0:12}, not the run's ${head:0:12}; refusing"
@@ -89,17 +91,22 @@ image_record() {
 # Leftovers of interrupted builds; the lock guarantees no build is running.
 find "$RELEASES" -mindepth 1 -maxdepth 1 \( -name '.build-*' -o -name '.image-record.*' \) -exec rm -rf -- {} +
 release=$RELEASES/$sha
-# A release kept from an earlier deploy (a roll-forward after a rollback) is reused, as long
-# as an image release still has its image.
-if [[ -f $release/.complete ]] && is_image_release "$release"; then
-	image=$(release_image "$release") || die "$release/IMAGE does not name the image by digest; refusing"
-	docker image inspect "$image" >/dev/null 2>&1 || {
-		log "$image is not in Ember's Docker daemon; fetching the release again"
-		rm -f -- "$release/.complete"
-	}
+# A release kept from an earlier deploy (a roll-forward after a rollback) is reused only when
+# it is what this deploy would make: a host-built release for --host-build, otherwise an image
+# release naming exactly the image CI recorded, still in Ember's Docker daemon.
+reuse=false
+if [[ $host_build == true ]]; then
+	[[ -f $release/.complete ]] && ! is_image_release "$release" && reuse=true
+else
+	record=$(image_record)
+	image=${record% *} commit=${record#* }
+	if [[ -f $release/.complete && $(release_image "$release" || true) == "$image" ]] &&
+		docker image inspect "$image" >/dev/null 2>&1; then
+		reuse=true
+	fi
 fi
 
-if [[ -f $release/.complete ]]; then
+if [[ $reuse == true ]]; then
 	log "reusing the release of $sha"
 elif [[ $host_build == true ]]; then
 	log "building $sha on this host"
@@ -135,8 +142,6 @@ elif [[ $host_build == true ]]; then
 	mv -T -- "$build" "$release"
 	trap - EXIT
 else
-	record=$(image_record)
-	image=${record% *} commit=${record#* }
 	log "pulling $image, the CI image of ${commit:0:12}"
 	pulled=$(docker pull --quiet "$image" 2>&1) || {
 		# A registry that answers that the image does not exist is final; anything else (no
@@ -238,21 +243,21 @@ write_history "${history[@]}" "$sha"
 log "deployed $sha and healthy"
 
 # Keep the newest releases from the deploy history, always including the live one, and the
-# images they name. An image no kept release names is removed, by its digest only.
+# images they name. Any other image of this repository in Ember's daemon (a removed release's,
+# or one a refused deploy pulled) is removed, by its digest only; nothing is ever pruned.
 mapfile -t keep < <(tac -- "$HISTORY" | awk '!seen[$0]++' | head -n "$KEEP_RELEASES")
-kept_images=() removed_images=()
 for dir in "$RELEASES"/*/; do
 	name=$(basename -- "$dir")
-	if [[ $name == "$sha" ]] || printf '%s\n' "${keep[@]}" | grep -qx -- "$name"; then
-		kept_images+=("$(release_image "$dir" || true)")
-		continue
-	fi
-	removed_images+=("$(release_image "$dir" || true)")
-	rm -rf -- "${RELEASES:?}/$name"
+	[[ $name == "$sha" ]] || printf '%s\n' "${keep[@]}" | grep -qx -- "$name" || rm -rf -- "${RELEASES:?}/$name"
 done
-for image in "${removed_images[@]}"; do
-	if [[ -z $image ]] || printf '%s\n' "${kept_images[@]}" | grep -qxF -- "$image"; then
-		continue
+kept_images=$(for dir in "$RELEASES"/*/; do release_image "$dir" || true; done)
+# Images pulled by digest have no tag, which plain `image ls` hides.
+images=$(docker image ls --all --digests --format '{{.Repository}}@{{.Digest}}' ghcr.io/eduard-cc/ember) || {
+	log "could not list the images in Ember's Docker daemon; old images stay" >&2
+	exit 0
+}
+while read -r image; do
+	if [[ $image =~ $IMAGE_PATTERN ]] && ! grep -qxF -- "$image" <<<"$kept_images"; then
+		docker image rm "$image" >/dev/null || log "could not remove $image; remove it by hand" >&2
 	fi
-	docker image rm "$image" >/dev/null || log "could not remove $image; remove it by hand" >&2
-done
+done <<<"$images"
