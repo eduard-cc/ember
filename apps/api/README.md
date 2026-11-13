@@ -1,6 +1,6 @@
 # Isolated local Ember API
 
-NestJS 11, TypeORM explicit PostgreSQL migrations, independent Zod document validation.
+NestJS 12, TypeORM explicit PostgreSQL migrations, independent Zod document validation.
 No registration, telemetry, queues, remote resources or active-draft storage.
 All fixtures are synthetic.
 

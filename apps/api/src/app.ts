@@ -1,6 +1,6 @@
 import {Body, Controller, Delete, Get, Module, Post, Query, Req, Res} from '@nestjs/common';
 import {NestFactory} from '@nestjs/core';
-import {NestExpressApplication} from '@nestjs/platform-express';
+import {ExpressAdapter, NestExpressApplication} from '@nestjs/platform-express';
 import compression from 'compression';
 import {Request, Response} from 'express';
 import 'reflect-metadata';
@@ -68,7 +68,12 @@ export async function createApp({indexHtml}: {indexHtml?: string} = {}) {
 	}
 	@Module({controllers: [Api]})
 	class AppModule {}
-	const app = await NestFactory.create<NestExpressApplication>(AppModule, {logger: false, bodyParser: false});
+	// An explicit adapter keeps Nest and Express on one copy of @nestjs/common under the test
+	// runner's TypeScript loader; Nest's default loads the adapter with a dynamic import.
+	const app = await NestFactory.create<NestExpressApplication>(AppModule, new ExpressAdapter(), {
+		logger: false,
+		bodyParser: false,
+	});
 	app.getHttpAdapter().getInstance().disable('x-powered-by');
 	// A fresh installation downloads the whole history feed and the app bundle; both are
 	// repetitive JSON/JS that gzip shrinks over 10x on slow phone links.
