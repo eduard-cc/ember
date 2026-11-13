@@ -98,6 +98,15 @@ describe('bundled exercise catalog', () => {
           expect(`${source.author} ${source.url} ${source.licenseUrl}`).not.toMatch(
             /everkinetic|wger/i,
           );
+          // Provenance links point at the catalog README in this repository and its section.
+          const readme = /^https:\/\/github\.com\/eduard-cc\/ember\/blob\/main\/(.+)$/.exec(
+            source.url,
+          )?.[1];
+          expect(readme && existsSync(`../../${readme}`)).toBe(true);
+          expect(readFileSync(`../../${readme}`, 'utf8')).toContain(
+            '\n## App-owned illustrations\n',
+          );
+          expect(source.licenseUrl).toBe(`${source.url}#app-owned-illustrations`);
         }
         expect(source.url).toMatch(/^https:\/\//);
       }
