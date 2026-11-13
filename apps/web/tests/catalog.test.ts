@@ -11,7 +11,7 @@ const strokeBand = [1.7, 2.7];
 
 /** Mean line width (px) of a drawing: 2 × ink area ÷ outline length. The outline is measured
  * with Crofton's formula over four directions, so diagonal lines count like straight ones.
- * Ink is alpha above half. Same measure as `stroke_width` in scripts/catalog/generate.py. */
+ * Ink is alpha above half. Same measure as `stroke_width` in scripts/catalog/stroke.py. */
 function strokeWidth({width, height, data}: ImageData) {
   const ink = (x: number, y: number) =>
     x >= 0 && y >= 0 && x < width && y < height && data[(y * width + x) * 4 + 3] > 127;
@@ -219,7 +219,7 @@ describe('bundled exercise catalog', () => {
     for (const image of catalog.flatMap((e) => e.images)) {
       const bytes = readFileSync(`src/catalog/images/${image.file}`);
       const width = strokeWidth(await decode(new Uint8Array(bytes).buffer));
-      if (width < strokeBand[0] || width > strokeBand[1])
+      if (!(width >= strokeBand[0] && width <= strokeBand[1]))
         outside.push(`${image.file}: ${width.toFixed(2)}px`);
     }
     expect(outside).toEqual([]);

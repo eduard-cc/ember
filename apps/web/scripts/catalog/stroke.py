@@ -19,10 +19,10 @@ import math
 
 from PIL import Image, ImageChops, ImageFilter, ImageMorph, ImageOps
 
-# Mean line width (px) of the licensed drawings' 240px masks before normalisation: median,
-# and the 5th-95th percentile band that tests/catalog.test.ts holds every drawing to.
+# Mean line width (px): the median of the licensed drawings' 240px masks before
+# normalisation. tests/catalog.test.ts holds every bundled drawing to their 5th-95th
+# percentile band.
 STROKE_TARGET = 2.1
-STROKE_BAND = (1.7, 2.7)
 WORK = 1440  # working long side: 6 working pixels per mask pixel
 MASK_SIDE = 240
 INK = 96  # binarisation threshold on 0-255 ink
@@ -211,6 +211,8 @@ def normalise(image, measure):
     for _ in range(ROUNDS):
         png = draw(factor)
         width = measure(png)
+        if width <= 0:
+            raise ValueError('normalised drawing has no opaque line work')
         if best is None or abs(width - STROKE_TARGET) < abs(best[0] - STROKE_TARGET):
             best = (width, png)
         if abs(width - STROKE_TARGET) < 0.03:

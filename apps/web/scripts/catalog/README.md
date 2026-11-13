@@ -35,8 +35,9 @@ licence and attribution). Build from a full Everkinetic checkout, including
 
 Some `dist/png` drawings are cut off at the legs, feet or equipment. For the
 exercises in `EK_FULL_FIGURE` (`generate.py`), the artist's full-figure exports
-are used instead. They are cleaned of stray specks first. Review each pair side by side for exercise, pose and start/finish order; some exports
-label start and finish backwards, so the mapping lists files in display order.
+are used instead. They are cleaned of stray specks first. Review each pair side by
+side for exercise, pose and start/finish order; some exports label start and
+finish backwards, so the mapping lists files in display order.
 Keep an exercise on `dist` when its full-figure export is near-identical, already
 uncropped or no better: shrugs lose their visible shoulder lift at full-figure
 scale.
@@ -101,9 +102,10 @@ npm run typecheck
 
 The script imports `generate.normalised_mask`, so line width, cropping, ink
 extraction, 8-level quantisation, maximum 240-pixel side and lossless WebP
-conversion match the licensed drawings. It refuses mismatched source hashes and never replaces or
-edits a licensed illustration or its attribution. All inputs are validated before
-any asset changes. Run it after `generate.py` when rebuilding the licensed base.
+conversion match the licensed drawings. It refuses mismatched source hashes and
+never replaces or edits a licensed illustration or its attribution. All inputs
+are validated before any asset changes. Run it after `generate.py` when
+rebuilding the licensed base.
 
 Each bundled drawing is credited `Ember (AI-assisted, gpt-image-2)`, license
 `app-owned`, with an adaptation note saying it is AI-assisted and not an
