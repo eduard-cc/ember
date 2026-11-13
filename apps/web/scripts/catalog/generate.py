@@ -501,6 +501,13 @@ def main():
     unknown = sorted({entry[1] for entry in CATALOG} - set(BODY_PARTS))
     if unknown:
         sys.exit(f'unknown body parts: {unknown}')
+    unmapped = sorted(set(EK_UNRELEASED) - set(names))
+    if unmapped:
+        sys.exit(f'EK_UNRELEASED names outside the catalog: {unmapped}')
+    mixed = sorted(name for name, files in EK_UNRELEASED.items()
+                   if len({f.split('.')[0][:-1] for f in files}) != 1)
+    if mixed:
+        sys.exit(f'EK_UNRELEASED pairs mixing drawing numbers: {mixed}')
 
     if OUT_IMAGES.exists():
         for old in OUT_IMAGES.glob('*.webp'):
