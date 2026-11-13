@@ -1,5 +1,5 @@
 import {liveQuery} from 'dexie';
-import {ChevronRight, Plus, Scale, Trash2} from 'lucide-react';
+import {ChevronRight, Plus, Scale, Trash} from 'lucide-react';
 import {type FormEvent, useEffect, useEffectEvent, useMemo, useRef, useState} from 'react';
 
 import type {BodyWeight} from '../../shared/contracts';
@@ -329,7 +329,7 @@ export function BodyWeight({
               className='text-destructive max-desk:mt-3 desk:ml-auto'
               onClick={() => void remove()}
             >
-              <Trash2 size={16} aria-hidden='true' />
+              <Trash size={16} aria-hidden='true' />
               Delete entry
             </Button>
           )}

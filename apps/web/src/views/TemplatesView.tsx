@@ -1,4 +1,4 @@
-import {ClipboardList, Clock, Layers, Pencil, Play, Plus, Trash2} from 'lucide-react';
+import {ClipboardList, Clock, Layers, Pencil, Play, Plus, Trash} from 'lucide-react';
 import {useEffect, useMemo, useRef, useState} from 'react';
 
 import {OptionsMenu} from '../components/ExerciseMenu';
@@ -179,7 +179,7 @@ export function TemplatesView({
                         {label: 'Edit template', icon: Pencil, onSelect: () => edit(template)},
                         {
                           label: 'Delete template',
-                          icon: Trash2,
+                          icon: Trash,
                           danger: true,
                           onSelect: () => {
                             returnTo.current = template.id;

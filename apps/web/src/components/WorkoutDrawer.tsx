@@ -1,4 +1,4 @@
-import {ArrowUpRight, Clock, Layers, Pencil, RotateCcw, Trash2, Trophy, Weight} from 'lucide-react';
+import {ArrowUpRight, Clock, Layers, Pencil, RotateCcw, Trash, Trophy, Weight} from 'lucide-react';
 import {createContext, useContext, useMemo, useRef, useState} from 'react';
 
 import {
@@ -241,7 +241,7 @@ export function WorkoutDrawer({
                     },
                     {
                       label: 'Delete workout',
-                      icon: Trash2,
+                      icon: Trash,
                       danger: true,
                       onSelect: () => {
                         returnTo.current = drawn.id;
