@@ -126,6 +126,13 @@ cat >"$sandbox/bin/systemctl" <<EOF
 #!/usr/bin/env bash
 echo "{ path=$HOME/.local/lib/ember/start.sh ; argv[]=$HOME/.local/lib/ember/start.sh ... }"
 EOF
+# curl answers only the registry probe: 401 (reachable), or registry-status ("down" fails).
+cat >"$sandbox/bin/curl" <<EOF
+#!/usr/bin/env bash
+status=\$(cat -- "$sandbox/registry-status" 2>/dev/null || echo 401)
+[[ \$status != down ]] || { printf 000; exit 7; }
+printf '%s' "\$status"
+EOF
 # npm makes the files a host build keeps; the account's Node lists its migrations.
 cat >"$sandbox/bin/npm" <<'EOF'
 #!/usr/bin/env bash
@@ -254,13 +261,16 @@ green_run "$c1" "$i_missing $c1\n"
 [[ $(deploy "$c1") == 1 ]] && said 'could not pull' || fail 'a missing image must refuse'
 : >"$runs"
 green_run "$c1" "$i1 $c1\n"
-for error in 'dial tcp: connection refused' 'net/http: request canceled (Client.Timeout exceeded while awaiting headers)' \
-	'received unexpected HTTP status: 503 Service Unavailable' 'toomanyrequests: retry later'; do
-	echo "$error" >"$sandbox/pull-error"
-	[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' || fail "an unreachable registry must retry later: $error"
+# Whether a failed pull is retried depends on the registry's own answer, never the message.
+echo 'pull failed' >"$sandbox/pull-error"
+for status in down 503 429; do
+	echo "$status" >"$sandbox/registry-status"
+	[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' || fail "an unavailable registry ($status) must retry later"
 done
-# A pull that fails on this host (a full disk, say) is a failed deploy, not a retry.
-echo 'write /var/lib/docker: no space left on device' >"$sandbox/pull-error"
+rm -- "$sandbox/registry-status"
+# A pull that fails on this host (a full disk, say) is a failed deploy, not a retry, even when
+# the message mentions a timeout.
+echo 'write /app/server/node_modules/rxjs/internal/operators/timeout.js: no space left on device' >"$sandbox/pull-error"
 [[ $(deploy "$c1") == 1 ]] && said 'no space left on device' || fail 'a local pull failure must fail the deploy'
 rm -- "$sandbox/pull-error"
 d=${i1#*@sha256:}

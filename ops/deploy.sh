@@ -82,13 +82,17 @@ image_record() {
 }
 
 # Pulls an image by digest, then checks that its own labels name this repository and the
-# commit. Only an unreachable registry is retried later; anything else fails the deploy.
+# commit. A failed pull is retried later only when the registry itself cannot be reached or
+# answers 429 or 5xx, judged by asking it, never by the error text; anything else (an image
+# it does not have, a full disk) fails the deploy.
 fetch_image() {
-	local image=$1 commit=$2 pulled labels
+	local image=$1 commit=$2 pulled labels status
 	log "pulling $image, the CI image of ${commit:0:12}"
 	pulled=$(docker pull --quiet "$image" 2>&1) || {
-		if grep -qiE 'dial tcp|connection (refused|reset)|time-?out|timed out|deadline exceeded|TLS handshake|no such host|temporary failure in name resolution|network is unreachable|toomanyrequests|too many requests|(502|503|504) |bad gateway|service unavailable|unexpected EOF' <<<"$pulled"; then
-			retry_later "could not reach the registry for $image ($(tail -n 1 <<<"$pulled"))"
+		status=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 15 "https://${image%%/*}/v2/") ||
+			status=000
+		if [[ $status == 000 || $status == 429 || $status == 5?? ]]; then
+			retry_later "could not reach the registry for $image (HTTP $status; $(tail -n 1 <<<"$pulled"))"
 		fi
 		die "could not pull $image ($(tail -n 1 <<<"$pulled"))"
 	}
