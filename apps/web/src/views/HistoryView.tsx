@@ -1,4 +1,4 @@
-import {History, Loader, Search} from 'lucide-react';
+import {Loader, RotateCcwClock, Search} from 'lucide-react';
 import {useMemo, useRef, useState} from 'react';
 
 import {WorkoutDrawer, WorkoutStats} from '../components/WorkoutDrawer';
@@ -214,7 +214,7 @@ export function HistoryView({
           />
         ) : (
           <EmptyState
-            icon={History}
+            icon={RotateCcwClock}
             title='No workouts yet'
             description='Finished workouts appear here, newest first.'
           />

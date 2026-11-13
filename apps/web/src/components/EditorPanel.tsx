@@ -1,4 +1,4 @@
-import {ArrowLeft, CircleAlert, X} from 'lucide-react';
+import {ArrowLeft, CircleExclamationPoint, X} from 'lucide-react';
 import {type ReactNode, type RefObject, useEffect, useRef, useState} from 'react';
 
 import {useBackLayer} from '../state/back';
@@ -219,7 +219,7 @@ export function EditorPanel({
             role='alert'
             className='editor-problem flex shrink-0 items-start gap-2.5 border-b border-destructive/40 bg-destructive-foreground px-4 py-3 text-[14px] font-medium text-destructive focus-visible:outline-none'
           >
-            <CircleAlert size={16} className='mt-0.5 shrink-0' aria-hidden='true' />
+            <CircleExclamationPoint size={16} className='mt-0.5 shrink-0' aria-hidden='true' />
             <span className='min-w-0 flex-1 [overflow-wrap:anywhere]'>{problem}</span>
           </div>
         )}

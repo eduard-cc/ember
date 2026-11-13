@@ -1,4 +1,4 @@
-import {ChevronRight, CircleAlert, CloudOff, Loader, Lock} from 'lucide-react';
+import {ChevronRight, CircleExclamationPoint, CloudOff, Loader, Lock} from 'lucide-react';
 import {
   type ReactNode,
   type RefObject,
@@ -233,7 +233,7 @@ function useShownConditions(covering: boolean) {
 function ConditionIcon({condition, size}: {condition: Condition; size: number}) {
   const Icon =
     condition.tier === 'problem'
-      ? CircleAlert
+      ? CircleExclamationPoint
       : condition.tier === 'notice'
         ? Lock
         : condition.key === 'offline'

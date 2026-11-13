@@ -1,4 +1,4 @@
-import {ArrowDown, ArrowUp, Ellipsis, type LucideIcon, Replace, Trash2} from 'lucide-react';
+import {ArrowDown, ArrowUp, Ellipsis, type LucideIcon, Replace, Trash} from 'lucide-react';
 import {
   type KeyboardEvent,
   forwardRef,
@@ -243,7 +243,7 @@ export const ExerciseMenu = forwardRef<
       {label: 'Replace exercise', icon: Replace, onSelect: onReplace},
       ...(onMoveUp ? [{label: 'Move up', icon: ArrowUp, onSelect: onMoveUp}] : []),
       ...(onMoveDown ? [{label: 'Move down', icon: ArrowDown, onSelect: onMoveDown}] : []),
-      {label: 'Remove exercise', icon: Trash2, onSelect: onRemove, danger: true},
+      {label: 'Remove exercise', icon: Trash, onSelect: onRemove, danger: true},
     ]}
   />
 ));

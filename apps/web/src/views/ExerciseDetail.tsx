@@ -1,4 +1,4 @@
-import {ArrowLeft, ChevronRight, History, Info, Trophy} from 'lucide-react';
+import {ArrowLeft, ChevronRight, Info, RotateCcwClock, Trophy} from 'lucide-react';
 import {type ReactElement, type ReactNode, useId, useMemo, useRef, useState} from 'react';
 
 import {type Muscle, bodyPartOf, catalogEntry} from '../catalog/catalog';
@@ -165,7 +165,7 @@ function HistoryTab({
   if (!history.length)
     return (
       <EmptyState
-        icon={History}
+        icon={RotateCcwClock}
         title='No history yet'
         description='Sessions appear here after you finish a workout with this exercise.'
         framed={framed}
