@@ -194,8 +194,11 @@ describe('bundled exercise catalog', () => {
     // Everkinetic's unpublished drawings (same artist and licence) cover these exercises.
     for (const name of [
       'Ab Wheel',
+      'Bicycle Crunch',
       'Cable Crunch',
       'Hanging Knee Raise',
+      'Hanging Leg Raise',
+      'Pendlay Row (Barbell)',
       'Russian Twist',
       'Woodchopper (Cable)',
     ])
@@ -208,7 +211,7 @@ describe('bundled exercise catalog', () => {
           changes: 'cropped, resized, recoloured and line width normalised',
         }),
       ]);
-    expect(licensed.length).toBeGreaterThanOrEqual(164);
+    expect(licensed.length).toBeGreaterThanOrEqual(167);
     for (const entry of licensed)
       expect(entry.sources.some((s) => s.license === 'app-owned')).toBe(false);
   });
