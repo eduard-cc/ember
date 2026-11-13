@@ -2,10 +2,9 @@
 # Shared by deploy.sh and rollback.sh; not executable on its own.
 #
 # Layout (EMBER_HOME, default ~/.local/share/ember):
-#   releases/<sha>/   a release, one of two kinds:
-#                     image: IMAGE (the image by digest) and dist/, the web shell copied out of it
-#                     host-built: dist/ and server/ (server/dist, production node_modules)
-#   current           symlink to the serving release; ember.service and EMBER_WEB_ROOT use it
+#   releases/<sha>/   a release: IMAGE (the image by digest), REVISION and dist/, the web
+#                     shell copied out of the image
+#   current           symlink to the serving release; ember.service starts it
 #   history           healthy deploys, oldest first; rollback pops it like a stack
 #   deploy.lock       held by every deploy or rollback
 #   auto-deploy.hold  a main commit ops/auto-deploy.sh must not deploy
@@ -14,7 +13,6 @@ shopt -s inherit_errexit
 # Byte-wise matching: the image and digest patterns below must only ever match ASCII.
 export LC_ALL=C
 
-export PATH=$HOME/.local/bin:$PATH
 EMBER_HOME=${EMBER_HOME:-$HOME/.local/share/ember}
 EMBER_ENV=${EMBER_ENV:-$HOME/.config/ember/runtime.env}
 EMBER_UNIT=${EMBER_UNIT:-ember.service}
@@ -56,11 +54,13 @@ lock() {
 
 current_release() { if [[ -L $CURRENT ]]; then basename -- "$(readlink -- "$CURRENT")"; fi; }
 
-# An image release has an IMAGE entry, whatever it is; a host-built release has none.
+# An image release has an IMAGE entry, whatever it is. Releases built on the host before
+# images (dist/ and server/, no IMAGE) can stay in history until they age out; ember.service
+# cannot run them, so rollback skips them.
 is_image_release() { [[ -e $1/IMAGE || -L $1/IMAGE ]]; }
 
-# The image a release folder names, when it is an image release: IMAGE holds exactly one
-# line, the image by digest. Fails for a host-built release and for anything malformed.
+# The image a release folder names: IMAGE holds exactly one line, the image by digest.
+# Fails for a release without one and for anything malformed.
 release_image() {
 	local file=$1/IMAGE image
 	[[ -f $file && ! -L $file ]] || return 1
@@ -118,7 +118,6 @@ setting() {
 
 check_config() {
 	[[ -f $EMBER_ENV ]] || die "missing $EMBER_ENV"
-	[[ $(setting EMBER_WEB_ROOT) == "$CURRENT/dist" ]] || die "EMBER_WEB_ROOT in $EMBER_ENV must be $CURRENT/dist"
 	[[ $(setting EMBER_PORT) =~ ^[0-9]+$ ]] || die "EMBER_PORT missing from $EMBER_ENV"
 	[[ -n $(setting EMBER_ORIGIN) ]] || die "EMBER_ORIGIN missing from $EMBER_ENV"
 }
@@ -177,36 +176,24 @@ shell_served() {
 	done
 }
 
-# Runs the Node of a release with the given arguments and stdin: the image's own Node, with
-# no network or capabilities, for an image release; the account's Node in server/ otherwise.
+# Runs the Node of a release's image with the given arguments and stdin, with no network
+# or capabilities.
 release_node() {
 	local release=$1 image
 	shift
-	if image=$(release_image "$release"); then
-		docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
-			--entrypoint node "$image" "$@"
-	elif is_image_release "$release"; then
+	image=$(release_image "$release") || {
 		log "$release/IMAGE does not name the image by digest" >&2
 		return 1
-	else
-		(cd "$release/server" && node "$@")
-	fi
+	}
+	docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+		--entrypoint node "$image" "$@"
 }
 
-# The process listening on the port is the serving release's, not a leftover one: for a
-# host-built release the unit's own process; for an image release the container
-# ember.service started from exactly that image, published on loopback only by the
-# daemon's rootlesskit.
+# The process listening on the port is the serving release's, not a leftover one: the
+# container ember.service started from exactly that release's image, published on loopback
+# only by the daemon's rootlesskit.
 owns_port() {
 	local port=$1 image want got pid pids
-	if ! is_image_release "$CURRENT"; then
-		pid=$(systemctl --user show --property MainPID --value "$EMBER_UNIT")
-		ss -ltnpH "sport = :$port" | grep -q "pid=$pid," || {
-			log "port $port is not served by $EMBER_UNIT (pid $pid)" >&2
-			return 1
-		}
-		return 0
-	fi
 	image=$(release_image "$CURRENT") || {
 		log "$CURRENT/IMAGE does not name the image by digest" >&2
 		return 1
@@ -299,20 +286,33 @@ write_history() {
 		mv -T -- "$HISTORY.tmp" "$HISTORY"
 }
 
-# History is a stack of healthy deploys. Roll back to the newest entry that is
-# not the serving release; the stack only changes once that release is healthy.
-# Database migrations stay applied; the pre-migration backup is the way back for data.
+# History is a stack of healthy deploys. A rollback returns to the newest complete image
+# release that is not the serving one: this sets ROLLBACK_STACK to history up to and
+# including it, and fails when there is none. Changes nothing.
+rollback_stack() {
+	local now entry
+	now=$(current_release)
+	ROLLBACK_STACK=()
+	[[ -f $HISTORY ]] && mapfile -t ROLLBACK_STACK <"$HISTORY"
+	while ((${#ROLLBACK_STACK[@]})); do
+		entry=${ROLLBACK_STACK[-1]}
+		if [[ $entry != "$now" && -f $RELEASES/$entry/.complete ]]; then
+			is_image_release "$RELEASES/$entry" && return 0
+			log "skipping ${entry:0:12}: it is not an image release, which is all ember.service runs" >&2
+		fi
+		unset 'ROLLBACK_STACK[-1]'
+	done
+	log 'no earlier healthy release to roll back to' >&2
+	return 1
+}
+
+# Roll back to that release; the stack only changes once it is healthy. Database
+# migrations stay applied; the pre-migration backup is the way back for data.
 roll_back() {
 	local now target stack=()
 	now=$(current_release)
-	[[ -f $HISTORY ]] && mapfile -t stack <"$HISTORY"
-	while ((${#stack[@]})) && [[ ${stack[-1]} == "$now" || ! -f $RELEASES/${stack[-1]}/.complete ]]; do
-		unset 'stack[-1]'
-	done
-	((${#stack[@]})) || {
-		log 'no earlier healthy release to roll back to' >&2
-		return 1
-	}
+	rollback_stack || return 1
+	stack=("${ROLLBACK_STACK[@]}")
 	target=${stack[-1]}
 	log "rolling back from ${now:-nothing} to $target"
 	# Callers test this function, which disables errexit inside it: check each step.

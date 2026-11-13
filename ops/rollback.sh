@@ -16,6 +16,7 @@ source "$SCRIPT_DIR/lib.sh"
 }
 lock
 check_config
+rollback_stack || die 'nothing was changed'
 # Keep ops/auto-deploy.sh from putting main straight back; the next commit on main
 # clears this.
 hold_main
