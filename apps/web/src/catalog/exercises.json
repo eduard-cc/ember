@@ -10,11 +10,11 @@
       {
         "file": "bench-press-barbell-0.webp",
         "width": 240,
-        "height": 218
+        "height": 219
       },
       {
         "file": "bench-press-barbell-1.webp",
-        "width": 214,
+        "width": 213,
         "height": 240
       }
     ],
@@ -26,7 +26,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -57,7 +57,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -71,12 +71,12 @@
     "images": [
       {
         "file": "bench-press-smith-machine-0.webp",
-        "width": 185,
+        "width": 184,
         "height": 240
       },
       {
         "file": "bench-press-smith-machine-1.webp",
-        "width": 185,
+        "width": 184,
         "height": 240
       }
     ],
@@ -88,7 +88,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -103,7 +103,7 @@
       {
         "file": "bench-press-wide-grip-barbell-0.webp",
         "width": 240,
-        "height": 166
+        "height": 167
       },
       {
         "file": "bench-press-wide-grip-barbell-1.webp",
@@ -119,7 +119,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -150,7 +150,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -181,7 +181,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -195,7 +195,7 @@
     "images": [
       {
         "file": "chest-dip-assisted-0.webp",
-        "width": 182,
+        "width": 183,
         "height": 240
       },
       {
@@ -212,7 +212,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -226,12 +226,12 @@
     "images": [
       {
         "file": "chest-fly-0.webp",
-        "width": 136,
+        "width": 137,
         "height": 240
       },
       {
         "file": "chest-fly-1.webp",
-        "width": 165,
+        "width": 166,
         "height": 240
       }
     ],
@@ -243,7 +243,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/135/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -274,7 +274,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -305,7 +305,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -319,12 +319,12 @@
     "images": [
       {
         "file": "chest-press-machine-0.webp",
-        "width": 207,
+        "width": 206,
         "height": 240
       },
       {
         "file": "chest-press-machine-1.webp",
-        "width": 176,
+        "width": 175,
         "height": 240
       }
     ],
@@ -336,7 +336,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -351,7 +351,7 @@
       {
         "file": "decline-bench-press-barbell-0.webp",
         "width": 240,
-        "height": 160
+        "height": 161
       },
       {
         "file": "decline-bench-press-barbell-1.webp",
@@ -367,7 +367,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -398,7 +398,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -413,7 +413,7 @@
       {
         "file": "decline-chest-fly-dumbbell-0.webp",
         "width": 240,
-        "height": 150
+        "height": 151
       },
       {
         "file": "decline-chest-fly-dumbbell-1.webp",
@@ -429,7 +429,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -444,7 +444,7 @@
       {
         "file": "floor-press-dumbbell-0.webp",
         "width": 240,
-        "height": 132
+        "height": 131
       },
       {
         "file": "floor-press-dumbbell-1.webp",
@@ -460,7 +460,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -474,12 +474,12 @@
     "images": [
       {
         "file": "incline-bench-press-barbell-0.webp",
-        "width": 234,
+        "width": 233,
         "height": 240
       },
       {
         "file": "incline-bench-press-barbell-1.webp",
-        "width": 211,
+        "width": 210,
         "height": 240
       }
     ],
@@ -491,7 +491,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -505,7 +505,7 @@
     "images": [
       {
         "file": "incline-bench-press-dumbbell-0.webp",
-        "width": 199,
+        "width": 198,
         "height": 240
       },
       {
@@ -522,7 +522,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -536,7 +536,7 @@
     "images": [
       {
         "file": "incline-bench-press-dumbbell-neutral-grip-0.webp",
-        "width": 192,
+        "width": 191,
         "height": 240
       },
       {
@@ -553,7 +553,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -567,12 +567,12 @@
     "images": [
       {
         "file": "incline-bench-press-smith-machine-0.webp",
-        "width": 185,
+        "width": 184,
         "height": 240
       },
       {
         "file": "incline-bench-press-smith-machine-1.webp",
-        "width": 185,
+        "width": 184,
         "height": 240
       }
     ],
@@ -584,7 +584,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -599,7 +599,7 @@
       {
         "file": "incline-chest-fly-cable-0.webp",
         "width": 240,
-        "height": 194
+        "height": 193
       },
       {
         "file": "incline-chest-fly-cable-1.webp",
@@ -615,7 +615,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -634,7 +634,7 @@
       },
       {
         "file": "incline-chest-fly-dumbbell-1.webp",
-        "width": 149,
+        "width": 148,
         "height": 240
       }
     ],
@@ -646,7 +646,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -660,12 +660,12 @@
     "images": [
       {
         "file": "incline-chest-press-machine-0.webp",
-        "width": 197,
+        "width": 198,
         "height": 240
       },
       {
         "file": "incline-chest-press-machine-1.webp",
-        "width": 141,
+        "width": 142,
         "height": 240
       }
     ],
@@ -677,7 +677,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -692,11 +692,11 @@
       {
         "file": "pullover-dumbbell-0.webp",
         "width": 240,
-        "height": 175
+        "height": 174
       },
       {
         "file": "pullover-dumbbell-1.webp",
-        "width": 226,
+        "width": 227,
         "height": 240
       }
     ],
@@ -708,7 +708,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -723,12 +723,12 @@
       {
         "file": "push-up-0.webp",
         "width": 240,
-        "height": 141
+        "height": 140
       },
       {
         "file": "push-up-1.webp",
         "width": 240,
-        "height": 142
+        "height": 141
       }
     ],
     "sources": [
@@ -739,7 +739,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -754,7 +754,7 @@
       {
         "file": "push-up-feet-elevated-0.webp",
         "width": 240,
-        "height": 183
+        "height": 182
       },
       {
         "file": "push-up-feet-elevated-1.webp",
@@ -770,7 +770,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -785,11 +785,11 @@
       {
         "file": "back-extension-0.webp",
         "width": 240,
-        "height": 186
+        "height": 185
       },
       {
         "file": "back-extension-1.webp",
-        "width": 178,
+        "width": 177,
         "height": 240
       }
     ],
@@ -801,7 +801,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -821,7 +821,7 @@
       {
         "file": "bent-over-one-arm-row-dumbbell-1.webp",
         "width": 240,
-        "height": 207
+        "height": 206
       }
     ],
     "sources": [
@@ -832,7 +832,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -846,12 +846,12 @@
     "images": [
       {
         "file": "bent-over-row-barbell-0.webp",
-        "width": 229,
+        "width": 227,
         "height": 240
       },
       {
         "file": "bent-over-row-barbell-1.webp",
-        "width": 225,
+        "width": 223,
         "height": 240
       }
     ],
@@ -863,7 +863,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/83/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -877,12 +877,12 @@
     "images": [
       {
         "file": "bent-over-row-dumbbell-0.webp",
-        "width": 179,
+        "width": 178,
         "height": 240
       },
       {
         "file": "bent-over-row-dumbbell-1.webp",
-        "width": 178,
+        "width": 179,
         "height": 240
       }
     ],
@@ -894,7 +894,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -925,7 +925,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -956,7 +956,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -970,12 +970,12 @@
     "images": [
       {
         "file": "chin-up-0.webp",
-        "width": 152,
+        "width": 153,
         "height": 240
       },
       {
         "file": "chin-up-1.webp",
-        "width": 193,
+        "width": 195,
         "height": 240
       }
     ],
@@ -987,7 +987,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/152/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1018,7 +1018,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1049,7 +1049,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1068,7 +1068,7 @@
       },
       {
         "file": "deadlift-dumbbell-1.webp",
-        "width": 66,
+        "width": 67,
         "height": 240
       }
     ],
@@ -1080,7 +1080,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1094,12 +1094,12 @@
     "images": [
       {
         "file": "deadlift-smith-machine-0.webp",
-        "width": 146,
+        "width": 147,
         "height": 240
       },
       {
         "file": "deadlift-smith-machine-1.webp",
-        "width": 146,
+        "width": 148,
         "height": 240
       }
     ],
@@ -1111,7 +1111,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1130,7 +1130,7 @@
       },
       {
         "file": "inverted-row-1.webp",
-        "width": 216,
+        "width": 215,
         "height": 240
       }
     ],
@@ -1142,7 +1142,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1173,7 +1173,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1204,7 +1204,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1235,7 +1235,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1249,12 +1249,12 @@
     "images": [
       {
         "file": "lat-pulldown-close-grip-cable-0.webp",
-        "width": 96,
+        "width": 95,
         "height": 240
       },
       {
         "file": "lat-pulldown-close-grip-cable-1.webp",
-        "width": 108,
+        "width": 107,
         "height": 240
       }
     ],
@@ -1266,7 +1266,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1285,7 +1285,7 @@
       },
       {
         "file": "lat-pulldown-underhand-cable-1.webp",
-        "width": 105,
+        "width": 104,
         "height": 240
       }
     ],
@@ -1297,7 +1297,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1312,7 +1312,7 @@
       {
         "file": "pendlay-row-barbell-0.webp",
         "width": 240,
-        "height": 175
+        "height": 176
       },
       {
         "file": "pendlay-row-barbell-1.webp",
@@ -1328,7 +1328,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1342,7 +1342,7 @@
     "images": [
       {
         "file": "pull-up-0.webp",
-        "width": 159,
+        "width": 160,
         "height": 240
       },
       {
@@ -1359,7 +1359,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1390,7 +1390,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1421,7 +1421,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1435,12 +1435,12 @@
     "images": [
       {
         "file": "rack-pull-barbell-0.webp",
-        "width": 146,
+        "width": 147,
         "height": 240
       },
       {
         "file": "rack-pull-barbell-1.webp",
-        "width": 146,
+        "width": 148,
         "height": 240
       }
     ],
@@ -1452,7 +1452,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/484/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1467,12 +1467,12 @@
       {
         "file": "seated-row-cable-0.webp",
         "width": 240,
-        "height": 171
+        "height": 172
       },
       {
         "file": "seated-row-cable-1.webp",
         "width": 240,
-        "height": 163
+        "height": 162
       }
     ],
     "sources": [
@@ -1483,7 +1483,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1514,7 +1514,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1534,7 +1534,7 @@
       {
         "file": "shrug-barbell-1.webp",
         "width": 240,
-        "height": 226
+        "height": 227
       }
     ],
     "sources": [
@@ -1545,7 +1545,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1559,12 +1559,12 @@
     "images": [
       {
         "file": "shrug-cable-0.webp",
-        "width": 133,
+        "width": 129,
         "height": 240
       },
       {
         "file": "shrug-cable-1.webp",
-        "width": 135,
+        "width": 131,
         "height": 240
       }
     ],
@@ -1576,7 +1576,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1590,12 +1590,12 @@
     "images": [
       {
         "file": "shrug-dumbbell-0.webp",
-        "width": 168,
+        "width": 165,
         "height": 240
       },
       {
         "file": "shrug-dumbbell-1.webp",
-        "width": 165,
+        "width": 163,
         "height": 240
       }
     ],
@@ -1607,7 +1607,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1638,7 +1638,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1652,12 +1652,12 @@
     "images": [
       {
         "file": "straight-arm-pulldown-cable-0.webp",
-        "width": 119,
+        "width": 118,
         "height": 240
       },
       {
         "file": "straight-arm-pulldown-cable-1.webp",
-        "width": 86,
+        "width": 85,
         "height": 240
       }
     ],
@@ -1669,7 +1669,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1684,12 +1684,12 @@
       {
         "file": "superman-0.webp",
         "width": 240,
-        "height": 49
+        "height": 48
       },
       {
         "file": "superman-1.webp",
         "width": 240,
-        "height": 60
+        "height": 59
       }
     ],
     "sources": [
@@ -1700,7 +1700,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1719,7 +1719,7 @@
       },
       {
         "file": "t-bar-row-1.webp",
-        "width": 224,
+        "width": 223,
         "height": 240
       }
     ],
@@ -1731,7 +1731,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1750,7 +1750,7 @@
       },
       {
         "file": "arnold-press-dumbbell-1.webp",
-        "width": 133,
+        "width": 134,
         "height": 240
       }
     ],
@@ -1762,7 +1762,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1776,7 +1776,7 @@
     "images": [
       {
         "file": "external-rotation-cable-0.webp",
-        "width": 165,
+        "width": 164,
         "height": 240
       },
       {
@@ -1793,7 +1793,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1807,12 +1807,12 @@
     "images": [
       {
         "file": "face-pull-cable-0.webp",
-        "width": 153,
+        "width": 154,
         "height": 240
       },
       {
         "file": "face-pull-cable-1.webp",
-        "width": 162,
+        "width": 163,
         "height": 240
       }
     ],
@@ -1824,7 +1824,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1855,7 +1855,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1886,7 +1886,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1900,12 +1900,12 @@
     "images": [
       {
         "file": "front-raise-dumbbell-0.webp",
-        "width": 95,
+        "width": 96,
         "height": 240
       },
       {
         "file": "front-raise-dumbbell-1.webp",
-        "width": 91,
+        "width": 92,
         "height": 240
       }
     ],
@@ -1917,7 +1917,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1931,7 +1931,7 @@
     "images": [
       {
         "file": "incline-shoulder-press-dumbbell-0.webp",
-        "width": 198,
+        "width": 199,
         "height": 240
       },
       {
@@ -1948,7 +1948,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1962,12 +1962,12 @@
     "images": [
       {
         "file": "internal-rotation-cable-0.webp",
-        "width": 239,
+        "width": 238,
         "height": 240
       },
       {
         "file": "internal-rotation-cable-1.webp",
-        "width": 222,
+        "width": 221,
         "height": 240
       }
     ],
@@ -1979,7 +1979,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1993,12 +1993,12 @@
     "images": [
       {
         "file": "lateral-raise-cable-0.webp",
-        "width": 218,
+        "width": 217,
         "height": 240
       },
       {
         "file": "lateral-raise-cable-1.webp",
-        "width": 224,
+        "width": 223,
         "height": 240
       }
     ],
@@ -2010,7 +2010,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2024,7 +2024,7 @@
     "images": [
       {
         "file": "lateral-raise-dumbbell-0.webp",
-        "width": 119,
+        "width": 118,
         "height": 240
       },
       {
@@ -2041,7 +2041,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2056,12 +2056,12 @@
       {
         "file": "lateral-raise-machine-0.webp",
         "width": 240,
-        "height": 217
+        "height": 218
       },
       {
         "file": "lateral-raise-machine-1.webp",
         "width": 240,
-        "height": 217
+        "height": 218
       }
     ],
     "sources": [
@@ -2072,7 +2072,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2087,12 +2087,12 @@
       {
         "file": "lying-reverse-fly-dumbbell-0.webp",
         "width": 240,
-        "height": 220
+        "height": 219
       },
       {
         "file": "lying-reverse-fly-dumbbell-1.webp",
         "width": 240,
-        "height": 170
+        "height": 169
       }
     ],
     "sources": [
@@ -2103,7 +2103,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2134,7 +2134,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/566/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2148,12 +2148,12 @@
     "images": [
       {
         "file": "overhead-press-dumbbell-one-arm-0.webp",
-        "width": 133,
+        "width": 134,
         "height": 240
       },
       {
         "file": "overhead-press-dumbbell-one-arm-1.webp",
-        "width": 99,
+        "width": 100,
         "height": 240
       }
     ],
@@ -2165,7 +2165,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2196,7 +2196,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2227,7 +2227,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2241,12 +2241,12 @@
     "images": [
       {
         "file": "rear-delt-row-barbell-0.webp",
-        "width": 228,
+        "width": 227,
         "height": 240
       },
       {
         "file": "rear-delt-row-barbell-1.webp",
-        "width": 230,
+        "width": 229,
         "height": 240
       }
     ],
@@ -2258,7 +2258,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2272,7 +2272,7 @@
     "images": [
       {
         "file": "rear-delt-row-dumbbell-0.webp",
-        "width": 218,
+        "width": 217,
         "height": 240
       },
       {
@@ -2289,7 +2289,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2320,7 +2320,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2351,7 +2351,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2365,7 +2365,7 @@
     "images": [
       {
         "file": "reverse-fly-dumbbell-0.webp",
-        "width": 210,
+        "width": 209,
         "height": 240
       },
       {
@@ -2382,7 +2382,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2401,7 +2401,7 @@
       },
       {
         "file": "reverse-fly-machine-1.webp",
-        "width": 191,
+        "width": 192,
         "height": 240
       }
     ],
@@ -2413,7 +2413,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2444,7 +2444,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/566/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2475,7 +2475,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/567/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2489,7 +2489,7 @@
     "images": [
       {
         "file": "seated-reverse-fly-cable-0.webp",
-        "width": 194,
+        "width": 192,
         "height": 240
       },
       {
@@ -2506,7 +2506,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2520,7 +2520,7 @@
     "images": [
       {
         "file": "shoulder-press-machine-0.webp",
-        "width": 164,
+        "width": 165,
         "height": 240
       },
       {
@@ -2537,7 +2537,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/543/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2568,7 +2568,7 @@
         "license": "CC BY-SA 3.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
         "url": "https://wger.de/exercise/566/view-base",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2599,7 +2599,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2613,12 +2613,12 @@
     "images": [
       {
         "file": "upright-row-cable-0.webp",
-        "width": 99,
+        "width": 97,
         "height": 240
       },
       {
         "file": "upright-row-cable-1.webp",
-        "width": 126,
+        "width": 125,
         "height": 240
       }
     ],
@@ -2630,7 +2630,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2661,7 +2661,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2692,7 +2692,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2723,7 +2723,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2738,12 +2738,12 @@
       {
         "file": "bench-press-close-grip-barbell-0.webp",
         "width": 240,
-        "height": 204
+        "height": 203
       },
       {
         "file": "bench-press-close-grip-barbell-1.webp",
         "width": 240,
-        "height": 230
+        "height": 231
       }
     ],
     "sources": [
@@ -2754,7 +2754,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2785,7 +2785,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2799,12 +2799,12 @@
     "images": [
       {
         "file": "bicep-curl-cable-0.webp",
-        "width": 111,
+        "width": 110,
         "height": 240
       },
       {
         "file": "bicep-curl-cable-1.webp",
-        "width": 113,
+        "width": 112,
         "height": 240
       }
     ],
@@ -2816,7 +2816,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2830,12 +2830,12 @@
     "images": [
       {
         "file": "bicep-curl-dumbbell-0.webp",
-        "width": 131,
+        "width": 130,
         "height": 240
       },
       {
         "file": "bicep-curl-dumbbell-1.webp",
-        "width": 119,
+        "width": 118,
         "height": 240
       }
     ],
@@ -2847,7 +2847,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2861,12 +2861,12 @@
     "images": [
       {
         "file": "bicep-curl-dumbbell-alternating-0.webp",
-        "width": 118,
+        "width": 117,
         "height": 240
       },
       {
         "file": "bicep-curl-dumbbell-alternating-1.webp",
-        "width": 132,
+        "width": 131,
         "height": 240
       }
     ],
@@ -2878,7 +2878,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2897,7 +2897,7 @@
       },
       {
         "file": "bicep-curl-machine-1.webp",
-        "width": 189,
+        "width": 187,
         "height": 240
       }
     ],
@@ -2909,7 +2909,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2924,12 +2924,12 @@
       {
         "file": "close-grip-push-up-0.webp",
         "width": 240,
-        "height": 125
+        "height": 124
       },
       {
         "file": "close-grip-push-up-1.webp",
         "width": 240,
-        "height": 125
+        "height": 124
       }
     ],
     "sources": [
@@ -2940,7 +2940,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2954,12 +2954,12 @@
     "images": [
       {
         "file": "concentration-curl-dumbbell-0.webp",
-        "width": 151,
+        "width": 150,
         "height": 240
       },
       {
         "file": "concentration-curl-dumbbell-1.webp",
-        "width": 151,
+        "width": 150,
         "height": 240
       }
     ],
@@ -2971,7 +2971,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2985,12 +2985,12 @@
     "images": [
       {
         "file": "cross-body-hammer-curl-dumbbell-0.webp",
-        "width": 117,
+        "width": 116,
         "height": 240
       },
       {
         "file": "cross-body-hammer-curl-dumbbell-1.webp",
-        "width": 101,
+        "width": 100,
         "height": 240
       }
     ],
@@ -3002,7 +3002,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3016,12 +3016,12 @@
     "images": [
       {
         "file": "drag-curl-barbell-0.webp",
-        "width": 210,
+        "width": 209,
         "height": 240
       },
       {
         "file": "drag-curl-barbell-1.webp",
-        "width": 210,
+        "width": 209,
         "height": 240
       }
     ],
@@ -3033,7 +3033,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3047,12 +3047,12 @@
     "images": [
       {
         "file": "ez-bar-curl-0.webp",
-        "width": 227,
+        "width": 226,
         "height": 240
       },
       {
         "file": "ez-bar-curl-1.webp",
-        "width": 227,
+        "width": 226,
         "height": 240
       }
     ],
@@ -3064,7 +3064,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3078,7 +3078,7 @@
     "images": [
       {
         "file": "hammer-curl-cable-0.webp",
-        "width": 97,
+        "width": 95,
         "height": 240
       },
       {
@@ -3095,7 +3095,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3109,12 +3109,12 @@
     "images": [
       {
         "file": "hammer-curl-dumbbell-0.webp",
-        "width": 131,
+        "width": 130,
         "height": 240
       },
       {
         "file": "hammer-curl-dumbbell-1.webp",
-        "width": 98,
+        "width": 97,
         "height": 240
       }
     ],
@@ -3126,7 +3126,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3140,12 +3140,12 @@
     "images": [
       {
         "file": "incline-curl-dumbbell-0.webp",
-        "width": 167,
+        "width": 166,
         "height": 240
       },
       {
         "file": "incline-curl-dumbbell-1.webp",
-        "width": 169,
+        "width": 168,
         "height": 240
       }
     ],
@@ -3157,7 +3157,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3172,7 +3172,7 @@
       {
         "file": "jm-press-barbell-0.webp",
         "width": 240,
-        "height": 205
+        "height": 204
       },
       {
         "file": "jm-press-barbell-1.webp",
@@ -3188,7 +3188,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3219,7 +3219,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3233,12 +3233,12 @@
     "images": [
       {
         "file": "overhead-curl-cable-0.webp",
-        "width": 234,
+        "width": 233,
         "height": 240
       },
       {
         "file": "overhead-curl-cable-1.webp",
-        "width": 221,
+        "width": 220,
         "height": 240
       }
     ],
@@ -3250,7 +3250,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3264,13 +3264,13 @@
     "images": [
       {
         "file": "overhead-triceps-extension-dumbbell-0.webp",
-        "width": 214,
+        "width": 215,
         "height": 240
       },
       {
         "file": "overhead-triceps-extension-dumbbell-1.webp",
         "width": 240,
-        "height": 229
+        "height": 228
       }
     ],
     "sources": [
@@ -3281,7 +3281,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3300,7 +3300,7 @@
       },
       {
         "file": "preacher-curl-barbell-1.webp",
-        "width": 175,
+        "width": 174,
         "height": 240
       }
     ],
@@ -3312,7 +3312,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3326,12 +3326,12 @@
     "images": [
       {
         "file": "preacher-curl-cable-0.webp",
-        "width": 137,
+        "width": 136,
         "height": 240
       },
       {
         "file": "preacher-curl-cable-1.webp",
-        "width": 137,
+        "width": 136,
         "height": 240
       }
     ],
@@ -3343,7 +3343,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3362,7 +3362,7 @@
       },
       {
         "file": "preacher-curl-dumbbell-1.webp",
-        "width": 138,
+        "width": 137,
         "height": 240
       }
     ],
@@ -3374,7 +3374,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3405,7 +3405,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3419,12 +3419,12 @@
     "images": [
       {
         "file": "reverse-curl-dumbbell-0.webp",
-        "width": 115,
+        "width": 114,
         "height": 240
       },
       {
         "file": "reverse-curl-dumbbell-1.webp",
-        "width": 117,
+        "width": 116,
         "height": 240
       }
     ],
@@ -3436,7 +3436,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3467,7 +3467,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3498,7 +3498,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3512,7 +3512,7 @@
     "images": [
       {
         "file": "seated-bicep-curl-dumbbell-0.webp",
-        "width": 183,
+        "width": 182,
         "height": 240
       },
       {
@@ -3529,7 +3529,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3560,7 +3560,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3591,7 +3591,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3606,11 +3606,11 @@
       {
         "file": "skullcrusher-dumbbell-0.webp",
         "width": 240,
-        "height": 195
+        "height": 193
       },
       {
         "file": "skullcrusher-dumbbell-1.webp",
-        "width": 226,
+        "width": 227,
         "height": 240
       }
     ],
@@ -3622,7 +3622,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3641,7 +3641,7 @@
       },
       {
         "file": "spider-curl-barbell-1.webp",
-        "width": 174,
+        "width": 173,
         "height": 240
       }
     ],
@@ -3653,7 +3653,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3684,7 +3684,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3698,12 +3698,12 @@
     "images": [
       {
         "file": "triceps-dip-0.webp",
-        "width": 194,
+        "width": 191,
         "height": 240
       },
       {
         "file": "triceps-dip-1.webp",
-        "width": 133,
+        "width": 132,
         "height": 240
       }
     ],
@@ -3715,7 +3715,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3729,7 +3729,7 @@
     "images": [
       {
         "file": "triceps-dip-assisted-0.webp",
-        "width": 182,
+        "width": 183,
         "height": 240
       },
       {
@@ -3746,7 +3746,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3760,12 +3760,12 @@
     "images": [
       {
         "file": "triceps-extension-0.webp",
-        "width": 102,
+        "width": 100,
         "height": 240
       },
       {
         "file": "triceps-extension-1.webp",
-        "width": 85,
+        "width": 84,
         "height": 240
       }
     ],
@@ -3777,7 +3777,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3791,12 +3791,12 @@
     "images": [
       {
         "file": "triceps-extension-barbell-0.webp",
-        "width": 208,
+        "width": 206,
         "height": 240
       },
       {
         "file": "triceps-extension-barbell-1.webp",
-        "width": 172,
+        "width": 171,
         "height": 240
       }
     ],
@@ -3808,7 +3808,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3823,12 +3823,12 @@
       {
         "file": "triceps-extension-cable-0.webp",
         "width": 240,
-        "height": 109
+        "height": 108
       },
       {
         "file": "triceps-extension-cable-1.webp",
         "width": 240,
-        "height": 154
+        "height": 153
       }
     ],
     "sources": [
@@ -3839,7 +3839,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3853,12 +3853,12 @@
     "images": [
       {
         "file": "triceps-extension-machine-0.webp",
-        "width": 127,
+        "width": 126,
         "height": 240
       },
       {
         "file": "triceps-extension-machine-1.webp",
-        "width": 152,
+        "width": 151,
         "height": 240
       }
     ],
@@ -3870,7 +3870,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3901,7 +3901,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3915,7 +3915,7 @@
     "images": [
       {
         "file": "triceps-pushdown-cable-rope-0.webp",
-        "width": 84,
+        "width": 83,
         "height": 240
       },
       {
@@ -3932,7 +3932,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3951,7 +3951,7 @@
       },
       {
         "file": "triceps-pushdown-cable-v-bar-1.webp",
-        "width": 84,
+        "width": 83,
         "height": 240
       }
     ],
@@ -3963,7 +3963,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3977,7 +3977,7 @@
     "images": [
       {
         "file": "triceps-pushdown-cable-0.webp",
-        "width": 85,
+        "width": 84,
         "height": 240
       },
       {
@@ -3994,7 +3994,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4025,7 +4025,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4039,7 +4039,7 @@
     "images": [
       {
         "file": "zottman-curl-dumbbell-0.webp",
-        "width": 131,
+        "width": 130,
         "height": 240
       },
       {
@@ -4056,7 +4056,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4070,12 +4070,12 @@
     "images": [
       {
         "file": "belt-squat-machine-0.webp",
-        "width": 232,
+        "width": 231,
         "height": 240
       },
       {
         "file": "belt-squat-machine-1.webp",
-        "width": 228,
+        "width": 227,
         "height": 240
       }
     ],
@@ -4087,7 +4087,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4106,7 +4106,7 @@
       },
       {
         "file": "box-jump-1.webp",
-        "width": 228,
+        "width": 227,
         "height": 240
       }
     ],
@@ -4118,7 +4118,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4137,7 +4137,7 @@
       },
       {
         "file": "box-squat-barbell-1.webp",
-        "width": 200,
+        "width": 199,
         "height": 240
       }
     ],
@@ -4149,7 +4149,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4164,12 +4164,12 @@
       {
         "file": "bulgarian-split-squat-0.webp",
         "width": 240,
-        "height": 195
+        "height": 196
       },
       {
         "file": "bulgarian-split-squat-1.webp",
         "width": 240,
-        "height": 195
+        "height": 196
       }
     ],
     "sources": [
@@ -4180,7 +4180,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4200,7 +4200,7 @@
       {
         "file": "calf-press-on-leg-press-1.webp",
         "width": 240,
-        "height": 165
+        "height": 166
       }
     ],
     "sources": [
@@ -4211,7 +4211,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4225,12 +4225,12 @@
     "images": [
       {
         "file": "donkey-calf-raise-0.webp",
-        "width": 194,
+        "width": 193,
         "height": 240
       },
       {
         "file": "donkey-calf-raise-1.webp",
-        "width": 176,
+        "width": 174,
         "height": 240
       }
     ],
@@ -4242,7 +4242,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4261,7 +4261,7 @@
       },
       {
         "file": "front-squat-barbell-1.webp",
-        "width": 199,
+        "width": 198,
         "height": 240
       }
     ],
@@ -4273,7 +4273,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4288,12 +4288,12 @@
       {
         "file": "glute-bridge-0.webp",
         "width": 240,
-        "height": 115
+        "height": 114
       },
       {
         "file": "glute-bridge-1.webp",
         "width": 240,
-        "height": 118
+        "height": 117
       }
     ],
     "sources": [
@@ -4304,7 +4304,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4318,12 +4318,12 @@
     "images": [
       {
         "file": "glute-kickback-cable-0.webp",
-        "width": 96,
+        "width": 97,
         "height": 240
       },
       {
         "file": "glute-kickback-cable-1.webp",
-        "width": 163,
+        "width": 164,
         "height": 240
       }
     ],
@@ -4335,7 +4335,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4366,7 +4366,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4397,7 +4397,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4428,7 +4428,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4448,7 +4448,7 @@
       {
         "file": "hack-squat-1.webp",
         "width": 240,
-        "height": 166
+        "height": 167
       }
     ],
     "sources": [
@@ -4459,7 +4459,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4478,7 +4478,7 @@
       },
       {
         "file": "hack-squat-barbell-1.webp",
-        "width": 198,
+        "width": 197,
         "height": 240
       }
     ],
@@ -4490,7 +4490,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4504,12 +4504,12 @@
     "images": [
       {
         "file": "hip-abductor-machine-0.webp",
-        "width": 135,
+        "width": 134,
         "height": 240
       },
       {
         "file": "hip-abductor-machine-1.webp",
-        "width": 208,
+        "width": 207,
         "height": 240
       }
     ],
@@ -4521,7 +4521,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4535,7 +4535,7 @@
     "images": [
       {
         "file": "hip-adductor-machine-0.webp",
-        "width": 208,
+        "width": 207,
         "height": 240
       },
       {
@@ -4552,7 +4552,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4567,12 +4567,12 @@
       {
         "file": "hip-thrust-barbell-0.webp",
         "width": 240,
-        "height": 94
+        "height": 95
       },
       {
         "file": "hip-thrust-barbell-1.webp",
         "width": 240,
-        "height": 107
+        "height": 108
       }
     ],
     "sources": [
@@ -4583,7 +4583,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4602,7 +4602,7 @@
       },
       {
         "file": "leg-extension-machine-1.webp",
-        "width": 158,
+        "width": 159,
         "height": 240
       }
     ],
@@ -4614,7 +4614,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4634,7 +4634,7 @@
       {
         "file": "leg-press-1.webp",
         "width": 240,
-        "height": 158
+        "height": 159
       }
     ],
     "sources": [
@@ -4645,7 +4645,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4665,7 +4665,7 @@
       {
         "file": "lunge-barbell-1.webp",
         "width": 240,
-        "height": 212
+        "height": 211
       }
     ],
     "sources": [
@@ -4676,7 +4676,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4691,12 +4691,12 @@
       {
         "file": "lunge-bodyweight-0.webp",
         "width": 240,
-        "height": 203
+        "height": 204
       },
       {
         "file": "lunge-bodyweight-1.webp",
         "width": 240,
-        "height": 203
+        "height": 204
       }
     ],
     "sources": [
@@ -4707,7 +4707,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4721,7 +4721,7 @@
     "images": [
       {
         "file": "lunge-dumbbell-0.webp",
-        "width": 111,
+        "width": 112,
         "height": 240
       },
       {
@@ -4738,7 +4738,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4758,7 +4758,7 @@
       {
         "file": "lying-leg-curl-machine-1.webp",
         "width": 240,
-        "height": 158
+        "height": 159
       }
     ],
     "sources": [
@@ -4769,7 +4769,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4784,7 +4784,7 @@
       {
         "file": "narrow-stance-leg-press-0.webp",
         "width": 240,
-        "height": 141
+        "height": 142
       },
       {
         "file": "narrow-stance-leg-press-1.webp",
@@ -4800,7 +4800,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4820,7 +4820,7 @@
       {
         "file": "overhead-squat-barbell-1.webp",
         "width": 240,
-        "height": 208
+        "height": 210
       }
     ],
     "sources": [
@@ -4831,7 +4831,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4851,7 +4851,7 @@
       {
         "file": "pistol-squat-1.webp",
         "width": 240,
-        "height": 203
+        "height": 202
       }
     ],
     "sources": [
@@ -4862,7 +4862,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4893,7 +4893,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4907,7 +4907,7 @@
     "images": [
       {
         "file": "reverse-lunge-dumbbell-0.webp",
-        "width": 111,
+        "width": 112,
         "height": 240
       },
       {
@@ -4924,7 +4924,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4939,7 +4939,7 @@
       {
         "file": "romanian-deadlift-barbell-0.webp",
         "width": 240,
-        "height": 232
+        "height": 233
       },
       {
         "file": "romanian-deadlift-barbell-1.webp",
@@ -4955,7 +4955,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4986,7 +4986,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5000,7 +5000,7 @@
     "images": [
       {
         "file": "seated-calf-raise-barbell-0.webp",
-        "width": 163,
+        "width": 162,
         "height": 240
       },
       {
@@ -5017,7 +5017,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5048,7 +5048,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5079,7 +5079,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5099,7 +5099,7 @@
       {
         "file": "seated-leg-press-machine-1.webp",
         "width": 240,
-        "height": 158
+        "height": 159
       }
     ],
     "sources": [
@@ -5110,7 +5110,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5129,7 +5129,7 @@
       },
       {
         "file": "single-leg-deadlift-dumbbell-1.webp",
-        "width": 101,
+        "width": 100,
         "height": 240
       }
     ],
@@ -5141,7 +5141,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5155,12 +5155,12 @@
     "images": [
       {
         "file": "sissy-squat-0.webp",
-        "width": 135,
+        "width": 134,
         "height": 240
       },
       {
         "file": "sissy-squat-1.webp",
-        "width": 111,
+        "width": 110,
         "height": 240
       }
     ],
@@ -5172,7 +5172,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5203,7 +5203,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5218,7 +5218,7 @@
       {
         "file": "squat-barbell-0.webp",
         "width": 240,
-        "height": 207
+        "height": 208
       },
       {
         "file": "squat-barbell-1.webp",
@@ -5234,7 +5234,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5248,7 +5248,7 @@
     "images": [
       {
         "file": "squat-bodyweight-0.webp",
-        "width": 190,
+        "width": 188,
         "height": 240
       },
       {
@@ -5265,7 +5265,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5279,12 +5279,12 @@
     "images": [
       {
         "file": "squat-dumbbell-0.webp",
-        "width": 144,
+        "width": 145,
         "height": 240
       },
       {
         "file": "squat-dumbbell-1.webp",
-        "width": 103,
+        "width": 104,
         "height": 240
       }
     ],
@@ -5296,7 +5296,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5310,12 +5310,12 @@
     "images": [
       {
         "file": "squat-smith-machine-0.webp",
-        "width": 180,
+        "width": 181,
         "height": 240
       },
       {
         "file": "squat-smith-machine-1.webp",
-        "width": 180,
+        "width": 181,
         "height": 240
       }
     ],
@@ -5327,7 +5327,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5347,7 +5347,7 @@
       {
         "file": "standing-calf-raise-barbell-1.webp",
         "width": 240,
-        "height": 213
+        "height": 214
       }
     ],
     "sources": [
@@ -5358,7 +5358,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5372,12 +5372,12 @@
     "images": [
       {
         "file": "standing-calf-raise-dumbbell-0.webp",
-        "width": 221,
+        "width": 219,
         "height": 240
       },
       {
         "file": "standing-calf-raise-dumbbell-1.webp",
-        "width": 221,
+        "width": 219,
         "height": 240
       }
     ],
@@ -5389,7 +5389,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5403,12 +5403,12 @@
     "images": [
       {
         "file": "standing-calf-raise-machine-0.webp",
-        "width": 191,
+        "width": 190,
         "height": 240
       },
       {
         "file": "standing-calf-raise-machine-1.webp",
-        "width": 177,
+        "width": 176,
         "height": 240
       }
     ],
@@ -5420,7 +5420,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5439,7 +5439,7 @@
       },
       {
         "file": "standing-calf-raise-smith-machine-1.webp",
-        "width": 199,
+        "width": 200,
         "height": 240
       }
     ],
@@ -5451,7 +5451,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5482,7 +5482,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5513,7 +5513,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5527,7 +5527,7 @@
     "images": [
       {
         "file": "step-up-dumbbell-0.webp",
-        "width": 153,
+        "width": 154,
         "height": 240
       },
       {
@@ -5544,7 +5544,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5559,12 +5559,12 @@
       {
         "file": "stiff-leg-deadlift-barbell-0.webp",
         "width": 240,
-        "height": 205
+        "height": 206
       },
       {
         "file": "stiff-leg-deadlift-barbell-1.webp",
         "width": 240,
-        "height": 225
+        "height": 226
       }
     ],
     "sources": [
@@ -5575,7 +5575,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5606,7 +5606,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5620,7 +5620,7 @@
     "images": [
       {
         "file": "walking-lunge-dumbbell-0.webp",
-        "width": 111,
+        "width": 112,
         "height": 240
       },
       {
@@ -5637,7 +5637,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5652,7 +5652,7 @@
       {
         "file": "zercher-squat-barbell-0.webp",
         "width": 240,
-        "height": 142
+        "height": 143
       },
       {
         "file": "zercher-squat-barbell-1.webp",
@@ -5668,7 +5668,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5682,7 +5682,7 @@
     "images": [
       {
         "file": "ab-rollout-barbell-0.webp",
-        "width": 177,
+        "width": 175,
         "height": 240
       },
       {
@@ -5699,7 +5699,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5714,12 +5714,12 @@
       {
         "file": "ab-wheel-0.webp",
         "width": 240,
-        "height": 97
+        "height": 98
       },
       {
         "file": "ab-wheel-1.webp",
         "width": 240,
-        "height": 78
+        "height": 80
       }
     ],
     "sources": [
@@ -5730,7 +5730,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5745,7 +5745,7 @@
       {
         "file": "bent-knee-hip-raise-0.webp",
         "width": 240,
-        "height": 120
+        "height": 119
       },
       {
         "file": "bent-knee-hip-raise-1.webp",
@@ -5761,7 +5761,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5776,12 +5776,12 @@
       {
         "file": "bicycle-crunch-0.webp",
         "width": 240,
-        "height": 83
+        "height": 84
       },
       {
         "file": "bicycle-crunch-1.webp",
         "width": 240,
-        "height": 84
+        "height": 85
       }
     ],
     "sources": [
@@ -5792,7 +5792,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5823,7 +5823,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5838,7 +5838,7 @@
       {
         "file": "cross-body-crunch-0.webp",
         "width": 240,
-        "height": 105
+        "height": 103
       },
       {
         "file": "cross-body-crunch-1.webp",
@@ -5854,7 +5854,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5874,7 +5874,7 @@
       {
         "file": "crunch-1.webp",
         "width": 240,
-        "height": 115
+        "height": 114
       }
     ],
     "sources": [
@@ -5885,7 +5885,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5899,7 +5899,7 @@
     "images": [
       {
         "file": "crunch-machine-0.webp",
-        "width": 202,
+        "width": 201,
         "height": 240
       },
       {
@@ -5916,7 +5916,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5931,11 +5931,11 @@
       {
         "file": "crunch-stability-ball-0.webp",
         "width": 240,
-        "height": 106
+        "height": 105
       },
       {
         "file": "crunch-stability-ball-1.webp",
-        "width": 238,
+        "width": 237,
         "height": 240
       }
     ],
@@ -5947,7 +5947,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5962,7 +5962,7 @@
       {
         "file": "decline-crunch-0.webp",
         "width": 240,
-        "height": 165
+        "height": 164
       },
       {
         "file": "decline-crunch-1.webp",
@@ -5978,7 +5978,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5998,7 +5998,7 @@
       {
         "file": "flat-bench-leg-raise-1.webp",
         "width": 240,
-        "height": 208
+        "height": 209
       }
     ],
     "sources": [
@@ -6009,7 +6009,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6024,12 +6024,12 @@
       {
         "file": "flutter-kicks-0.webp",
         "width": 240,
-        "height": 84
+        "height": 83
       },
       {
         "file": "flutter-kicks-1.webp",
         "width": 240,
-        "height": 98
+        "height": 97
       }
     ],
     "sources": [
@@ -6040,7 +6040,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6071,7 +6071,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6085,12 +6085,12 @@
     "images": [
       {
         "file": "hanging-leg-raise-0.webp",
-        "width": 144,
+        "width": 145,
         "height": 240
       },
       {
         "file": "hanging-leg-raise-1.webp",
-        "width": 185,
+        "width": 186,
         "height": 240
       }
     ],
@@ -6102,7 +6102,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6117,12 +6117,12 @@
       {
         "file": "hollow-hold-0.webp",
         "width": 240,
-        "height": 35
+        "height": 36
       },
       {
         "file": "hollow-hold-1.webp",
         "width": 240,
-        "height": 72
+        "height": 73
       }
     ],
     "sources": [
@@ -6133,7 +6133,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6153,7 +6153,7 @@
       {
         "file": "lying-leg-raise-1.webp",
         "width": 240,
-        "height": 208
+        "height": 209
       }
     ],
     "sources": [
@@ -6164,7 +6164,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6195,7 +6195,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6210,11 +6210,11 @@
       {
         "file": "oblique-crunch-decline-0.webp",
         "width": 240,
-        "height": 165
+        "height": 164
       },
       {
         "file": "oblique-crunch-decline-1.webp",
-        "width": 185,
+        "width": 183,
         "height": 240
       }
     ],
@@ -6226,7 +6226,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6240,12 +6240,12 @@
     "images": [
       {
         "file": "pallof-press-cable-0.webp",
-        "width": 140,
+        "width": 141,
         "height": 240
       },
       {
         "file": "pallof-press-cable-1.webp",
-        "width": 158,
+        "width": 159,
         "height": 240
       }
     ],
@@ -6257,7 +6257,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6272,7 +6272,7 @@
       {
         "file": "plank-0.webp",
         "width": 240,
-        "height": 75
+        "height": 77
       }
     ],
     "sources": [
@@ -6283,7 +6283,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6314,7 +6314,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6328,12 +6328,12 @@
     "images": [
       {
         "file": "side-bend-dumbbell-0.webp",
-        "width": 112,
+        "width": 111,
         "height": 240
       },
       {
         "file": "side-bend-dumbbell-1.webp",
-        "width": 106,
+        "width": 105,
         "height": 240
       }
     ],
@@ -6345,7 +6345,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6360,12 +6360,12 @@
       {
         "file": "side-plank-0.webp",
         "width": 240,
-        "height": 108
+        "height": 107
       },
       {
         "file": "side-plank-1.webp",
         "width": 240,
-        "height": 113
+        "height": 112
       }
     ],
     "sources": [
@@ -6376,7 +6376,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6407,7 +6407,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6422,12 +6422,12 @@
       {
         "file": "stability-ball-pull-in-0.webp",
         "width": 240,
-        "height": 110
+        "height": 109
       },
       {
         "file": "stability-ball-pull-in-1.webp",
         "width": 240,
-        "height": 150
+        "height": 149
       }
     ],
     "sources": [
@@ -6438,7 +6438,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6452,12 +6452,12 @@
     "images": [
       {
         "file": "woodchopper-cable-0.webp",
-        "width": 222,
+        "width": 221,
         "height": 240
       },
       {
         "file": "woodchopper-cable-1.webp",
-        "width": 222,
+        "width": 221,
         "height": 240
       }
     ],
@@ -6469,7 +6469,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6500,7 +6500,7 @@
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/everkinetic/data",
-        "changes": "cropped, resized and recoloured"
+        "changes": "cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6515,12 +6515,12 @@
       {
         "file": "cycling-stationary-bike-0.webp",
         "width": 240,
-        "height": 212
+        "height": 213
       },
       {
         "file": "cycling-stationary-bike-1.webp",
         "width": 240,
-        "height": 212
+        "height": 213
       }
     ],
     "sources": [
@@ -6531,7 +6531,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6546,12 +6546,12 @@
       {
         "file": "elliptical-trainer-0.webp",
         "width": 240,
-        "height": 206
+        "height": 207
       },
       {
         "file": "elliptical-trainer-1.webp",
         "width": 240,
-        "height": 206
+        "height": 207
       }
     ],
     "sources": [
@@ -6562,7 +6562,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6593,7 +6593,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6624,7 +6624,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6655,7 +6655,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6670,7 +6670,7 @@
       {
         "file": "running-treadmill-0.webp",
         "width": 240,
-        "height": 204
+        "height": 205
       },
       {
         "file": "running-treadmill-1.webp",
@@ -6686,7 +6686,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6700,12 +6700,12 @@
     "images": [
       {
         "file": "ski-erg-0.webp",
-        "width": 238,
+        "width": 237,
         "height": 240
       },
       {
         "file": "ski-erg-1.webp",
-        "width": 239,
+        "width": 238,
         "height": 240
       }
     ],
@@ -6717,7 +6717,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6732,12 +6732,12 @@
       {
         "file": "stair-climber-0.webp",
         "width": 240,
-        "height": 217
+        "height": 218
       },
       {
         "file": "stair-climber-1.webp",
         "width": 240,
-        "height": 217
+        "height": 218
       }
     ],
     "sources": [
@@ -6748,7 +6748,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6762,12 +6762,12 @@
     "images": [
       {
         "file": "burpee-0.webp",
-        "width": 217,
+        "width": 216,
         "height": 240
       },
       {
         "file": "burpee-1.webp",
-        "width": 53,
+        "width": 52,
         "height": 240
       }
     ],
@@ -6779,7 +6779,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6810,7 +6810,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6841,7 +6841,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6855,7 +6855,7 @@
     "images": [
       {
         "file": "farmer-s-walk-dumbbell-0.webp",
-        "width": 130,
+        "width": 129,
         "height": 240
       },
       {
@@ -6872,7 +6872,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6903,7 +6903,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6918,12 +6918,12 @@
       {
         "file": "power-clean-barbell-0.webp",
         "width": 240,
-        "height": 166
+        "height": 165
       },
       {
         "file": "power-clean-barbell-1.webp",
         "width": 240,
-        "height": 213
+        "height": 212
       }
     ],
     "sources": [
@@ -6934,7 +6934,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6965,7 +6965,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6980,7 +6980,7 @@
       {
         "file": "thruster-barbell-0.webp",
         "width": 240,
-        "height": 229
+        "height": 230
       },
       {
         "file": "thruster-barbell-1.webp",
@@ -6996,7 +6996,7 @@
         "license": "app-owned",
         "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md#app-owned-illustrations",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized and recoloured"
+        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
       }
     ]
   }

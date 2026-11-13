@@ -12,7 +12,7 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 ## Everkinetic mappings (`apps/web/scripts/catalog/generate.py`)
 
 - `dist/png` drawings are artist-cropped (legs, feet, plates cut off). `EK_FULL_FIGURE` maps exercises to the uncropped `src/images-ai` exports, ordered (start, finish) for display; some exports label S/F backwards, so review order by eye.
-- `thicken()` strips specks and picks the `MinFilter` size that brings the final mask closest to `EK_STROKE_WIDTH`; fixed sizes left large/small sources too faint or heavy.
+- `despeck()` strips stray specks from the full-figure exports; line weight is then set by the shared normalisation below.
 - Keep shrugs on `dist`: at full-figure scale the shoulder lift is invisible. `EK_UPPER_BODY` crops only the narrow dumbbell/cable shrugs (same box for both poses, hands and weight fully in frame); cropping barbell/Smith shrugs strips plates and rails.
 - `EK_NO_DRAWING` drops Everkinetic's drawing when it shows another variant (Pull Up (Assisted) reuses the chin-up-assisted QA poses; redrawing that pair means updating both records' hashes).
 - Check that an Everkinetic id's title matches the exercise before mapping it.
@@ -31,7 +31,7 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 
 - Match Everkinetic or don't ship: faceless egg heads, no hair, thick uniform outline, no hatching or shading, minimal muscle lines, equipment reduced to what the body touches, tight crop. QA side by side with licensed masks, and inspect both 240px masks and CSS-mask thumbnails on light and dark backgrounds.
 - "Minimal muscle lines" alone still yields anatomy-chart figures. Append explicit bans ("no ears, no finger knuckle lines, no shoe laces, no six-pack") to the prompt prefix. For a style-only failure, a targeted "remove interior lines, keep pose" edit usually passes.
-- Thin AI lines read faint at 240px. A uniform `MinFilter` dilation on the raw PNG brings stroke width into the licensed range without changing the pose; re-audit afterwards.
+- Line weight is set by the pipeline, not by the drawing: `stroke.py` redraws every drawing's lines from the full-size source at the catalog's mean width, scaling each line by one factor so outlines stay heavier than interior lines, and `tests/catalog.test.ts` fails when a bundled mask leaves the licensed 1.7–2.7px band. Uniform filters can't do this: `MinFilter` only thickens and merges nearby lines, `MaxFilter` erases fine interior lines. Thickening closes gaps narrower than the new line width, so judge dense machines and chains on the normalised mask, not the raw PNG.
 
 ## Prompting and pose limits
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "model": "gpt-image-2 (image_generate)",
-  "conversion": "generate.line_mask: MAX_SIDE=240, LEVELS=8, lossless WebP method=4",
+  "conversion": "generate.normalised_mask: stroke.normalise (line width 2.1px), then line_mask (MAX_SIDE=240, LEVELS=8, lossless WebP method=4)",
   "review": "Accepted only after a style audit against Everkinetic references, an independent strict physical-logic audit of the raw image, and a 240px mask check beside licensed drawings on light and dark backgrounds.",
   "exercises": [
     {

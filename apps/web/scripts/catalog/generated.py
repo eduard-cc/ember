@@ -21,14 +21,14 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-from generate import CACHE, OUT_IMAGES, OUT_JSON, ROOT, line_mask, slug
+from generate import CACHE, OUT_IMAGES, OUT_JSON, ROOT, normalised_mask, slug
 
 MANIFEST = Path(__file__).with_name('generated-manifest.json')
 PROVENANCE_URL = 'https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md'
 AUTHOR = 'Ember (AI-assisted, gpt-image-2)'
 LICENSE = 'app-owned'
 CHANGES = ('AI-assisted illustration made for Ember, not an Everkinetic or wger work; '
-           'cropped, resized and recoloured')
+           'cropped, resized, recoloured and line width normalised')
 
 
 def is_app_owned(source):
@@ -78,7 +78,7 @@ def bundle(source_dir):
             raw = (source_dir / 'accepted' / pose['file']).read_bytes()
             if hashlib.sha256(raw).hexdigest() != pose['sha256']:
                 raise ValueError(f'{entry["name"]}: {pose["file"]} does not match the reviewed PNG')
-            data, size = line_mask(raw)
+            data, size = normalised_mask(raw)
             if len(data) > 40 * 1024:
                 raise ValueError(f'{entry["name"]}: image exceeds catalog size budget')
             images.append((data, size))
@@ -112,7 +112,8 @@ def bundle(source_dir):
     manifest = {
         'schemaVersion': 3,
         'model': 'gpt-image-2 (image_generate)',
-        'conversion': 'generate.line_mask: MAX_SIDE=240, LEVELS=8, lossless WebP method=4',
+        'conversion': ('generate.normalised_mask: stroke.normalise (line width 2.1px), then '
+                       'line_mask (MAX_SIDE=240, LEVELS=8, lossless WebP method=4)'),
         'review': ('Accepted only after a style audit against Everkinetic references, an '
                    'independent strict physical-logic audit of the raw image, and a 240px '
                    'mask check beside licensed drawings on light and dark backgrounds.'),
