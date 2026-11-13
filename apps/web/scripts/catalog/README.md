@@ -35,11 +35,9 @@ licence and attribution). Build from a full Everkinetic checkout, including
 
 Some `dist/png` drawings are cut off at the legs, feet or equipment. For the
 exercises in `EK_FULL_FIGURE` (`generate.py`), the artist's full-figure exports
-are used instead. They are cleaned of stray specks, then thickened by whichever
-filter size brings the final mask closest to the measured `dist` stroke width
-(`EK_STROKE_WIDTH`); this measuring makes a full run take about 5 minutes. Review
-each pair side by side for exercise, pose and start/finish order; some exports
-label start and finish backwards, so the mapping lists files in display order.
+are used instead. They are cleaned of stray specks first. Review each pair side by
+side for exercise, pose and start/finish order; some exports label start and
+finish backwards, so the mapping lists files in display order.
 Keep an exercise on `dist` when its full-figure export is near-identical, already
 uncropped or no better: shrugs lose their visible shoulder lift at full-figure
 scale.
@@ -51,6 +49,19 @@ Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing.
 `EK_NO_DRAWING` skips Everkinetic's drawing where it shows a different variant:
 Pull Up (Assisted) shows the approved assisted-machine pair (also used by Chin
 Up (Assisted)) through `generated.py`.
+
+## Line width
+
+Every drawing, licensed or app-owned, is redrawn from its full-size source by
+`stroke.py` before the 240px mask is made, so all drawings share one line weight.
+It finds each line's centre and drawn width, scales every line's width by one
+factor per drawing (outlines stay heavier than interior lines; solid fills keep
+their size) and tunes that factor until the mask's mean line width is 2.1px, the
+median of the licensed Everkinetic drawings before normalisation. The pose and
+every line stay where they were drawn. Mean line width is 2 × ink area ÷ outline
+length, the outline measured over four directions (`stroke.stroke_width`).
+`tests/catalog.test.ts` holds every bundled drawing to 1.7–2.7px, the licensed
+drawings' 5th–95th percentile. A full `generate.py` run takes about 10 minutes.
 
 ## App-owned illustrations
 
@@ -89,11 +100,12 @@ npm run test:run -- tests/catalog.test.ts
 npm run typecheck
 ```
 
-The script imports `generate.line_mask`, so cropping, ink extraction, 8-level
-quantisation, maximum 240-pixel side and lossless WebP conversion match the
-licensed drawings. It refuses mismatched source hashes and never replaces or
-edits a licensed illustration or its attribution. All inputs are validated before
-any asset changes. Run it after `generate.py` when rebuilding the licensed base.
+The script imports `generate.normalised_mask`, so line width, cropping, ink
+extraction, 8-level quantisation, maximum 240-pixel side and lossless WebP
+conversion match the licensed drawings. It refuses mismatched source hashes and
+never replaces or edits a licensed illustration or its attribution. All inputs
+are validated before any asset changes. Run it after `generate.py` when
+rebuilding the licensed base.
 
 Each bundled drawing is credited `Ember (AI-assisted, gpt-image-2)`, license
 `app-owned`, with an adaptation note saying it is AI-assisted and not an

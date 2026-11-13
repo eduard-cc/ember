@@ -1,7 +1,35 @@
+import decode, {init} from '@jsquash/webp/decode.js';
 import {existsSync, readFileSync, statSync} from 'node:fs';
+import {createRequire} from 'node:module';
 import {describe, expect, it} from 'vitest';
 
 import {bodyParts, bodyPartsOf, catalog, catalogEntry, muscles} from '../src/catalog/catalog';
+
+// 5th to 95th percentile of the licensed drawings' line width before normalisation
+// (scripts/catalog/README.md, "Line width").
+const strokeBand = [1.7, 2.7];
+
+/** Mean line width (px) of a drawing: 2 × ink area ÷ outline length. The outline is measured
+ * with Crofton's formula over four directions, so diagonal lines count like straight ones.
+ * Ink is alpha above half. Same measure as `stroke_width` in scripts/catalog/stroke.py. */
+function strokeWidth({width, height, data}: ImageData) {
+  const ink = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < width && y < height && data[(y * width + x) * 4 + 3] > 127;
+  let area = 0;
+  const crossings = [0, 0, 0, 0];
+  for (let y = -1; y < height; y++)
+    for (let x = -1; x < width; x++) {
+      const here = ink(x, y);
+      if (here) area++;
+      if (here !== ink(x + 1, y)) crossings[0]++;
+      if (here !== ink(x, y + 1)) crossings[1]++;
+      if (here !== ink(x + 1, y + 1)) crossings[2]++;
+      if (ink(x + 1, y) !== ink(x, y + 1)) crossings[3]++;
+    }
+  const [across, down, diagonal, antidiagonal] = crossings;
+  const outline = (Math.PI / 8) * (across + down + (diagonal + antidiagonal) / Math.SQRT2);
+  return (2 * area) / outline;
+}
 
 // Names as a Strong export writes them, so imported history maps 1:1 without renaming.
 const strongNames = [
@@ -176,6 +204,25 @@ describe('bundled exercise catalog', () => {
     // Assisted pull-ups show the assisted machine, not the unassisted pull-up drawing.
     const assisted = catalogEntry('Pull Up (Assisted)');
     expect(assisted?.sources.find((s) => s.kind === 'illustration')?.license).toBe('app-owned');
+  });
+  it('draws every drawing with the line width of the licensed Everkinetic set', async () => {
+    // The package's types declare only Emscripten options; its init also takes a compiled module.
+    const initDecoder = init as unknown as (module: WebAssembly.Module) => Promise<void>;
+    await initDecoder(
+      new WebAssembly.Module(
+        readFileSync(
+          createRequire(import.meta.url).resolve('@jsquash/webp/codec/dec/webp_dec.wasm'),
+        ),
+      ),
+    );
+    const outside: string[] = [];
+    for (const image of catalog.flatMap((e) => e.images)) {
+      const bytes = readFileSync(`src/catalog/images/${image.file}`);
+      const width = strokeWidth(await decode(new Uint8Array(bytes).buffer));
+      if (!(width >= strokeBand[0] && width <= strokeBand[1]))
+        outside.push(`${image.file}: ${width.toFixed(2)}px`);
+    }
+    expect(outside).toEqual([]);
   });
   it('gives every exercise a drawing', () => {
     expect(catalog.filter((e) => e.images.length === 0).map((e) => e.name)).toEqual([]);

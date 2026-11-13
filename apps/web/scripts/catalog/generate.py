@@ -14,9 +14,10 @@ the names match character for character. Nothing is matched by fuzzy name at
 runtime.
 
 Only line drawings are bundled (Everkinetic, or wger drawings in the Everkinetic
-style), never photos. Images are cropped, resized and converted to alpha masks
-(lines become opaque, paper transparent) so the app can draw them in its own
-theme colour. Those modifications are stated on the Credits screen.
+style), never photos. Every drawing's lines are redrawn at one catalog line width
+(stroke.py), then cropped, resized and converted to alpha masks (lines become opaque,
+paper transparent) so the app can draw them in its own theme colour. Those
+modifications are stated on the Credits screen.
 
 Requires Pillow with WebP support.
 """
@@ -28,9 +29,10 @@ import sys
 import urllib.request
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageOps
 
 import muscles
+import stroke
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_JSON = ROOT / 'src/catalog/exercises.json'
@@ -293,6 +295,8 @@ LICENSES = {
 }
 WGER_LICENSE_IDS = {1: 'CC-BY-SA 3', 2: 'CC-BY-SA 4', 3: 'CC0', 4: 'CC-BY 4'}
 EK_LICENSE = LICENSES['CC-BY-SA 4']
+# Adaptations of every licensed drawing, stated on the Credits screen.
+CHANGES = 'cropped, resized, recoloured and line width normalised'
 # Everkinetic's dist/png cuts some drawings off at the legs, feet or equipment. For these,
 # the artist's full-figure source exports (src/images-ai, same licence) are used instead.
 # Each pair was reviewed side by side for exercise, pose and order: (start, finish).
@@ -423,35 +427,9 @@ def ink_runs(profile):
     return runs
 
 
-def stroke_width(mask_webp):
-    """Mean width (px) of the line work in a line_mask WebP: lengths of horizontal and
-    vertical runs of opaque pixels, ignoring runs longer than a stroke (filled areas)."""
-    alpha = Image.open(io.BytesIO(mask_webp)).split()[-1]
-    width, height = alpha.size
-    pixels = alpha.load()
-    runs = []
-    for outer, inner, at in ((height, width, lambda o, i: pixels[i, o]),
-                             (width, height, lambda o, i: pixels[o, i])):
-        for o in range(outer):
-            length = 0
-            for i in range(inner + 1):
-                if i < inner and at(o, i) > 127:
-                    length += 1
-                elif length:
-                    if length <= 12:
-                        runs.append(length)
-                    length = 0
-    return sum(runs) / len(runs) if runs else 0
-
-
-# Mean stroke width of the dist/png drawings after line_mask (measured Oct 2026).
-EK_STROKE_WIDTH = 2.9
-
-
-def thicken(raw, speck=50):
-    """Prepare a full-figure export: drop stray specks outside the drawing, then widen the
-    line work uniformly (grey minimum filter). The exports' native line widths vary, so
-    the filter size is chosen by measuring the line_mask result against EK_STROKE_WIDTH."""
+def despeck(raw, speck=50):
+    """Drop stray specks outside a full-figure export's drawing; returns a white-ground
+    greyscale image."""
     image = Image.open(io.BytesIO(raw)).convert('RGBA')
     flat = Image.alpha_composite(Image.new('RGBA', image.size, 'white'), image).convert('L')
     draw = ImageDraw.Draw(flat)
@@ -469,24 +447,13 @@ def thicken(raw, speck=50):
             if run != main and sum(profile[run[0]:run[1]]) < speck:
                 box = (run[0], 0, run[1] - 1, height - 1) if horizontal else (0, run[0], width - 1, run[1] - 1)
                 draw.rectangle(box, fill=255)
-    return match_stroke(flat)
+    return flat
 
 
-def match_stroke(flat):
-    """Widen (grey minimum filter) or thin (maximum filter) the line work of a white-ground
-    greyscale image, whichever brings its line_mask closest to EK_STROKE_WIDTH."""
-    candidates = []
-    for size in (-5, -3, 1, 3, 5, 7, 9, 11):
-        image = flat
-        if size > 1:
-            image = flat.filter(ImageFilter.MinFilter(size))
-        elif size < 0:
-            image = flat.filter(ImageFilter.MaxFilter(-size))
-        buffer = io.BytesIO()
-        image.save(buffer, 'PNG')
-        error = abs(stroke_width(line_mask(buffer.getvalue())[0]) - EK_STROKE_WIDTH)
-        candidates.append((error, abs(size), buffer.getvalue()))
-    return min(candidates)[2]
+def normalised_mask(image):
+    """line_mask of a drawing (encoded bytes or white-ground image) after its lines are redrawn
+    at the catalog line width (stroke.normalise)."""
+    return line_mask(stroke.normalise(image, lambda png: stroke.stroke_width(line_mask(png)[0])))
 
 
 def crop_fraction(raw, box):
@@ -554,16 +521,14 @@ def main():
             missing = [str(f) for f in files if not f.exists()]
             if missing:
                 sys.exit(f'{name}: full-figure Everkinetic export missing: {missing}')
-            # The exports are drawn smaller with finer lines than dist/png; thicken them
-            # to the same stroke weight before the shared crop and resize.
-            images = [thicken(f.read_bytes()) for f in files]
+            images = [despeck(f.read_bytes()) for f in files]
             image_source = ek_source
         if not images and ek_id and name not in EK_NO_DRAWING:
             files = [ek_root / f'dist/png/{ek_id}-relaxation.png', ek_root / f'dist/png/{ek_id}-tension.png']
             if all(f.exists() for f in files):
                 images = [f.read_bytes() for f in files]
                 if ek_id in EK_UPPER_BODY:
-                    images = [match_stroke(crop_fraction(raw, EK_UPPER_BODY[ek_id])) for raw in images]
+                    images = [crop_fraction(raw, EK_UPPER_BODY[ek_id]) for raw in images]
                 image_source = ek_source
         if not images and w and name not in EK_NO_DRAWING:
             drawings = [i for i in w['images'] if i['style'] == '1' and not i['is_ai_generated']
@@ -587,14 +552,14 @@ def main():
                 image_source = ek_source
         files_out = []
         for index, raw in enumerate(images):
-            data, size = line_mask(raw)
+            data, size = normalised_mask(raw)
             file = f'{slug(name)}-{index}.webp'
             (OUT_IMAGES / file).write_bytes(data)
             total_bytes += len(data)
             files_out.append({'file': file, 'width': size[0], 'height': size[1]})
         if image_source:
             sources.append({'kind': 'illustration', **image_source,
-                            'changes': 'cropped, resized and recoloured'})
+                            'changes': CHANGES})
         entries.append({
             'name': name, 'bodyPart': body, 'equipment': equipment, 'type': kind,
             'primaryMuscles': [], 'secondaryMuscles': [],  # set by muscles.apply
