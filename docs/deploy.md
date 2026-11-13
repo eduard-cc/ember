@@ -23,7 +23,7 @@ Runtime settings and secrets live in `~/.config/ember/runtime.env` (mode 0600, o
 
 ## Shipping through a PR
 
-- Every change reaches `main` through a PR; the `main` ruleset refuses direct pushes, force pushes and deletion, and requires the `CI` check (`docs/ci-and-tests.md`). Work on a short-lived branch, push it and open a PR whose description is one to three plain sentences on what it changes and why.
+- Every change reaches `main` through a PR; the `main` ruleset refuses direct pushes, force pushes and deletion, and requires the `CI` check (`docs/ci-and-tests.md`). Work on a short-lived branch, push it and open a PR whose description opens with one or two short sentences on what it changes and why, adds short bullets only when the PR does several separate things, puts anything the reviewer must act on (deploy order, migration, risk) on a line starting with **Note:**, and doesn't restate what CI reports.
 - Merge with `gh pr merge <n> --squash --auto --match-head-commit <sha>`, where `<sha>` is the head you verified and had reviewed: GitHub squashes once `CI` passes on that exact head (the repository allows auto-merge and squash merges only) and refuses if the branch moved meanwhile. Merging is shipping.
 - If `main` moved after the PR's CI ran, merge `origin/main` into the branch (never force-push a pushed branch) and let CI run on the new head.
 
