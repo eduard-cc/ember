@@ -354,6 +354,16 @@ EK_UPPER_BODY = {
     '0005': (0, 0, 1, 0.73),  # Shrug (Dumbbell)
     '0009': (0, 0, 1, 0.72),  # Shrug (Cable)
 }
+# Everkinetic's unpublished drawings (src/images-png-unknown: same artist and licence, not in
+# dist/ or its exercise list) for exercises it doesn't publish. Each pair was checked against
+# the exercise variant and is listed (start, finish); its source title names the drawing number.
+EK_UNRELEASED = {
+    'Ab Wheel': ('728a.svg.png', '728b.svg.png'),
+    'Cable Crunch': ('732a.svg.png', '732b.svg.png'),
+    'Hanging Knee Raise': ('753a.svg.png', '753b.svg.png'),
+    'Russian Twist': ('740b.svg.png', '740a.svg.png'),
+    'Woodchopper (Cable)': ('949a.svg.png', '949b.svg.png'),
+}
 # Exercises that skip Everkinetic's drawing because it shows a different variant; an
 # app-owned drawing (generated.py) fills the image instead.
 EK_NO_DRAWING = {'Pull Up (Assisted)'}
@@ -530,6 +540,18 @@ def main():
                 if ek_id in EK_UPPER_BODY:
                     images = [crop_fraction(raw, EK_UPPER_BODY[ek_id]) for raw in images]
                 image_source = ek_source
+        if not images and name in EK_UNRELEASED:
+            files = [ek_root / 'src/images-png-unknown' / f for f in EK_UNRELEASED[name]]
+            missing = [str(f) for f in files if not f.exists()]
+            if missing:
+                sys.exit(f'{name}: unpublished Everkinetic drawing missing: {missing}')
+            images = [f.read_bytes() for f in files]
+            number = EK_UNRELEASED[name][0].split('.')[0][:-1]
+            image_source = {
+                'title': f'Unpublished drawing {number}', 'author': 'Everkinetic',
+                'license': EK_LICENSE[0], 'licenseUrl': EK_LICENSE[1],
+                'url': 'https://github.com/everkinetic/data',
+            }
         if not images and w and name not in EK_NO_DRAWING:
             drawings = [i for i in w['images'] if i['style'] == '1' and not i['is_ai_generated']
                         and not unclear(i.get('license_author'))]

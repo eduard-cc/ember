@@ -46,6 +46,10 @@ Dumbbell and cable shrugs are cropped to the upper body (`EK_UPPER_BODY`, the
 same box for start and finish) so the small shoulder lift stays visible;
 barbell and Smith machine shrugs stay whole to keep their plates and rails.
 Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing.
+`EK_UNRELEASED` maps exercises Everkinetic doesn't publish to its unpublished
+drawings in `src/images-png-unknown` (same artist and licence, numbered, no
+title); each pair is checked against the exercise variant and listed in display
+order, and its credit is titled by drawing number.
 `EK_NO_DRAWING` skips Everkinetic's drawing where it shows a different variant:
 Pull Up (Assisted) shows the approved assisted-machine pair (also used by Chin
 Up (Assisted)) through `generated.py`.
@@ -73,8 +77,8 @@ original attribution and terms. Licensed Everkinetic reference drawings guide vi
 no reference pixels are bundled in the new assets.
 
 Raw PNGs stay outside git in `~/.cache/ember-catalog/generated/`: one QA record
-per exercise in `qa/<slug>.json` (status `accepted`, `rejected` or `unreviewed`,
-SHA-256, attempts, notes) and accepted sources in `accepted/<slug>.png`. Like the
+per exercise in `qa/<slug>.json` (status `accepted`, `rejected`, `unreviewed`
+or `replaced`, SHA-256, attempts, notes) and accepted sources in `accepted/<slug>.png`. Like the
 licensed drawings, each exercise shows a start and a finish pose: a record's ordered
 `poses` list (`accepted/<slug>-0.png` start, `-1.png` finish, each with its SHA-256)
 is bundled as `<slug>-0.webp` and `<slug>-1.webp`. Holds without a progression
@@ -85,7 +89,9 @@ reviewed exercise, its status, attempt count and the SHA-256 of accepted sources
 `sha256` is the finish pose (or the only drawing) and `startSha256` the start pose
 of a pair.
 Rejected and unreviewed images are never bundled, and an app-owned drawing whose
-record is no longer accepted is removed on the next run.
+record is no longer accepted is removed on the next run. `replaced` marks an
+accepted drawing superseded by a licensed one (`EK_UNRELEASED`); `generated.py`
+refuses it unless the exercise has that licensed drawing.
 `qa/pull-up-assisted.json` reuses the `chin-up-assisted-*.png` poses (same
 machine): redrawing that pair means updating both records' hashes.
 

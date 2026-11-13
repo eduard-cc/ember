@@ -4,7 +4,8 @@
 Usage: python3 scripts/catalog/generated.py [--source-dir ~/.cache/ember-catalog/generated]
 
 The source directory holds one QA record per exercise (qa/<slug>.json, status
-accepted|rejected|unreviewed) and accepted raw PNGs. A record's ordered `poses`
+accepted|rejected|unreviewed|replaced) and accepted raw PNGs. `replaced` marks a drawing
+superseded by a licensed one that generate.py now bundles. A record's ordered `poses`
 list (accepted/<slug>-0.png start, -1.png finish) becomes a start/finish pair;
 records without it bundle the single accepted/<slug>.png. Only accepted records
 whose PNGs match their recorded SHA-256 are bundled.
@@ -39,7 +40,7 @@ def load_records(source_dir):
     records = {}
     for path in sorted((source_dir / 'qa').glob('*.json')):
         record = json.loads(path.read_text())
-        if record.get('status') not in ('accepted', 'rejected', 'unreviewed'):
+        if record.get('status') not in ('accepted', 'rejected', 'unreviewed', 'replaced'):
             raise ValueError(f'{path.stem}: unknown QA status {record.get("status")!r}')
         records[path.stem] = record
     if not records:
@@ -54,6 +55,12 @@ def bundle(source_dir):
     unknown = sorted(set(records) - set(by_slug))
     if unknown:
         raise ValueError(f'QA records without a catalog exercise: {unknown}')
+
+    # A replaced AI drawing needs the licensed drawing that replaced it.
+    for key, record in records.items():
+        if record['status'] == 'replaced' and not any(
+                s['kind'] == 'illustration' and not is_app_owned(s) for s in by_slug[key]['sources']):
+            raise ValueError(f'{by_slug[key]["name"]}: replaced AI drawing has no licensed drawing')
 
     # Validate every input before writing any catalog asset.
     prepared = []

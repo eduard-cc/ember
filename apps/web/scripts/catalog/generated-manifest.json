@@ -6,10 +6,8 @@
   "exercises": [
     {
       "name": "Ab Wheel",
-      "status": "accepted",
-      "attempts": 3,
-      "sha256": "2798cf24563e3bb52cf3f4aabf274312594ec0e5406913548d59678514221554",
-      "startSha256": "3b6774e006d4cf7ea348aff67b8562466e9979a6f2c3cc09e6567d7fc91c48ee"
+      "status": "replaced",
+      "attempts": 3
     },
     {
       "name": "Arnold Press (Dumbbell)",
@@ -70,10 +68,8 @@
     },
     {
       "name": "Cable Crunch",
-      "status": "accepted",
-      "attempts": 3,
-      "sha256": "ab25f4c40965145b68c6b1e9b8e8b7fcb6a5efe0cfbd4249b9a9cd891f8daffe",
-      "startSha256": "b34619f5bd63a27bdfe6c29f1bf1ceec16b85f0fdee9d7db29cba3e7cb562b1f"
+      "status": "replaced",
+      "attempts": 3
     },
     {
       "name": "Chest Supported Row (Dumbbell)",
@@ -173,10 +169,8 @@
     },
     {
       "name": "Hanging Knee Raise",
-      "status": "accepted",
-      "attempts": 2,
-      "sha256": "a956ecdef963faa8151214c0c72964a4c91cf3d2e77a6b0c47a8dcd1b09dab10",
-      "startSha256": "1e659c0fa8f5874e0df44bb64ef9587e74d47a61aa5976ff4d75c80575fd19c4"
+      "status": "replaced",
+      "attempts": 2
     },
     {
       "name": "Hanging Leg Raise",
@@ -383,10 +377,8 @@
     },
     {
       "name": "Russian Twist",
-      "status": "accepted",
-      "attempts": 1,
-      "sha256": "2be36b508eb420f0543426385414dbc0eb279fae5ab7624d8668c49005e9daaf",
-      "startSha256": "6e11060f76426e5ce21e7963daa4db7899f5cc07fbab06add420e71e645ce062"
+      "status": "replaced",
+      "attempts": 1
     },
     {
       "name": "Seated Palms Up Wrist Curl (Dumbbell)",
@@ -482,11 +474,8 @@
     },
     {
       "name": "Woodchopper (Cable)",
-      "status": "accepted",
-      "attempts": 8,
-      "sha256": "54280c393aae388e0799e07533b0fc25cd62eb6e89f3750166ed20943e0e8205",
-      "startSha256": "d5a995dcab7d518f1fadedd76300de14869071ae8523c24bf793027ea1e4f721",
-      "postProcessed": "local line cleanup or thickening, re-audited"
+      "status": "replaced",
+      "attempts": 8
     },
     {
       "name": "Wrist Curl (Barbell)",

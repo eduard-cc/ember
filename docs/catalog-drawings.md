@@ -16,6 +16,7 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 - Keep shrugs on `dist`: at full-figure scale the shoulder lift is invisible. `EK_UPPER_BODY` crops only the narrow dumbbell/cable shrugs (same box for both poses, hands and weight fully in frame); cropping barbell/Smith shrugs strips plates and rails.
 - `EK_NO_DRAWING` drops Everkinetic's drawing when it shows another variant (Pull Up (Assisted) reuses the chin-up-assisted QA poses; redrawing that pair means updating both records' hashes).
 - Check that an Everkinetic id's title matches the exercise before mapping it.
+- `EK_UNRELEASED` maps exercises to Everkinetic's unpublished `src/images-png-unknown` drawings. They have no titles, so check each pair by eye for the exact variant (stance, grip, equipment) and frame order: #320 looks like a sumo deadlift in a contact sheet but is a conventional one (hip-width feet, hands outside the knees). Mark the superseded AI record `replaced`.
 - A full `generate.py` run takes several minutes.
 - A fresh worktree needs `NODE_ENV=development npm ci --include=dev` before `generated.py` (it runs the repo's Prettier).
 
