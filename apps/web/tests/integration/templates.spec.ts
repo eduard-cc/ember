@@ -114,7 +114,14 @@ test('stale offline template edit preserves both local edits and peer winner ins
     'data-sync',
     'Sync conflict or rejection · local changes kept for review/export',
   );
-  await expect(page.getByText('REVISION_CONFLICT', {exact: true})).toBeVisible();
+  // The problem strip's details name the conflicting local edit and why it waits.
+  await page.getByRole('button', {name: /^1 change not synced/}).click();
+  const details = page.getByRole('dialog', {name: 'Changes not synced', exact: true});
+  await expect(details.getByRole('listitem')).toHaveText([
+    'Local one · templateChanged on another device',
+  ]);
+  await details.getByRole('button', {name: 'Close', exact: true}).click();
+  await expect(details).toBeHidden();
   const pending = await templates(page);
   expect(pending.templates[0].name).toBe('Local two');
   expect(pending.outbox).toHaveLength(2);
@@ -306,7 +313,8 @@ test('retained editor rejects peer changes after ordinary Sync now UI refresh', 
   await expect(page.getByLabel('Template name')).toHaveValue('Retained rename');
   expect((await templates(page)).templates).toEqual([winner]);
   expect((await templates(page)).outbox).toEqual([]);
-  await page.getByRole('button', {name: 'Save template', exact: true}).click();
+  await expect(page.getByRole('alert')).toContainText('Template not saved.');
+  await page.getByRole('button', {name: 'Retry', exact: true}).click();
   await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'error');
   expect((await templates(page)).templates).toEqual([winner]);
   expect((await templates(page)).outbox).toEqual([]);

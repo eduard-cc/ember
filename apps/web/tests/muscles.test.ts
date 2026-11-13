@@ -85,6 +85,18 @@ describe('sets per muscle', () => {
     expect(result.trained).toBe(false);
   });
 
+  it('leaves out workouts without a date, which belong to no 4-week block', () => {
+    const result = muscleSets(
+      [
+        workout('a', '', [log('Bench Press (Barbell)', 3)]),
+        workout('b', '2026-11-10T18:00:00', [log('Bench Press (Barbell)', 1, 'b')]),
+      ],
+      now,
+    );
+    expect(result.trained).toBe(true);
+    expect(row(result, 'Chest')).toMatchObject({sets: 1, usual: null});
+  });
+
   it('takes tags from the reviewed catalog, cardio and unknown names excepted', () => {
     expect(countedTargets('Face Pull (Cable)')).toEqual({
       primary: ['Rear delts'],

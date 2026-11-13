@@ -51,7 +51,12 @@ test('history edits and deletion reach a second device through the real API', as
     await editor.getByLabel('Reps for Synthetic Press set 1').fill('10');
     await editor.getByRole('button', {name: 'Save changes'}).click();
     await expect(editor).toBeHidden();
+    // A save returns to the drawer, showing the saved workout.
+    const edited = page.locator('.workout-drawer');
+    await expect(edited.getByRole('heading', {name: 'Corrected session'})).toBeVisible();
     await expect(page.locator('.app-shell')).toHaveAttribute('data-sync', 'Synced');
+    await edited.getByRole('button', {name: 'Close workout'}).click();
+    await expect(edited).toBeHidden();
     await syncNow(fresh);
     await expect(
       fresh.getByRole('heading', {name: 'Corrected session', exact: true}),

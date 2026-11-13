@@ -101,7 +101,8 @@ export function muscleSets(
   for (const workout of workouts) {
     const age = Math.round((today - noon(workout.date)) / DAY);
     const block = Math.floor(age / 28);
-    if (age < 0 || block > 6) continue;
+    // Undated workouts (allowed by the document schema) fall in no block.
+    if (!Number.isFinite(age) || age < 0 || block > 6) continue;
     for (const exercise of workout.exercises) {
       // Stored history holds only recorded sets (imported ones carry no completed flag).
       const sets = exercise.sets.length;
