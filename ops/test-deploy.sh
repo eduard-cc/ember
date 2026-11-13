@@ -134,18 +134,20 @@ echo "{ path=$HOME/.local/lib/ember/start.sh ; argv[]=$HOME/.local/lib/ember/sta
 EOF
 # curl: the registry's side of a pull. /v2/ answers 401 and a token request a pull token;
 # a manifest or blob by digest answers that token from $sandbox/manifests or $sandbox/blobs,
-# 404 when absent. registry-status overrides every answer and registry-status-<kind>
-# (token, manifest, blob) one kind's: a status, "down" (no answer) or "cut" (a 200 whose
-# body breaks off). Prints only the status, as deploy.sh's --write-out '%{http_code}' asks.
+# 404 when absent. registry-status overrides every answer, registry-status-<kind> (token,
+# manifest, blob) one kind's and registry-status-<digest> one part's: a status, "down" (no
+# connection), "cut" (a 200 whose body breaks off) or "local" (a 200 curl cannot write out).
+# Writes what deploy.sh's --write-out '\n%{http_code}' asks for, or the status alone.
 cat >"$sandbox/bin/curl" <<EOF
 #!/usr/bin/env bash
-out=/dev/null config= accept=
+out=/dev/stdout config= accept= format='%{http_code}'
 while ((\$#)); do
 	case \$1 in
 	--output) out=\$2 && shift ;;
+	--write-out) format=\$2 && shift ;;
 	--config) config=\$(cat) && shift ;;
 	-H) [[ \$2 != Accept:* ]] || accept=\$2 && shift ;;
-	--write-out | --max-time | --range) shift ;;
+	--max-time | --range) shift ;;
 	-*) ;;
 	*) url=\$1 ;;
 	esac
@@ -165,11 +167,16 @@ case \$url in
 esac
 [[ \$kind == root || \$kind == token || \$config == 'header = "Authorization: Bearer synthetic"' ]] ||
 	status=401 body=
-status=\$(cat -- "$sandbox/registry-status-\$kind" 2>/dev/null || cat -- "$sandbox/registry-status" 2>/dev/null || echo "\$status")
-[[ \$status != down ]] || { printf 000; exit 7; }
-[[ \$status != cut ]] || { printf '%s' "\${body:0:2}" >"\$out"; printf 200; exit 18; }
-printf '%s' "\$body" >"\$out"
-printf '%s' "\$status"
+for f in "registry-status-\$digest" "registry-status-\$kind" registry-status; do
+	[[ ! -e $sandbox/\$f ]] || { status=\$(<"$sandbox/\$f") && break; }
+done
+answer() { printf '%s' "\$1" >"\$out" && printf "\${format//'%{http_code}'/\$2}"; }
+case \$status in
+down) answer '' 000 && exit 7 ;;
+cut) answer "\${body:0:2}" 200 && exit 18 ;;
+local) printf "\${format//'%{http_code}'/200}" && exit 23 ;;
+*) answer "\$body" "\$status" ;;
+esac
 EOF
 # npm makes the files a host build keeps; the account's Node lists its migrations.
 cat >"$sandbox/bin/npm" <<'EOF'
@@ -351,8 +358,19 @@ for kind in token manifest blob; do
 		rm -- "$sandbox/registry-status-$kind"
 	done
 done
-# The registry's definite answer that the image is missing or not ours to pull is final.
-for refusal in manifest:404 blob:404 token:403 manifest:401 blob:403; do
+# The image's own parts: the manifest of this platform and its last layer.
+amd64=$(sha256sum <<<"amd64 ${i_index#*@sha256:}" | cut -c1-64)
+layer2=$(sha256sum <<<"layer2 ${i_index#*@sha256:}" | cut -c1-64)
+for part in "$amd64" "$layer2"; do
+	echo 503 >"$sandbox/registry-status-$part"
+	[[ $(deploy "$c1") == 69 ]] && said 'could not reach the registry' || fail "an unavailable part ($part) must retry later"
+	echo 404 >"$sandbox/registry-status-$part"
+	[[ $(deploy "$c1") == 1 ]] && said "could not pull $i_index (HTTP 404" || fail "a missing part ($part) must fail the deploy"
+	rm -- "$sandbox/registry-status-$part"
+done
+# The registry's definite answer that the image is missing or not ours to pull is final, and
+# so is a curl failure on this host.
+for refusal in manifest:404 blob:404 token:403 manifest:401 blob:403 token:local blob:local; do
 	echo "${refusal#*:}" >"$sandbox/registry-status-${refusal%:*}"
 	[[ $(deploy "$c1") == 1 ]] && said "could not pull $i_index" || fail "a registry refusal ($refusal) must fail the deploy"
 	rm -- "$sandbox/registry-status-${refusal%:*}"
