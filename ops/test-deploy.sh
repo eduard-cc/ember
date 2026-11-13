@@ -22,8 +22,7 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@ex
 export GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@example.invalid
 mkdir -p "$HOME/.local/lib/ember" "$EMBER_HOME/releases" "$sandbox/bin" "$sandbox/registry" \
 	"$sandbox/local" "$sandbox/artifacts" "$sandbox/unhealthy"
-printf 'EMBER_PORT="5191"\nEMBER_ORIGIN="https://ember.example.invalid"\nEMBER_WEB_ROOT="%s"\n' \
-	"$EMBER_HOME/current/dist" >"$EMBER_ENV"
+printf 'EMBER_PORT="5191"\nEMBER_ORIGIN="https://ember.example.invalid"\n' >"$EMBER_ENV"
 runs=$sandbox/runs log=$sandbox/log alerts=$sandbox/alerts
 touch "$runs" "$log" "$alerts"
 printf 'Initial1\n' >"$sandbox/applied"
@@ -178,18 +177,7 @@ local) printf "\${format//'%{http_code}'/200}" && exit 23 ;;
 *) answer "\$body" "\$status" ;;
 esac
 EOF
-# npm makes the files a host build keeps; the account's Node lists its migrations.
-cat >"$sandbox/bin/npm" <<'EOF'
-#!/usr/bin/env bash
-app=$2
-case $3 in
-ci) mkdir -p "$app/node_modules" && touch "$app/package.json" ;;
-run) mkdir -p "$app/dist" && touch "$app/dist/index.html" "$app/dist/trial.js" ;;
-esac
-EOF
-mkdir -p "$HOME/.local/bin"
-printf '#!/usr/bin/env bash\nprintf "Initial1\\nSecond2\\n"\n' >"$HOME/.local/bin/node"
-chmod +x "$sandbox/bin"/* "$HOME/.local/bin/node"
+chmod +x "$sandbox/bin"/*
 export PATH=$sandbox/bin:$PATH
 
 git init --quiet --bare --initial-branch=main "$sandbox/origin.git"
@@ -223,12 +211,6 @@ printf '#!/usr/bin/env bash\necho "$2" >>%q\n' "$alerts" >"$ops/notify.sh"
 printf '#!/usr/bin/env bash\n[[ $1 == ember ]] && echo synthetic >"$2" && echo "backup $2" >>%q\n' "$log" >"$ops/backup.sh"
 printf '#!/usr/bin/env bash\necho "restore-check $1 $2" >>%q\n' "$log" >"$ops/restore-check.sh"
 chmod +x "$ops"/*.sh
-
-# The live state before the first image release: one host-built release.
-mkdir -p "$EMBER_HOME/releases/$c0/dist" "$EMBER_HOME/releases/$c0/server/dist"
-touch "$EMBER_HOME/releases/$c0/.complete"
-ln -s "releases/$c0" "$EMBER_HOME/current"
-echo "$c0" >"$EMBER_HOME/history"
 
 # An image CI published for a commit: digest, labels, web shell and migrations.
 image() { # <commit> [migrations...]; prints the image by digest (another one with SALT set)
@@ -280,7 +262,7 @@ green_run() { # <commit> [record]
 with zipfile.ZipFile(sys.argv[1], "w") as z: z.writestr("ember-image", sys.argv[2].encode().decode("unicode_escape"))' \
 		"$sandbox/artifacts/$((next_run * 10)).zip" "$2"
 }
-deploy() { # [--host-build] <commit>; prints the exit code
+deploy() { # <commit>; prints the exit code
 	local rc=0
 	"$ops/deploy.sh" "$@" >"$sandbox/out" 2>&1 || rc=$?
 	echo "$rc"
@@ -288,6 +270,30 @@ deploy() { # [--host-build] <commit>; prints the exit code
 live() { [[ $(readlink -- "$EMBER_HOME/current") == "releases/$1" ]]; }
 said() { grep -qF -- "$1" "$sandbox/out" || fail "expected output: $1"; }
 logged() { grep -qF -- "$1" "$log"; }
+
+# The live state: an image release, with a release built on the host before images below
+# it in history (ember.service no longer runs those).
+mkdir -p "$EMBER_HOME/releases/$c0/dist" "$EMBER_HOME/releases/$c0/server/dist"
+touch "$EMBER_HOME/releases/$c0/.complete"
+ci0=$(commit app.txt)
+i0=$(image "$ci0")
+touch "$sandbox/local/${i0#*@sha256:}"
+mkdir -p "$EMBER_HOME/releases/$ci0"
+cp -r -- "$sandbox/registry/${i0#*@sha256:}/web" "$EMBER_HOME/releases/$ci0/dist"
+echo "$i0" >"$EMBER_HOME/releases/$ci0/IMAGE"
+touch "$EMBER_HOME/releases/$ci0/.complete"
+ln -s "releases/$ci0" "$EMBER_HOME/current"
+printf '%s\n' "$c0" "$ci0" >"$EMBER_HOME/history"
+rollback() { "$ops/rollback.sh" >"$sandbox/out" 2>&1; }
+
+# A release built on the host is never a rollback target: ember.service cannot run it, so
+# the rollback stops and says why, changing nothing.
+rollback && fail 'rollback to a release built on the host must fail'
+said "skipping ${c0:0:12}: it is not an image release"
+said 'no earlier healthy release to roll back to'
+said 'nothing was changed'
+live "$ci0" && [[ $(<"$EMBER_HOME/history") == "$c0"$'\n'"$ci0" && ! -e $EMBER_HOME/auto-deploy.hold ]] ||
+	fail 'a refused rollback must change nothing, not even the hold'
 
 c1=$(commit app.txt)
 i1=$(image "$c1")
@@ -402,7 +408,7 @@ echo 'unexpected EOF' >"$sandbox/pull-error-once"
 : >"$log"
 [[ $(deploy "$c1") == 1 ]] && said 'run ops/install.sh' || fail 'a pull that succeeds when tried again must deploy'
 [[ $(grep -c '^pull ' "$log") == 2 ]] || fail "a failed pull must be tried once more: $(<"$log")"
-live "$c0" || fail 'nothing may have switched yet'
+live "$ci0" || fail 'nothing may have switched yet'
 
 # The installed launcher must be this checkout's before an image release can start.
 [[ $(deploy "$c1") == 1 ]] && said 'run ops/install.sh' || fail 'a missing launcher must refuse'
@@ -410,39 +416,36 @@ cp -- "$ops/start.sh" "$HOME/.local/lib/ember/start.sh"
 echo '# older' >>"$HOME/.local/lib/ember/start.sh"
 [[ $(deploy "$c1") == 1 ]] && said 'run ops/install.sh' || fail 'an outdated launcher must refuse'
 cp -- "$ops/start.sh" "$HOME/.local/lib/ember/start.sh"
-live "$c0" && ! logged backup || fail 'nothing may have switched or been backed up yet'
+live "$ci0" && ! logged backup || fail 'nothing may have switched or been backed up yet'
 logged "pull $d" || fail 'the image must be pulled by digest'
 
-# The first image release after a host-built one always takes the backup gate, even
-# without migrations; a restored copy that differs from the live database stops it.
-echo '12 0' >"$sandbox/restored-counts"
+# A release without migrations switches without a backup.
 : >"$log"
-[[ $(deploy "$c1") == 1 ]] && said 'restored copy differs' && live "$c0" || fail 'a differing restore must refuse'
-said "first image release after the host-built $c0"
-logged 'dropdb ember_restore_validation_' || fail 'the validation copy must be dropped'
-rm -- "$sandbox/restored-counts"
-: >"$log"
-[[ $(deploy "$c1") == 0 ]] && live "$c1" || fail 'the first image release should deploy'
-said "first image release after the host-built $c0"
-said 'restore-tested backup kept at'
-said 'records/migrations 12 1 in both'
-logged 'backup ' && logged 'restore-check ' && logged 'dropdb ' || fail 'the gate must back up, restore-check and drop'
+[[ $(deploy "$c1") == 0 ]] && live "$c1" && ! logged backup || fail 'a release without migrations should deploy without a backup'
 [[ $(<"$EMBER_HOME/releases/$c1/IMAGE") == "$i1" ]] || fail 'IMAGE must name the image by digest'
 [[ $(<"$EMBER_HOME/releases/$c1/REVISION") == "$c1" ]] || fail 'REVISION must name the commit'
 grep -qF "<title>$c1</title>" "$EMBER_HOME/releases/$c1/dist/index.html" || fail 'dist must be the image web shell'
 [[ $(tail -n 1 "$EMBER_HOME/history") == "$c1" ]] || fail 'history must record the release'
 [[ -z $(find "$EMBER_HOME/releases" -name '.image-record.*' -o -name '.build-*') ]] || fail 'temporary files left behind'
 
-# Between image releases without migrations there is no backup; with one there is.
 c2=$(commit app.txt)
 green_run "$c2" "$(image "$c2") $c2\n"
-: >"$log"
-[[ $(deploy "$c2") == 0 ]] && live "$c2" && ! logged backup || fail 'an image release without migrations should deploy without a backup'
+[[ $(deploy "$c2") == 0 ]] && live "$c2" || fail 'a second release should deploy'
+# A release that adds a migration is preceded by a backup whose restore matches the live
+# database; a restored copy that differs stops it.
 c3=$(commit app.txt)
 green_run "$c3" "$(image "$c3" Second2) $c3\n"
+echo '12 0' >"$sandbox/restored-counts"
 : >"$log"
-[[ $(deploy "$c3") == 0 ]] && live "$c3" && logged backup || fail 'a release with a migration should back up first'
+[[ $(deploy "$c3") == 1 ]] && said 'restored copy differs' && live "$c2" || fail 'a differing restore must refuse'
+logged 'dropdb ember_restore_validation_' || fail 'the validation copy must be dropped'
+rm -- "$sandbox/restored-counts"
+: >"$log"
+[[ $(deploy "$c3") == 0 ]] && live "$c3" || fail 'a release with a migration should deploy'
 said 'release adds migrations: Second2'
+said 'restore-tested backup kept at'
+said 'records/migrations 12 1 in both'
+logged 'backup ' && logged 'restore-check ' && logged 'dropdb ' || fail 'the gate must back up, restore-check and drop'
 printf 'Initial1\nSecond2\n' >"$sandbox/applied"
 
 # A docs-only commit has no image of its own: it runs its code commit's image, whether its
@@ -470,44 +473,41 @@ grep -qF "Deploy of ${c6:0:12} failed its health check, so it was rolled back to
 [[ $(tail -n 1 "$EMBER_HOME/history") == "$c4" ]] || fail 'a failed release must not enter history'
 rm -- "$sandbox/unhealthy/$c6"
 
-# ops/rollback.sh walks back across both kinds of release, down to the host-built one.
-rollback() { "$ops/rollback.sh" >"$sandbox/out" 2>&1; }
+# ops/rollback.sh walks back through history, then stops.
 rollback && live "$c3" || fail 'rollback from an image release'
-rollback && rollback && live "$c1" || fail 'rollback between image releases'
-rollback && live "$c0" || fail 'rollback to the host-built release'
+rollback && rollback && rollback && live "$ci0" || fail 'rollback between image releases'
 rollback && fail 'rollback with no earlier release must fail'
-live "$c0" || fail 'a refused rollback must leave the host-built release'
+live "$ci0" || fail 'a refused rollback must leave the live release'
 [[ $(<"$EMBER_HOME/auto-deploy.hold") == $(git -C "$sandbox/checkout" rev-parse origin/main) ]] ||
 	fail 'a rollback must hold main'
 
-# Rolling forward reuses a kept release without pulling, and takes the gate again after
-# the host-built one. Releases history no longer names are removed with their images,
-# unless a kept release still names the image (a docs-only commit shares its code's).
+# Rolling forward reuses a kept release without pulling. Releases history no longer names
+# are removed with their images, unless a kept release still names the image (a docs-only
+# commit shares its code's).
 d1=${i1#*@sha256:} d3=$(cut -d@ -f2 <"$EMBER_HOME/releases/$c3/IMAGE")
 d3=${d3#sha256:}
 : >"$log"
 [[ $(deploy "$c4") == 0 ]] && live "$c4" && said 'reusing the release' && ! logged pull || fail 'a kept release should be reused'
-logged backup || fail 'the first image release after a host-built one takes the gate again'
-[[ ! -e $EMBER_HOME/releases/$c1 && ! -e $EMBER_HOME/releases/$c3 && -e $EMBER_HOME/releases/$c0 ]] ||
+[[ ! -e $EMBER_HOME/releases/$c1 && ! -e $EMBER_HOME/releases/$c3 && -e $EMBER_HOME/releases/$ci0 ]] ||
 	fail 'releases history no longer names should be removed'
 logged "image rm $d1" || fail "a removed release's image should be removed"
 ! logged "image rm $d3" && [[ -e $sandbox/local/$d3 ]] || fail 'an image a kept release names must stay'
 # A kept release whose image is gone from the daemon is fetched again.
-rollback && live "$c0" || fail 'rollback to the host-built release again'
+rollback && live "$ci0" || fail 'rollback to the oldest image release again'
 rm -- "$sandbox/local/$d3"
 : >"$log"
 [[ $(deploy "$c4") == 0 ]] && live "$c4" && said 'pulling' && logged "pull $d3" ||
 	fail 'a kept release without its image should be fetched again'
 
-# Five releases are kept from history, always including the host-built one until it
-# falls out. Images are only ever removed by digest.
+# Five releases are kept from history, whatever kind, until they fall out. Images are only
+# ever removed by digest.
 for _ in 1 2 3 4; do
 	c=$(commit app.txt)
 	green_run "$c" "$(image "$c" Second2) $c\n"
 	[[ $(deploy "$c") == 0 ]] || fail 'more releases should deploy'
 done
 releases=$(find "$EMBER_HOME/releases" -mindepth 1 -maxdepth 1 -type d | wc -l)
-[[ $releases == 5 && ! -e $EMBER_HOME/releases/$c0 && -e $EMBER_HOME/releases/$c4 ]] ||
+[[ $releases == 5 && ! -e $EMBER_HOME/releases/$c0 && ! -e $EMBER_HOME/releases/$ci0 && -e $EMBER_HOME/releases/$c4 ]] ||
 	fail "the five newest releases should be kept, found $releases"
 [[ -e $sandbox/local/$d3 ]] || fail 'the image of a kept release must stay in the daemon'
 ! grep -v '^image rm [0-9a-f]\{64\}$' "$log" | grep -q '^image rm' || fail 'images must be removed by digest'
@@ -517,14 +517,12 @@ newest=$c
 [[ $(deploy "$newest") == 0 ]] && said 'already live and healthy' || fail 'the live release should be left alone'
 
 # A release rollback can return to is never replaced: not by a newer record of the same
-# code, not by --host-build, and not while it is live.
+# code, and not while it is live.
 mapfile -t kept < <(tail -n 3 "$EMBER_HOME/history")
 green_run "${kept[0]}" "$(SALT=rerun image "${kept[0]}" Second2) ${kept[0]}\n"
 before=$(<"$EMBER_HOME/releases/${kept[0]}/IMAGE")
 [[ $(deploy "${kept[0]}") == 1 ]] && said 'that ops/rollback.sh can return to; refusing to replace it' || fail 'a history release must not be replaced'
 [[ $(<"$EMBER_HOME/releases/${kept[0]}/IMAGE") == "$before" ]] && live "$newest" || fail 'a refused replacement must change nothing'
-[[ $(deploy --host-build "${kept[1]}") == 1 ]] && said 'refusing to replace it' || fail '--host-build must not replace a history release'
-[[ $(deploy --host-build "$newest") == 1 ]] && said 'the live release' && live "$newest" || fail '--host-build must not replace the live release'
 
 # A release no rollback can return to (one whose health check failed) is replaced by a newer
 # record of its code, and the image it named goes.
@@ -540,13 +538,4 @@ green_run "$c" "$(SALT=rerun image "$c" Second2) $c\n"
 [[ $(<"$EMBER_HOME/releases/$c/IMAGE") == *"$(sha256sum <<<"image $c rerun" | cut -c1-64)" ]] || fail 'the release must name the newer image'
 logged "image rm $old" || fail 'the replaced image should be removed'
 
-# --host-build makes a host-built release of a commit no rollback can return to, reuses it
-# later, and never pulls.
-c=$(commit app.txt)
-green_run "$c" "$(image "$c" Second2) $c\n"
-: >"$log"
-[[ $(deploy --host-build "$c") == 0 ]] && live "$c" && said "building $c on this host" && ! logged pull || fail '--host-build should build'
-[[ -d $EMBER_HOME/releases/$c/server && ! -e $EMBER_HOME/releases/$c/IMAGE ]] || fail '--host-build should make a host-built release'
-[[ $(deploy "$c") == 1 ]] && said 'the live release' || fail 'an image deploy must not replace a live host-built release'
-rollback && [[ $(deploy --host-build "$c") == 0 ]] && live "$c" && said 'reusing the release' || fail '--host-build should reuse its release'
 echo 'deploy checks passed'

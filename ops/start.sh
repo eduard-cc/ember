@@ -5,11 +5,10 @@
 #
 #   start.sh <runtime.env> <current release folder>
 #
-# An image release (an IMAGE file naming the image by digest) runs that image in Ember's
-# Docker daemon, on the database's network, published on loopback only, read-only, without
+# A release's IMAGE file names its image by digest; this runs that image in Ember's Docker
+# daemon, on the database's network, published on loopback only, read-only, without
 # capabilities and with its own limits inside ember-live.slice. The daemon never pulls
-# here: ops/deploy.sh pulled exactly that digest. A host-built release runs its server
-# with the account's Node, as before.
+# here: ops/deploy.sh pulled exactly that digest. Anything else is refused.
 #
 # systemd has already loaded runtime.env into this environment (EnvironmentFile=), so the
 # container gets exactly those variables, passed by name and never written anywhere, with
@@ -23,16 +22,11 @@ export LC_ALL=C
 }
 env_file=$1 current=$2
 
-# Any IMAGE entry, even a broken link, makes it an image release: never fall back to Node.
-if [[ ! -e $current/IMAGE && ! -L $current/IMAGE ]]; then
-	cd -- "$current/server"
-	exec "$HOME/.local/bin/node" "$current/server/dist/trial.js"
-fi
-
 refuse() {
 	echo "ember-start: $*" >&2
 	exit 1
 }
+[[ -e $current/IMAGE || -L $current/IMAGE ]] || refuse "$current is not an image release"
 [[ -f $current/IMAGE && ! -L $current/IMAGE ]] || refuse "$current/IMAGE is not a file"
 image=$(<"$current/IMAGE") 2>/dev/null
 # The same check as release_image in ops/lib.sh: one line, byte for byte.

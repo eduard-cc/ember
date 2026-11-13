@@ -162,7 +162,7 @@ cp "$here/notify.sh" "$HOME/src/ember/ops/notify.sh"
 cmp "$here/notify.sh" "$HOME/.local/lib/ember/notify.sh"
 
 # ember.service runs the installed launcher, never the checkout's copy, and the launcher
-# starts either kind of release. Fake node and docker record how they were started.
+# starts the release's image. A fake docker records how it was started.
 cmp "$here/start.sh" "$HOME/.local/lib/ember/start.sh"
 # shellcheck disable=SC2016 # the installed child shell expands HOME
 printf '#!/bin/sh\ntouch "$HOME/checkout-code-ran"\n' >"$HOME/src/ember/ops/start.sh"
@@ -171,10 +171,6 @@ fail() {
 	exit 1
 }
 started=$sandbox/started
-cat >"$HOME/.local/bin/node" <<EOF
-#!/usr/bin/env bash
-{ echo "node \$PWD"; printf '%s\n' "\$@"; } >"$started"
-EOF
 cat >"$sandbox/bin/docker" <<EOF
 #!/usr/bin/env bash
 {
@@ -185,10 +181,10 @@ cat >"$sandbox/bin/docker" <<EOF
 	done
 } >"$started"
 EOF
-chmod 755 "$HOME/.local/bin/node" "$sandbox/bin/docker"
+chmod 755 "$sandbox/bin/docker"
 export XDG_RUNTIME_DIR=$sandbox/run
 ember=$HOME/.local/share/ember
-mkdir -p "$ember/releases/host/server/dist" "$ember/releases/image/dist"
+mkdir -p "$ember/releases/image/dist"
 digest=$(printf 'a%.0s' {1..64})
 echo "ghcr.io/eduard-cc/ember@sha256:$digest" >"$ember/releases/image/IMAGE"
 # The synthetic runtime.env, with the database on the live loopback port.
@@ -196,7 +192,6 @@ env_file=$HOME/.config/ember/runtime.env
 cat >"$env_file" <<EOF
 EMBER_PORT=5191
 EMBER_ORIGIN="https://ember.example.invalid"
-EMBER_WEB_ROOT=$ember/current/dist
 EMBER_DATABASE_URL=postgres://ember:synthetic@127.0.0.1:55438/ember
 EOF
 # Runs the unit's ExecStart as systemd would: specifiers expanded, runtime.env loaded.
@@ -209,32 +204,32 @@ launch() {
 	# shellcheck disable=SC1090,SC2086 # synthetic env file; the command line is split like systemd does
 	(set -a && source "$env_file" && set +a && exec $command) 2>"$sandbox/launch.err"
 }
-ln -sfn releases/host "$ember/current"
-launch || fail 'a host-built release should start'
-[[ $(<"$started") == "node $ember/current/server"$'\n'"$ember/current/server/dist/trial.js" ]] ||
-	fail "a host-built release must run its server with the account's Node: $(<"$started")"
-[[ ! -e $HOME/checkout-code-ran ]] || fail 'ember.service executed checkout code'
-
 ln -sfn releases/image "$ember/current"
 launch || fail "an image release should start: $(<"$sandbox/launch.err")"
+[[ ! -e $HOME/checkout-code-ran ]] || fail 'ember.service executed checkout code'
 mapfile -t args <"$started"
 expected=(docker --host "unix://$XDG_RUNTIME_DIR/ember/docker.sock" run --rm --init --name ember-app
 	--pull never --network ember-local_default --publish 127.0.0.1:5191:5191
 	--read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges
 	--memory 768m --pids-limit 256 --cpus 1.5
-	--env EMBER_PORT --env EMBER_ORIGIN --env EMBER_WEB_ROOT --env EMBER_DATABASE_URL
-	--env EMBER_HOST --env DOTENV_CONFIG_PATH "ghcr.io/eduard-cc/ember@sha256:$digest"
+	--env EMBER_PORT --env EMBER_ORIGIN --env EMBER_DATABASE_URL
+	--env EMBER_HOST --env EMBER_WEB_ROOT --env DOTENV_CONFIG_PATH "ghcr.io/eduard-cc/ember@sha256:$digest"
 	env\ EMBER_HOST=0.0.0.0 env\ EMBER_WEB_ROOT=/app/web
 	env\ EMBER_DATABASE_URL=postgres://ember:synthetic@ember-postgres:5432/ember
 	'env EMBER_ORIGIN=https://ember.example.invalid' env\ DOTENV_CONFIG_PATH=/dev/null)
 [[ ${args[*]} == "${expected[*]}" ]] || fail "unexpected container start: ${args[*]}"
 
 # Anything but one image by digest, or a database other than ember-postgres's published
-# port, is refused before docker runs.
+# port, is refused before docker runs, and so is a release without an image.
 refused() {
 	launch && fail "$1 must be refused"
 	[[ ! -e $started ]] || fail "$1 must not start anything"
 }
+mkdir -p "$ember/releases/server/server/dist" "$ember/releases/server/dist"
+ln -sfn releases/server "$ember/current"
+refused 'a release without IMAGE'
+grep -qF 'is not an image release' "$sandbox/launch.err" || fail "a release without IMAGE must say why: $(<"$sandbox/launch.err")"
+ln -sfn releases/image "$ember/current"
 for bad in 'ghcr.io/eduard-cc/ember:main' "ghcr.io/other/ember@sha256:$digest" "ghcr.io/eduard-cc/ember@sha256:${digest}0" \
 	"ghcr.io/eduard-cc/ember@sha256:$digest --privileged" ''; do
 	echo "$bad" >"$ember/releases/image/IMAGE"

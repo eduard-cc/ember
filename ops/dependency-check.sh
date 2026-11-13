@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # Monthly scheduled check (script-only): do the production npm
-# dependencies have high or critical advisories, or does the Node that runs the live app miss
-# a security release or the .nvmrc major? If so, put one Ember kanban card on the board.
+# dependencies have high or critical advisories, or does the Node the image pins (the
+# Dockerfile's base image, which the live app runs) miss a security release or the .nvmrc
+# major? If so, put one Ember kanban card on the board.
 # Prints nothing when there is nothing to do or a card for the same findings already exists.
 # Read-only on the repository, the live app and the database.
 set -Eeuo pipefail
 # The owner's cron runs a reviewed copy installed outside the checkout, with EMBER_REPO set to
 # the owner's checkout, which it only reads: code from main never runs as the owner.
 repo=${EMBER_REPO:-$(dirname -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")")}
-# ember.service's ExecStart runs this binary.
-node_bin=${EMBER_NODE:-$HOME/.local/bin/node}
 findings=()
 
 # Dev dependencies only run in CI and builds; what ships is the API's production tree and
@@ -32,12 +31,13 @@ want=$(tr -d '[:space:]' <"$repo/.nvmrc")
 	echo "unexpected .nvmrc: $want (expected a bare major)" >&2
 	exit 1
 }
-have=$("$node_bin" --version) || {
-	echo "cannot run $node_bin" >&2
+# The same pin ops/image-smoke.sh checks the built image against.
+have=$(sed -nE 's/^FROM node:([0-9]+\.[0-9]+\.[0-9]+)-bookworm-slim@sha256:[0-9a-f]{64} AS base$/\1/p' "$repo/Dockerfile")
+[[ $have =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+	echo 'no exact Node pin in Dockerfile' >&2
 	exit 1
 }
-have=${have#v}
-[[ ${have%%.*} == "$want" ]] || findings+=("Node: the live app runs $have but .nvmrc (and CI) use $want")
+[[ ${have%%.*} == "$want" ]] || findings+=("Node: the image pins $have but .nvmrc (and CI) use $want")
 index=$(curl -fsS --max-time 20 https://nodejs.org/dist/index.json) || {
 	echo 'could not read the Node release index' >&2
 	exit 1
@@ -54,7 +54,7 @@ security=$(jq -r --arg have "$have" '
 	exit 1
 }
 if [[ -n $security ]]; then
-	findings+=("Node: the live app runs $have; security release $security is out")
+	findings+=("Node: the image pins $have; security release $security is out")
 fi
 
 ((${#findings[@]})) || exit 0
@@ -72,7 +72,7 @@ $list
 
 Fix what applies and ship per AGENTS.md:
 - npm: in-major updates only, never \`npm audit fix --force\`. For anything that cannot be fixed safely, record why and whether production can reach it. Re-check the \`overrides\` in apps/web/package.json and apps/api/package.json and drop any no longer needed.
-- Node: ember.service runs $node_bin (resolves to $(readlink -f -- "$node_bin")). Move it to the newest $want.x, restart ember.service and run the live checks. If it resolves outside Ember's own files, other tools share it: change how Ember gets its Node rather than updating the shared one.
+- Node: the live app runs the image's Node, pinned by tag and digest in the Dockerfile's first stage. Move that pin to the newest $want.x (Dependabot's docker update does this; merge it if one is open), then check the deploy and the live app.
 EOF
 ) || {
 	echo 'could not create the kanban card' >&2

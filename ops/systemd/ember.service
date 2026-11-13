@@ -1,10 +1,10 @@
 # User unit installed by ops/install.sh. Serves the release `current` points at through
-# the installed launcher (ops/start.sh): an image release as the ember-app container in
-# Ember's Docker daemon, a host-built release with the account's Node. ops/deploy.sh and
-# ops/rollback.sh switch the link and restart this unit.
+# the installed launcher (ops/start.sh), which runs its image as the ember-app container in
+# Ember's Docker daemon. ops/deploy.sh and ops/rollback.sh switch the link and restart this
+# unit.
 [Unit]
 Description=Ember (private, Tailscale Serve only)
-# The database, and an image release's container, run in Ember's own rootless Docker daemon.
+# The database and the app's container run in Ember's own rootless Docker daemon.
 Wants=ember-docker.service
 After=network.target ember-docker.service
 # Five starts within five minutes means it is crash-looping: give up and alert.
@@ -20,7 +20,6 @@ Slice=ember-live.slice
 Nice=5
 IOSchedulingClass=best-effort
 IOSchedulingPriority=7
-Environment=NODE_ENV=production
 # At boot the database container starts with its Docker daemon, a little after it.
 ExecStartPre=/usr/bin/timeout 120 /bin/sh -c 'until /usr/bin/docker --host unix://%t/ember/docker.sock exec ember-postgres pg_isready -q -U ember -d ember; do sleep 2; done'
 # A container left behind by a crash would hold the name and the port.
@@ -29,7 +28,7 @@ TimeoutStartSec=150
 WorkingDirectory=%h/.local/share/ember
 EnvironmentFile=%h/.config/ember/runtime.env
 ExecStart=%h/.local/lib/ember/start.sh %h/.config/ember/runtime.env %h/.local/share/ember/current
-# Stops the container gracefully; a host-built release has none and gets SIGTERM directly.
+# Stops the container gracefully.
 ExecStop=-/usr/bin/docker --host unix://%t/ember/docker.sock stop --timeout 20 ember-app
 # The container's exit status after SIGTERM, which docker run passes on.
 SuccessExitStatus=143

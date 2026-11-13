@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2015 # every fail() exits, so A && B || fail is intended
-# Local check of ops/dependency-check.sh with fake npm, node, curl and hermes. Never
-# touches the registry, nodejs.org, the kanban board or the live app.
+# Local check of ops/dependency-check.sh with fake npm, curl and hermes and a synthetic
+# Dockerfile. Never touches the registry, nodejs.org, the kanban board or the live app.
 set -Eeuo pipefail
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 sandbox=$(mktemp -d "${TMPDIR:-/tmp}/ember-dependency-check-test.XXXXXX")
@@ -19,7 +19,12 @@ echo 26 >"$repo/.nvmrc"
 clean='{"vulnerabilities":{},"metadata":{"vulnerabilities":{"high":0,"critical":0}}}'
 echo "$clean" >"$repo/apps/web/audit.json"
 echo "$clean" >"$repo/apps/api/audit.json"
-echo v26.12.1 >"$sandbox/node-version"
+# The Node the image runs: the Dockerfile's pinned base image.
+pin() { # <version>
+	printf '# synthetic\nFROM node:%s-bookworm-slim@sha256:%s AS base\n\nFROM base AS build\n' \
+		"$1" "$(printf '0%.0s' {1..64})" >"$repo/Dockerfile"
+}
+pin 26.12.1
 cat >"$sandbox/index.json" <<'EOF'
 [{"version":"v27.1.0","security":true},{"version":"v26.13.0","security":false},
  {"version":"v26.12.1","security":true},{"version":"v26.8.1","security":false},
@@ -32,10 +37,6 @@ cat >"$sandbox/bin/npm" <<'EOF'
 #!/usr/bin/env bash
 [[ -e audit.json ]] && cat audit.json
 exit 1
-EOF
-cat >"$sandbox/bin/node" <<EOF
-#!/usr/bin/env bash
-cat -- "$sandbox/node-version"
 EOF
 cat >"$sandbox/bin/curl" <<EOF
 #!/usr/bin/env bash
@@ -55,7 +56,7 @@ else
 fi
 EOF
 chmod +x "$sandbox/bin/"*
-export PATH=$sandbox/bin:$PATH EMBER_NODE=$sandbox/bin/node EMBER_REPO=$repo
+export PATH=$sandbox/bin:$PATH EMBER_REPO=$repo
 run() { "$sandbox/installed/dependency-check.sh" 2>"$sandbox/err"; }
 
 # Clean dependencies on the newest security release of the .nvmrc major: silence, no card.
@@ -63,11 +64,11 @@ out=$(run) && [[ -z $out && ! -e $sandbox/keys ]] || fail "clean run: $out"
 
 # A high production advisory and a Node security release queue one card naming both.
 echo '{"vulnerabilities":{"qs":{"name":"qs","severity":"high"},"x":{"name":"x","severity":"moderate"}},"metadata":{"vulnerabilities":{}}}' >"$repo/apps/api/audit.json"
-echo v26.8.1 >"$sandbox/node-version"
+pin 26.8.1
 out=$(run) || fail "findings run: $(cat "$sandbox/err")"
 [[ $out == *'found 2 issue(s)'* ]] || fail "findings output: $out"
 grep -qF 'npm (api): qs has a high advisory' "$sandbox/body" || fail 'advisory missing from card'
-grep -qF 'security release 26.12.1 is out' "$sandbox/body" || fail 'Node release missing from card'
+grep -qF 'Node: the image pins 26.8.1; security release 26.12.1 is out' "$sandbox/body" || fail 'Node release missing from card'
 grep -qF -- "--workspace worktree:$repo" "$sandbox/args" || fail 'card not anchored to the checkout'
 ! grep -qF 'x has' "$sandbox/body" || fail 'moderate advisory on card'
 
@@ -79,7 +80,7 @@ out=$(run) && [[ -z $out && $(wc -l <"$sandbox/keys") -eq 1 ]] || fail "repeat r
 # A card that cannot be created fails loudly.
 mv "$sandbox/bin/hermes" "$sandbox/hermes"
 printf '#!/usr/bin/env bash\nexit 1\n' >"$sandbox/bin/hermes" && chmod +x "$sandbox/bin/hermes"
-echo v26.7.0 >"$sandbox/node-version"
+pin 26.7.0
 ! out=$(run) && grep -qF 'could not create the kanban card' "$sandbox/err" || fail "card failure: $out"
 mv "$sandbox/hermes" "$sandbox/bin/hermes"
 
@@ -90,8 +91,13 @@ mv "$sandbox/index.json.off" "$sandbox/index.json"
 
 # A Node major behind .nvmrc is a finding of its own.
 echo "$clean" >"$repo/apps/api/audit.json"
-echo v25.9.0 >"$sandbox/node-version"
-out=$(run) && grep -qF 'runs 25.9.0 but .nvmrc (and CI) use 26' "$sandbox/body" || fail "major drift: $out"
+pin 25.9.0
+out=$(run) && grep -qF 'the image pins 25.9.0 but .nvmrc (and CI) use 26' "$sandbox/body" || fail "major drift: $out"
+
+# A Dockerfile without one exact Node pin fails loudly instead of reporting clean.
+sed -i 's/^FROM node:25.9.0-bookworm-slim@/FROM node:25-bookworm-slim@/' "$repo/Dockerfile"
+! out=$(run) && grep -qF 'no exact Node pin in Dockerfile' "$sandbox/err" || fail "unpinned Node: $out"
+pin 26.12.1
 
 # An audit that cannot reach the registry fails loudly instead of reporting clean.
 rm "$repo/apps/web/audit.json"

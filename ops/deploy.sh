@@ -2,28 +2,20 @@
 # Put a commit from main into its own release folder and switch the live app to it.
 #
 #   ops/deploy.sh <commit>
-#   ops/deploy.sh --host-build <commit>
 #
 # Refuses unless the commit is on origin/main and CI passed for its latest code change.
 # The release is the image CI tested and published for that code: pulled by the digest its
 # green run recorded and checked against the image's own labels; no tag is ever resolved
-# here. --host-build instead builds the commit on this host from `git archive`, never from
-# a working tree (a manual fallback while the registry is unavailable). A release that adds
-# a migration, or the first image release after a host-built one, is preceded by a backup
-# whose restore is tested. If the new release is unhealthy, the previous release is
-# restored and the owner is alerted. Migrations are never rolled back.
+# here. A release that adds a migration is preceded by a backup whose restore is tested.
+# If the new release is unhealthy, the previous release is restored and the owner is
+# alerted. Migrations are never rolled back.
 ACTION=deploy
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 # shellcheck source=ops/lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
-host_build=false
-if [[ $# == 2 && $1 == --host-build ]]; then
-	host_build=true
-	shift
-fi
 [[ $# == 1 && $1 =~ ^[0-9a-f]{7,40}$ ]] || {
-	echo "usage: $(basename "$0") [--host-build] <commit>" >&2
+	echo "usage: $(basename "$0") <commit>" >&2
 	exit 2
 }
 KEEP_RELEASES=5
@@ -179,24 +171,19 @@ fetch_image() {
 		die "$image is labelled '$labels', not commit ${commit:0:12} of $IMAGE_SOURCE; refusing"
 }
 
-# Leftovers of interrupted builds; the lock guarantees no build is running.
+# Leftovers of interrupted deploys; the lock guarantees no deploy is running.
 find "$RELEASES" -mindepth 1 -maxdepth 1 \( -name '.build-*' -o -name '.image-record.*' \) -exec rm -rf -- {} +
 release=$RELEASES/$sha
 previous=$(current_release)
-# What this deploy makes: a host-built release for --host-build, otherwise an image release
-# naming exactly the image the newest green run of this code recorded. A complete release of
-# that kind (a roll-forward after a rollback, or the live one) is reused; its image is pulled
-# again by the same digest if it has left the daemon.
+# What this deploy makes: a release naming exactly the image the newest green run of this
+# code recorded. A complete release of that image (a roll-forward after a rollback, or the
+# live one) is reused; its image is pulled again by the same digest if it has left the daemon.
 reuse=false
-if [[ $host_build == true ]]; then
-	[[ -f $release/.complete ]] && ! is_image_release "$release" && reuse=true
-else
-	record=$(image_record)
-	image=${record% *} commit=${record#* }
-	if [[ -f $release/.complete && $(release_image "$release" || true) == "$image" ]]; then
-		reuse=true
-		docker image inspect "$image" >/dev/null 2>&1 || fetch_image "$image" "$commit"
-	fi
+record=$(image_record)
+image=${record% *} commit=${record#* }
+if [[ -f $release/.complete && $(release_image "$release" || true) == "$image" ]]; then
+	reuse=true
+	docker image inspect "$image" >/dev/null 2>&1 || fetch_image "$image" "$commit"
 fi
 if [[ $previous == "$sha" ]]; then
 	[[ $reuse == true ]] || die "the live release of ${sha:0:12} is not the one this deploy would make; refusing to replace it"
@@ -211,40 +198,6 @@ fi
 
 if [[ $reuse == true ]]; then
 	log "reusing the release of $sha"
-elif [[ $host_build == true ]]; then
-	log "building $sha on this host"
-	build=$(mktemp -d "$RELEASES/.build-$sha.XXXXXX")
-	trap 'rm -rf -- "$build"' EXIT
-	"${GIT[@]}" archive --format=tar "$sha" | tar -x -C "$build"
-	# Chained with &&: errexit is off on the left of ||, so every step must gate the next.
-	(
-		cd "$build" &&
-			# Shells may export NODE_ENV=production, which makes npm ci skip the build tools.
-			NODE_ENV=development npm --prefix apps/web ci --include=dev --no-audit --no-fund --loglevel=error &&
-			NODE_ENV=development npm --prefix apps/api ci --include=dev --no-audit --no-fund --loglevel=error &&
-			# Vite derives import.meta.env.PROD from NODE_ENV.
-			NODE_ENV=production npm --prefix apps/web run build &&
-			NODE_ENV=production npm --prefix apps/api run build &&
-			npm --prefix apps/api prune --omit=dev --no-audit --no-fund --loglevel=error &&
-			[[ -f apps/web/dist/index.html && -f apps/api/dist/trial.js ]] &&
-			# Keep only what runs, in the release layout ember.service and EMBER_WEB_ROOT expect:
-			# the web shell in dist/ and the compiled server with its runtime dependencies in server/.
-			mv -T apps/web/dist dist &&
-			mkdir server &&
-			mv -t server apps/api/dist apps/api/node_modules apps/api/package.json
-	) >"$build.log" 2>&1 || {
-		tail -n 40 -- "$build.log" >&2
-		rm -f -- "$build.log"
-		die 'build failed; nothing was deployed'
-	}
-	rm -f -- "$build.log"
-	find "$build" -mindepth 1 -maxdepth 1 ! -name dist ! -name server -exec rm -rf -- {} +
-	echo "$sha" >"$build/REVISION"
-	touch "$build/.complete"
-	# Only a release no rollback can return to is replaced (checked above).
-	rm -rf -- "$release"
-	mv -T -- "$build" "$release"
-	trap - EXIT
 else
 	fetch_image "$image" "$commit"
 	build=$(mktemp -d "$RELEASES/.build-$sha.XXXXXX")
@@ -265,14 +218,12 @@ else
 	mv -T -- "$build" "$release"
 	trap - EXIT
 fi
-# ember.service starts an image release through the installed launcher, which deploys
-# never update: refuse before anything changes if it is missing or older than this checkout.
-if is_image_release "$release"; then
-	if ! cmp -s -- "$SCRIPT_DIR/start.sh" "$HOME/.local/lib/ember/start.sh" ||
-		! systemctl --user show --property ExecStart --value "$EMBER_UNIT" |
-		grep -qF "path=$HOME/.local/lib/ember/start.sh "; then
-		die "$EMBER_UNIT does not start releases through this checkout's ops/start.sh; run ops/install.sh, then deploy again"
-	fi
+# ember.service starts the release through the installed launcher, which deploys never
+# update: refuse before anything changes if it is missing or older than this checkout.
+if ! cmp -s -- "$SCRIPT_DIR/start.sh" "$HOME/.local/lib/ember/start.sh" ||
+	! systemctl --user show --property ExecStart --value "$EMBER_UNIT" |
+	grep -qF "path=$HOME/.local/lib/ember/start.sh "; then
+	die "$EMBER_UNIT does not start releases through this checkout's ops/start.sh; run ops/install.sh, then deploy again"
 fi
 
 # Migrations the live database has not applied yet, by TypeORM migration name.
@@ -287,16 +238,8 @@ unknown=$(comm -13 <(sort <<<"$release_migrations") <(sort <<<"$applied"))
 [[ -z $unknown ]] || die "the database has migrations this release lacks ($(tr '\n' ' ' <<<"$unknown")); refusing to run old code on a newer schema"
 pending=$(comm -23 <(sort <<<"$release_migrations") <(sort <<<"$applied"))
 
-# The switch from a host-built release to an image release changes how the app reaches
-# the database, so it takes the same backup gate as a migration.
-gate=
 if [[ -n $pending ]]; then
-	gate="release adds migrations: $(tr '\n' ' ' <<<"$pending")"
-elif is_image_release "$release" && ! { [[ -n $previous ]] && is_image_release "$RELEASES/$previous"; }; then
-	gate="first image release after the host-built ${previous:-nothing}"
-fi
-if [[ -n $gate ]]; then
-	log "$gate"
+	log "release adds migrations: $(tr '\n' ' ' <<<"$pending")"
 	[[ -d $BACKUPS ]] || mkdir -m 700 -- "$BACKUPS"
 	backup=$BACKUPS/ember-$(date +%Y%m%dT%H%M%S)-pre-deploy-${sha:0:12}.dump
 	"$SCRIPT_DIR/backup.sh" ember "$backup" || die 'pre-deploy backup failed; nothing was deployed'

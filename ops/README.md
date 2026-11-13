@@ -5,15 +5,15 @@ The live app runs from releases as a dedicated service account, never from a che
 | File                                              | Purpose                                                                                                          |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `auto-deploy.sh`                                  | Timer entry point: fast-forwards the account's checkout and runs `deploy.sh` on a green `main`, holding failures |
-| `deploy.sh`, `rollback.sh`, `lib.sh`              | Fetch (or `--host-build`) and switch a release, roll back to the previous healthy one; `lib.sh` holds the checks |
+| `deploy.sh`, `rollback.sh`, `lib.sh`              | Fetch and switch a release, roll back to the previous healthy one; `lib.sh` holds the checks                     |
 | `backup.sh`, `restore-check.sh`                   | Validated `pg_dump` of the live database and a restore drill into a disposable validation database               |
 | `install.sh`                                      | Installs the user units, slices, the reviewed launcher and alert notifier; restarts nothing                      |
-| `start.sh`                                        | `ember.service`'s launcher (installed copy): runs an image release's container, or a host-built release's server |
+| `start.sh`                                        | `ember.service`'s launcher (installed copy): runs the current release's image as the `ember-app` container       |
 | `notify.sh`                                       | Sends an alert to the owner's Hermes webhook, queueing it while Hermes is unreachable                            |
 | `docker.sh`, `docker-host.sh`                     | The Docker CLI pointed at Ember's own rootless daemon                                                            |
 | `compose.local.yml`                               | The `ember-postgres` container (development daemon, and the live one with `EMBER_PG_PORT`)                       |
 | `limited.sh`                                      | Runs the npm test scripts in the capped `ember-jobs.slice`                                                       |
-| `dependency-check.sh`, `postgres-update-check.sh` | Monthly checks that queue an update card for npm advisories, Node releases or a new PostgreSQL minor             |
+| `dependency-check.sh`, `postgres-update-check.sh` | Monthly checks that queue an update card for npm advisories, the image's Node or a new PostgreSQL minor          |
 | `isolation-check.sh`                              | Shows what the service account can and cannot reach                                                              |
 | `image-smoke.sh`                                  | Runtime smoke test of a built image with synthetic settings (`docs/ci-and-tests.md`)                             |
 | `ghcr-retention.sh`                               | Lists, or with `--delete` deletes, old versions of the GHCR image; CI runs it as a dry run                       |
