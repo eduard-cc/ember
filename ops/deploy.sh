@@ -48,10 +48,10 @@ ci=$(ci_state "$sha") || retry_later 'could not read CI results from GitHub'
 [[ $ci == success ]] || die "CI failed for ${sha:0:12}"
 
 # The image a green push run of this code published, as "<image by digest> <commit>", from
-# the run's ember-image artifact. The newest green run that has one counts, and its record
-# must name that run's own commit. Runs in a command substitution: exit codes pass through.
+# the run's ember-image artifact. The newest green run that published an image counts, and its
+# record must name that run's own commit. Runs in a command substitution: exit codes pass through.
 image_record() {
-	local runs head status conclusion run artifact record line
+	local runs head status conclusion run artifact published record line
 	runs=$(ci_runs "$sha") || retry_later 'could not read CI results from GitHub'
 	while read -r head status conclusion run; do
 		[[ $status == completed && $conclusion == success && $run =~ ^[0-9]+$ ]] || continue
@@ -59,7 +59,15 @@ image_record() {
 			--jq '.artifacts[] | select(.name == "ember-image" and (.expired | not)) | .id') ||
 			retry_later "could not read the artifacts of CI run $run"
 		artifact=$(sort -n <<<"$artifact" | tail -n 1)
-		[[ -n $artifact ]] || continue
+		if [[ -z $artifact ]]; then
+			# A run that published nothing (docs only) defers to the next older run; one that
+			# published an image whose record is gone (expired, deleted) is refused.
+			published=$(gh api "repos/$REPO/actions/runs/$run/jobs?per_page=100" \
+				--jq '.jobs[] | select(.name == "Publish image") | .conclusion') ||
+				retry_later "could not read the jobs of CI run $run"
+			[[ $published != success ]] || die "CI run $run published an image but its ember-image record is gone; refusing"
+			continue
+		fi
 		[[ $artifact =~ ^[0-9]+$ ]] || die "CI run $run lists an unexpected artifact id"
 		record=$(mktemp "$RELEASES/.image-record.XXXXXX")
 		gh api "repos/$REPO/actions/artifacts/$artifact/zip" >"$record.zip" ||

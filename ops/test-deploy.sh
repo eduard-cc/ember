@@ -42,6 +42,10 @@ case \$2 in
 	run=\${2#*/actions/runs/}
 	cat -- "$sandbox/artifacts/\${run%%/*}" 2>/dev/null || true
 	;;
+*/actions/runs/*/jobs*)
+	run=\${2#*/actions/runs/}
+	echo "\$(cat -- "$sandbox/artifacts/\${run%%/*}.publish" 2>/dev/null || echo skipped)"
+	;;
 */actions/artifacts/*/zip)
 	artifact=\${2#*/actions/artifacts/}
 	cat -- "$sandbox/artifacts/\${artifact%/zip}.zip"
@@ -205,6 +209,7 @@ green_run() { # <commit> [record]
 	# gh lists the newest run first.
 	{ echo "$1 completed success $next_run" && cat -- "$runs"; } >"$runs.new" && mv -- "$runs.new" "$runs"
 	(($# > 1)) || return 0
+	echo success >"$sandbox/artifacts/$next_run.publish"
 	echo "$((next_run * 10))" >"$sandbox/artifacts/$next_run"
 	python3 -c 'import sys, zipfile
 with zipfile.ZipFile(sys.argv[1], "w") as z: z.writestr("ember-image", sys.argv[2].encode().decode("unicode_escape"))' \
@@ -231,9 +236,16 @@ touch "$sandbox/gh-down"
 [[ $(deploy "$c1") == 69 ]] || fail 'unreachable GitHub must retry later'
 rm -- "$sandbox/gh-down"
 
-# A green run without an image record refuses; one whose artifacts cannot be read retries.
+# A green run that published nothing refuses; one whose published record is gone refuses
+# even when an older run of the same code has one; unreadable artifacts retry.
 green_run "$c1"
 [[ $(deploy "$c1") == 1 ]] && said 'recorded an image; refusing' || fail 'a run without an image must refuse'
+: >"$runs"
+green_run "$c1" "$i1 $c1\n"
+green_run "$c1" "$i1 $c1\n"
+rm -- "$sandbox/artifacts/$next_run"
+[[ $(deploy "$c1") == 1 ]] && said "CI run $next_run published an image but its ember-image record is gone" ||
+	fail 'a newest run whose record is gone must refuse'
 : >"$runs"
 green_run "$c1" "$i1 $c1\n"
 touch "$sandbox/artifacts-down"
@@ -322,9 +334,10 @@ green_run "$c3" "$(image "$c3" Second2) $c3\n"
 said 'release adds migrations: Second2'
 printf 'Initial1\nSecond2\n' >"$sandbox/applied"
 
-# A docs-only commit has no image of its own: it runs its code commit's image, even while
-# its own run is still going or has no artifact.
+# A docs-only commit has no image of its own: it runs its code commit's image, whether its
+# own run published nothing or is still going.
 c4=$(commit README.md)
+green_run "$c4"
 echo "$c4 in_progress  102" >>"$runs"
 [[ $(deploy "$c4") == 0 ]] && live "$c4" || fail 'a docs-only commit should deploy'
 [[ $(<"$EMBER_HOME/releases/$c4/IMAGE") == "$(<"$EMBER_HOME/releases/$c3/IMAGE")" ]] ||
