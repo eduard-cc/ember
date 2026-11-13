@@ -25,7 +25,8 @@ body; the tall upper-back wedge is Lats). Usage is in the script's docstring.
 ## Drawings
 
 The licensed base catalog is built by `generate.py` from reviewed open-source
-mappings. Do not replace or reattribute those illustrations or text sources.
+mappings. Do not replace or reattribute those illustrations. The catalog holds
+drawings and exercise facts only; it bundles no instruction text.
 Everkinetic drawings come from `dist/png`; when an exercise has none there,
 `generate.py` falls back to the artist's finished source exports
 `src/images-ai/<id>-S.ai.png` and `-F.ai.png` ("ai" = Adobe Illustrator, same
@@ -46,11 +47,10 @@ scale.
 Dumbbell and cable shrugs are cropped to the upper body (`EK_UPPER_BODY`, the
 same box for start and finish) so the small shoulder lift stays visible;
 barbell and Smith machine shrugs stay whole to keep their plates and rails.
-Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing and
-steps. `EK_TEXT_ONLY` keeps
-Everkinetic's instructions but not its drawing where that drawing shows a
-different variant: Pull Up (Assisted) shows the approved assisted-machine
-pair (also used by Chin Up (Assisted)) through `generated.py`.
+Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing.
+`EK_NO_DRAWING` skips Everkinetic's drawing where it shows a different variant:
+Pull Up (Assisted) shows the approved assisted-machine pair (also used by Chin
+Up (Assisted)) through `generated.py`.
 
 ## App-owned illustrations
 

@@ -102,8 +102,7 @@ def bundle(source_dir):
         stale_files += [OUT_IMAGES / image['file'] for image in entry['images']]
         entry['images'] = [{'file': f'{key}-{i}.webp', 'width': size[0], 'height': size[1]}
                            for i, (_, size) in enumerate(images)]
-        # Preserve every instruction/muscle source and its order/contents.
-        entry['sources'] = [s for s in entry['sources'] if s['kind'] != 'illustration'] + [{
+        entry['sources'] = [{
             'kind': 'illustration', 'title': entry['name'], 'author': AUTHOR,
             'license': LICENSE, 'licenseUrl': PROVENANCE_URL + '#app-owned-illustrations',
             'url': PROVENANCE_URL, 'changes': CHANGES,

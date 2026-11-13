@@ -30,7 +30,7 @@ export const muscles = [
 ] as const;
 export type Muscle = (typeof muscles)[number];
 export interface CatalogSource {
-  kind: 'illustration' | 'instructions';
+  kind: 'illustration';
   title: string;
   author: string;
   license: string;
@@ -46,7 +46,6 @@ export interface CatalogExercise {
   /** Reviewed tags from scripts/catalog/muscles.json. */
   primaryMuscles: Muscle[];
   secondaryMuscles: Muscle[];
-  instructions: string[];
   images: {file: string; width: number; height: number}[];
   sources: CatalogSource[];
 }
