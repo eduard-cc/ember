@@ -9,7 +9,8 @@ const shown = (page: Page) =>
       (await (await navigator.serviceWorker.ready).getNotifications({tag})).map((item) => ({
         title: item.title,
         body: item.body,
-        badge: item.badge,
+        // Chromium shows the badge; TypeScript's DOM types omit it as not cross-browser.
+        badge: (item as Notification & {badge?: string}).badge,
         silent: item.silent,
       })),
     tag,
