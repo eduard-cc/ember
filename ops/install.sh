@@ -3,7 +3,7 @@
 # restart the app (ops/deploy.sh does that once a release exists). Slice limits apply on
 # daemon-reload; a changed ember-docker.service needs a restart to take effect. Starts
 # ember-auto-deploy.timer, which deploys main once its CI has passed, and
-# ember-notify-retry.path, which sends alerts queued while Hermes was unreachable.
+# ember-notify-retry.path, which sends alerts queued while the alert webhook was unreachable.
 set -Eeuo pipefail
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 units=$HOME/.config/systemd/user

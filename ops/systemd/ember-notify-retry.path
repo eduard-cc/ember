@@ -1,5 +1,5 @@
 # User unit installed and enabled by ops/install.sh. Starts ember-notify-retry.service
-# whenever ops/notify.sh has queued an alert that Hermes could not take yet.
+# whenever ops/notify.sh has queued an alert that the alert webhook could not take yet.
 [Unit]
 Description=Watch for queued Ember alerts
 
