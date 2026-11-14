@@ -1156,12 +1156,12 @@
     "images": [
       {
         "file": "iso-lateral-row-machine-0.webp",
-        "width": 217,
+        "width": 177,
         "height": 240
       },
       {
         "file": "iso-lateral-row-machine-1.webp",
-        "width": 191,
+        "width": 177,
         "height": 240
       }
     ],
@@ -1169,11 +1169,11 @@
       {
         "kind": "illustration",
         "title": "Iso-Lateral Row (Machine)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -2396,12 +2396,12 @@
     "images": [
       {
         "file": "reverse-fly-machine-0.webp",
-        "width": 128,
+        "width": 163,
         "height": 240
       },
       {
         "file": "reverse-fly-machine-1.webp",
-        "width": 192,
+        "width": 163,
         "height": 240
       }
     ],
@@ -2409,11 +2409,11 @@
       {
         "kind": "illustration",
         "title": "Reverse Fly (Machine)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4163,24 +4163,24 @@
     "images": [
       {
         "file": "bulgarian-split-squat-0.webp",
-        "width": 240,
-        "height": 196
+        "width": 155,
+        "height": 240
       },
       {
         "file": "bulgarian-split-squat-1.webp",
-        "width": 240,
-        "height": 196
+        "width": 208,
+        "height": 240
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Bulgarian Split Squat",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6184,18 +6184,18 @@
       {
         "file": "mountain-climber-1.webp",
         "width": 240,
-        "height": 153
+        "height": 150
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Mountain Climber",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6514,24 +6514,24 @@
     "images": [
       {
         "file": "cycling-stationary-bike-0.webp",
-        "width": 240,
-        "height": 213
+        "width": 201,
+        "height": 240
       },
       {
         "file": "cycling-stationary-bike-1.webp",
-        "width": 240,
-        "height": 213
+        "width": 201,
+        "height": 240
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Cycling (Stationary Bike)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
