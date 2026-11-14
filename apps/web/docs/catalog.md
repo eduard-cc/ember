@@ -49,7 +49,7 @@ uncropped or no better: shrugs lose their visible shoulder lift at full-figure
 scale.
 
 Dumbbell and cable shrugs are cropped to the upper body (`EK_UPPER_BODY`, the
-same box for start and finish) so the small shoulder lift stays visible;
+same box for start and finish, hands and weight fully in frame) so the small shoulder lift stays visible;
 barbell and Smith machine shrugs stay whole to keep their plates and rails.
 Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing.
 `EK_UNRELEASED` maps exercises Everkinetic doesn't publish to its unpublished
@@ -83,12 +83,16 @@ line width, so judge dense machines and chains on the normalised mask, not the r
 
 ## App-owned illustrations
 
-Missing illustrations may be generated specifically for Ember. They are marked
-`app-owned`, credited to `Ember (AI-assisted, gpt-image-2)`, and explicitly described as AI-assisted. This
-label describes app-created provenance, not a claim that AI output has exclusive
-copyright or a Creative Commons license. Existing licensed sources retain their
-original attribution and terms. Licensed Everkinetic reference drawings guide visual style only;
-no reference pixels are bundled in the new assets.
+Missing illustrations may be generated specifically for Ember and are explicitly
+described as AI-assisted. By default they are marked `app-owned` and credited to
+`Ember (AI-assisted, gpt-image-2)`. This label describes app-created provenance, not a
+claim that AI output has exclusive copyright or a Creative Commons license. A drawing
+made with Everkinetic drawings of other exercises as style references sets
+`"credit": "after-everkinetic"` in its QA record: it is credited to `Ember (AI-assisted,
+after Everkinetic)` under Everkinetic's licence, CC BY-SA 4.0, and the manifest lists
+its `credit`. Never use a drawing of the same exercise, or wger, as a reference. Existing
+licensed sources retain their original attribution and terms. No reference pixels are
+bundled in the new assets.
 
 Raw PNGs stay outside git in `~/.cache/ember-catalog/generated/`: one QA record
 per exercise in `qa/<slug>.json` (status `accepted`, `rejected`, `unreviewed`
@@ -137,9 +141,12 @@ never replaces or edits a licensed illustration or its attribution. All inputs
 are validated before any asset changes. Run it after `generate.py` when
 rebuilding the licensed base.
 
-Each bundled drawing is credited `Ember (AI-assisted, gpt-image-2)` (enforced by
-`tests/catalog.test.ts`), license `app-owned`, with an adaptation note saying it is
-AI-assisted and not an Everkinetic or wger work.
+Each bundled drawing is credited from its QA record's `credit` (enforced by
+`tests/catalog.test.ts`): by default
+`Ember (AI-assisted, gpt-image-2)`, license `app-owned`, with an adaptation note
+saying it is AI-assisted and not an Everkinetic or wger work; with `after-everkinetic`,
+`Ember (AI-assisted, after Everkinetic)`, CC BY-SA 4.0, with an adaptation note naming
+the Everkinetic style references.
 
 ## Style
 
@@ -155,7 +162,7 @@ AI-assisted and not an Everkinetic or wger work.
 ## QA and fixing defects
 
 Generate with gpt-image-2, using licensed Everkinetic drawings as style
-references only. Every candidate must pass, on the raw full-size image:
+references only. Before it is shown or accepted, every candidate must pass, on the raw full-size image:
 
 1. A style audit (see Style).
 2. An independent strict physical-logic audit: limb counts, no twisted torso,

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Unit tests for generated.py's mask step, on synthetic drawings (no QA cache needed).
+"""Unit tests for generated.py's mask and credit steps, on synthetic data (no QA cache needed).
 
 Run from apps/web: python3 -B -m unittest discover -s scripts/catalog -p 'test_*.py'
 """
 import io
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -13,7 +15,7 @@ from PIL import Image, ImageDraw
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).parent))
 from generate import normalised_mask  # noqa: E402
-from generated import pose_masks  # noqa: E402
+from generated import credit_source, load_records, pose_masks  # noqa: E402
 from stroke import STROKE_TARGET, stroke_width  # noqa: E402
 
 CANVAS = (900, 1200)
@@ -61,6 +63,28 @@ class PoseMasks(unittest.TestCase):
             pose_masks([LOW], shared_scale=True)
         with self.assertRaisesRegex(ValueError, 'one canvas size'):
             pose_masks([LOW, drawing((400, 100, 500, 1100), canvas=(1000, 1200))], shared_scale=True)
+
+
+class Credits(unittest.TestCase):
+    def test_a_record_credit_picks_the_drawing_credit(self):
+        owned = credit_source('Synthetic Lift', None)
+        self.assertEqual((owned['author'], owned['license']), ('Ember (AI-assisted, gpt-image-2)', 'app-owned'))
+        self.assertIn('not an Everkinetic or wger work', owned['changes'])
+        after = credit_source('Synthetic Lift', 'after-everkinetic')
+        self.assertEqual(
+            (after['author'], after['license'], after['licenseUrl']),
+            ('Ember (AI-assisted, after Everkinetic)', 'CC BY-SA 4.0',
+             'https://creativecommons.org/licenses/by-sa/4.0/'))
+        self.assertIn('Everkinetic drawings of other exercises', after['changes'])
+        self.assertEqual(after['title'], 'Synthetic Lift')
+
+    def test_an_unknown_credit_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / 'qa').mkdir()
+            (Path(tmp) / 'qa' / 'synthetic-lift.json').write_text(
+                json.dumps({'status': 'accepted', 'credit': 'somebody-else'}))
+            with self.assertRaisesRegex(ValueError, 'unknown credit'):
+                load_records(Path(tmp))
 
 
 if __name__ == '__main__':

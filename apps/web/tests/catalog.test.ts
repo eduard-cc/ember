@@ -3,7 +3,18 @@ import {existsSync, readFileSync, statSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {describe, expect, it} from 'vitest';
 
-import {bodyParts, bodyPartsOf, catalog, catalogEntry, muscles} from '../src/catalog/catalog';
+import {
+  type CatalogSource,
+  bodyParts,
+  bodyPartsOf,
+  catalog,
+  catalogEntry,
+  muscles,
+} from '../src/catalog/catalog';
+
+/** An AI-assisted drawing made for Ember (bundled by scripts/catalog/generated.py), whatever its credit. */
+const isAiDrawing = (source: CatalogSource) =>
+  source.kind === 'illustration' && source.author.startsWith('Ember (AI-assisted');
 
 // 5th to 95th percentile of the licensed drawings' line width before normalisation
 // (docs/catalog.md, "Line width").
@@ -117,14 +128,9 @@ describe('bundled exercise catalog', () => {
         // Attribution names the author and links the source; contact addresses are not needed.
         expect(source.author).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.-]+/);
         expect(source.license).toMatch(/^(CC BY-SA [34]\.0|CC0 1\.0|app-owned)$/);
-        if (source.license === 'app-owned') {
+        if (isAiDrawing(source)) {
           expect(source.kind).toBe('illustration');
-          expect(source.author).toBe('Ember (AI-assisted, gpt-image-2)');
           expect(source.changes).toContain('AI-assisted illustration');
-          expect(source.changes).toContain('not an Everkinetic or wger work');
-          expect(`${source.author} ${source.url} ${source.licenseUrl}`).not.toMatch(
-            /everkinetic|wger/i,
-          );
           // Provenance links point at the catalog README in this repository and its section.
           const readme = /^https:\/\/github\.com\/eduard-cc\/ember\/blob\/main\/(.+)$/.exec(
             source.url,
@@ -133,7 +139,23 @@ describe('bundled exercise catalog', () => {
           expect(readFileSync(`../../${readme}`, 'utf8')).toContain(
             '\n## App-owned illustrations\n',
           );
+        }
+        if (source.license === 'app-owned') {
+          expect(source.author).toBe('Ember (AI-assisted, gpt-image-2)');
+          expect(source.changes).toContain('not an Everkinetic or wger work');
+          expect(`${source.author} ${source.url} ${source.licenseUrl}`).not.toMatch(
+            /everkinetic|wger/i,
+          );
           expect(source.licenseUrl).toBe(`${source.url}#app-owned-illustrations`);
+        } else if (isAiDrawing(source)) {
+          // Drawn with Everkinetic drawings of other exercises as style references.
+          expect(source).toMatchObject({
+            author: 'Ember (AI-assisted, after Everkinetic)',
+            license: 'CC BY-SA 4.0',
+            licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+          });
+          expect(source.changes).toContain("after Everkinetic's drawing style");
+          expect(source.changes).toContain('Everkinetic drawings of other exercises');
         }
         expect(source.url).toMatch(/^https:\/\//);
       }
@@ -145,7 +167,7 @@ describe('bundled exercise catalog', () => {
     }
   });
   it('shows every AI-assisted drawing as a start/finish pair, except holds without a progression', () => {
-    const appOwned = catalog.filter((e) => e.sources.some((s) => s.license === 'app-owned'));
+    const appOwned = catalog.filter((e) => e.sources.some(isAiDrawing));
     const singles = appOwned.filter((e) => e.images.length === 1).map((e) => e.name);
     expect(singles).toEqual(['Plank']);
     for (const entry of appOwned.filter((e) => e.name !== 'Plank'))
@@ -172,29 +194,33 @@ describe('bundled exercise catalog', () => {
     const manifest = JSON.parse(
       readFileSync('scripts/catalog/generated-manifest.json', 'utf8'),
     ) as {
-      exercises: {name: string; status: string; sha256?: string}[];
+      exercises: {name: string; status: string; sha256?: string; credit?: string}[];
     };
     const accepted = manifest.exercises.filter((e) => e.status === 'accepted');
     expect(accepted.length).toBeGreaterThan(0);
     for (const item of accepted) expect(item.sha256).toMatch(/^[0-9a-f]{64}$/);
-    const appOwned = catalog.filter((e) => e.sources.some((s) => s.license === 'app-owned'));
+    const appOwned = catalog.filter((e) => e.sources.some(isAiDrawing));
     expect(appOwned.map((e) => e.name).sort()).toEqual(accepted.map((e) => e.name).sort());
+    // Each record's credit picks its drawing's credit; without one the drawing is app-owned.
+    const credited = new Map(accepted.map((e) => [e.name, e.credit]));
+    expect([...credited.values()].filter(Boolean).length).toBeGreaterThan(0);
     for (const entry of appOwned) {
       const illustrations = entry.sources.filter((s) => s.kind === 'illustration');
-      expect(illustrations).toEqual([
-        expect.objectContaining({
-          author: 'Ember (AI-assisted, gpt-image-2)',
-          license: 'app-owned',
-        }),
+      expect(illustrations, entry.name).toEqual([
+        expect.objectContaining(
+          credited.get(entry.name) === 'after-everkinetic'
+            ? {author: 'Ember (AI-assisted, after Everkinetic)', license: 'CC BY-SA 4.0'}
+            : {author: 'Ember (AI-assisted, gpt-image-2)', license: 'app-owned'},
+        ),
       ]);
     }
     // Rejected or unreviewed drawings never ship.
     for (const item of manifest.exercises.filter((e) => e.status !== 'accepted'))
-      expect(catalogEntry(item.name)?.sources.some((s) => s.license === 'app-owned')).toBe(false);
+      expect(catalogEntry(item.name)?.sources.some(isAiDrawing)).toBe(false);
   });
   it('keeps licensed drawings attributed to their original authors', () => {
     const licensed = catalog.filter((e) =>
-      e.sources.some((s) => s.kind === 'illustration' && s.license !== 'app-owned'),
+      e.sources.some((s) => s.kind === 'illustration' && !isAiDrawing(s)),
     );
     // Everkinetic's unpublished drawings (same artist and licence) cover these exercises.
     for (const name of [
@@ -217,8 +243,7 @@ describe('bundled exercise catalog', () => {
         }),
       ]);
     expect(licensed.length).toBeGreaterThanOrEqual(167);
-    for (const entry of licensed)
-      expect(entry.sources.some((s) => s.license === 'app-owned')).toBe(false);
+    for (const entry of licensed) expect(entry.sources.some(isAiDrawing)).toBe(false);
   });
   it('shows each exercise its own movement, not a neighbouring variant', () => {
     // Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises drawing.

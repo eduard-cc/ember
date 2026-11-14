@@ -816,23 +816,23 @@
       {
         "file": "bent-over-one-arm-row-dumbbell-0.webp",
         "width": 240,
-        "height": 207
+        "height": 209
       },
       {
         "file": "bent-over-one-arm-row-dumbbell-1.webp",
         "width": 240,
-        "height": 206
+        "height": 209
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Bent Over One Arm Row (Dumbbell)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -1776,12 +1776,12 @@
     "images": [
       {
         "file": "external-rotation-cable-0.webp",
-        "width": 164,
+        "width": 136,
         "height": 240
       },
       {
         "file": "external-rotation-cable-1.webp",
-        "width": 190,
+        "width": 168,
         "height": 240
       }
     ],
@@ -1789,11 +1789,11 @@
       {
         "kind": "illustration",
         "title": "External Rotation (Cable)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -3543,12 +3543,12 @@
     "images": [
       {
         "file": "seated-palms-up-wrist-curl-dumbbell-0.webp",
-        "width": 220,
+        "width": 175,
         "height": 240
       },
       {
         "file": "seated-palms-up-wrist-curl-dumbbell-1.webp",
-        "width": 216,
+        "width": 174,
         "height": 240
       }
     ],
@@ -3556,11 +3556,11 @@
       {
         "kind": "illustration",
         "title": "Seated Palms Up Wrist Curl (Dumbbell)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4070,12 +4070,12 @@
     "images": [
       {
         "file": "belt-squat-machine-0.webp",
-        "width": 231,
+        "width": 146,
         "height": 240
       },
       {
         "file": "belt-squat-machine-1.webp",
-        "width": 227,
+        "width": 179,
         "height": 240
       }
     ],
@@ -4083,11 +4083,11 @@
       {
         "kind": "illustration",
         "title": "Belt Squat (Machine)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4101,12 +4101,12 @@
     "images": [
       {
         "file": "box-jump-0.webp",
-        "width": 240,
-        "height": 168
+        "width": 182,
+        "height": 240
       },
       {
         "file": "box-jump-1.webp",
-        "width": 227,
+        "width": 182,
         "height": 240
       }
     ],
@@ -4114,11 +4114,11 @@
       {
         "kind": "illustration",
         "title": "Box Jump",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -4690,24 +4690,24 @@
     "images": [
       {
         "file": "lunge-bodyweight-0.webp",
-        "width": 240,
-        "height": 204
+        "width": 59,
+        "height": 240
       },
       {
         "file": "lunge-bodyweight-1.webp",
-        "width": 240,
-        "height": 204
+        "width": 234,
+        "height": 240
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Lunge (Bodyweight)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5248,24 +5248,24 @@
     "images": [
       {
         "file": "squat-bodyweight-0.webp",
-        "width": 188,
+        "width": 127,
         "height": 240
       },
       {
         "file": "squat-bodyweight-1.webp",
-        "width": 240,
-        "height": 225
+        "width": 226,
+        "height": 240
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Squat (Bodyweight)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -5558,24 +5558,24 @@
     "images": [
       {
         "file": "stiff-leg-deadlift-barbell-0.webp",
-        "width": 240,
-        "height": 206
+        "width": 172,
+        "height": 240
       },
       {
         "file": "stiff-leg-deadlift-barbell-1.webp",
-        "width": 240,
-        "height": 226
+        "width": 130,
+        "height": 240
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Stiff Leg Deadlift (Barbell)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6117,23 +6117,23 @@
       {
         "file": "hollow-hold-0.webp",
         "width": 240,
-        "height": 36
+        "height": 39
       },
       {
         "file": "hollow-hold-1.webp",
         "width": 240,
-        "height": 73
+        "height": 72
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Hollow Hold",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6545,24 +6545,24 @@
     "images": [
       {
         "file": "elliptical-trainer-0.webp",
-        "width": 240,
-        "height": 207
+        "width": 158,
+        "height": 240
       },
       {
         "file": "elliptical-trainer-1.webp",
-        "width": 240,
-        "height": 207
+        "width": 171,
+        "height": 240
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Elliptical Trainer",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6607,12 +6607,12 @@
     "images": [
       {
         "file": "jumping-jack-0.webp",
-        "width": 88,
+        "width": 90,
         "height": 240
       },
       {
         "file": "jumping-jack-1.webp",
-        "width": 145,
+        "width": 144,
         "height": 240
       }
     ],
@@ -6620,11 +6620,11 @@
       {
         "kind": "illustration",
         "title": "Jumping Jack",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6700,12 +6700,12 @@
     "images": [
       {
         "file": "ski-erg-0.webp",
-        "width": 154,
+        "width": 89,
         "height": 240
       },
       {
         "file": "ski-erg-1.webp",
-        "width": 163,
+        "width": 102,
         "height": 240
       }
     ],
@@ -6713,11 +6713,11 @@
       {
         "kind": "illustration",
         "title": "Ski Erg",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
@@ -6917,24 +6917,24 @@
     "images": [
       {
         "file": "power-clean-barbell-0.webp",
-        "width": 240,
-        "height": 165
+        "width": 215,
+        "height": 240
       },
       {
         "file": "power-clean-barbell-1.webp",
-        "width": 240,
-        "height": 212
+        "width": 172,
+        "height": 240
       }
     ],
     "sources": [
       {
         "kind": "illustration",
         "title": "Power Clean (Barbell)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised"
       }
     ]
   },
