@@ -4,11 +4,12 @@ Ember is a self-hosted, local-first workout tracker for phones: a React PWA with
 
 ## Layout
 
-- `apps/web`: the React PWA (views, components, local storage, sync client, PWA shell), its tests, the exercise catalog pipeline and the document schemas in `apps/web/shared/`. Read `apps/web/AGENTS.md` before touching it.
+- `apps/web`: the React PWA (views, components, local storage, sync client, PWA shell), its tests, the exercise catalog pipeline and the backup schema in `apps/web/shared/`. Read `apps/web/AGENTS.md` before touching it.
 - `apps/api`: the NestJS sync API and its tests. Read `apps/api/AGENTS.md` before touching it.
+- `packages/contracts`: `@ember/contracts`, the document schemas, retired keys and served-file rule both apps import (the API as `#contracts`). A change there is a change to both apps. Read `packages/contracts/README.md` before touching it.
 - `ops/`: deploy, backup, install and host-setup scripts, systemd units and the local Compose file. Read `ops/README.md` before touching it.
 - `.github/`: the CI workflow and Dependabot config. `docs/`: topics that span both apps.
-- Each app has its own `package.json`, lockfile and ESLint config; run npm commands inside the app (`npm --prefix apps/web …`, `npm --prefix apps/api …`). Prettier runs once from `apps/web` over the whole repository, with each area's config (API: tabs; everything else: two spaces). The Node major is in the root `.nvmrc`.
+- Each app has its own `package.json`, lockfile and ESLint config; run npm commands inside the app (`npm --prefix apps/web …`, `npm --prefix apps/api …`). `packages/contracts` has neither node_modules nor a lockfile: its only dependency, zod, resolves from each app. Prettier runs once from `apps/web` over the whole repository, with each area's config (API: tabs; everything else: two spaces). The Node major is in the root `.nvmrc`.
 - Read before touching:
   - CI, local test runs, ports, Playwright: `docs/ci-and-tests.md`
   - PRs and merging, deploy, rollback, live checks, static assets and the precache: `docs/deploy.md`
@@ -65,7 +66,7 @@ This repository and everything attached to it (commits, PRs, comments, issues, C
 
 ## Verification
 
-- Commands are in each app's `package.json` and in README.md; each app's `AGENTS.md` lists its checks. Before handoff: the web app's `format:check` (whole repository), `lint:check` for each app you touched, then that app's checks: for `apps/web` typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched; for `apps/api` typecheck, build and `test:e2e`. `test:integration` is not in CI: run it locally whenever sync, imported history or recovery is touched.
+- Commands are in each app's `package.json` and in README.md; each app's `AGENTS.md` lists its checks. Before handoff: the web app's `format:check` (whole repository), `lint:check` for each app you touched, then that app's checks: for `apps/web` typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched; for `apps/api` typecheck, build and `test:e2e`; for `packages/contracts` both apps' checks. `test:integration` is not in CI: run it locally whenever sync, imported history or recovery is touched.
 - Prefer tests before domain behavior; verify observable Playwright flows at phone size and typecheck/build before handoff.
 - Local test stacks use fixed container names and ports shared by every worktree: never run fixed-port suites concurrently, and check for another run before starting one (`docs/ci-and-tests.md`). Fixtures are synthetic and databases disposable.
 - Do not invent successful check output; state production gaps explicitly. Remaining release gates are listed in PRODUCT.md.
