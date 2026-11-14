@@ -218,9 +218,9 @@
     {
       "name": "Kettlebell Swing",
       "status": "accepted",
-      "attempts": 1,
-      "sha256": "9379cccfbba2a9d96f535004d257b9611805fe694da4a12ee7f15ff6331038f8",
-      "startSha256": "911eae8722ef519a992d284d0ecfef61388cbf24a8656d6c43c9d08ffa56a820"
+      "attempts": 3,
+      "sha256": "82b87402bc0e95c433ce6c89173d8cbac6358a9c16f793db6476bc8d406409a3",
+      "startSha256": "f2e0edeb5df11205150333d543ba6ee1968bca5697976bc5026967c4d697bb1b"
     },
     {
       "name": "Lat Pulldown (Cable)",
@@ -390,16 +390,16 @@
     {
       "name": "Single Leg Deadlift (Dumbbell)",
       "status": "accepted",
-      "attempts": 1,
-      "sha256": "87c73717119dd5cea773f0193ceb00bd97e4341dc8eb1b51ba07d30d38c6369d",
-      "startSha256": "7ecd3ba4acb361c3fdc6c51d1ef02019acaaa8b32ee66aaf507216abd59d09b5"
+      "attempts": 4,
+      "sha256": "a71143722e1f93ca8df9543f1db9a8ab6237d52b66770ffe19856b447b0db4b1",
+      "startSha256": "d467d77fcb3fde69204bfc9eb012bb893d2fb32bf1fa0cb60298338f0bc04c49"
     },
     {
       "name": "Sit Up",
       "status": "accepted",
-      "attempts": 3,
-      "sha256": "0a55d9331cbeb8d07d2292c48ae4801183f79e65ca9ef3782da5d1932d6df694",
-      "startSha256": "283293ae85b3c721f05b18fe0fc50cf7def0191b7fe85b258ac3aaa6fd0027de"
+      "attempts": 5,
+      "sha256": "e350aec2c4e51feab2ef2068920a5561afe5cddc355458599659ce9460f85812",
+      "startSha256": "a6f9723064fd56e2977623f26b757208f83f4aca4a09d4a636cc5be8cc81d919"
     },
     {
       "name": "Ski Erg",
@@ -461,9 +461,9 @@
     {
       "name": "Thruster (Barbell)",
       "status": "accepted",
-      "attempts": 4,
-      "sha256": "2799058bb7c61dc5115a876cdf2837e6504df560bf588ce78fb451751a0f6df2",
-      "startSha256": "498d1cebfdf4253217031becce5ebe2914fa3c47c32a8fcf335ff9b2a8a9922c"
+      "attempts": 9,
+      "sha256": "ce1fc5421c90ca5c79a0fb00bc25aa92f31059fb2ff6edfe3af83358b94ed01f",
+      "startSha256": "b3ed741240a7c43777d40d2da65c618a37171121f5458fdd1eb5688432f0ca0f"
     },
     {
       "name": "Woodchopper (Cable)",

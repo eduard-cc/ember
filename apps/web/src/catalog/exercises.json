@@ -5124,13 +5124,13 @@
     "images": [
       {
         "file": "single-leg-deadlift-dumbbell-0.webp",
-        "width": 240,
-        "height": 161
+        "width": 128,
+        "height": 240
       },
       {
         "file": "single-leg-deadlift-dumbbell-1.webp",
-        "width": 100,
-        "height": 240
+        "width": 240,
+        "height": 172
       }
     ],
     "sources": [
@@ -6391,12 +6391,12 @@
       {
         "file": "sit-up-0.webp",
         "width": 240,
-        "height": 117
+        "height": 95
       },
       {
         "file": "sit-up-1.webp",
         "width": 240,
-        "height": 144
+        "height": 203
       }
     ],
     "sources": [
@@ -6886,12 +6886,12 @@
     "images": [
       {
         "file": "kettlebell-swing-0.webp",
-        "width": 152,
+        "width": 150,
         "height": 240
       },
       {
         "file": "kettlebell-swing-1.webp",
-        "width": 151,
+        "width": 159,
         "height": 240
       }
     ],
@@ -6979,12 +6979,12 @@
     "images": [
       {
         "file": "thruster-barbell-0.webp",
-        "width": 240,
-        "height": 230
+        "width": 225,
+        "height": 240
       },
       {
         "file": "thruster-barbell-1.webp",
-        "width": 224,
+        "width": 139,
         "height": 240
       }
     ],
