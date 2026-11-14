@@ -296,11 +296,10 @@ jobs:
           shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh
           ops/notify.sh ops/test-install.sh ops/image-smoke.sh ops/ghcr-retention.sh ops/start.sh ops/lib.sh
           ops/docker-host.sh ops/deploy.sh ops/rollback.sh ops/auto-deploy.sh ops/test-deploy.sh ops/test-auto-deploy.sh
-          ops/test-release-switch.sh ops/dependency-check.sh ops/test-dependency-check.sh
+          ops/test-release-switch.sh
       - run: bash ops/test-install.sh
       - run: bash ops/test-deploy.sh
       - run: bash ops/test-auto-deploy.sh
-      - run: bash ops/test-dependency-check.sh
       - run: python3 -B ops/test-ember-run.py
 
   # Builds the production image (the Dockerfile runs the build-time smoke check) and runs

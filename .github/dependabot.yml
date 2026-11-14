@@ -52,16 +52,36 @@ updates:
       - dependency-name: 'typescript'
         versions: ['>=7']
 
-  # The Dockerfile's Node base image, pinned by tag and digest.
+  # The Dockerfile's Node base image, pinned by tag and digest. Checked daily and exempt from the
+  # cooldown: a Node security release's flaws are public the day it ships, and the official image
+  # carries far less supply-chain risk than an npm package, so waiting a week costs more than it buys.
   - package-ecosystem: docker
     directory: /
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 7
+      exclude:
+        - node
+    ignore:
+      # Keep the image on the runtime major in .nvmrc.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+
+  # The PostgreSQL image in ops/compose.local.yml. A new minor needs a backup and a container
+  # recreate (docs/operations.md), so its PR carries the hold label and is never merged as is.
+  - package-ecosystem: docker-compose
+    directory: /ops
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
+    labels:
+      - dependencies
+      - hold
     ignore:
-      # Keep the image on the runtime major in .nvmrc.
-      - dependency-name: node
+      # Major upgrades need a dump and restore.
+      - dependency-name: postgres
         update-types: ['version-update:semver-major']
 
   # Workflow actions are pinned by commit SHA with the version in a comment.
