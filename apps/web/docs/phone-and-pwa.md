@@ -38,4 +38,4 @@ A release between a hold timer and the React effect that attaches listeners is l
 - Chromium touch/viewport tests don't prove comfort on a real phone keyboard; on-device validation is still outstanding.
 - Chrome fills the bottom gesture-bar strip from the manifest `theme_color`/`background_color` only; page `meta theme-color` and CSS can't reach it. The manifest uses Night `#17161b`.
 - Manifest changes reach the phone only after the service-worker shell update is applied and Chrome's periodic WebAPK update check runs.
-- Updates require explicit confirmation and a saved, draft-free transition; never reload an active logger silently. The production shell precaches only a finite allowlist (see docs/deploy.md).
+- Updates require explicit confirmation and a saved, draft-free transition; never reload an active logger silently. The production shell precaches only a finite allowlist (see `ops/README.md`).

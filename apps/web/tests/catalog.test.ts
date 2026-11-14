@@ -6,7 +6,7 @@ import {describe, expect, it} from 'vitest';
 import {bodyParts, bodyPartsOf, catalog, catalogEntry, muscles} from '../src/catalog/catalog';
 
 // 5th to 95th percentile of the licensed drawings' line width before normalisation
-// (scripts/catalog/README.md, "Line width").
+// (docs/catalog.md, "Line width").
 const strokeBand = [1.7, 2.7];
 
 /** Mean line width (px) of a drawing: 2 × ink area ÷ outline length. The outline is measured

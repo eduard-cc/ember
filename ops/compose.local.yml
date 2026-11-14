@@ -9,7 +9,7 @@ services:
     env_file: ../apps/api/.postgres.env
     ports:
       # 55439 on the owner's development daemon; 55438 for the live database in the
-      # service account's daemon (docs/operations.md).
+      # service account's daemon (ops/README.md).
       - '127.0.0.1:${EMBER_PG_PORT:-55439}:5432'
     volumes:
       - ember-data:/var/lib/postgresql/data
