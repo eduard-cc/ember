@@ -9,7 +9,9 @@ superseded by a licensed one that generate.py now bundles. A record's ordered `p
 list (accepted/<slug>-0.png start, -1.png finish) becomes a start/finish pair;
 records without it bundle the single accepted/<slug>.png. Each drawing is cropped to its own
 ink, except a pair with `"sharedScale": true` (both drawn on one canvas at one scale, e.g. a
-burpee's crouch and jump), which is cropped with one shared box. Only accepted records
+burpee's crouch and jump), which is cropped with one shared box. A record's `credit`
+picks the drawing's credit (`after-everkinetic`: drawn with Everkinetic drawings of other
+exercises as style references, CC BY-SA 4.0); without one it is app-owned. Only accepted records
 whose PNGs match their recorded SHA-256 are bundled.
 App-owned drawings that are no longer accepted are removed; licensed Everkinetic/wger
 drawings and their sources are never modified. All inputs are validated before any
@@ -33,10 +35,33 @@ AUTHOR = 'Ember (AI-assisted, gpt-image-2)'
 LICENSE = 'app-owned'
 CHANGES = ('AI-assisted illustration made for Ember, not an Everkinetic or wger work; '
            'cropped, resized, recoloured and line width normalised')
+# A QA record's `credit` names how its drawing is credited; without one it is app-owned.
+CREDITS = {
+    'after-everkinetic': {
+        'author': 'Ember (AI-assisted, after Everkinetic)',
+        'license': 'CC BY-SA 4.0',
+        'licenseUrl': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'changes': ("AI-assisted illustration made for Ember after Everkinetic's drawing style, "
+                    'with Everkinetic drawings of other exercises as style references; '
+                    'cropped, resized, recoloured and line width normalised'),
+    },
+}
+AUTHORS = {AUTHOR} | {credit['author'] for credit in CREDITS.values()}
 
 
 def is_app_owned(source):
-    return source['kind'] == 'illustration' and source['license'] == LICENSE
+    """An illustration this script bundles (an AI-assisted Ember drawing), whatever its credit."""
+    return source['kind'] == 'illustration' and source['author'] in AUTHORS
+
+
+def credit_source(name, credit):
+    if credit is None:
+        return {'kind': 'illustration', 'title': name, 'author': AUTHOR, 'license': LICENSE,
+                'licenseUrl': PROVENANCE_URL + '#app-owned-illustrations', 'url': PROVENANCE_URL,
+                'changes': CHANGES}
+    return {'kind': 'illustration', 'title': name, 'author': CREDITS[credit]['author'],
+            'license': CREDITS[credit]['license'], 'licenseUrl': CREDITS[credit]['licenseUrl'],
+            'url': PROVENANCE_URL, 'changes': CREDITS[credit]['changes']}
 
 
 def load_records(source_dir):
@@ -45,6 +70,8 @@ def load_records(source_dir):
         record = json.loads(path.read_text())
         if record.get('status') not in ('accepted', 'rejected', 'unreviewed', 'replaced'):
             raise ValueError(f'{path.stem}: unknown QA status {record.get("status")!r}')
+        if record.get('credit') is not None and record['credit'] not in CREDITS:
+            raise ValueError(f'{path.stem}: unknown credit {record["credit"]!r}')
         records[path.stem] = record
     if not records:
         raise ValueError(f'no QA records in {source_dir / "qa"}')
@@ -131,11 +158,7 @@ def bundle(source_dir):
         stale_files += [OUT_IMAGES / image['file'] for image in entry['images']]
         entry['images'] = [{'file': f'{key}-{i}.webp', 'width': size[0], 'height': size[1]}
                            for i, (_, size) in enumerate(images)]
-        entry['sources'] = [{
-            'kind': 'illustration', 'title': entry['name'], 'author': AUTHOR,
-            'license': LICENSE, 'licenseUrl': PROVENANCE_URL + '#app-owned-illustrations',
-            'url': PROVENANCE_URL, 'changes': CHANGES,
-        }]
+        entry['sources'] = [credit_source(entry['name'], records[key].get('credit'))]
 
     hashes = {key: shas for key, _, _, shas in prepared}
     manifest = {
@@ -154,6 +177,7 @@ def bundle(source_dir):
                 **({'sha256': hashes[key][-1]} if key in hashes else {}),
                 **({'startSha256': hashes[key][0]} if len(hashes.get(key, [])) == 2 else {}),
                 **({'sharedScale': True} if key in hashes and record.get('sharedScale') else {}),
+                **({'credit': record['credit']} if key in hashes and record.get('credit') else {}),
                 **({'postProcessed': 'local line cleanup or thickening, re-audited'}
                    if record['status'] == 'accepted' and record.get('derived_from') else {}),
             }
@@ -176,7 +200,7 @@ def bundle(source_dir):
     MANIFEST.write_text(json.dumps(manifest, indent=2) + '\n')
     OUT_JSON.write_text(formatted)
     total = sum(p.stat().st_size for p in OUT_IMAGES.glob('*.webp'))
-    print(f'{len(prepared)} app-owned drawings bundled; removed: {removed or "none"}; '
+    print(f'{len(prepared)} AI-assisted drawings bundled; removed: {removed or "none"}; '
           f'{sum(bool(e["images"]) for e in entries)}/{len(entries)} exercises illustrated; '
           f'{sum(not e["images"] for e in entries)} missing; '
           f'{total / 1024:.2f} KiB total image payload')
