@@ -40,6 +40,7 @@ OUT_IMAGES = ROOT / 'src/catalog/images'
 CACHE = Path.home() / '.cache/ember-catalog'
 MAX_SIDE = 240
 LEVELS = 8
+MASK_PAD = 8  # paper kept around the ink when a mask is cropped
 # Display order of body parts; keep in sync with `bodyParts` in src/catalog/catalog.ts.
 BODY_PARTS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core', 'Cardio', 'Full body']
 
@@ -400,8 +401,9 @@ def credit(author):
     return name or 'wger.de contributors'
 
 
-def line_mask(raw):
-    """Crop a line drawing and turn it into an alpha mask (ink opaque, paper transparent)."""
+def line_mask(raw, box=None):
+    """Crop a line drawing (to its ink, or to `box` when given) and turn it into an alpha mask
+    (ink opaque, paper transparent)."""
     image = Image.open(io.BytesIO(raw))
     if image.mode in ('RGBA', 'LA', 'P'):
         image = image.convert('RGBA')
@@ -410,11 +412,12 @@ def line_mask(raw):
     gray = image.convert('L')
     ink = ImageOps.invert(gray)
     ink = ink.point(lambda v: 0 if v < 24 else v)
-    box = ink.getbbox()
+    if box is None:
+        box = ink.getbbox()
+        if box:
+            box = (max(0, box[0] - MASK_PAD), max(0, box[1] - MASK_PAD),
+                   min(ink.width, box[2] + MASK_PAD), min(ink.height, box[3] + MASK_PAD))
     if box:
-        pad = 8
-        box = (max(0, box[0] - pad), max(0, box[1] - pad),
-               min(ink.width, box[2] + pad), min(ink.height, box[3] + pad))
         ink = ink.crop(box)
     ink.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)
     # Eight ink levels keep anti-aliased edges and compress losslessly to a few KB.
@@ -463,10 +466,15 @@ def despeck(raw, speck=50):
     return flat
 
 
-def normalised_mask(image):
+def normalised_mask(image, box=None):
     """line_mask of a drawing (encoded bytes or white-ground image) after its lines are redrawn
-    at the catalog line width (stroke.normalise)."""
-    return line_mask(stroke.normalise(image, lambda png: stroke.stroke_width(line_mask(png)[0])))
+    at the catalog line width (stroke.normalise). It is cropped to its own ink, or to `box`
+    (source pixels) when given: drawings on one canvas masked with one box share one scale."""
+    crop = None if box is None else stroke.work_box(box, MASK_PAD)
+
+    def measure(png):
+        return stroke.stroke_width(line_mask(png, crop)[0])
+    return line_mask(stroke.normalise(image, measure, box), crop)
 
 
 def crop_fraction(raw, box):

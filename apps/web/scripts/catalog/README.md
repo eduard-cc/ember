@@ -88,6 +88,12 @@ tracked `generated-manifest.json` is written from those records and lists every
 reviewed exercise, its status, attempt count and the SHA-256 of accepted sources:
 `sha256` is the finish pose (or the only drawing) and `startSha256` the start pose
 of a pair.
+Each drawing is cropped to its own ink and scaled to fit 240px, so a crouch and a
+jump would show at the same height. A pair drawn on one canvas at one scale can set
+`"sharedScale": true` in its record: both frames are then cropped with one box (the
+union of their ink), keep their true relative size, and the manifest lists
+`sharedScale`. `python3 -B -m unittest discover -s scripts/catalog -p 'test_*.py'`
+tests this step on synthetic drawings.
 Rejected and unreviewed images are never bundled, and an app-owned drawing whose
 record is no longer accepted is removed on the next run. `replaced` marks an
 accepted drawing superseded by a licensed one (`EK_UNRELEASED`); `generated.py`
