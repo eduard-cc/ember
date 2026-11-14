@@ -1,5 +1,5 @@
 # The production image: the compiled API with its shared contracts, its runtime dependencies
-# and the web shell it serves. CI builds and smoke-tests it (docs/ci-and-tests.md). The Node major matches .nvmrc.
+# and the web shell it serves. CI builds and smoke-tests it (docs/ci-and-images.md). The Node major matches .nvmrc.
 FROM node:26.13.1-bookworm-slim@sha256:5df79989ed685e09f0a98019db4cebfb22fb9df1a53c0161664a011f7ff6b0f1 AS base
 
 FROM base AS build

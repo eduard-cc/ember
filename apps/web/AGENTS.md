@@ -4,10 +4,11 @@ The React PWA: React 19 + TypeScript, Vite, Tailwind v4 with shadcn-style Radix 
 
 ## Read before touching
 
-- UI, layout, accessibility, phone gestures, installed PWA: `docs/phone-and-pwa.md` (root) and `DESIGN.md`.
-- Local storage, sync client, recovery, history editing: `docs/sync-and-history.md` (root).
-- Catalog data and drawings: `scripts/catalog/README.md` and `docs/catalog-drawings.md` (root). Never hand-edit `src/catalog/exercises.json`; change the inputs and run the scripts.
-- Playwright, ports, flaky or killed runs: `docs/ci-and-tests.md` (root).
+- `README.md`: local setup, dev server, demo mode, checks. `PRODUCT.md`: product scope and release gates.
+- UI, layout, accessibility, phone gestures, installed PWA: `docs/phone-and-pwa.md` and `DESIGN.md`.
+- Local storage, sync client, recovery, history editing: `docs/sync-and-history.md`; sync protocol rules: `packages/contracts/README.md` (root).
+- Catalog data and drawings: `docs/catalog.md`. Never hand-edit `src/catalog/exercises.json`; change the inputs and run the scripts.
+- Playwright, ports, flaky or killed runs: `docs/testing.md`.
 
 ## Layout
 
@@ -20,11 +21,11 @@ The React PWA: React 19 + TypeScript, Vite, Tailwind v4 with shadcn-style Radix 
 
 - Setup: `npm ci --include=dev` here and in `apps/api` (a unit test imports the API's security headers; the integration harness builds the API and loads its `pg`, `argon2` and `dotenv`).
 - Checks: `npm run format:check` (Prettier over the whole repository), `lint:check`, `typecheck`, `build`, `test:run`, `test:e2e`, `test:pwa`, `test:integration`. `format` and `lint` rewrite files.
-- `test:integration` needs the git-ignored `apps/api/.env` pointing at `ember_dev` (`docs/ci-and-tests.md`); it is not in CI.
+- `test:integration` needs the git-ignored `apps/api/.env` pointing at `ember_dev` (`docs/testing.md`); it is not in CI.
 
 ## Traps
 
 - Playwright `test:e2e` builds into `dist-e2e/` and previews on 5188; tests tagged `@dev-server` run on a dev server on 5189, because only it serves `/src/...` modules. Tag every test that imports or routes source modules, or it passes without testing anything.
 - `test:pwa` builds `dist/` and previews on 5193, and its lifecycle tests rewrite `dist/sw.js`: never run it alongside another suite that uses that build.
-- `scripts/pwa-build.ts` imports the server's static-file rule (`packages/contracts/src/static-files.ts`, by path: Vite bundles its config before the alias applies) and fails the build if the service worker would precache a file the server refuses. A new asset type means widening that one rule (`docs/deploy.md`).
+- `scripts/pwa-build.ts` imports the server's static-file rule (`packages/contracts/src/static-files.ts`, by path: Vite bundles its config before the alias applies) and fails the build if the service worker would precache a file the server refuses. A new asset type means widening that one rule (`ops/README.md`, root).
 - `?demo=1` seeds data only in development and the e2e build.

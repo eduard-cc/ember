@@ -117,90 +117,13 @@ No live Serve route, runtime environment, or deployment is changed by these test
 
 ## API contract
 
-All paths below are prefixed `/api/v1`. Every response uses `Cache-Control: no-store`.
-`GET /health` returns `{status:"ready"}` after a database readiness query.
-`POST /session` accepts `{password}` in default password mode or `{}` in Tailscale mode; successful login returns
-`{ownerId,csrfToken}` plus `ember_session` HttpOnly, SameSite=Strict cookie,
-scoped to `/api/v1`, Secure when configured. Only the token hash is persisted in PostgreSQL.
-`GET /session` returns current owner and CSRF token, or 401 for missing/revoked/expired session.
-`DELETE /session` revokes that session and clears the cookie, returning `{loggedOut:true}`.
-Every mutation requires the exact configured Origin; authenticated mutations also require
-`X-CSRF-Token` matching the PostgreSQL session. Login itself uses exact-origin protection.
-Password-mode login is limited to five attempts per minute, globally per API process, before Argon2 work.
-This constant-space local limiter is not a distributed or restart-resistant deployment limiter.
-
-`POST /sync/operations` accepts `{version:1,operations:[...]}` (1–50, at most 10 MiB).
-Operation fields: UUID `operationId`, nonempty string `entityId`,
-`kind` (`putBodyWeight`, `putWorkout`, `deleteWorkout`, `putTemplate`, `deleteTemplate`,
-`putImportedWorkout`, `deleteImportedWorkout`), nullable `expectedRevision`,
-and `payload` (Workout, BodyWeight or null). A BodyWeight is `{id,date,kg,deleted}`: a calendar-valid
-local wall time, kg above 0 and at most 500 with at most two decimals, and a tombstone flag. It is
-stored in the same generic `records`/`changes` tables; each kind may only revise records of its own
-kind, so measurements and workouts can never overwrite each other. Measurement updates and
-tombstones require the current revision, like templates. Source entity/set IDs are not forced to UUIDs.
-All Workout fields including the optional completion flag and string-valued `original` evidence
-are preserved (the retired `excluded`/`suspicious` set flags are accepted from older clients and dropped), with no timestamp conversion, name merging, set deduplication or analytics.
-Unknown fields, nonfinite values and ID mismatches are rejected. Defensive bounds:
-IDs 512 characters; names 1000; up to 1000 exercises and 5000 sets per exercise.
-Dates are calendar-valid timezone-free `YYYY-MM-DDTHH:mm:ss` wall timestamps or
-legacy empty strings; timezone suffixes, fractions and impossible dates are rejected.
-Workout creates require at least one set and reject any explicitly uncompleted set;
-absent completion flags are supported for historical imports. This does not allow clients
-to sync active drafts: they must keep drafts entirely outside the operations contract.
-
-Responses use the envelope **`{results:[ack,...]}`**.
-Each ack has `{operationId,status,entityId,revision,changeSeq,errorCode?}`;
-null revision/sequence means no accepted write. Malformed operation IDs are echoed only
-for client diagnosis; schema rejections are not entered in the validated operation ledger.
-Top-level invalid batches return 400. Each valid operation has its own transaction,
-processed in input order; a database failure returns 500, so retry the immutable batch:
-earlier committed operations replay their original acknowledgement.
-
-A recursively key-sorted canonical validated payload is SHA-256 hashed in the ledger.
-Same operation ID/same content returns its original accepted/conflict/semantic rejection;
-different validated content returns `OPERATION_ID_REUSED` conflict without writes.
-`expectedRevision:null` is create-only. Existing IDs cannot be silently recreated.
-Template updates/deletes require the current revision. Deletion keeps a revisioned
-tombstone that cannot be resurrected. The owner may edit finished
-(`putWorkout`) and imported (`putImportedWorkout`) workouts at the current revision; an edit
-still needs at least one set and no uncompleted set. `deleteWorkout` tombstones a native
-workout at its current revision and is final. Every earlier revision stays in `changes`.
-Each kind revises only its own records: native and imported history, templates and
-measurements can never overwrite one another.
-Imported history uses separate operation kinds. Strong import is retired in the app, but the
-kinds stay for existing imported history: deletion tombstones only imported records at the
-current revision, and a put at an imported tombstone's exact revision revives it.
-
-`GET /sync/changes?after=0&limit=100` accepts safe integer cursor and limit 1–100.
-Returns `{changes,nextCursor,hasMore}`; each change has
-`{entityId,kind,revision,changeSeq,payload}`. Deleted-template payloads are null.
-Body-weight changes require `X-Sync-Body-Weight: 1`; older apps receive only the kinds they
-understand. Filtering happens before pagination, so the cursor remains the last returned change.
-Upgraded apps replay from zero once to recover measurements hidden behind an older cursor.
-`deleteWorkout` tombstones likewise require `X-Sync-Workout-Deletes: 1`, filtered before
-pagination, and apps that send it keep their own cursor and replay from zero once.
-The server bridge for an opt-in kind ships one release before the UI that writes it, so a
-UI rollback lands on a server that still hides the new kind from the older app.
-Legacy or rolled-back apps keep displaying deleted native workouts until upgraded; edits to
-those stale copies conflict rather than resurrect them. Re-upgrading resumes the independent
-workout-deletes cursor even if a legacy cursor has advanced meanwhile. A rolled-back app's
-backup validator cannot export a still-pending `deleteWorkout`; let that operation sync or
-return to the updated app before exporting.
-
-Rollout is two releases: deploy this API compatibility bridge without the new frontend first,
-then deploy the body-weight UI. Keep the bridge as the immediate rollback release: it accepts
-measurement operations from cached new apps while keeping old apps' change feeds compatible.
-Reverting the UI must retain the bridge; do not deploy a pre-bridge API after measurements exist.
-Records, feed writes, sequence allocation and ledger writes commit atomically.
-An owner-scoped transaction advisory lock is acquired **before** allocating sequence
-values; the transactional sequence row prevents uncommitted writes from being skipped.
-Concurrent stale edits, delayed commits, rollback/retry and pagination use real PostgreSQL tests.
+The session and sync endpoints and their documents: `packages/contracts/README.md` (root).
 
 ## Boundaries
 
 This README covers the API and its local setup. The live deployment (`ember.service` behind
 Tailscale Serve), nightly encrypted off-device backups and the restore drill are described in
-the root README.md. Browser sync, deliberate JSON restore and a local PostgreSQL
+`ops/README.md` (root). Browser sync, deliberate JSON restore and a local PostgreSQL
 archive/restore drill are implemented and tested in the repository. Password mode is for
 local development and tests; production uses Tailscale owner identity. Hardened
 production database roles remain a release gate. Do not delete the

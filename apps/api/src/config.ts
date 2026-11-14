@@ -2,7 +2,7 @@ import 'dotenv/config';
 import {z} from 'zod';
 
 // Development and test databases live on 55439. The live database may also run on 55438, in
-// the Ember service account's own Docker daemon (docs/operations.md), and only as `ember`.
+// the Ember service account's own Docker daemon (ops/README.md), and only as `ember`.
 const LIVE_ONLY_PORT = '55438';
 
 // The image sets EMBER_CONTAINER=1. Inside it the database is the `ember-postgres` container

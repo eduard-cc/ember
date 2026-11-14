@@ -1,6 +1,6 @@
 # Sync, outbox and history data
 
-Read before changing the sync feed or outbox, local persistence, recovery export/restore, imported history, history editors, or per-session aggregates.
+Read before changing the sync feed or outbox, local persistence, recovery export/restore, imported history, history editors, or per-session aggregates. Protocol rules (record kinds, extending the feed, retiring a stored field) are in `packages/contracts/README.md`; wiping server data in `apps/api/docs/sync.md`.
 
 ## Invariants
 
@@ -13,20 +13,11 @@ Read before changing the sync feed or outbox, local persistence, recovery export
 
 ## Saving and sync guarantees
 
-- "Saved on this device" means the IndexedDB transaction committed. It does not protect against clearing browser storage, uninstalling the PWA or losing the device; server sync is not off-device backup either (see `docs/operations.md`).
+- "Saved on this device" means the IndexedDB transaction committed. It does not protect against clearing browser storage, uninstalling the PWA or losing the device; server sync is not off-device backup either (see `ops/README.md`).
 - A second same-origin tab is read-only until the writer closes and it is reloaded. Failed writes keep the draft and show a visible storage error rather than claiming success.
 - Completed history, imported history, templates and body-weight entries sync automatically while the app is open and connected, with no manual Sync Now control; routine sync is silent, while auth blocks, failed saves and rejected changes surface. An expired session reconnects automatically. Pending changes survive reopening, and previously trusted installations keep logging offline. Android does not guarantee uploads while the PWA is closed.
-- Body-weight entries are their own `putBodyWeight` record kind: corrections need the current revision, and deletion syncs as a revisioned tombstone (`deleted: true`) that Undo revives.
 - Valid legacy `ember:v1` localStorage data migrates transactionally, keeping the original bytes. Malformed or unsupported data blocks writes; an explicit reset preserves recovery evidence.
 - Recovery export/restore lives in the storage layer and is not exposed in the UI. Exports are version 2 and always list body-weight entries (tombstones included); version 1 archives still restore. Diagnostic pending operations are labelled, not replayed as old acknowledgements, and a restore never authorizes overwriting newer server revisions.
-
-## Extending the sync feed
-
-A new record kind ships compatibly:
-
-- Deploy the compatible server bridge before the UI, so a one-command rollback keeps API support.
-- Filter opt-in kinds before pagination for legacy clients (`apps/api/src/sync/service.ts`), so a legacy cursor is always the last change it could see.
-- Keep an independent opt-in cursor (see `DELETES_CURSOR` in `apps/web/src/sync/engine.ts`). A one-time replay boolean is not enough: a rolled-back frontend can advance the shared cursor past hidden creates, edits or tombstones. Test upgrade, legacy cursor advancement and return to the new frontend.
 
 ## First download
 
@@ -41,15 +32,7 @@ A new record kind ships compatibly:
 
 - Compare optimistic editor bases with `canonical()` (`apps/web/src/storage/canonical.ts`), not `JSON.stringify`: schema-normalized reads can reorder otherwise identical objects and falsely block edits or deletes. Test editing and deleting imported as well as native workouts.
 
-## Retiring a stored field
-
-- Stored, synced and backed-up documents outlive the code that wrote them. When a field leaves the contracts, accept and drop it on parse (add it to the retired keys in `packages/contracts/src/retired-keys.ts`, which both apps' schemas apply), strip it from IndexedDB in a new Dexie version's `upgrade` (`apps/web/src/storage/db.ts`, `apps/web/src/storage/retired-fields.ts`) and from `records`/`changes` in a server migration, without bumping revisions. Never rewrite original import bytes (`raw`) or restore-evidence archives. The retired set flags `excluded`/`suspicious` and the `suspiciousRows` warning follow this pattern.
-
 ## Aggregating history
 
 - `getHistory` (`apps/web/src/domain/model.ts`) returns exercise-block entries, not unique workouts: a workout with repeated blocks of one exercise yields several entries.
 - Aggregate per-session exercise volume across matching blocks by `workoutId`, without merging or deleting raw blocks or sets.
-
-## Wiping server data
-
-Also reset every client's local store and outbox, or local-first sync pushes the old records straight back. Verify on a real phone, not only in Playwright.

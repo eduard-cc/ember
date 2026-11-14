@@ -1,6 +1,6 @@
 # Exercise catalog
 
-Paths and commands below are relative to `apps/web`.
+Read before changing catalog data or proposing, generating, editing, QA-ing or bundling exercise drawings. Paths and commands below are relative to `apps/web`.
 
 ## Muscles
 
@@ -24,6 +24,11 @@ body; the tall upper-back wedge is Lats). Usage is in the script's docstring.
 
 ## Drawings
 
+- Every catalog exercise has a drawing (`tests/catalog.test.ts`, "gives every exercise a drawing"); a new exercise needs one before it ships.
+- Before proposing new drawing work, read the QA records in `~/.cache/ember-catalog/generated/qa/*.json` (status, attempts, notes) and `scripts/catalog/generated-manifest.json`.
+- Licensed sources first: re-check wger (`/api/v2/exerciseimage/?exercise=<id>`) for new licensed drawings. free-exercise-db has only photos, which the catalog excludes.
+- Missing drawings come from reference-guided generation plus review rounds. Generic unguided attempts do not converge, and targeted edits of near-misses rarely fix structural problems (floating pads, safety-filter blocks).
+
 The licensed base catalog is built by `generate.py` from reviewed open-source
 mappings. Do not replace or reattribute those illustrations. The catalog holds
 drawings and exercise facts only; it bundles no instruction text.
@@ -31,11 +36,12 @@ Everkinetic drawings come from `dist/png`; when an exercise has none there,
 `generate.py` falls back to the artist's finished source exports
 `src/images-ai/<id>-S.ai.png` and `-F.ai.png` ("ai" = Adobe Illustrator, same
 licence and attribution). Build from a full Everkinetic checkout, including
-`src/`, or those drawings are dropped.
+`src/`, or those drawings are dropped. Check that an Everkinetic id's title
+matches the exercise before mapping it.
 
 Some `dist/png` drawings are cut off at the legs, feet or equipment. For the
 exercises in `EK_FULL_FIGURE` (`generate.py`), the artist's full-figure exports
-are used instead. They are cleaned of stray specks first. Review each pair side by
+are used instead. They are cleaned of stray specks first (`despeck()`). Review each pair side by
 side for exercise, pose and start/finish order; some exports label start and
 finish backwards, so the mapping lists files in display order.
 Keep an exercise on `dist` when its full-figure export is near-identical, already
@@ -43,13 +49,18 @@ uncropped or no better: shrugs lose their visible shoulder lift at full-figure
 scale.
 
 Dumbbell and cable shrugs are cropped to the upper body (`EK_UPPER_BODY`, the
-same box for start and finish) so the small shoulder lift stays visible;
+same box for start and finish, hands and weight fully in frame) so the small shoulder lift stays visible;
 barbell and Smith machine shrugs stay whole to keep their plates and rails.
 Lying Leg Raise uses Everkinetic's Flat Bench Leg Raises (0021) drawing.
 `EK_UNRELEASED` maps exercises Everkinetic doesn't publish to its unpublished
 drawings in `src/images-png-unknown` (same artist and licence, numbered, no
 title); each pair is checked against the exercise variant and listed in display
-order, and its credit is titled by drawing number.
+order, and its credit is titled by drawing number. Check each pair by eye for the
+exact variant (stance, grip, equipment) and frame order: #320 looks like a sumo
+deadlift in a contact sheet but is a conventional one (hip-width feet, hands outside
+the knees), #618 is a seated knee tuck rather than a sit-up, #630 finishes like a
+curl (elbows down) rather than a clean's front rack, and #521 is a hinged
+hand-to-hand kettlebell pass with no swing finish. Mark the superseded AI record `replaced`.
 `EK_NO_DRAWING` skips Everkinetic's drawing where it shows a different variant:
 Pull Up (Assisted) shows the approved assisted-machine pair (also used by Chin
 Up (Assisted)) through `generated.py`.
@@ -66,6 +77,9 @@ every line stay where they were drawn. Mean line width is 2 × ink area ÷ outli
 length, the outline measured over four directions (`stroke.stroke_width`).
 `tests/catalog.test.ts` holds every bundled drawing to 1.7–2.7px, the licensed
 drawings' 5th–95th percentile. A full `generate.py` run takes about 10 minutes.
+Uniform filters can't do this: `MinFilter` only thickens and merges nearby lines,
+`MaxFilter` erases fine interior lines. Thickening closes gaps narrower than the new
+line width, so judge dense machines and chains on the normalised mask, not the raw PNG.
 
 ## App-owned illustrations
 
@@ -76,8 +90,9 @@ claim that AI output has exclusive copyright or a Creative Commons license. A dr
 made with Everkinetic drawings of other exercises as style references sets
 `"credit": "after-everkinetic"` in its QA record: it is credited to `Ember (AI-assisted,
 after Everkinetic)` under Everkinetic's licence, CC BY-SA 4.0, and the manifest lists
-its `credit`. Existing licensed sources retain their original attribution and terms. No
-reference pixels are bundled in the new assets.
+its `credit`. Never use a drawing of the same exercise, or wger, as a reference. Existing
+licensed sources retain their original attribution and terms. No reference pixels are
+bundled in the new assets.
 
 Raw PNGs stay outside git in `~/.cache/ember-catalog/generated/`: one QA record
 per exercise in `qa/<slug>.json` (status `accepted`, `rejected`, `unreviewed`
@@ -85,7 +100,11 @@ or `replaced`, SHA-256, attempts, notes) and accepted sources in `accepted/<slug
 licensed drawings, each exercise shows a start and a finish pose: a record's ordered
 `poses` list (`accepted/<slug>-0.png` start, `-1.png` finish, each with its SHA-256)
 is bundled as `<slug>-0.webp` and `<slug>-1.webp`. Holds without a progression
-(Plank) keep a single drawing. Pairs are reviewed for movement order,
+(Plank) keep a single drawing. Generate the second pose by editing the approved first
+so person, machine and angle match, and check which pose the approved drawing
+actually shows before labelling it start or finish. When a pose keeps failing against
+an approved partner whose machine is wrong, redraw both poses from one real-machine
+reference (video frames) instead of forcing it. Pairs are reviewed for movement order,
 anatomy and matching equipment; review notes live in `reviews/`. The
 tracked `generated-manifest.json` is written from those records and lists every
 reviewed exercise, its status, attempt count and the SHA-256 of accepted sources:
@@ -97,7 +116,7 @@ jump would show at the same height. A pair drawn on one canvas at one scale can 
 union of their ink), keep their true relative size, and the manifest lists
 `sharedScale`. `python3 -B -m unittest discover -s scripts/catalog -p 'test_*.py'`
 tests this step on synthetic drawings.
-Rejected and unreviewed images are never bundled, and an app-owned drawing whose
+Successful generation is not approval: rejected and unreviewed images are never bundled, and an app-owned drawing whose
 record is no longer accepted is removed on the next run. `replaced` marks an
 accepted drawing superseded by a licensed one (`EK_UNRELEASED`); `generated.py`
 refuses it unless the exercise has that licensed drawing.
@@ -105,7 +124,7 @@ refuses it unless the exercise has that licensed drawing.
 machine): redrawing that pair means updating both records' hashes.
 
 Reproduce the bundled additions (Pillow with WebP support and the repository's
-Node/Prettier dependencies from `npm ci --include=dev` required):
+Node/Prettier dependencies from `NODE_ENV=development npm ci --include=dev` required):
 
 ```sh
 python3 scripts/catalog/generated.py
@@ -117,31 +136,48 @@ npm run typecheck
 
 The script imports `generate.normalised_mask`, so line width, cropping, ink
 extraction, 8-level quantisation, maximum 240-pixel side and lossless WebP
-conversion match the licensed drawings. It refuses mismatched source hashes and
+conversion match the licensed drawings; reuse `generate.line_mask` when working on raw drawings. It refuses mismatched source hashes and
 never replaces or edits a licensed illustration or its attribution. All inputs
 are validated before any asset changes. Run it after `generate.py` when
 rebuilding the licensed base.
 
-Each bundled drawing is credited from its QA record's `credit`: by default
+Each bundled drawing is credited from its QA record's `credit` (enforced by
+`tests/catalog.test.ts`): by default
 `Ember (AI-assisted, gpt-image-2)`, license `app-owned`, with an adaptation note
 saying it is AI-assisted and not an Everkinetic or wger work; with `after-everkinetic`,
 `Ember (AI-assisted, after Everkinetic)`, CC BY-SA 4.0, with an adaptation note naming
 the Everkinetic style references.
 
-## QA and continuation
+## Style
+
+- Match Everkinetic or don't ship: faceless egg heads without hair or ears, thick uniform outline, no hatching or shading, minimal muscle lines, equipment reduced to what the body touches, tight crop.
+- "Minimal muscle lines" alone still yields anatomy-chart figures. Append explicit bans ("no ears, no finger knuckle lines, no shoe laces, no six-pack") to the prompt prefix. For a style-only failure, a targeted "remove interior lines, keep pose" edit usually passes.
+
+## Prompting and pose limits
+
+- In pure side view, ab wheels come out edge-on; ask for a full circle facing the viewer with the handle pointing at the viewer.
+- Use front three-quarter angles for pulldowns and two-dumbbell movements so bars stay visibly left-right and dumbbells stay separate.
+- Editing an approved drawing into a new pose keeps the style but rarely fixes pose limits. gpt-image-2 would not draw a front rack with high elbows (cleans, thrusters), readable upturned palms (wrist curls), a barbell across the body in a front raise, visibly raised heels on a calf raise, or a coherent barbell hip thrust. Don't spend attempts on these; find another source or plan a different approach.
+
+## QA and fixing defects
 
 Generate with gpt-image-2, using licensed Everkinetic drawings as style
-references only. Every candidate must pass, on the raw full-size image:
+references only. Before it is shown or accepted, every candidate must pass, on the raw full-size image:
 
-1. A style audit: faceless egg head without hair or ears, thick uniform outlines,
-   no shading or hatching, sparse interior lines.
+1. A style audit (see Style).
 2. An independent strict physical-logic audit: limb counts, no twisted torso,
-   cables continuous from a pulley on a grounded column, machine parts and pivots
-   connected to a grounded base, handles gripped, correct dumbbell/plate count,
-   nothing passing through the body, and not confusable with another exercise.
+   cables one straight continuous line from a pulley on a grounded column, fully visible and never hidden behind legs,
+   machine parts and pivots connected to a grounded base (no floating pads or pulleys), handles attached and gripped,
+   correct dumbbell/plate count, nothing passing through the body, and not confusable with another exercise.
+   Style QA misses physics errors, and a single physics audit is noisy: accept only after two
+   independent physics passes plus style, and break ties with a targeted yes/no question about the specific defect.
 
-Then inspect its 240px mask beside licensed masks on light and dark backgrounds.
+Then inspect its 240px mask and CSS-mask thumbnail beside licensed masks on light and dark backgrounds.
 Local post-processing is limited to operations that cannot change the pose
 (removing small isolated specks, uniform line thickening); the result is
 re-audited. About six attempts per exercise; an exercise without a passing
 drawing stays without one. `generated-manifest.json` is the current status.
+
+- Fix a single defect with a targeted image edit; regenerate when there are several. If the provider's safety filter blocks an edit (wording like "crunched down" or "kneeling" can trip it), a local luminance threshold removes grey specks without changing geometry.
+- When a whole-image edit won't fix a small local defect and breaks other parts, edit a crop around the defect, binarise it, and paste it back with a tight hard-edged mask covering only the changed region; re-audit the seam.
+- Re-audit after any edit or post-processing.

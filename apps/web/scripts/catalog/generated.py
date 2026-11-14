@@ -30,7 +30,7 @@ import stroke
 from generate import CACHE, OUT_IMAGES, OUT_JSON, ROOT, normalised_mask, slug
 
 MANIFEST = Path(__file__).with_name('generated-manifest.json')
-PROVENANCE_URL = 'https://github.com/eduard-cc/ember/blob/main/apps/web/scripts/catalog/README.md'
+PROVENANCE_URL = 'https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md'
 AUTHOR = 'Ember (AI-assisted, gpt-image-2)'
 LICENSE = 'app-owned'
 CHANGES = ('AI-assisted illustration made for Ember, not an Everkinetic or wger work; '
