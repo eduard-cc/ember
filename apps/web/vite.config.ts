@@ -2,13 +2,18 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import {defineConfig} from 'vite';
 
+import {contracts} from './contracts.config.ts';
 import {pwaShell} from './scripts/pwa-build.ts';
 
 export default defineConfig(({command}) => ({
   plugins: [tailwindcss(), react(), pwaShell()],
   // Builds keep the eager image URLs; see src/catalog/image-urls.dev.ts.
   resolve: {
-    alias: command === 'serve' ? [{find: /^\.\/image-urls$/, replacement: './image-urls.dev'}] : [],
+    alias: [
+      contracts.alias,
+      ...(command === 'serve' ? [{find: /^\.\/image-urls$/, replacement: './image-urls.dev'}] : []),
+    ],
+    dedupe: contracts.dedupe,
   },
   server: {
     proxy: {

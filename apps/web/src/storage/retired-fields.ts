@@ -1,4 +1,4 @@
-import {RETIRED_SET_KEYS, RETIRED_WARNING_KEYS} from '../../shared/contracts';
+import {RETIRED_SET_KEYS, RETIRED_WARNING_KEYS} from '@ember/contracts';
 
 type Doc = Record<string, unknown>;
 const isDoc = (value: unknown): value is Doc =>

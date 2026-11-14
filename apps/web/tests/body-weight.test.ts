@@ -1,9 +1,9 @@
 import 'fake-indexeddb/auto';
 
+import {BodyWeightSchema, LocalOperationSchema} from '@ember/contracts';
 import {expect, it, vi} from 'vitest';
 
 import {parseBackup} from '../shared/backup';
-import {BodyWeightSchema, LocalOperationSchema} from '../shared/contracts';
 import {
   formatKg,
   fromLocalInput,

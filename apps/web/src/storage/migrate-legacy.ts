@@ -1,4 +1,5 @@
-import {AppStateSchema} from '../../shared/contracts';
+import {AppStateSchema} from '@ember/contracts';
+
 import type {WorkoutRepository} from './repository';
 
 export async function migrateLegacy(

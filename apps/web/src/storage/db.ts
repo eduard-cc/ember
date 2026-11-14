@@ -1,6 +1,6 @@
+import type {BodyWeight, LocalOperation} from '@ember/contracts';
 import Dexie, {type Table} from 'dexie';
 
-import type {BodyWeight, LocalOperation} from '../../shared/contracts';
 import type {Workout} from '../domain/types';
 import {stripImportSource, stripWorkout} from './retired-fields';
 

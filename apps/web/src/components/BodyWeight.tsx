@@ -1,8 +1,8 @@
+import type {BodyWeight} from '@ember/contracts';
 import {liveQuery} from 'dexie';
 import {ChevronRight, Plus, Scale, Trash} from 'lucide-react';
 import {type FormEvent, useEffect, useEffectEvent, useMemo, useRef, useState} from 'react';
 
-import type {BodyWeight} from '../../shared/contracts';
 import {
   formatKg,
   fromLocalInput,

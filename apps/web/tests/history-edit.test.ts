@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto';
 
+import {LocalOperationSchema} from '@ember/contracts';
 import {expect, it} from 'vitest';
 
-import {LocalOperationSchema} from '../shared/contracts';
 import {editableCopy, editedHistory} from '../src/domain/history-edit';
 import type {Workout} from '../src/domain/types';
 import {exportBackup} from '../src/storage/backup';

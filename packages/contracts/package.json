@@ -1,0 +1,13 @@
+{
+  "name": "@ember/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Document schemas and the served-file rule shared by the Ember web app and API.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "zod": "4.6.7"
+  }
+}

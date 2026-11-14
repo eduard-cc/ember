@@ -106,7 +106,8 @@ explicitly revoke existing sessions when transferring ownership.
 
 Tests synthesize proxy identity only on real loopback HTTP requests against
 migrated disposable PostgreSQL databases. To avoid a fixed-port process test and
-avoid rebuilding shared `dist`, run from `apps/api/`:
+avoid rebuilding shared `dist`, run from `apps/api/` (after `npm run contracts:build` if
+`packages/contracts` changed):
 
 ```sh
 node scripts/test-e2e.mjs test/tailscale-config.e2e.test.ts test/tailscale-auth.e2e.test.ts test/auth.e2e.test.ts test/config.e2e.test.ts test/sync.e2e.test.ts

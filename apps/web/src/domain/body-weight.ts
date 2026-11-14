@@ -1,4 +1,5 @@
-import type {BodyWeight} from '../../shared/contracts';
+import type {BodyWeight} from '@ember/contracts';
+
 import {localTimestamp} from '../utils/date';
 
 const MAX_BODY_WEIGHT_KG = 500;

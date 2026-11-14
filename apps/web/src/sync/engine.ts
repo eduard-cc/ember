@@ -1,12 +1,12 @@
-import {z} from 'zod';
-
 import {
   type BodyWeight,
   BodyWeightSchema,
   OperationKindSchema,
   WorkoutSchema,
   isDeleteKind,
-} from '../../shared/contracts';
+} from '@ember/contracts';
+import {z} from 'zod';
+
 import type {Workout} from '../domain/types';
 import type {WorkoutRepository} from '../storage/repository';
 

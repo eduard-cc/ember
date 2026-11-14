@@ -49,7 +49,7 @@ Runtime settings and secrets live in `~/.config/ember/runtime.env` (mode 0600, o
 
 ## Static assets and the precache
 
-The production server sends only files allowed by `apps/api/src/static-files.ts` (`index.html`, `sw.js`, the public shell files, and `assets/*.{js,css,woff2,webp}`). `apps/web/scripts/pwa-build.ts` imports the same rule and fails the build if the service worker would precache a file the server refuses, and `ops/deploy.sh`'s health check fetches `sw.js`, the manifest and every precached URL through Serve byte for byte, rolling back and naming the file on a mismatch. A single missing file makes the service worker's `cache.addAll` fail, leaving installed apps on the old shell while the API looks healthy. A new asset type means widening that one rule. After deploys that touch the shell, still check that the service worker activates on a phone.
+The production server sends only files allowed by `packages/contracts/src/static-files.ts` (`index.html`, `sw.js`, the public shell files, and `assets/*.{js,css,woff2,webp}`). `apps/web/scripts/pwa-build.ts` imports the same rule and fails the build if the service worker would precache a file the server refuses, and `ops/deploy.sh`'s health check fetches `sw.js`, the manifest and every precached URL through Serve byte for byte, rolling back and naming the file on a mismatch. A single missing file makes the service worker's `cache.addAll` fail, leaving installed apps on the old shell while the API looks healthy. A new asset type means widening that one rule. After deploys that touch the shell, still check that the service worker activates on a phone.
 
 ## Read-only live offline-shell check
 

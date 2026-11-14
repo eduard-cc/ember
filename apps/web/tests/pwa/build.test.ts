@@ -1,8 +1,8 @@
+import {isServedShellFile} from '@ember/contracts';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {describe, expect, it} from 'vitest';
 
-import {isServedShellFile} from '../../../api/src/static-files';
 import {pwaShell} from '../../scripts/pwa-build';
 
 function emittedWorker(bundle: Record<string, unknown>): string {

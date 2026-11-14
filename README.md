@@ -42,6 +42,8 @@ npm --prefix apps/api run build
 npm --prefix apps/api run test:e2e
 ```
 
+The shared document schemas live in `packages/contracts` (`packages/contracts/README.md`); the API's `build`, `typecheck`, `dev`, `migration` and `start:trial` compile it first.
+
 `format:check` runs Prettier over the whole repository from `apps/web`, which holds the Prettier install; `npm --prefix apps/web run format` rewrites files. `lint` in either app applies ESLint's automatic fixes. `test:integration` is local-only; CI runs the rest (see `docs/ci-and-tests.md`).
 
 ## Deploy and rollback

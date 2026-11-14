@@ -3,7 +3,8 @@ import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {Plugin} from 'vite';
 
-import {isServedShellFile, publicShellFiles} from '../../api/src/static-files.ts';
+// By path, not `@ember/contracts`: Vite bundles its config before the alias applies.
+import {isServedShellFile, publicShellFiles} from '../../../packages/contracts/src/static-files.ts';
 
 /** Build-only, finite app-shell allowlist. Never discovers or caches user data. */
 export function pwaShell(): Plugin {

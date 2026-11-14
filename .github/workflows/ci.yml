@@ -182,9 +182,8 @@ jobs:
           docker exec ember-postgres psql -U ember_ci -d postgres -v ON_ERROR_STOP=1
           -c "CREATE ROLE ember_dev LOGIN CREATEDB PASSWORD 'synthetic-ci-only'"
           -c "ALTER DATABASE ember_dev OWNER TO ember_dev"
-      # The API date-contract tests also exercise the web app's shared schemas.
-      - run: npm --prefix apps/web ci --include=dev && npm --prefix apps/api ci --include=dev
-      # pretest:e2e builds the API first.
+      - run: npm --prefix apps/api ci --include=dev
+      # pretest:e2e builds the API (and the shared contracts it imports) first.
       - run: npm --prefix apps/api run test:e2e
         env:
           TMPDIR: ${{ runner.temp }}
