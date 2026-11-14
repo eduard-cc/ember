@@ -434,8 +434,8 @@
       "name": "Stair Climber",
       "status": "accepted",
       "attempts": 16,
-      "sha256": "adaf529f842ee7a02678a21e2eff47eea80e5144707aa76f34349f7a22a20a42",
-      "startSha256": "7db558250e1641f7e5ae5249871356d84caae0c10041d11dc054d9761b00a84b",
+      "sha256": "eef72cfe55f8a11711378414690b2c64fbffe35052c3a6669183599079746208",
+      "startSha256": "e9a91e58493005a935fad7c9264745e799059900d1b0e894e0a1530cfa1ca9c2",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
