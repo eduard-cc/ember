@@ -38,6 +38,7 @@ for (const file of [
 	'/app/web/sw.js',
 	'/app/web/manifest.webmanifest',
 	`${server}/dist/trial.js`,
+	`${server}/contracts/index.js`,
 ])
 	assert.ok(fs.statSync(file).isFile(), `Missing from the image: ${file}`);
 

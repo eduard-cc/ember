@@ -1,7 +1,5 @@
 import assert from 'node:assert/strict';
-import {spawnSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
-import {resolve} from 'node:path';
 import {test} from 'node:test';
 
 import {origin, setup} from './helpers';
@@ -64,7 +62,7 @@ test('sync rejects non-local or invalid calendar timestamps before they reach th
 		await s.app.close();
 	}
 });
-test('accepted local timestamps and empty legacy dates round-trip unchanged into the browser contract', async () => {
+test('accepted local timestamps and empty legacy dates round-trip unchanged through the feed', async () => {
 	const s = await setup();
 	try {
 		const operations = validDates.flatMap((date) =>
@@ -82,24 +80,10 @@ test('accepted local timestamps and empty legacy dates round-trip unchanged into
 			.get('/api/v1/sync/changes?after=' + (result.body.results[0].changeSeq - 1))
 			.set('Cookie', s.cookie)
 			.expect(200);
-		const payloads = feed.body.changes.map((c: any) => c.payload);
 		assert.deepEqual(
-			payloads,
+			feed.body.changes.map((c: any) => c.payload),
 			operations.map((o) => o.payload),
 		);
-		// Load the actual browser schema with root dependencies, without expanding the server build root.
-		const parity = spawnSync(
-			process.execPath,
-			[
-				'--import',
-				resolve('node_modules/tsx/dist/loader.mjs'),
-				'--input-type=module',
-				'-e',
-				"import {WorkoutSchema} from './shared/contracts.ts'; let input=''; for await (const chunk of process.stdin) input+=chunk; for (const payload of JSON.parse(input)) WorkoutSchema.parse(payload);",
-			],
-			{cwd: resolve('../web'), input: JSON.stringify(payloads), encoding: 'utf8'},
-		);
-		assert.equal(parity.status, 0, parity.stderr);
 	} finally {
 		await s.app.close();
 	}

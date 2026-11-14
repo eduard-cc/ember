@@ -4,7 +4,8 @@ import {
   BodyWeightSchema,
   type LocalOperation,
   WorkoutSchema,
-} from '../../shared/contracts';
+} from '@ember/contracts';
+
 import {countedSets} from '../domain/sets';
 import type {Workout} from '../domain/types';
 import {elapsedMinutes} from '../domain/workout-duration';

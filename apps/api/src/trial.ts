@@ -1,10 +1,10 @@
+import {isServedShellFile} from '#contracts';
 import type {NextFunction, Request, Response} from 'express';
 import {readFile, realpath, stat} from 'node:fs/promises';
 import {isAbsolute, join, resolve, sep} from 'node:path';
 
 import {createApp} from './app';
 import {config} from './config';
-import {isServedShellFile} from './static-files';
 
 async function main() {
 	// tsc emits apps/api/dist/trial.js; the web build is apps/web/dist. Releases set EMBER_WEB_ROOT.

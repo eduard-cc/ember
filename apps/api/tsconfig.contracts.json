@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "CommonJS",
+		"moduleResolution": "Bundler",
+		"types": [],
+		"strict": true,
+		"declaration": true,
+		"skipLibCheck": true,
+		"rootDir": "../../packages/contracts/src",
+		"outDir": "contracts",
+		"paths": {"zod": ["./node_modules/zod"]}
+	},
+	"include": ["../../packages/contracts/src"]
+}

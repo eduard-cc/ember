@@ -1,7 +1,7 @@
+import type {LocalOperation} from '@ember/contracts';
 import {liveQuery} from 'dexie';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-import type {LocalOperation} from '../../shared/contracts';
 import type {WorkoutRepository} from '../storage/repository';
 import {
   DELETES_CURSOR,

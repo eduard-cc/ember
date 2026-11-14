@@ -2,7 +2,19 @@
 	"name": "@eduard-cc/ember-server",
 	"private": true,
 	"version": "0.1.0",
+	"imports": {
+		"#contracts": {
+			"types": "./contracts/index.d.ts",
+			"default": "./contracts/index.js"
+		}
+	},
 	"scripts": {
+		"contracts:build": "tsc -p tsconfig.contracts.json",
+		"prebuild": "npm run contracts:build",
+		"pretypecheck": "npm run contracts:build",
+		"predev": "npm run contracts:build",
+		"premigration": "npm run contracts:build",
+		"prestart:trial": "npm run contracts:build",
 		"pretest:e2e": "npm run build",
 		"test:e2e": "../../ops/limited.sh node scripts/test-e2e.mjs",
 		"typecheck": "tsc --noEmit",

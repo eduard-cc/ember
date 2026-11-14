@@ -1,6 +1,8 @@
 node_modules/
 dist/
 dist-e2e/
+# @ember/contracts compiled for the API (npm run contracts:build).
+apps/api/contracts/
 coverage/
 playwright-report/
 playwright-pwa-report/

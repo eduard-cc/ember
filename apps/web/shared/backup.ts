@@ -1,6 +1,5 @@
+import {AppStateSchema, BodyWeightSchema, LocalOperationSchema} from '@ember/contracts';
 import {z} from 'zod';
-
-import {AppStateSchema, BodyWeightSchema, LocalOperationSchema} from './contracts';
 
 const BackupSchema = z
   .object({

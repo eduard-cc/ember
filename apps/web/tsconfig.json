@@ -11,13 +11,19 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@ember/contracts": ["../../packages/contracts/src/index.ts"],
+      "zod": ["./node_modules/zod"]
+    }
   },
   "include": [
     "src",
     "tests",
     "scripts",
     "shared",
+    "../../packages/contracts/src",
+    "contracts.config.ts",
     "vite.config.ts",
     "vitest.config.ts",
     "playwright.config.ts",

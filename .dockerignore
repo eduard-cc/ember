@@ -1,10 +1,12 @@
-# An allowlist: the image is built from the two apps' sources only. Local installs, build
-# and test output and every env file stay out of the build context.
+# An allowlist: the image is built from the two apps' and the shared package's sources only.
+# Local installs, build and test output and every env file stay out of the build context.
 *
 !apps/web
 !apps/api
+!packages
 **/node_modules
 **/dist
+apps/api/contracts
 **/dist-e2e
 **/coverage
 **/test-results

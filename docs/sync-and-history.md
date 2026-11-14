@@ -43,7 +43,7 @@ A new record kind ships compatibly:
 
 ## Retiring a stored field
 
-- Stored, synced and backed-up documents outlive the code that wrote them. When a field leaves the contracts, accept and drop it on parse (`z.preprocess` in `apps/web/shared/contracts.ts` and `apps/api/src/sync/schema.ts`), strip it from IndexedDB in a new Dexie version's `upgrade` (`apps/web/src/storage/db.ts`, `apps/web/src/storage/retired-fields.ts`) and from `records`/`changes` in a server migration, without bumping revisions. Never rewrite original import bytes (`raw`) or restore-evidence archives. The retired set flags `excluded`/`suspicious` and the `suspiciousRows` warning follow this pattern.
+- Stored, synced and backed-up documents outlive the code that wrote them. When a field leaves the contracts, accept and drop it on parse (add it to the retired keys in `packages/contracts/src/retired-keys.ts`, which both apps' schemas apply), strip it from IndexedDB in a new Dexie version's `upgrade` (`apps/web/src/storage/db.ts`, `apps/web/src/storage/retired-fields.ts`) and from `records`/`changes` in a server migration, without bumping revisions. Never rewrite original import bytes (`raw`) or restore-evidence archives. The retired set flags `excluded`/`suspicious` and the `suspiciousRows` warning follow this pattern.
 
 ## Aggregating history
 
