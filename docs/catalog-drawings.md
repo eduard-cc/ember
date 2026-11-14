@@ -22,7 +22,7 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 
 ## App-owned (AI-assisted) drawings
 
-- Generate them as app-owned assets with explicit AI-assisted attribution (`Ember (AI-assisted, gpt-image-2)`, enforced by `apps/web/tests/catalog.test.ts`). Preserve every licensed asset and source. Cache raw PNGs outside git, record source hashes and QA decisions, and reuse `generate.line_mask`.
+- Generate them with explicit AI-assisted attribution, enforced by `apps/web/tests/catalog.test.ts`: app-owned (`Ember (AI-assisted, gpt-image-2)`) by default, or, for drawings made with Everkinetic drawings of other exercises as style references, `"credit": "after-everkinetic"` in the QA record (`Ember (AI-assisted, after Everkinetic)`, CC BY-SA 4.0). Never use a drawing of the same exercise, or wger, as a reference. Preserve every licensed asset and source. Cache raw PNGs outside git, record source hashes and QA decisions, and reuse `generate.line_mask`.
 - Every app-owned drawing is an approved start/finish pair (`qa/<slug>.json` `poses` list, `accepted/<slug>-0/-1.png`), except holds without a progression (Plank, a single drawing). Generate the second pose by editing the approved first so person, machine and angle match. Check which pose the approved drawing actually shows before labelling it start or finish.
 - When a pose keeps failing against an approved partner whose machine is wrong, redraw both poses from one real-machine reference (video frames) instead of forcing it.
 - Bundle with `apps/web/scripts/catalog/generated.py`: it reads `qa/<slug>.json` status and removes app-owned drawings that are no longer accepted.
