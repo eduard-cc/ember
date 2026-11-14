@@ -156,11 +156,16 @@ describe('bundled exercise catalog', () => {
     const manifest = JSON.parse(
       readFileSync('scripts/catalog/generated-manifest.json', 'utf8'),
     ) as {
-      exercises: {name: string; status: string; startSha256?: string}[];
+      exercises: {name: string; status: string; startSha256?: string; sharedScale?: boolean}[];
     };
     for (const item of manifest.exercises.filter((e) => e.status === 'accepted')) {
       if (item.name === 'Plank') expect(item.startSha256).toBeUndefined();
       else expect(item.startSha256).toMatch(/^[0-9a-f]{64}$/);
+    }
+    // A shared-scale pair is cropped with one box, so both frames show at one scale.
+    for (const item of manifest.exercises.filter((e) => e.sharedScale)) {
+      const [start, finish] = catalogEntry(item.name)?.images ?? [];
+      expect([start.width, start.height]).toEqual([finish.width, finish.height]);
     }
   });
   it('bundles exactly the accepted AI-assisted drawings with only one illustration source', () => {

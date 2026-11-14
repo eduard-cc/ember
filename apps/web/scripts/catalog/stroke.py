@@ -150,22 +150,47 @@ def stroke_width(mask_webp):
     return 2 * area / outline if outline else 0
 
 
-def normalise(image, measure):
-    """Redraw a white-ground drawing (PIL image or encoded bytes) with STROKE_TARGET-wide lines.
-
-    `measure(png_bytes)` returns the mask line width of a candidate (stroke_width of its
-    line_mask). Returns the redrawn drawing as white-ground greyscale PNG bytes.
-    """
+def _ink(image):
+    """Ink (0 paper, 255 black) of a white-ground drawing, a PIL image or encoded bytes."""
     if isinstance(image, (bytes, bytearray)):
         image = Image.open(io.BytesIO(image))
     if image.mode != 'L':
         image = image.convert('RGBA')
         image = Image.alpha_composite(Image.new('RGBA', image.size, 'white'), image).convert('L')
-    ink = ImageOps.invert(image)
+    return ImageOps.invert(image)
+
+
+def _ink_box(ink):
     box = ink.point(lambda v: 255 if v >= 24 else 0).getbbox()
     if not box:
         raise ValueError('drawing has no ink')
-    ink = ink.crop(box)
+    return box
+
+
+def ink_box(image):
+    """Bounding box of a drawing's ink; returns (canvas size, box)."""
+    ink = _ink(image)
+    return ink.size, _ink_box(ink)
+
+
+def work_box(box, pad):
+    """Where a source crop box lands on normalise's output canvas, widened by `pad` pixels."""
+    width, height = box[2] - box[0], box[3] - box[1]
+    scale, margin = WORK / max(width, height), WORK // 20
+    return (margin - pad, margin - pad, margin + max(1, round(width * scale)) + pad,
+            margin + max(1, round(height * scale)) + pad)
+
+
+def normalise(image, measure, box=None):
+    """Redraw a white-ground drawing (PIL image or encoded bytes) with STROKE_TARGET-wide lines.
+
+    `measure(png_bytes)` returns the mask line width of a candidate (stroke_width of its
+    line_mask). The drawing is cropped to its ink, or to `box` (source pixels) when given, so
+    drawings normalised with one box share one scale. Returns the redrawn drawing as
+    white-ground greyscale PNG bytes.
+    """
+    ink = _ink(image)
+    ink = ink.crop(_ink_box(ink) if box is None else box)
     scale = WORK / max(ink.size)
     ink = ink.resize((max(1, round(ink.width * scale)), max(1, round(ink.height * scale))),
                      Image.LANCZOS)

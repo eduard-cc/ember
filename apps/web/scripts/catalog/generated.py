@@ -7,7 +7,9 @@ The source directory holds one QA record per exercise (qa/<slug>.json, status
 accepted|rejected|unreviewed|replaced) and accepted raw PNGs. `replaced` marks a drawing
 superseded by a licensed one that generate.py now bundles. A record's ordered `poses`
 list (accepted/<slug>-0.png start, -1.png finish) becomes a start/finish pair;
-records without it bundle the single accepted/<slug>.png. Only accepted records
+records without it bundle the single accepted/<slug>.png. Each drawing is cropped to its own
+ink, except a pair with `"sharedScale": true` (both drawn on one canvas at one scale, e.g. a
+burpee's crouch and jump), which is cropped with one shared box. Only accepted records
 whose PNGs match their recorded SHA-256 are bundled.
 App-owned drawings that are no longer accepted are removed; licensed Everkinetic/wger
 drawings and their sources are never modified. All inputs are validated before any
@@ -22,6 +24,7 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
+import stroke
 from generate import CACHE, OUT_IMAGES, OUT_JSON, ROOT, normalised_mask, slug
 
 MANIFEST = Path(__file__).with_name('generated-manifest.json')
@@ -46,6 +49,22 @@ def load_records(source_dir):
     if not records:
         raise ValueError(f'no QA records in {source_dir / "qa"}')
     return records
+
+
+def pose_masks(raws, shared_scale=False):
+    """Catalog masks of one exercise's drawings, each cropped to its own ink. A shared-scale pair
+    (start and finish drawn on one canvas at one scale) is cropped with one box, the union of both
+    drawings' ink, so the app shows a crouch and a jump at their true relative size."""
+    if not shared_scale:
+        return [normalised_mask(raw) for raw in raws]
+    if len(raws) != 2:
+        raise ValueError('a shared scale needs a start/finish pair')
+    sizes, boxes = zip(*(stroke.ink_box(raw) for raw in raws))
+    if sizes[0] != sizes[1]:
+        raise ValueError('a shared-scale pair must be drawn on one canvas size')
+    box = (min(b[0] for b in boxes), min(b[1] for b in boxes),
+           max(b[2] for b in boxes), max(b[3] for b in boxes))
+    return [normalised_mask(raw, box) for raw in raws]
 
 
 def bundle(source_dir):
@@ -80,15 +99,18 @@ def bundle(source_dir):
             raise ValueError(f'{entry["name"]}: refusing to replace a licensed illustration')
         if entry['images'] and not illustrations:
             raise ValueError(f'{entry["name"]}: refusing to replace unattributed images')
-        images = []
+        raws = []
         for pose in poses:
             raw = (source_dir / 'accepted' / pose['file']).read_bytes()
             if hashlib.sha256(raw).hexdigest() != pose['sha256']:
                 raise ValueError(f'{entry["name"]}: {pose["file"]} does not match the reviewed PNG')
-            data, size = normalised_mask(raw)
-            if len(data) > 40 * 1024:
-                raise ValueError(f'{entry["name"]}: image exceeds catalog size budget')
-            images.append((data, size))
+            raws.append(raw)
+        try:
+            images = pose_masks(raws, record.get('sharedScale', False))
+        except ValueError as error:
+            raise ValueError(f'{entry["name"]}: {error}') from error
+        if any(len(data) > 40 * 1024 for data, _ in images):
+            raise ValueError(f'{entry["name"]}: image exceeds catalog size budget')
         prepared.append((key, entry, images, [p['sha256'] for p in poses]))
 
     accepted = {key for key, *_ in prepared}
@@ -131,6 +153,7 @@ def bundle(source_dir):
                 'attempts': record.get('attempts', 0),
                 **({'sha256': hashes[key][-1]} if key in hashes else {}),
                 **({'startSha256': hashes[key][0]} if len(hashes.get(key, [])) == 2 else {}),
+                **({'sharedScale': True} if key in hashes and record.get('sharedScale') else {}),
                 **({'postProcessed': 'local line cleanup or thickening, re-audited'}
                    if record['status'] == 'accepted' and record.get('derived_from') else {}),
             }

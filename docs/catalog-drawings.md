@@ -26,6 +26,7 @@ Read before proposing, generating, editing, QA-ing or bundling exercise catalog 
 - Every app-owned drawing is an approved start/finish pair (`qa/<slug>.json` `poses` list, `accepted/<slug>-0/-1.png`), except holds without a progression (Plank, a single drawing). Generate the second pose by editing the approved first so person, machine and angle match. Check which pose the approved drawing actually shows before labelling it start or finish.
 - When a pose keeps failing against an approved partner whose machine is wrong, redraw both poses from one real-machine reference (video frames) instead of forcing it.
 - Bundle with `apps/web/scripts/catalog/generated.py`: it reads `qa/<slug>.json` status and removes app-owned drawings that are no longer accepted.
+- Each frame is cropped to its own ink, so frames of very different size (a burpee's crouch and jump) show at the same height. Draw such a pair on one canvas at one scale and set `"sharedScale": true` in its QA record; both frames are then cropped with one box.
 - Successful generation is not approval: a drawing ships only once it has passed review.
 
 ## Style
