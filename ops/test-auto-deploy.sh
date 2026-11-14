@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2015 # every fail() exits, so A && B || fail is intended
 # Local check of ops/auto-deploy.sh against a throwaway git origin, a fake `gh` that
-# reports CI results, a fake `hermes` that records alerts and a stub deploy.sh. Never
+# reports CI results, a fake alert webhook that records alerts and a stub deploy.sh. Never
 # touches the live app, the real repository or GitHub.
 set -Eeuo pipefail
 SCRIPT_DIR=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 sandbox=$(mktemp -d "${TMPDIR:-/tmp}/ember-auto-deploy-test.XXXXXX")
-trap 'rm -rf -- "$sandbox"' EXIT
+receiver=
+trap '[[ -z $receiver ]] || kill -- "$receiver" 2>/dev/null; rm -rf -- "$sandbox"' EXIT
 fail() {
 	echo "auto-deploy check failed: $*" >&2
 	exit 1
@@ -27,12 +28,37 @@ cat >"$sandbox/bin/gh" <<EOF
 [[ ! -e $sandbox/gh-hook ]] || bash -- "$sandbox/gh-hook"
 [[ ! -e $sandbox/gh-down ]] && cat -- "$ci"
 EOF
-cat >"$sandbox/bin/hermes" <<EOF
-#!/usr/bin/env bash
-echo "\${@: -1}" >>"$alerts"
-EOF
-chmod +x "$sandbox/bin/gh" "$sandbox/bin/hermes"
+chmod +x "$sandbox/bin/gh"
 export PATH=$sandbox/bin:$PATH
+
+# The alert webhook records each alert's message as one line and reports it delivered.
+export EMBER_ALERT_WEBHOOK_FILE=$sandbox/alert-webhook
+python3 -I - "$alerts" "$EMBER_ALERT_WEBHOOK_FILE" <<'PY' &
+import http.server, json, os, sys
+alerts, webhook = sys.argv[1:]
+class Handler(http.server.BaseHTTPRequestHandler):
+    def do_POST(self):
+        message = json.loads(self.rfile.read(int(self.headers['Content-Length'])))['message']
+        with open(alerts, 'a') as file:
+            file.write(message.replace('\n', ' ') + '\n')
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'{"status": "delivered"}')
+    def log_message(self, *args):
+        pass
+server = http.server.HTTPServer(('127.0.0.1', 0), Handler)
+staging = webhook + '.tmp'
+with open(staging, 'w') as file:
+    file.write(f'http://127.0.0.1:{server.server_port}/webhooks/ember-alerts\nsynthetic-test-secret\n')
+os.replace(staging, webhook)
+server.serve_forever()
+PY
+receiver=$!
+for _ in {1..100}; do
+	[[ ! -e $EMBER_ALERT_WEBHOOK_FILE ]] || break
+	sleep 0.1
+done
+[[ -e $EMBER_ALERT_WEBHOOK_FILE ]] || fail 'the fake alert webhook did not start'
 
 git init --quiet --bare --initial-branch=main "$sandbox/origin.git"
 git clone --quiet "$sandbox/origin.git" "$sandbox/upstream" 2>/dev/null

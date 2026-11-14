@@ -19,7 +19,6 @@ export default [
       'test-results/**',
       '.local/**',
       '.impeccable/**',
-      '.hermes/**',
     ],
   },
   js.configs.recommended,

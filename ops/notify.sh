@@ -1,33 +1,34 @@
 #!/usr/bin/env bash
-# Send one alert to the owner's Hermes app.
+# Send one alert to the owner's alert webhook.
 #
-#   ops/notify.sh <subject> <message>   send it, or queue it while Hermes is unreachable
-#   ops/notify.sh --flush               send the queued alerts, waiting for Hermes as needed
+#   ops/notify.sh <subject> <message>   send it, or queue it while the receiver is unreachable
+#   ops/notify.sh --flush               send the queued alerts, waiting for the receiver as needed
 #
-# The Ember service account has no Hermes login. It posts the alert to the owner's Hermes
-# webhook, which forwards it to the Hermes app as a push notification: the file
-# ~/.config/ember/hermes-webhook (mode 0600) holds the route URL on its first line and the
-# route's HMAC secret on its second. When Hermes cannot be reached (a gateway restart, for
+# The alert is posted, signed, to a webhook that forwards it to the owner as a push
+# notification: the file ~/.config/ember/alert-webhook (mode 0600) holds the URL on its first
+# line and the HMAC secret on its second. When the receiver cannot be reached (a restart, for
 # example), the alert waits in ~/.local/state/ember/alert-queue and ember-notify-retry.path
 # starts `--flush`, which sends the queue in order, retrying every 30 seconds, and gives up on
-# an alert after 24 hours. An alert Hermes refuses or does not deliver is not retried: notify
-# fails and the caller logs it. Without the webhook file (an owner-run install) the alert goes
-# through `hermes send` to the Hermes app. Neither the URL nor the secret ever appears on a
-# command line, where other local users could read it.
+# an alert after 24 hours. An alert the receiver refuses or does not deliver is not retried:
+# notify fails and the caller logs it. Without the webhook file nothing is sent: notify logs the
+# alert and fails. Neither the URL nor the secret ever appears on a command line, where other
+# local users could read it.
 set -Eeuo pipefail
 usage() { echo "usage: $(basename "$0") <subject> <message> | --flush" >&2; }
-export PATH=$HOME/.local/bin:$PATH
-hermes_webhook=${EMBER_HERMES_WEBHOOK_FILE:-$HOME/.config/ember/hermes-webhook}
+alert_webhook=${EMBER_ALERT_WEBHOOK_FILE:-$HOME/.config/ember/alert-webhook}
 queue=${EMBER_ALERT_QUEUE:-$HOME/.local/state/ember/alert-queue}
 if (($# == 1)) && [[ $1 == --flush ]]; then
 	:
 elif (($# == 2)); then
-	[[ -e $hermes_webhook ]] || exec hermes send --quiet --to push --subject "$1" "$2"
+	if [[ ! -e $alert_webhook ]]; then
+		echo "notify: no alert webhook configured, not sent: $1 $2" >&2
+		exit 1
+	fi
 else
 	usage
 	exit 2
 fi
-exec python3 -I - "$hermes_webhook" "$queue" "$@" <<'PY'
+exec python3 -I - "$alert_webhook" "$queue" "$@" <<'PY'
 import fcntl, hashlib, hmac, json, os, re, sys, time, urllib.error, urllib.request
 from pathlib import Path
 
@@ -41,7 +42,7 @@ def log(text):
 
 
 def post(subject, message):
-    """One signed attempt: 'delivered', 'retry' (Hermes unreachable) or 'failed', with a reason."""
+    """One signed attempt: 'delivered', 'retry' (receiver unreachable) or 'failed', with a reason."""
     try:
         url, secret = (webhook.read_text().split('\n') + ['', ''])[:2]
     except OSError as error:
@@ -59,17 +60,17 @@ def post(subject, message):
             answer = response.read()
     except urllib.error.HTTPError as error:
         if error.code < 500 and error.code != 429:  # refused (signature, route): retrying cannot help
-            return 'failed', f'Hermes webhook refused the alert: {error}'
-        return 'retry', f'Hermes webhook failed: {error}'
+            return 'failed', f'alert webhook refused the alert: {error}'
+        return 'retry', f'alert webhook failed: {error}'
     except Exception as error:
-        return 'retry', f'Hermes webhook unreachable: {error}'
-    # Hermes also answers 200 when its route drops an alert ("ignored"): only a delivery counts.
+        return 'retry', f'alert webhook unreachable: {error}'
+    # The receiver also answers 200 when it drops an alert ("ignored"): only a delivery counts.
     try:
         if json.loads(answer).get('status') == 'delivered':
             return 'delivered', ''
     except (ValueError, AttributeError):
         pass
-    return 'failed', f'Hermes did not deliver the alert: {answer[:200]!r}'
+    return 'failed', f'the receiver did not deliver the alert: {answer[:200]!r}'
 
 
 def queued():
@@ -88,7 +89,7 @@ def enqueue(subject, message):
 
 
 def send(subject, message):
-    if waiting := len(queued()):  # Hermes is known to be away: keep the order
+    if waiting := len(queued()):  # the receiver is known to be away: keep the order
         enqueue(subject, message)
         log(f'queued behind {waiting} undelivered alert(s)')
         return 0
@@ -104,7 +105,7 @@ def send(subject, message):
         log(reason)
         return 1
     enqueue(subject, message)
-    log(f'{reason}; queued until Hermes takes it')
+    log(f'{reason}; queued until the receiver takes it')
     return 0
 
 
@@ -125,7 +126,7 @@ def flush():
                     lost += 1
                     continue
                 if time.time() - queued_at > MAX_AGE:
-                    log(f'gave up after {MAX_AGE / 3600:g} h, Hermes never took this alert: {subject} {message}')
+                    log(f'gave up after {MAX_AGE / 3600:g} h, the receiver never took this alert: {subject} {message}')
                     item.unlink(missing_ok=True)
                     lost += 1
                     continue
@@ -141,7 +142,7 @@ def flush():
             else:
                 continue
             time.sleep(RETRY_INTERVAL)
-    # Failing makes the unit's OnFailure alert report the loss, once Hermes takes alerts again.
+    # Failing makes the unit's OnFailure alert report the loss, once the receiver takes alerts again.
     return 1 if lost else 0
 
 

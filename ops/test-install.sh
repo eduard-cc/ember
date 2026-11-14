@@ -7,15 +7,11 @@ here=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 sandbox=$(mktemp -d "${TMPDIR:-/tmp}/ember-install-test.XXXXXX")
 trap 'rm -rf -- "$sandbox"' EXIT
 export HOME=$sandbox/home
-mkdir -p "$HOME/src/ember/ops" "$HOME/.local/bin" "$sandbox/bin"
+mkdir -p "$HOME/src/ember/ops" "$sandbox/bin"
 cp "$here/install.sh" "$here/notify.sh" "$here/start.sh" "$HOME/src/ember/ops/"
 cp -r "$here/systemd" "$HOME/src/ember/ops/"
 printf '#!/bin/sh\nexit 0\n' >"$sandbox/bin/systemctl"
-cat >"$HOME/.local/bin/hermes" <<'EOF'
-#!/bin/sh
-printf '%s\n' "$*" >"$HOME/alert"
-EOF
-chmod 755 "$sandbox/bin/systemctl" "$HOME/.local/bin/hermes"
+chmod 755 "$sandbox/bin/systemctl"
 export PATH=$sandbox/bin:$PATH
 "$HOME/src/ember/ops/install.sh" >/dev/null
 # A fetched commit changes the notifier source; an installed owner's unit must never
@@ -33,17 +29,20 @@ def unit_command(name):
     for key, value in {'%h': str(home), '%H': 'test-host', '%i': 'test-unit'}.items():
         command = command.replace(key, value)
     return shlex.split(command)
-subprocess.run(unit_command('ember-notify-failure@.service'), check=True)
+# Without an alert webhook file nothing is sent: the alert is logged and the run fails.
+unconfigured = subprocess.run(unit_command('ember-notify-failure@.service'), stderr=subprocess.PIPE, text=True)
+assert unconfigured.returncode != 0, unconfigured
+assert 'no alert webhook configured' in unconfigured.stderr, unconfigured
+assert 'test-unit failed.' in unconfigured.stderr, f'the unsent alert was not logged: {unconfigured}'
 subprocess.run(unit_command('ember-notify-retry.service'), check=True)  # an empty queue is done at once
 path = configparser.ConfigParser(interpolation=None)
 path.read(home / '.config/systemd/user/ember-notify-retry.path')
 assert path['Path']['DirectoryNotEmpty'] == '%h/.local/state/ember/alert-queue', 'retry unit watches the wrong queue'
 assert not (home / 'checkout-code-ran').exists(), 'owner-side notification executed checkout code'
-alert = (home / 'alert').read_text()
-assert 'test-unit failed.' in alert, 'owner-side alert was not dispatched'
-assert '--to push' in alert, f'owner-side alert did not go to the Hermes app: {alert}'
+queue = home / '.local/state/ember/alert-queue'
+assert not queue.exists() or not any(queue.iterdir()), 'an alert without a webhook was queued'
 PY
-# With a Hermes webhook file the installed notifier posts a signed alert to it instead.
+# With an alert webhook file the installed notifier posts a signed alert to it.
 mkdir -p "$HOME/.config/ember"
 python3 - "$HOME" <<'PY'
 import configparser, hashlib, hmac, http.server, json, os, shlex, subprocess, sys, threading
@@ -62,19 +61,27 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass
 server = http.server.HTTPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
-webhook = home / '.config/ember/hermes-webhook'
+webhook = home / '.config/ember/alert-webhook'
 webhook.write_text(f'http://127.0.0.1:{server.server_port}/webhooks/ember-alerts\n{secret}\n')
 os.chmod(webhook, 0o600)
+unit = configparser.ConfigParser(interpolation=None)
+unit.read(home / '.config/systemd/user/ember-notify-failure@.service')
+failure = unit['Service']['ExecStart']
+for key, value in {'%h': str(home), '%H': 'test-host', '%i': 'test-unit'}.items():
+    failure = failure.replace(key, value)
+subprocess.run(shlex.split(failure), check=True, stderr=subprocess.DEVNULL)
+assert len(received) == 1, 'the failure unit did not reach the alert webhook'
+assert json.loads(received[0][2]) == {'subject': '[test-host]', 'message': 'test-unit failed. Details: journalctl --user -u test-unit -n 50'}, received
+received.clear()
 subprocess.run([str(home / '.local/lib/ember/notify.sh'), '[ember]', 'Deploy of abc1234 failed.'], check=True)
 server.shutdown()
-assert len(received) == 1, 'no alert reached the Hermes webhook'
+assert len(received) == 1, 'no alert reached the alert webhook'
 path, headers, body = received[0]
 assert path == '/webhooks/ember-alerts', path
 assert json.loads(body) == {'subject': '[ember]', 'message': 'Deploy of abc1234 failed.'}, body
 signed = f"{headers['X-Webhook-Timestamp']}.".encode() + body
 expected = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
 assert hmac.compare_digest(headers['X-Webhook-Signature-V2'], expected), 'bad webhook signature'
-assert 'test-unit failed.' in (home / 'alert').read_text(), 'the Hermes CLI fallback was used again'
 notify = [str(home / '.local/lib/ember/notify.sh'), '[ember]']
 def serve(handler):
     received.clear()
@@ -91,7 +98,6 @@ def answer(code, body=b''):
         self.end_headers()
         self.wfile.write(body)
     return handler
-cli_alert = (home / 'alert').read_text()
 unit = configparser.ConfigParser(interpolation=None)
 unit.read(home / '.config/systemd/user/ember-notify-retry.service')
 retry = shlex.split(unit['Service']['ExecStart'].replace('%h', str(home)))
@@ -101,7 +107,7 @@ refused = subprocess.run(notify + ['Rollback failed.'], stderr=subprocess.PIPE, 
 server.shutdown()
 assert refused.returncode == 1 and 'refused' in refused.stderr, refused
 assert received == ['Rollback failed.'], f'a refused alert was retried: {received}'
-# Hermes answers 200 "ignored" when its route drops an alert: that is not a delivery either.
+# The receiver answers 200 "ignored" when it drops an alert: that is not a delivery either.
 server = serve(answer(200, b'{"status": "ignored", "reason": "script"}'))
 ignored = subprocess.run(notify + ['Ignored alert.'], stderr=subprocess.PIPE, text=True)
 server.shutdown()
@@ -109,21 +115,20 @@ assert ignored.returncode == 1 and 'did not deliver' in ignored.stderr, ignored
 assert received == ['Ignored alert.'], f'an ignored alert was retried: {received}'
 queue = home / '.local/state/ember/alert-queue'
 assert not list(queue.glob('*')), 'a refused or ignored alert was queued'
-assert (home / 'alert').read_text() == cli_alert, 'an alert went through the Hermes CLI'
-# While Hermes is unreachable, alerts wait in the queue in order; once it is back, the
+# While the receiver is unreachable, alerts wait in the queue in order; once it is back, the
 # retry unit sends them oldest first and empties the queue.
 server = serve(answer(503))
 first = subprocess.run(notify + ['Deploy of 1111111 failed.'], stderr=subprocess.PIPE, text=True)
 server.shutdown()
 assert first.returncode == 0 and 'queued' in first.stderr, first
-assert len(received) == 3, f'an unreachable Hermes was tried {len(received)} times'
+assert len(received) == 3, f'an unreachable receiver was tried {len(received)} times'
 received.clear()
 second = subprocess.run(notify + ['Deploy of 2222222 failed.'], stderr=subprocess.PIPE, text=True)
 assert second.returncode == 0 and 'queued behind 1' in second.stderr, second
 assert received == [], 'a new alert jumped the queue'
 assert len(list(queue.glob('*.json'))) == 2, list(queue.iterdir())
 assert all(p.stat().st_mode & 0o077 == 0 for p in queue.glob('*.json')), 'queued alerts are readable by others'
-# Hermes is still away on the first try: the run waits and starts again from the oldest.
+# The receiver is still away on the first try: the run waits and starts again from the oldest.
 delivered = answer(200, b'{"status": "delivered"}')
 def back_after_one_try(self):
     Handler.do_POST = delivered
@@ -136,7 +141,7 @@ assert flushed.returncode == 0, flushed
 assert received == ['Deploy of 1111111 failed.'] * 2 + ['Deploy of 2222222 failed.'], received
 assert 'sent: [ember] Deploy of 2222222 failed.' in flushed.stderr, 'a delivered alert was not logged'
 assert not list(queue.glob('*')), 'delivered alerts stayed queued'
-# A queued alert Hermes refuses is not retried: it leaves the queue and the run fails.
+# A queued alert the receiver refuses is not retried: it leaves the queue and the run fails.
 server = serve(answer(503))
 subprocess.run(notify + ['Deploy of 4444444 failed.'], check=True, stderr=subprocess.DEVNULL)
 server.shutdown()
@@ -146,7 +151,7 @@ server.shutdown()
 assert refused.returncode == 1 and 'refused' in refused.stderr and '4444444' in refused.stderr, refused
 assert received == ['Deploy of 4444444 failed.'], f'a refused queued alert was retried: {received}'
 assert not list(queue.glob('*')), 'a refused alert stayed queued'
-# An alert Hermes never takes is given up after its maximum age, and the run fails so
+# An alert the receiver never takes is given up after its maximum age, and the run fails so
 # its OnFailure alert reports the loss. A rate-limited alert is retried like an unreachable one.
 server = serve(answer(429))
 subprocess.run(notify + ['Deploy of 3333333 failed.'], check=True, stderr=subprocess.DEVNULL)

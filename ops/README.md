@@ -9,7 +9,7 @@ The live app runs from releases as a dedicated service account, never from a che
 | `backup.sh`, `restore-check.sh`      | Validated `pg_dump` of the live database and a restore drill into a disposable validation database               |
 | `install.sh`                         | Installs the user units, slices, the reviewed launcher and alert notifier; restarts nothing                      |
 | `start.sh`                           | `ember.service`'s launcher (installed copy): runs the current release's image as the `ember-app` container       |
-| `notify.sh`                          | Sends an alert to the owner's Hermes webhook, queueing it while Hermes is unreachable                            |
+| `notify.sh`                          | Sends a signed alert to the owner's alert webhook, queueing it while the webhook is unreachable                  |
 | `docker.sh`, `docker-host.sh`        | The Docker CLI pointed at Ember's own rootless daemon                                                            |
 | `compose.local.yml`                  | The `ember-postgres` container (development daemon, and the live one with `EMBER_PG_PORT`)                       |
 | `limited.sh`                         | Runs the npm test scripts in the capped `ember-jobs.slice`                                                       |
