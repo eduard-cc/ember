@@ -56,9 +56,10 @@
     {
       "name": "Bulgarian Split Squat",
       "status": "accepted",
-      "attempts": 6,
-      "sha256": "71c9744fd752cee677c1008e76a179b5ab6db8a3a4e87fc03e930b414ed76013",
-      "startSha256": "abda2e62428e941ffe608e6fd4341cc6aa57f969b332251d48ca0bfba0d7a5a4"
+      "attempts": 8,
+      "sha256": "65457a75a7db415d4b39d3ca1780e2234a17b2848009902db3fceff9c81ebb98",
+      "startSha256": "688cf219fd7ad51e92c392c2837ff69fbbcb8b7b8412899c6955ac474db52465",
+      "credit": "after-everkinetic"
     },
     {
       "name": "Burpee",
@@ -111,9 +112,11 @@
     {
       "name": "Cycling (Stationary Bike)",
       "status": "accepted",
-      "attempts": 7,
-      "sha256": "e41b31268368840574461308a63ddb729376fb491b9b95c32cbccc80b75a3401",
-      "startSha256": "3b20bb295786499e68cf1a0a1ac6f3ddb9f841c70a7d30d583b7f302d02271d6"
+      "attempts": 12,
+      "sha256": "5534c283e094ad61c243c7cd884c7210462adb4c66ed29e31c02dfe8b0284a00",
+      "startSha256": "4bf268cf9613d99ed47236c89baf1b7a8e0cf374390ee23d1750be682767348b",
+      "sharedScale": true,
+      "credit": "after-everkinetic"
     },
     {
       "name": "Elliptical Trainer",
@@ -204,9 +207,11 @@
     {
       "name": "Iso-Lateral Row (Machine)",
       "status": "accepted",
-      "attempts": 11,
-      "sha256": "8cd0fbab84d4f8cbc0538a2c92a3f9606e2eed711a0f6057f27a02cfebe5526a",
-      "startSha256": "de3661bb2fb585a983dfd6e60306d90e50b62c79c305ce2efd31fbc3acff8b35"
+      "attempts": 15,
+      "sha256": "c3f6f86e35c10c1089f6dd42be0eb72f5f6a94d289d842b29865ff8c38734495",
+      "startSha256": "f8feb3feb040b71a3f5fff5e0677643c63835a3736e210275c6ac97fe677fc4b",
+      "sharedScale": true,
+      "credit": "after-everkinetic"
     },
     {
       "name": "Jump Rope",
@@ -270,9 +275,10 @@
     {
       "name": "Mountain Climber",
       "status": "accepted",
-      "attempts": 5,
-      "sha256": "807be1e88dc0793b7a232dc58b150401c35315ba4e6ee801f2017219ea804964",
-      "startSha256": "ec3a7ce35a53a2a19d0b5f709da6444da7e7e99f4938ce324c9e226101544db3",
+      "attempts": 6,
+      "sha256": "eb73019b1a7ba5a6dbec3617401936cc7eb9dbce20c9199dff5b53c9c008f388",
+      "startSha256": "72775d054983615211a97ba2bb990a162ccbf171ecaac8c2b4ed6e4ba5c6c8c4",
+      "credit": "after-everkinetic",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
@@ -347,9 +353,11 @@
     {
       "name": "Reverse Fly (Machine)",
       "status": "accepted",
-      "attempts": 11,
-      "sha256": "c633de51889347489dfea5a7ff8af509d85d57891c64916037458588c7a59241",
-      "startSha256": "ef72dc9c1b9f1aaa94640c2f480f5770b5892ae479d3e27309c01dec92422e6f"
+      "attempts": 16,
+      "sha256": "1752308a3a2d50522bea8354cc0370bac873d3b41926505d35fce461ad3bf0f0",
+      "startSha256": "c8ab3db663f35ea1164d908a77cda51e186ebf3fa5a15318837413a9871374fa",
+      "sharedScale": true,
+      "credit": "after-everkinetic"
     },
     {
       "name": "Reverse Wrist Curl (Barbell)",
