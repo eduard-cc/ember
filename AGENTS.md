@@ -1,6 +1,6 @@
 # Ember agent instructions
 
-Ember is a self-hosted, local-first workout tracker for phones: a React PWA with a NestJS and PostgreSQL sync API. This repository holds the app, the API and their deployment tooling. Rules and non-obvious traps only; product scope is in PRODUCT.md, the visual system in `apps/web/DESIGN.md`, setup and commands in README.md; derive everything else from the code.
+Ember is a self-hosted, local-first workout tracker for phones: a React PWA with a NestJS and PostgreSQL sync API. This repository holds the app, the API and their deployment tooling. Rules and non-obvious traps only; product scope is in `apps/web/PRODUCT.md`, the visual system in `apps/web/DESIGN.md`, setup and commands in each app's README.md; derive everything else from the code.
 
 ## Layout
 
@@ -8,15 +8,15 @@ Ember is a self-hosted, local-first workout tracker for phones: a React PWA with
 - `apps/api`: the NestJS sync API and its tests. Read `apps/api/AGENTS.md` before touching it.
 - `packages/contracts`: `@ember/contracts`, the document schemas, retired keys and served-file rule both apps import (the API as `#contracts`). A change there is a change to both apps. Read `packages/contracts/README.md` before touching it.
 - `ops/`: deploy, backup, install and host-setup scripts, systemd units and the local Compose file. Read `ops/README.md` before touching it.
-- `.github/`: the CI workflow and Dependabot config. `docs/`: topics that span both apps.
+- `.github/`: the CI workflow and Dependabot config. `docs/`: topics that span both apps (CI and the production image).
 - Each app has its own `package.json`, lockfile and ESLint config; run npm commands inside the app (`npm --prefix apps/web …`, `npm --prefix apps/api …`). `packages/contracts` has neither node_modules nor a lockfile: its only dependency, zod, resolves from each app. Prettier runs once from `apps/web` over the whole repository, with each area's config (API: tabs; everything else: two spaces). The Node major is in the root `.nvmrc`.
 - Read before touching:
-  - CI, local test runs, ports, Playwright: `docs/ci-and-tests.md`
-  - PRs and merging, deploy, rollback, live checks, static assets and the precache: `docs/deploy.md`
-  - Backups, restore drills, the service account, Docker daemon, PostgreSQL pin, slices: `docs/operations.md`
-  - Sync feed, outbox, local storage, recovery, history editing and aggregates: `docs/sync-and-history.md`
-  - UI, layout, accessibility, phone gestures, installed PWA: `docs/phone-and-pwa.md`
-  - Catalog drawings (licensed and AI-assisted): `docs/catalog-drawings.md`
+  - CI, the production image, GHCR: `docs/ci-and-images.md`
+  - Local test runs, ports, Playwright: `apps/web/docs/testing.md`
+  - PRs and merging, deploy, rollback, live checks, static assets and the precache, backups, restore drills, the service account, Docker daemon, PostgreSQL pin, slices: `ops/README.md`
+  - Sync protocol (record kinds, extending the feed, retiring a stored field): `packages/contracts/README.md`; outbox, local storage, recovery, history editing and aggregates: `apps/web/docs/sync-and-history.md`; wiping server data: `apps/api/docs/sync.md`
+  - UI, layout, accessibility, phone gestures, installed PWA: `apps/web/docs/phone-and-pwa.md`
+  - Catalog data and drawings (licensed and AI-assisted): `apps/web/docs/catalog.md`
 
 ## Product direction and workflow
 
@@ -25,10 +25,10 @@ Ember is a self-hosted, local-first workout tracker for phones: a React PWA with
 - Repeating a workout prefills editable targets; every set stays uncompleted until explicitly confirmed.
 - Workouts use existing catalog or recorded exercises only; no custom-exercise creation. Reject adding or replacing with an exercise already in that workout, with a clear message. Keep exercise variants distinct and preserve imported repeated blocks.
 - Dumbbell weight is per dumbbell; barbell weight includes the bar; assisted pull-up/dip load means assistance.
-- PRODUCT.md's exclusions (rest timers, alerts, nutrition, social, watch, etc.) hold unless the owner changes them. Do not promise native ongoing-service behavior from web notifications.
+- `apps/web/PRODUCT.md`'s exclusions (rest timers, alerts, nutrition, social, watch, etc.) hold unless the owner changes them. Do not promise native ongoing-service behavior from web notifications.
 - `apps/web/DESIGN.md` is the visual contract: a restrained shadcn style with Ember's own amber color scheme and gym-specific thumb-friendly controls. Hit targets at least 44px; visible keyboard focus, exact-value chart alternatives, reduced-motion support. Ember is designed for phones: design, test and verify at phone sizes; the desktop layouts are legacy and get no new work.
-- Work on a short-lived branch and open a PR; it is squash-merged once the `CI` check passes (`docs/deploy.md`). Use Conventional Commit-style messages such as `feat: ...` and `fix: ...`. Preserve unrelated work. A change that touches both apps is one PR.
-- Merging to `main` ships: the live instance deploys a green `main` within minutes, and the app's update gate never reloads an open workout. Every deploy has a one-command rollback (`docs/deploy.md`).
+- Work on a short-lived branch and open a PR; it is squash-merged once the `CI` check passes (`ops/README.md`). Use Conventional Commit-style messages such as `feat: ...` and `fix: ...`. Preserve unrelated work. A change that touches both apps is one PR.
+- Merging to `main` ships: the live instance deploys a green `main` within minutes, and the app's update gate never reloads an open workout. Every deploy has a one-command rollback (`ops/README.md`).
 
 ## Analytics invariants
 
@@ -40,7 +40,7 @@ Lead with reps at the same weight and weight at comparable reps. Show complete e
 - The API stays loopback-only behind Tailscale Serve, which strips spoofed identity headers. Production auth is the owner's exact Tailscale identity; never enable Funnel or accept arbitrary tailnet users.
 - Active workouts never enter server sync. Revision conflicts stay visible and retained; never silently overwrite peer data.
 - Never reload an active logger silently: shell updates need explicit confirmation and a saved, draft-free transition.
-- Never build in or serve from a checkout. The live app runs from built releases in a dedicated service account; run live commands only the way `docs/operations.md` describes, never as another user.
+- Never build in or serve from a checkout. The live app runs from built releases in a dedicated service account; run live commands only the way `ops/README.md` describes, never as another user.
 - Ember shares its host with other apps. Run Ember containers only in Ember's own rootless Docker daemon, through `ops/docker.sh`; name Ember containers and projects explicitly, and never run `docker system/volume/image prune` or an unscoped `compose down -v`. Change Tailscale Serve only on Ember's own device, never the host's.
 
 ## Production data
@@ -66,10 +66,10 @@ This repository and everything attached to it (commits, PRs, comments, issues, C
 
 ## Verification
 
-- Commands are in each app's `package.json` and in README.md; each app's `AGENTS.md` lists its checks. Before handoff: the web app's `format:check` (whole repository), `lint:check` for each app you touched, then that app's checks: for `apps/web` typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched; for `apps/api` typecheck, build and `test:e2e`; for `packages/contracts` both apps' checks. `test:integration` is not in CI: run it locally whenever sync, imported history or recovery is touched.
+- Commands are in each app's `package.json` and README.md; each app's `AGENTS.md` lists its checks. Before handoff: the web app's `format:check` (whole repository), `lint:check` for each app you touched, then that app's checks: for `apps/web` typecheck, `test:run`, `test:e2e`, plus `test:integration` / `test:pwa` when touched; for `apps/api` typecheck, build and `test:e2e`; for `packages/contracts` both apps' checks. `test:integration` is not in CI: run it locally whenever sync, imported history or recovery is touched.
 - Prefer tests before domain behavior; verify observable Playwright flows at phone size and typecheck/build before handoff.
-- Local test stacks use fixed container names and ports shared by every worktree: never run fixed-port suites concurrently, and check for another run before starting one (`docs/ci-and-tests.md`). Fixtures are synthetic and databases disposable.
-- Do not invent successful check output; state production gaps explicitly. Remaining release gates are listed in PRODUCT.md.
+- Local test stacks use fixed container names and ports shared by every worktree: never run fixed-port suites concurrently, and check for another run before starting one (`apps/web/docs/testing.md`). Fixtures are synthetic and databases disposable.
+- Do not invent successful check output; state production gaps explicitly. Remaining release gates are listed in `apps/web/PRODUCT.md`.
 
 ## Writing tests
 
@@ -80,4 +80,4 @@ This repository and everything attached to it (commits, PRs, comments, issues, C
 
 ## Docs
 
-Living docs (`README.md`, `AGENTS.md` files, `PRODUCT.md`, `apps/web/DESIGN.md`, `docs/`, `ops/README.md`, `apps/api/README.md`, `apps/web/scripts/catalog/README.md`) state current durable facts: no dates, decision history or rename narration. Edit Markdown by hand.
+Living docs (`README.md` files: root, `apps/web`, `apps/api`, `packages/contracts`, `ops`; `AGENTS.md` files; `apps/web/PRODUCT.md`, `apps/web/DESIGN.md`; `docs/`, `apps/web/docs/`, `apps/api/docs/`) state current durable facts: no dates, decision history or rename narration. Edit Markdown by hand.
