@@ -1006,7 +1006,7 @@
       },
       {
         "file": "chin-up-assisted-1.webp",
-        "width": 128,
+        "width": 131,
         "height": 240
       }
     ],
@@ -1187,12 +1187,12 @@
     "images": [
       {
         "file": "lat-pulldown-cable-0.webp",
-        "width": 161,
+        "width": 181,
         "height": 240
       },
       {
         "file": "lat-pulldown-cable-1.webp",
-        "width": 163,
+        "width": 183,
         "height": 240
       }
     ],
@@ -1378,7 +1378,7 @@
       },
       {
         "file": "pull-up-assisted-1.webp",
-        "width": 128,
+        "width": 131,
         "height": 240
       }
     ],
@@ -2055,13 +2055,13 @@
     "images": [
       {
         "file": "lateral-raise-machine-0.webp",
-        "width": 240,
-        "height": 218
+        "width": 159,
+        "height": 240
       },
       {
         "file": "lateral-raise-machine-1.webp",
-        "width": 240,
-        "height": 218
+        "width": 185,
+        "height": 240
       }
     ],
     "sources": [
@@ -5372,12 +5372,12 @@
     "images": [
       {
         "file": "standing-calf-raise-dumbbell-0.webp",
-        "width": 219,
+        "width": 89,
         "height": 240
       },
       {
         "file": "standing-calf-raise-dumbbell-1.webp",
-        "width": 219,
+        "width": 86,
         "height": 240
       }
     ],
@@ -5590,12 +5590,12 @@
       {
         "file": "sumo-deadlift-barbell-0.webp",
         "width": 240,
-        "height": 192
+        "height": 158
       },
       {
         "file": "sumo-deadlift-barbell-1.webp",
         "width": 240,
-        "height": 200
+        "height": 208
       }
     ],
     "sources": [
@@ -6669,13 +6669,13 @@
     "images": [
       {
         "file": "running-treadmill-0.webp",
-        "width": 240,
-        "height": 205
+        "width": 231,
+        "height": 240
       },
       {
         "file": "running-treadmill-1.webp",
-        "width": 240,
-        "height": 205
+        "width": 231,
+        "height": 240
       }
     ],
     "sources": [
@@ -6731,13 +6731,13 @@
     "images": [
       {
         "file": "stair-climber-0.webp",
-        "width": 240,
-        "height": 218
+        "width": 113,
+        "height": 240
       },
       {
         "file": "stair-climber-1.webp",
-        "width": 240,
-        "height": 218
+        "width": 112,
+        "height": 240
       }
     ],
     "sources": [
@@ -6762,12 +6762,12 @@
     "images": [
       {
         "file": "burpee-0.webp",
-        "width": 216,
+        "width": 192,
         "height": 240
       },
       {
         "file": "burpee-1.webp",
-        "width": 52,
+        "width": 192,
         "height": 240
       }
     ],
@@ -6825,11 +6825,11 @@
       {
         "file": "clean-and-press-barbell-0.webp",
         "width": 240,
-        "height": 164
+        "height": 171
       },
       {
         "file": "clean-and-press-barbell-1.webp",
-        "width": 209,
+        "width": 168,
         "height": 240
       }
     ],

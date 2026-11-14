@@ -59,9 +59,10 @@
     {
       "name": "Burpee",
       "status": "accepted",
-      "attempts": 2,
-      "sha256": "60c88b6a3ae0d48a7111765e29baf9c9580143b40a4d46d406d8fadc10818bee",
-      "startSha256": "a4356aed2ca01943932baad31ede67c9ae7eafb17e4d7c3b499e2c568b32afb8"
+      "attempts": 6,
+      "sha256": "a7b990d1bcb1890538de0b156ef24bdfc8ed764de7e331cd74e0f20771ce88fd",
+      "startSha256": "569ab9d5a9de25de95c6875bfd177a753f1dabadff537e27a06a62e14e015931",
+      "sharedScale": true
     },
     {
       "name": "Cable Crunch",
@@ -78,16 +79,16 @@
     {
       "name": "Chin Up (Assisted)",
       "status": "accepted",
-      "attempts": 11,
-      "sha256": "b90b69df34bdac81218b8bda267e87359b40622673f2a576b2f278c4a601a396",
-      "startSha256": "2961835c0580e3a66e692ef5a909a45a19daed3bce787abc285be76eea0fcf70"
+      "attempts": 13,
+      "sha256": "2faa3e5a5826205cc05762b9586415a7874d047805c6e6d17f5e86246fbc2c75",
+      "startSha256": "56f8c05ea9db70f698cdef5b6e2c682db56822ba73865aab69a458863dff1407"
     },
     {
       "name": "Clean and Press (Barbell)",
       "status": "accepted",
-      "attempts": 4,
-      "sha256": "852d0534c1667ade7b14d520265bd550470f3e814b5aa2b8e8c8d9bf1dd0d4d0",
-      "startSha256": "8aa61ee52e3f9d9db45cc028e2fe1481aecf86ced34eefcde62ab93019761f7b"
+      "attempts": 6,
+      "sha256": "8e9218ed1a657a0dbac3183fa8a7a37743dd3807d16f353be896851d32caae13",
+      "startSha256": "82d0b465463c08e5bf8e302cc541253e00a14e334741ba1fb68ae68436cb1890"
     },
     {
       "name": "Clean (Barbell)",
@@ -225,9 +226,9 @@
     {
       "name": "Lat Pulldown (Cable)",
       "status": "accepted",
-      "attempts": 10,
-      "sha256": "1cccbf915bfb025a212ce47b4093559b0279949cbbc967f58d02c28b2a932fe8",
-      "startSha256": "98af14608ffe7b67f24f77554110643094ca968c8c69b44365ec9cd5d30cf4ba"
+      "attempts": 12,
+      "sha256": "69b3e3ca1a0d5812362c8697ec372c1c90ff58541475e52ff5362018796e2f34",
+      "startSha256": "a0d9109faa3f2c322d87cba4fa9c56026715ea0995ffb72f04766b15e588b288"
     },
     {
       "name": "Lat Pulldown (Machine)",
@@ -246,9 +247,9 @@
     {
       "name": "Lateral Raise (Machine)",
       "status": "accepted",
-      "attempts": 7,
-      "sha256": "3a975f8200866f1a4cbbbfbb55dc7f9f270a69f2d4a7e06e0a29cee5a22a0ecb",
-      "startSha256": "2d5039f22b5093615a44769ceb8be042fd48650f571c641acffc7905a94afc81"
+      "attempts": 15,
+      "sha256": "bd838b9f1f48654089828e3dbc16e3e2cde4f835a32532ee70153a17eb8c3413",
+      "startSha256": "1706a1ddf7b0893d584854793aeaee35b0566cacaafba23b7c28c33659db2ffe"
     },
     {
       "name": "Lunge (Bodyweight)",
@@ -316,8 +317,8 @@
       "name": "Pull Up (Assisted)",
       "status": "accepted",
       "attempts": 0,
-      "sha256": "b90b69df34bdac81218b8bda267e87359b40622673f2a576b2f278c4a601a396",
-      "startSha256": "2961835c0580e3a66e692ef5a909a45a19daed3bce787abc285be76eea0fcf70"
+      "sha256": "2faa3e5a5826205cc05762b9586415a7874d047805c6e6d17f5e86246fbc2c75",
+      "startSha256": "56f8c05ea9db70f698cdef5b6e2c682db56822ba73865aab69a458863dff1407"
     },
     {
       "name": "Pullover (Machine)",
@@ -364,9 +365,9 @@
     {
       "name": "Running (Treadmill)",
       "status": "accepted",
-      "attempts": 2,
-      "sha256": "c77d015556f8709361ec6601bf5a0035976f7a51ddef8228f6418bbb612ce1a9",
-      "startSha256": "f38e81c562efb3fbb6328f3141984aceccd7dd95da12c71e7481cb63af1bde41"
+      "attempts": 4,
+      "sha256": "5455d7cc45ed767e97b6be4695d15ac435daee752c1bfc14038e2c4b43b5e720",
+      "startSha256": "51303d9e155ec847ae92c0bb3814576d798c34285827cc9f14af42c6ef2dc954"
     },
     {
       "name": "Russian Twist",
@@ -432,17 +433,17 @@
     {
       "name": "Stair Climber",
       "status": "accepted",
-      "attempts": 8,
-      "sha256": "b843dd5511bce3423b5a7c1dd04d285ed9d712ff90e2efcc00ac4508d6409627",
-      "startSha256": "f85f0a8ab148829a45505b852ef52e1faafd4916cf7069405bcefff8e3a25546",
+      "attempts": 16,
+      "sha256": "adaf529f842ee7a02678a21e2eff47eea80e5144707aa76f34349f7a22a20a42",
+      "startSha256": "7db558250e1641f7e5ae5249871356d84caae0c10041d11dc054d9761b00a84b",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
       "name": "Standing Calf Raise (Dumbbell)",
       "status": "accepted",
-      "attempts": 7,
-      "sha256": "6c0bbdc0d9431ac265fdf4ca2f477edb60e70a425f1f929201295a2e7591e37a",
-      "startSha256": "7fbbdcdd10f1fb8beb07c8567298818a4194d887985e2a35c5205ae84cc870fb"
+      "attempts": 10,
+      "sha256": "d121e31a6beb694cc0d0bb48152db9f1346acf7c3d59dc67d1669cd08550540b",
+      "startSha256": "9537337d053c658e4b834f949e6a7d83595ffccfc48501e5030d5082408b717d"
     },
     {
       "name": "Stiff Leg Deadlift (Barbell)",
@@ -454,9 +455,9 @@
     {
       "name": "Sumo Deadlift (Barbell)",
       "status": "accepted",
-      "attempts": 1,
-      "sha256": "3600e79c16492924d6f94123bdd736f353f30a0c1aaf645967e1397404b6f54d",
-      "startSha256": "f43cc64c5ffaef570ffa94fa0127e17c9aa8c6b73d9c8d66f933b14d8d2f69f9"
+      "attempts": 3,
+      "sha256": "d8247b450dac99066cde6edd75557699412196cbb200823c64040f0503ea0597",
+      "startSha256": "89c5a9d6d3293ceb25780edd8f1c627d5aaac1658aae6ca29b8c0b16054a6c4c"
     },
     {
       "name": "Thruster (Barbell)",
