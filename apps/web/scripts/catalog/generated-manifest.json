@@ -456,9 +456,11 @@
     {
       "name": "Seated Row (Machine)",
       "status": "accepted",
-      "attempts": 3,
-      "sha256": "f46ad63380dea4723a7806cd2e17749a84833ca0d50fd4b110a04112eff4c0a3",
-      "startSha256": "c67a2358137407c5e7a826af0e0c28501ca44b79a4348f7521c063a0f612427d",
+      "attempts": 11,
+      "sha256": "f0702e6f2a6520d57587f136ce2313443780d1434da093ca4ad84359ec7c90b3",
+      "startSha256": "12d3c2ed7e9ae18bf2a96e93bc97f1cec016fc2270e5d866437c97be6d2eda5c",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
       "line": "default"
     },
     {
