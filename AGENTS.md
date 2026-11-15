@@ -59,4 +59,4 @@ This repository and everything attached to it (commits, PRs, comments, issues, C
 
 ## Docs
 
-Living docs (`README.md`, `AGENTS.md`, `PRODUCT.md`, `DESIGN.md`, `docs/` folders) state current durable facts: no dates, history or rename narration. Edit Markdown by hand.
+Living docs (`README.md`, `AGENTS.md`, `PRODUCT.md`, `DESIGN.md`, `docs/` folders) state current durable facts: no dates, history or rename narration. Edit Markdown by hand. CI checks their paths, npm scripts and word budgets (`.github/scripts/check-docs.mjs`).

@@ -82,6 +82,9 @@ jobs:
       - run: npm --prefix apps/web run format:check
       - run: npm --prefix apps/web run lint:check
       - run: npm --prefix apps/api run lint:check
+      # Living docs: backticked paths and npm scripts exist, word budgets hold.
+      - run: node --test .github/scripts/
+      - run: node .github/scripts/check-docs.mjs
 
   build:
     name: Build & typecheck
