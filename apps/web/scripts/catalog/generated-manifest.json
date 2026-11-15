@@ -276,9 +276,11 @@
     {
       "name": "Lat Pulldown (Machine)",
       "status": "accepted",
-      "attempts": 11,
-      "sha256": "d031ea3b56f77ce2ba8c2542aa5659fbf2c07dba32ac3dd69fe711c2b015250c",
-      "startSha256": "c10268866d53816347f4b07823c446609ded84be0178aa25affdb23ec9a99467",
+      "attempts": 13,
+      "sha256": "4d8cfafe131a3b8f699191dc1ee62f4e92879a61918e80755f4952d4fe5efd64",
+      "startSha256": "87c1eeb7b8555a0c7709f114d75952ecd294e6af949cd8f6326b78b17c43a402",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
       "line": "default"
     },
     {
