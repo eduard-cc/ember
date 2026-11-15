@@ -62,7 +62,7 @@ rounded:
 
 ## Scope and character
 
-Ember is a fast workout ledger with its evidence one step away, designed for phones. The desktop layouts (from 1000px) are legacy: don't break them deliberately, but design, test and verify new work at phone sizes only. A restrained shadcn family, warm Paper/Ink and Night neutrals, Inter and one Amber accent; hairline borders and spacing set hierarchy, and workout controls are thumb-friendly. Never Strong's branding or assets.
+Ember is a fast workout ledger with its evidence one step away. The desktop layouts (from 1000px) are legacy: don't break them deliberately, but design, test and verify new work at phone sizes only. A restrained shadcn family, warm Paper/Ink and Night neutrals, Inter and one Amber accent; hairline borders and spacing set hierarchy, and workout controls are thumb-friendly. Never Strong's branding or assets.
 
 A visual change never replaces storage, sync or ownership behaviour (`docs/sync-and-history.md`) or rewrites saved history.
 
@@ -74,7 +74,7 @@ A visual change never replaces storage, sync or ownership behaviour (`docs/sync-
 - System theme is the default and follows live OS changes; Light/Dark override it. The appearance preference (`ember:appearance:v1`) is separate from workout data; a failed preference write keeps the tab usable, says so and never changes workout-saving claims.
 - Inter Variable is bundled locally: no CDN, display font or ornamental monospace. Use the type styles above and weights 400/500/600/700. Input text is at least 16px; chart axes at least 11 CSS px. Every value, count and date used for comparison uses tabular numerals.
 - Corners: controls and tinted notes `rounded-md` (6px); set checks, inline menu rows and PR tags `rounded-sm` (4px); cards, banners, centred dialogs and drawer tops `rounded-card` (12px). Full-screen panels, edge-to-edge bands and chart bars stay square. Flat cards have 1px token borders, not decorative shadows. Dialog elevation uses `--shadow` and a 60% Paper / 85% Night scrim.
-- The icon is the Ember heart (`EmberHeart`), also the launch splash and celebration heart. The `public/icons/` PNGs and `favicon.svg` share its traced paths: change the mark in all of them together. Manifest splash and gesture-strip colours stay Night, because Android does not follow the page theme there.
+- The icon is the Ember heart (`EmberHeart`), also the launch splash and celebration heart. The `public/icons/` PNGs (maskable glyph inside the 40% safe circle) and `favicon.svg` share its traced paths: change the mark in all of them together. Manifest splash and gesture-strip colours stay Night: Android ignores the page theme there.
 
 ## Workspace and navigation
 
@@ -94,13 +94,13 @@ A visual change never replaces storage, sync or ownership behaviour (`docs/sync-
 - `ActionSheet` focuses its first row and supports arrow/Home/End; closing returns focus before handing off the action. An outside closing tap is consumed, never passed through to a set.
 - Segments, chips and sort share one selected styling; chips scroll horizontally without widening the page. No selection animation on frequently used filters.
 - Toasts (`src/components/toasts.tsx`) show one at a time. App hides its Toaster while Settings is open, because the modal's focus trap would keep the keyboard from a toast's action; the exercise picker mounts its own.
-- No tap highlight or text-size inflation; controls use `touch-action: manipulation`, with no selection or iOS callout, while input editing stays native. Page overscroll is disabled. Hover states are capability-gated. Never truncate comparison values or dates: wrap or move metadata before shrinking an action.
+- No tap highlight or text-size inflation; controls use `touch-action: manipulation`, with no selection or iOS callout, while input editing stays native. Page overscroll is disabled. Hover is capability-gated. Never truncate comparison values or dates: wrap or move metadata before shrinking an action.
 
 ## Motion and feedback
 
 Curves: strong ease-out `cubic-bezier(.23,1,.32,1)`, ease-in-out `cubic-bezier(.77,0,.175,1)` for on-screen movement, drawer `cubic-bezier(.32,.72,0,1)`. No `transition: all`, scale-from-zero, sluggish ease-in or hover-only actions. Prefer transform/opacity and interruptible transitions for repeated state changes; the set tint/check drawing and the celebration are scoped exceptions.
 
-- Durations live in `src/index.css`; overlays use the drawer curve, and a launch-restored draft or keyboard tab navigation does not animate.
+- Durations live in `src/index.css`; drawers and the phone logger use the drawer curve, and a launch-restored draft or keyboard tab navigation does not animate.
 - Presses sink buttons and rows slightly on touch (not a card's own menu); keyboard focus gets no press.
 - Chart inspection and metric changes are immediate: never animate series, headlines or keyboard inspection.
 
@@ -127,7 +127,7 @@ Reduced motion removes movement, smooth scrolling, transitions, the live ping an
 ## Editors, history and exercise rows
 
 - Template and history editors share `EditorPanel`, built from the logger's pieces: ✕ (or ← Back) at left, a centred label, and the Amber Save where Finish sits, so Save stays visible with the keyboard open. They drop only the Done column, so values sit where they do while logging. The phone panel follows visual-viewport height and offset.
-- Save with nothing changed just closes. While saving, edits and dismissal are locked; a failure keeps the editor, Save reads Retry and an inline destructive strip under the header holds the message and focus, never also a toast. Validation focuses the first problem inline. ✕/←, Escape and back on a changed draft open Discard changes? (Discard on top, Keep editing focused); keeping returns to the last field. Success returns focus to the entry point.
+- Save with nothing changed just closes an existing item. While saving, edits and dismissal are locked; a failure keeps the editor, Save reads Retry and an inline destructive strip under the header holds the message and focus, never also a toast. Validation focuses the first problem inline. ✕/←, Escape and back on a changed draft open Discard changes? (Discard on top, Keep editing focused); keeping returns to the last field. Success returns focus to the entry point.
 - History editing marks changed values and added sets in Amber and counts them in the card subtitle, showing what Save would write. Its Previous shows only the session before that workout, without source links. Expected revisions, retained import cells, conflicts and repeated blocks stay intact; the editor never silently overwrites peers.
 - Template cards show what Start will actually prefill (`routineTargets`), never stale template values; blank targets are valid prescriptions, and duration estimates are omitted without evidence.
 - `ExerciseLine` never infers a best set from a formula. Finished work shows its actual top set (heaviest weight, then most reps at it) with explicit units: `75 kg × 8`, `12 reps`, `60 s`, `1.2 km · 5:00`, assistance `−20 kg × 8` announced as assistance. Templates show a shared load over paired reps or the top target set; never pair an independent weight range with an unrelated reps list.
@@ -179,7 +179,7 @@ The logger autosaves without a notice; a failed save surfaces through its error 
 
 - The phone Settings entry is Profile's cog, outside the disabled content fieldset so read-only and maintenance states can open it. Closing restores focus to it.
 - The notification row says honestly when the phone has not allowed or has blocked notifications, and shows only a short Add to Home Screen or not-available line where the browser cannot notify.
-- Settings never gains the controls `PRODUCT.md` excludes. Owned history, including portaled forms, unmounts while sync is locked or saved data is unreadable.
+- Settings never gains the controls `PRODUCT.md` excludes. Owned history, including portaled forms, unmounts while sync is locked; body weight also while saved data is unreadable.
 - App update appears only with a waiting production shell and applies through an explicit confirmation that requires the saved, draft-free, trusted installation-lock transition, including cross-tab checks. Applying never reloads the current page. The unreadable-data reset also needs its own confirmation, keeps the original bytes and is never a server-history reset.
 
 ## Back, safety and verification
@@ -188,4 +188,4 @@ Every transient layer (picker, details, drawer, menu, Settings, editors, celebra
 
 Hook classes, live regions and sync-lock unmounting: `docs/phone-and-pwa.md`. Saved means the IndexedDB transaction committed, never a cosmetic timer.
 
-Verify the populated app at Pixel 6 (412×915), 320px and short landscape, in Paper and Night. Stress long, unbreakable and non-Latin names, four-digit counts and loads, many sets, empty/one/large histories and enlarged text; measure overflow, reachable 44px actions and chart labels, then inspect screenshots. Use synthetic data only and abort API writes in live checks. Chromium emulation does not satisfy real Android or iPhone keyboard, gesture, audio or haptic acceptance (release gates in `PRODUCT.md`).
+Verify the populated app at Pixel 6 (412×915), 320px and short landscape, in Paper and Night. Stress long, unbreakable and non-Latin names, four-digit counts and loads, many sets, empty/one/large histories and enlarged text; measure overflow, reachable 44px actions and chart labels, then inspect screenshots. Use synthetic data; abort API writes in live checks. Chromium emulation does not satisfy real Android or iPhone keyboard, gesture, audio or haptic acceptance (release gates in `PRODUCT.md`).

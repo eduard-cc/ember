@@ -24,7 +24,7 @@ Start a template or repeat a historical workout. Adjust prefilled weight/repetit
 
 Weighted, assisted, bodyweight, duration and cardio exercise rows are supported; broader cardio workflows remain future scope.
 
-Excluded unless the owner changes it: rest timers, notifications required for core use, nutrition, body-part measurements, social features, watch support, streaks and milestone counts, manual Sync Now, a Backup & Recovery panel, a user-facing export flow, and in-app flagging, exclusion or data-cleanup controls.
+Excluded unless the owner changes it: rest timers, alerts, notifications required for core use, nutrition, body-part measurements, social features, watch support, streaks and milestone counts, manual Sync Now, a Backup & Recovery panel, a user-facing export flow, and in-app flagging, exclusion or data-cleanup controls.
 
 Active-workout notification: silent ("Workout active", the start time, "Tap to resume"; never exercise names or loads), on by default where the browser supports service-worker notifications (Android Chrome; iPhone and iPad on iOS 16.4+ once added to the Home Screen). The OS permission is asked once, from the first Start workout tap; logging never waits on it. A swiped-away notification stays away while Ember is in the background and returns when Ember is opened or brought back; it clears on finish, discard, replacement or switching it off, and a tap opens the logger. It is an ordinary notification: never promise a live timer, Live Activity or guaranteed ongoing panel.
 
