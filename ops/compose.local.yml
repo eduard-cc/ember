@@ -2,7 +2,9 @@
 name: ember-local
 services:
   postgres:
-    image: postgres:17.12-bookworm
+    # The one PostgreSQL pin, by tag and digest; ops/postgres-image.sh reads it for the scripts
+    # and CI.
+    image: postgres:17.12-bookworm@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536
     container_name: ember-postgres
     # The live app depends on it: start with ember-docker.service after a reboot.
     restart: unless-stopped

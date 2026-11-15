@@ -15,8 +15,8 @@ here=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
 # shellcheck source=ops/docker-host.sh
 source "$here/docker-host.sh"
 
-# The same pin as ops/compose.local.yml (checked by apps/web/tests/postgres-image.test.ts).
-postgres=postgres:17.12-bookworm
+# shellcheck source=ops/postgres-image.sh
+source "$here/postgres-image.sh"
 run=ember-image-smoke-$$-$RANDOM
 db=$run-db
 app=$run-app
@@ -41,7 +41,7 @@ node=$(docker run --rm --network none "${hardened[@]}" --entrypoint node "$image
 docker network create --internal "$run" >/dev/null
 docker run -d --name "$db" --network "$run" --network-alias ember-postgres \
 	-e POSTGRES_USER=ember_smoke -e POSTGRES_PASSWORD=synthetic-smoke-only -e POSTGRES_DB=ember_smoke \
-	"$postgres" >/dev/null
+	"$POSTGRES_IMAGE" >/dev/null
 # Over TCP: the server initdb starts first listens on its socket only.
 for _ in {1..60}; do
 	docker exec "$db" pg_isready -q -h 127.0.0.1 -U ember_smoke -d ember_smoke && break

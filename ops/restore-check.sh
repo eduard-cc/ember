@@ -8,11 +8,10 @@ archive=$1; target=$2
 [[ -f "$archive" && ! -L "$archive" ]] || { printf '%s\n' 'Archive must be a regular non-symlink file.' >&2; exit 1; }
 # shellcheck source=ops/docker-host.sh
 source "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/docker-host.sh"
+# shellcheck source=ops/postgres-image.sh
+source "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/postgres-image.sh"
 container=ember-postgres
-actual=$(docker inspect --format '{{.Config.Image}} {{.State.Health.Status}} {{range (index .NetworkSettings.Ports "5432/tcp")}}{{.HostIp}}:{{.HostPort}}{{end}}' "$container")
-# 55439 on the owner's development daemon, 55438 in the service account's (live) daemon.
-expected='postgres:17.12-bookworm healthy 127.0.0.1'
-[[ "$actual" == "$expected:55439" || "$actual" == "$expected:55438" ]] || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
+postgres_container_pinned || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
 # Preflight never mutates an existing target; validation and creation both fail closed.
 exists=$(docker exec "$container" sh -c 'psql -U "$POSTGRES_USER" -d postgres -Atc "SELECT count(*) FROM pg_database WHERE datname='\''$1'\''"' sh "$target")
 [[ "$exists" == 0 ]] || { printf '%s\n' 'Refusing existing database; restore checks require a fresh target.' >&2; exit 1; }
@@ -27,4 +26,4 @@ created=true
 docker exec -i "$container" sh -c 'exec pg_restore -U "$POSTGRES_USER" -d "$1" --single-transaction --exit-on-error --no-owner --no-acl' sh "$target" < "$archive"
 docker exec "$container" sh -c 'exec psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.records"' sh "$target" > /dev/null
 created=false
-printf '%s\n' 'Restored into isolated validation database; logical comparison remains the caller’s responsibility.'
+printf '%s\n' "Restored into isolated validation database; logical comparison remains the caller's responsibility."
