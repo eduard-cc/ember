@@ -1,6 +1,6 @@
 # Ember web agent instructions
 
-The React PWA: React 19 + TypeScript, Vite, Tailwind v4 with shadcn-style Radix wrappers, Dexie for local storage, Vitest and Playwright. Paths below are relative to `apps/web` unless they start at the repository root. Repo-wide rules (product direction, analytics invariants, production data, privacy, writing tests) are in the root `AGENTS.md`.
+The React PWA: React 19 + TypeScript, Vite, Tailwind v4 with shadcn-style Radix wrappers, Dexie for local storage, Vitest and Playwright. Paths below are relative to `apps/web` unless they start at the repository root. Repo-wide rules (analytics invariants, architecture, production data, privacy, writing tests) are in the root `AGENTS.md`; product rules in `PRODUCT.md`.
 
 ## Read before touching
 
