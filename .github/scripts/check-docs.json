@@ -1,0 +1,104 @@
+{
+  "docs": ["**/README.md", "**/AGENTS.md", "**/PRODUCT.md", "**/DESIGN.md", "**/docs/**/*.md"],
+  "extensions": [
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".json",
+    ".md",
+    ".sh",
+    ".py",
+    ".yml",
+    ".yaml",
+    ".css",
+    ".html",
+    ".sql",
+    ".toml"
+  ],
+  "budgets": [
+    {
+      "pattern": "README.md",
+      "words": 300
+    },
+    {
+      "pattern": "AGENTS.md",
+      "words": 1000
+    },
+    {
+      "pattern": "apps/*/AGENTS.md",
+      "words": 1400
+    },
+    {
+      "pattern": "**/DESIGN.md",
+      "words": 3500
+    },
+    {
+      "pattern": "**/PRODUCT.md",
+      "words": 1200
+    },
+    {
+      "pattern": "ops/README.md",
+      "words": 2500
+    }
+  ],
+  "defaultBudget": 2500,
+  "overrides": {
+    "AGENTS.md": {
+      "words": 1250,
+      "reason": "the four protected sections and the shared Writing tests section stay word for word"
+    }
+  },
+  "allowMissing": [
+    {
+      "paths": ["**/dist/**", "**/dist-e2e/**"],
+      "reason": "build output, created by the build and git-ignored"
+    },
+    {
+      "paths": ["apps/api/contracts/**"],
+      "reason": "compiled shared contracts, created by contracts:build and git-ignored"
+    },
+    {
+      "paths": ["**/node_modules/**"],
+      "reason": "installed by npm ci"
+    },
+    {
+      "paths": ["**/playwright-pwa-report/**", "**/test-results/**"],
+      "reason": "test output, git-ignored"
+    },
+    {
+      "paths": ["apps/api/.env", "apps/api/.postgres.env"],
+      "reason": "local settings each checkout creates, git-ignored"
+    },
+    {
+      "paths": ["origin/main"],
+      "reason": "a git ref, not a path"
+    },
+    {
+      "paths": ["ghcr.io/eduard-cc/ember"],
+      "reason": "the container image name, not a path"
+    },
+    {
+      "paths": ["PRODUCT.md", "DESIGN.md"],
+      "docs": ["AGENTS.md"],
+      "reason": "names a kind of living doc, not one file"
+    },
+    {
+      "paths": ["package.json"],
+      "docs": ["README.md"],
+      "reason": "names each app's package.json, not one file"
+    },
+    {
+      "paths": ["trial.js", "index.html", "sw.js"],
+      "docs": ["docs/ci-and-images.md"],
+      "reason": "files inside the built image"
+    },
+    {
+      "paths": ["dist/png", "src/images-png-unknown"],
+      "docs": ["apps/web/docs/catalog.md"],
+      "reason": "paths in the external Everkinetic source checkout"
+    }
+  ]
+}
