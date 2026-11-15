@@ -1497,12 +1497,12 @@
     "images": [
       {
         "file": "seated-row-machine-0.webp",
-        "width": 191,
+        "width": 184,
         "height": 240
       },
       {
         "file": "seated-row-machine-1.webp",
-        "width": 191,
+        "width": 184,
         "height": 240
       }
     ],
@@ -1510,11 +1510,11 @@
       {
         "kind": "illustration",
         "title": "Seated Row (Machine)",
-        "author": "Ember (AI-assisted, gpt-image-2)",
-        "license": "app-owned",
-        "licenseUrl": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md#app-owned-illustrations",
+        "author": "Ember (AI-assisted, after Everkinetic)",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
         "url": "https://github.com/eduard-cc/ember/blob/main/apps/web/docs/catalog.md",
-        "changes": "AI-assisted illustration made for Ember, not an Everkinetic or wger work; cropped, resized, recoloured and line width normalised; hand-drawn line texture added (pencil-v1, default)"
+        "changes": "AI-assisted illustration made for Ember after Everkinetic's drawing style, with Everkinetic drawings of other exercises as style references; cropped, resized, recoloured and line width normalised; hand-drawn line texture added (pencil-v1, default)"
       }
     ]
   },
