@@ -48,6 +48,14 @@ def diagonal(d):
     d.line((60, 500, 840, 700), fill=0, width=12)
 
 
+def cable(d):
+    """A thick frame with hairline cables beside it, at every sub-pixel offset of the mask grid:
+    the cables sit at the minimum line width."""
+    d.rectangle((60, 100, 170, 1100), outline=0, width=14)
+    for i in range(8):
+        d.line((300 + 61 * i, 120, 300 + 61 * i + i, 1080), fill=0, width=2)
+
+
 def box(d):
     """A large rectangle: corners, but no T-junction."""
     d.rectangle((100, 300, 800, 1000), outline=0, width=12)
@@ -76,7 +84,7 @@ def rings(d):
 
 
 FIGURE, BAR, DIAGONAL, TEE, RINGS = png(figure), png(bar), png(diagonal), png(tee), png(rings)
-BOX, FRAME = png(box), png(frame)
+BOX, FRAME, CABLE = png(box), png(frame), png(cable)
 # normalised_mask(FIGURE) and normalised_mask(FIGURE, box) before the pass existed (Pillow 12/13 builds agree):
 # the licensed path (no line level) must keep producing exactly these bytes.
 PLAIN_SHA = '0784aed3c752c0a615465a3e1cd28e35efcc64b10d1ffc9b7e896da2ae119e45'
@@ -194,6 +202,12 @@ class NoBrokenStrokes(unittest.TestCase):
             margin = round(width * pencil.LEVELS[level]['taper_len'] * 2.5 / 240) + 4
             for x in range(margin, width - margin):
                 self.assertTrue(any(row[x] for row in grid), (level, x))
+
+    def test_a_hairline_cable_never_breaks(self):
+        for level in ('light', 'default', 'strong'):
+            grid = ink(normalised_mask(CABLE, line=level)[0])
+            pieces = sorted(cells for cells, _ in components(grid))
+            self.assertEqual(len(pieces), 9, (level, pieces))  # the frame and eight cables
 
     def test_only_the_stem_of_a_t_may_lift_off_never_the_bar(self):
         for level in ('light', 'default', 'strong'):

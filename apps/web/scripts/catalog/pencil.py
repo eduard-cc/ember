@@ -27,7 +27,9 @@ from PIL import Image
 
 VERSION = 'pencil-v1'
 DEFAULT_LEVEL = 'default'
-_SHARED = dict(width_sigma=5.0, width_min=0.55, min_width=0.9, jitter_sigma=0.5, taper_len=4.0,
+# min_width is stroke.MIN_WIDTH: outside tapers no line gets thinner than the plain redraw's
+# thinnest line, so hairlines (cables, ropes) only swell and never break into dashes.
+_SHARED = dict(width_sigma=5.0, width_min=0.55, min_width=1.2, jitter_sigma=0.5, taper_len=4.0,
                taper_tip=0.3, junction_len=5.0, gap_min_seg=8.0, gap_min_hole=600.0, gap_tip=0.6,
                fill_width=5.0, min_paper=3.0)
 LEVELS = {
