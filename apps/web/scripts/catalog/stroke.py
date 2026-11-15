@@ -29,6 +29,7 @@ INK = 96  # binarisation threshold on 0-255 ink
 FILL = 2.5  # past this many typical half-widths a shape is a solid fill: kept, not rescaled
 MIN_WIDTH = 1.2  # thinnest redrawn line, in mask pixels
 ROUNDS = 4
+TEXTURE_ROUNDS = 6  # the line pass shifts a little with each factor, so it converges more slowly
 
 
 def _lut(rule):
@@ -181,13 +182,15 @@ def work_box(box, pad):
             margin + max(1, round(height * scale)) + pad)
 
 
-def normalise(image, measure, box=None):
+def normalise(image, measure, box=None, texture=None):
     """Redraw a white-ground drawing (PIL image or encoded bytes) with STROKE_TARGET-wide lines.
 
     `measure(png_bytes)` returns the mask line width of a candidate (stroke_width of its
     line_mask). The drawing is cropped to its ink, or to `box` (source pixels) when given, so
-    drawings normalised with one box share one scale. Returns the redrawn drawing as
-    white-ground greyscale PNG bytes.
+    drawings normalised with one box share one scale. `texture` = (level, seed) adds the
+    hand-drawn line pass (pencil.py) to the redraw, so the tuned width is measured after it;
+    without it the redraw is unchanged. Returns the redrawn drawing as white-ground greyscale PNG
+    bytes.
     """
     ink = _ink(image)
     ink = ink.crop(_ink_box(ink) if box is None else box)
@@ -205,27 +208,66 @@ def normalise(image, measure, box=None):
     thresholds = _dither(binary.size)
     unit = WORK / MASK_SIDE
 
-    def draw(factor):
-        def line(d):
-            return max(1.0, (max(MIN_WIDTH * unit, (2 * d - 1) * factor) + 1) / 2)
+    fill = FILL * typical
+    if texture is not None:
+        import numpy as np  # only the hand-drawn line pass needs numpy
+        import pencil
+        centre_px = np.asarray(skeleton) > 0
+        half_width = np.asarray(distance).astype(np.float32)
+        scale_px, floor_px, jitter_px, cut_px, min_paper = pencil.plan(
+            centre_px, half_width, unit, *texture)
+        drawn = centre_px & ~cut_px
+        thresholds_px = np.asarray(thresholds)
 
-        whole, fraction = [0], [0]
-        fill = FILL * typical
-        for d in range(1, 256):
-            # Past the fill threshold the shape keeps its drawn extent beyond the rescaled
-            # line, so a stroke widening into a fill stays continuous.
-            radius = line(d) if d <= fill else line(fill) + d - fill
-            whole.append(int(radius))
-            fraction.append(min(255, round((radius - int(radius)) * 256)))
-        bump = ImageChops.subtract(radii.point(fraction), thresholds).point(lambda v: 1 if v else 0)
-        target = ImageChops.add(radii.point(whole), ImageChops.multiply(bump, centre.point(lambda v: 255 * v)))
-        target = target.point(lambda v: min(v, 255))
+    def line(d, factor):
+        return max(1.0, (max(MIN_WIDTH * unit, (2 * d - 1) * factor) + 1) / 2)
+
+    def paint(target):
         present = [r for r, count in enumerate(target.histogram()) if count and r]
         lines = Image.new('L', binary.size, 0)
         for r in range(max(present, default=0), 0, -1):
             lines = ImageChops.lighter(lines, target.point(lambda v, r=r: 255 if v == r else 0))
             if r > 1:
                 lines = _step('dilate', lines, r)
+        return lines
+
+    def plain(factor):
+        whole, fraction = [0], [0]
+        for d in range(1, 256):
+            # Past the fill threshold the shape keeps its drawn extent beyond the rescaled
+            # line, so a stroke widening into a fill stays continuous.
+            radius = line(d, factor) if d <= fill else line(fill, factor) + d - fill
+            whole.append(int(radius))
+            fraction.append(min(255, round((radius - int(radius)) * 256)))
+        bump = ImageChops.subtract(radii.point(fraction), thresholds).point(lambda v: 1 if v else 0)
+        target = ImageChops.add(radii.point(whole), ImageChops.multiply(bump, centre.point(lambda v: 255 * v)))
+        return paint(target.point(lambda v: min(v, 255)))
+
+    def textured(factor):
+        """The hand-drawn line pass: each centre pixel's planned width, taper, jitter and gaps."""
+        d = half_width[drawn]
+        width = np.maximum(MIN_WIDTH * unit, (2 * d - 1) * factor) * scale_px[drawn]
+        jitter = np.clip(jitter_px[drawn], -0.15 * width, 0.15 * width)
+        radius = np.maximum(1.0, np.maximum(width / 2 + jitter, floor_px[drawn] / 2) + 0.5)
+        filled = line(fill, factor) + d - fill
+        radius = np.where(d > fill, filled, radius)  # solid fills keep their drawn extent
+        whole = np.floor(radius)
+        fraction = np.minimum(255, np.round((radius - whole) * 256))
+        target_px = np.zeros(centre_px.shape, np.float64)
+        target_px[drawn] = whole + (fraction > thresholds_px[drawn])
+        lines = paint(Image.fromarray(np.minimum(target_px, 255).astype(np.uint8)))
+        # Never fill paper narrower than `min_paper` in the plain redraw (hands, laces, cable pairs).
+        steps = max(1, round(min_paper / 2))
+        paper = ImageOps.invert(plain(factor))
+        opened = paper
+        for i in range(steps):
+            opened = _step('erode', opened, i)
+        for i in range(steps):
+            opened = _step('dilate', opened, i)
+        return ImageChops.subtract(lines, ImageChops.subtract(paper, opened))
+
+    def draw(factor):
+        lines = plain(factor) if texture is None else textured(factor)
         lines = lines.filter(ImageFilter.GaussianBlur(unit / 4))
         buffer = io.BytesIO()
         ImageOps.invert(lines).save(buffer, 'PNG')
@@ -233,7 +275,7 @@ def normalise(image, measure, box=None):
 
     factor = STROKE_TARGET * unit / (2 * typical - 1)
     best = None
-    for _ in range(ROUNDS):
+    for _ in range(ROUNDS if texture is None else TEXTURE_ROUNDS):
         png = draw(factor)
         width = measure(png)
         if width <= 0:

@@ -81,6 +81,20 @@ Uniform filters can't do this: `MinFilter` only thickens and merges nearby lines
 `MaxFilter` erases fine interior lines. Thickening closes gaps narrower than the new
 line width, so judge dense machines and chains on the normalised mask, not the raw PNG.
 
+AI-assisted drawings also get a hand-drawn line pass (`scripts/catalog/pencil.py`,
+`pencil-v1`) inside that redraw, so their lines read like Everkinetic's: width swells and
+thins along a line, some free ends taper, a stem thins into the line it meets and at some
+T-junctions stops just short of it. The bar of a T is never thinned or cut, at most one gap
+opens per junction, small closed parts stay closed, jitter stays within ±15% of the line's width
+and paper narrower than 3 mask px is never filled. The tuning loop measures width after the
+pass (six rounds), so the 2.1px target and the band test hold. It is seeded from each source
+PNG's SHA-256, so reruns give the same bytes. Level `default` applies unless a QA record sets
+`"line": "light" | "default" | "strong" | "off"` (`off` for a drawing whose small parts
+suffer); the manifest lists each `line` and the credit's `changes` note names it. Licensed
+drawings never get the pass. It needs numpy (built with numpy 2.5 and Pillow 13; other versions may
+shift bytes); `scripts/catalog/generate.py` runs on Pillow alone. Its tests
+(`scripts/catalog/test_pencil.py`) run locally, not in CI.
+
 ## App-owned illustrations
 
 Missing illustrations may be generated specifically for Ember and are explicitly
@@ -123,8 +137,9 @@ refuses it unless the exercise has that licensed drawing.
 `~/.cache/ember-catalog/generated/qa/pull-up-assisted.json` reuses the `chin-up-assisted-*.png` poses (same
 machine): redrawing that pair means updating both records' hashes.
 
-Reproduce the bundled additions (Pillow with WebP support and the repository's
-Node/Prettier dependencies from `NODE_ENV=development npm ci --include=dev` required):
+Reproduce the bundled additions (Pillow with WebP support, numpy for the line pass, and the
+repository's Node/Prettier dependencies from `NODE_ENV=development npm ci --include=dev`
+required):
 
 ```sh
 python3 scripts/catalog/generated.py
@@ -146,7 +161,8 @@ Each bundled drawing is credited from its QA record's `credit` (enforced by
 `Ember (AI-assisted, gpt-image-2)`, license `app-owned`, with an adaptation note
 saying it is AI-assisted and not an Everkinetic or wger work; with `after-everkinetic`,
 `Ember (AI-assisted, after Everkinetic)`, CC BY-SA 4.0, with an adaptation note naming
-the Everkinetic style references.
+the Everkinetic style references. Both notes end with the line pass version and level
+("hand-drawn line texture added (pencil-v1, default)") unless the record sets `off`.
 
 ## Style
 

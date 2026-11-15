@@ -194,7 +194,7 @@ describe('bundled exercise catalog', () => {
     const manifest = JSON.parse(
       readFileSync('scripts/catalog/generated-manifest.json', 'utf8'),
     ) as {
-      exercises: {name: string; status: string; sha256?: string; credit?: string}[];
+      exercises: {name: string; status: string; sha256?: string; credit?: string; line?: string}[];
     };
     const accepted = manifest.exercises.filter((e) => e.status === 'accepted');
     expect(accepted.length).toBeGreaterThan(0);
@@ -213,6 +213,16 @@ describe('bundled exercise catalog', () => {
             : {author: 'Ember (AI-assisted, gpt-image-2)', license: 'app-owned'},
         ),
       ]);
+    }
+    // Every AI drawing records its hand-drawn line pass level, and its credit says when it was added.
+    for (const item of accepted) {
+      expect(item.line, item.name).toMatch(/^(light|default|strong|off)$/);
+      const {changes} = catalogEntry(item.name)!.sources.find(isAiDrawing)!;
+      if (item.line === 'off') expect(changes, item.name).not.toContain('line texture');
+      else
+        expect(changes, item.name).toContain(
+          `hand-drawn line texture added (pencil-v1, ${item.line})`,
+        );
     }
     // Rejected or unreviewed drawings never ship.
     for (const item of manifest.exercises.filter((e) => e.status !== 'accepted'))

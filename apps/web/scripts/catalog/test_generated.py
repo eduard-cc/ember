@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).parent))
 from generate import normalised_mask  # noqa: E402
-from generated import credit_source, load_records, pose_masks  # noqa: E402
+from generated import credit_source, line_level, load_records, pose_masks  # noqa: E402
 from stroke import STROKE_TARGET, stroke_width  # noqa: E402
 
 CANVAS = (900, 1200)
@@ -77,6 +77,33 @@ class Credits(unittest.TestCase):
              'https://creativecommons.org/licenses/by-sa/4.0/'))
         self.assertIn('Everkinetic drawings of other exercises', after['changes'])
         self.assertEqual(after['title'], 'Synthetic Lift')
+
+    def test_the_credit_names_the_line_pass_and_its_level(self):
+        for credit in (None, 'after-everkinetic'):
+            self.assertIn('hand-drawn line texture added (pencil-v1, default)',
+                          credit_source('Synthetic Lift', credit, 'default')['changes'])
+            self.assertIn('hand-drawn line texture added (pencil-v1, strong)',
+                          credit_source('Synthetic Lift', credit, 'strong')['changes'])
+            off = credit_source('Synthetic Lift', credit, 'off')['changes']
+            self.assertNotIn('line texture', off)
+            self.assertTrue(off.endswith('cropped, resized, recoloured and line width normalised'))
+
+    def test_an_unknown_line_level_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / 'qa').mkdir()
+            (Path(tmp) / 'qa' / 'synthetic-lift.json').write_text(
+                json.dumps({'status': 'accepted', 'line': 'heavy'}))
+            with self.assertRaisesRegex(ValueError, 'unknown line level'):
+                load_records(Path(tmp))
+
+    def test_ai_drawings_get_the_default_line_pass_unless_a_record_sets_one(self):
+        self.assertEqual(line_level({}), 'default')
+        self.assertEqual(line_level({'line': 'light'}), 'light')
+        self.assertEqual(line_level({'line': 'off'}), 'off')
+        default = pose_masks([LOW, TALL], shared_scale=True, line=line_level({}))
+        self.assertNotEqual(default, pose_masks([LOW, TALL], shared_scale=True))
+        self.assertEqual(pose_masks([LOW, TALL], shared_scale=True, line='off'),
+                         pose_masks([LOW, TALL], shared_scale=True))
 
     def test_an_unknown_credit_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:
