@@ -92,8 +92,9 @@
       "name": "Chin Up (Assisted)",
       "status": "accepted",
       "attempts": 13,
-      "sha256": "2faa3e5a5826205cc05762b9586415a7874d047805c6e6d17f5e86246fbc2c75",
-      "startSha256": "56f8c05ea9db70f698cdef5b6e2c682db56822ba73865aab69a458863dff1407",
+      "sha256": "4aa24b88ce23ab77331d24fb7207603745561856b817866cafc32db48532e0d7",
+      "startSha256": "1b5d0be8c652af51cc19e0b9c1ea25a50167e73a4dbb199848de44eb3c7f35e2",
+      "sharedScale": true,
       "line": "default"
     },
     {
@@ -115,9 +116,11 @@
     {
       "name": "Crunch (Machine)",
       "status": "accepted",
-      "attempts": 4,
-      "sha256": "f948c48368fa6e67c72b4c6a2734a7664288c4b6e55492fae956d2067e367aab",
-      "startSha256": "4ade0cfa8903c175bdb18269eb48d64e3624d972a2b3b2bb1a07c36ac9cb8a6a",
+      "attempts": 7,
+      "sha256": "226f927b8a10fd9a9f0aca1424cb0c4256a357e564e731d1624ab59a3a1e7b67",
+      "startSha256": "9def202c498299f92b9376361b2848a24b61a683ccd5358b720db47a3985da29",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
       "line": "default"
     },
     {
@@ -265,8 +268,9 @@
       "name": "Lat Pulldown (Cable)",
       "status": "accepted",
       "attempts": 12,
-      "sha256": "69b3e3ca1a0d5812362c8697ec372c1c90ff58541475e52ff5362018796e2f34",
-      "startSha256": "a0d9109faa3f2c322d87cba4fa9c56026715ea0995ffb72f04766b15e588b288",
+      "sha256": "7159af0c7850821ace9fbdb7c1580e3a8527cd162f6a75af9a15aa740b303c4d",
+      "startSha256": "9175b16e7139298c976ee526234075203d6f4116cda42c3de135277e3065a1b2",
+      "sharedScale": true,
       "line": "default"
     },
     {
@@ -370,16 +374,19 @@
       "name": "Pull Up (Assisted)",
       "status": "accepted",
       "attempts": 0,
-      "sha256": "2faa3e5a5826205cc05762b9586415a7874d047805c6e6d17f5e86246fbc2c75",
-      "startSha256": "56f8c05ea9db70f698cdef5b6e2c682db56822ba73865aab69a458863dff1407",
+      "sha256": "4aa24b88ce23ab77331d24fb7207603745561856b817866cafc32db48532e0d7",
+      "startSha256": "1b5d0be8c652af51cc19e0b9c1ea25a50167e73a4dbb199848de44eb3c7f35e2",
+      "sharedScale": true,
       "line": "default"
     },
     {
       "name": "Pullover (Machine)",
       "status": "accepted",
-      "attempts": 11,
-      "sha256": "da097d56ee3a62c0af4324f82a1c8e18b9d9a4df886f88d4d869294f30e7ea92",
-      "startSha256": "3e72ba75100f8bfe90dbe02b6bec34051ae4ac8249b4802cd0865e47eb1169e6",
+      "attempts": 14,
+      "sha256": "596fbf5bc52a39e763f0c0da71c235073928850fc8e7af398f3637ab591e163c",
+      "startSha256": "1ce17c5652dfb47b802229aedf774b4d7f8c494b5201a88966355c47eb4972f9",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
       "line": "default"
     },
     {
