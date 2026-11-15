@@ -49,7 +49,7 @@ test('compiled API binds loopback and serves auth, replay and readiness over TCP
 		});
 		assert.equal(login.status, 201);
 		const cookie = login.headers.get('set-cookie')!.split(';')[0];
-		const session = (await login.json()) as any;
+		const session = await login.json();
 		assert.equal(session.ownerId, 'owner');
 		const id = 'smoke-' + randomUUID();
 		const operation = {
@@ -75,8 +75,10 @@ test('compiled API binds loopback and serves auth, replay and readiness over TCP
 		const result = await first.json();
 		assert.deepEqual(await (await send()).json(), result);
 		assert.equal((await fetch(url + '/sync/changes', {headers: {Cookie: cookie}})).status, 200);
-	} finally {
 		child.kill('SIGTERM');
+		assert.deepEqual(await exited, [0, null], 'SIGTERM closes the app and exits cleanly');
+	} finally {
+		if (child.exitCode === null && child.signalCode === null) child.kill('SIGTERM');
 		await exited;
 	}
 });

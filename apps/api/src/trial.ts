@@ -50,9 +50,14 @@ async function main() {
 			next();
 		}
 	});
-	const shutdown = async () => {
-		await app.close();
-		process.exit(0);
+	const shutdown = () => {
+		app.close().then(
+			() => process.exit(0),
+			() => {
+				console.error('Ember trial shutdown failed');
+				process.exit(1);
+			},
+		);
 	};
 	process.once('SIGINT', shutdown);
 	process.once('SIGTERM', shutdown);
