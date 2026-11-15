@@ -85,13 +85,15 @@ AI-assisted drawings also get a hand-drawn line pass (`scripts/catalog/pencil.py
 `pencil-v1`) inside that redraw, so their lines read like Everkinetic's: width swells and
 thins along a line, some free ends taper, a stem thins into the line it meets and at some
 T-junctions stops just short of it. The bar of a T is never thinned or cut, at most one gap
-opens per junction, small closed parts stay closed, jitter is clipped to the line's own width
+opens per junction, small closed parts stay closed, jitter stays within ±15% of the line's width
 and paper narrower than 3 mask px is never filled. The tuning loop measures width after the
 pass (six rounds), so the 2.1px target and the band test hold. It is seeded from each source
 PNG's SHA-256, so reruns give the same bytes. Level `default` applies unless a QA record sets
 `"line": "light" | "default" | "strong" | "off"` (`off` for a drawing whose small parts
 suffer); the manifest lists each `line` and the credit's `changes` note names it. Licensed
-drawings never get the pass. It needs numpy; `scripts/catalog/generate.py` runs on Pillow alone.
+drawings never get the pass. It needs numpy (built with numpy 2.5 and Pillow 13; other versions may
+shift bytes); `scripts/catalog/generate.py` runs on Pillow alone. Its tests
+(`scripts/catalog/test_pencil.py`) run locally, not in CI.
 
 ## App-owned illustrations
 

@@ -12,7 +12,7 @@ measured after the pass):
 4. Gaps: at a T-junction the stem (never the bar that runs through) may stop short of the bar.
    At most one gap per junction, only on long enough lines, and a gap may open a closed shape only
    if that shape is large and not opened already, so hands, plates, pads and shoes stay closed.
-5. Edge jitter: fine seeded noise on the width, clipped to 30% of the line's own width so it can
+5. Edge jitter: fine seeded noise on the width, clipped to ±15% of the line's own width so it can
    never cut a line.
 
 `stroke.normalise` also keeps the minimum line width everywhere except inside tapers and never
