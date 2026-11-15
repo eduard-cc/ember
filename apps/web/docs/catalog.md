@@ -81,20 +81,17 @@ Uniform filters can't do this: `MinFilter` only thickens and merges nearby lines
 `MaxFilter` erases fine interior lines. Thickening closes gaps narrower than the new
 line width, so judge dense machines and chains on the normalised mask, not the raw PNG.
 
-AI-assisted drawings also get a hand-drawn line pass (`pencil.py`, version `pencil-v1`)
-inside that redraw, so their lines read like Everkinetic's: width swells and thins along a
-line, some free ends taper, a line thins as it runs into another, and at some T-junctions the
-stem stops just short of the bar. The bar of a T is never cut, at most one gap opens per
-junction, small closed parts (hands, plates, pads, shoes) stay closed, edge jitter is clipped
-to the line's own width and paper narrower than 3 mask pixels is never filled. The tuning
-loop measures the line width after the pass (six rounds instead of four), so the 2.1px
-target and the 1.7–2.7px test hold. The pass is seeded from each source PNG's SHA-256, so a
-rerun gives the same bytes. It is on at `default` for every AI-assisted drawing; a QA record
-may set `"line": "light" | "default" | "strong" | "off"` (`off` for a drawing whose small
-mechanical parts suffer). The manifest lists each drawing's `line` level and the credit's
-`changes` note names it. Licensed Everkinetic and wger drawings never get the pass
-(`generate.py` doesn't ask for it). The pass needs numpy as well as Pillow;
-`generate.py` without it still runs on Pillow alone.
+AI-assisted drawings also get a hand-drawn line pass (`scripts/catalog/pencil.py`,
+`pencil-v1`) inside that redraw, so their lines read like Everkinetic's: width swells and
+thins along a line, some free ends taper, a stem thins into the line it meets and at some
+T-junctions stops just short of it. The bar of a T is never thinned or cut, at most one gap
+opens per junction, small closed parts stay closed, jitter is clipped to the line's own width
+and paper narrower than 3 mask px is never filled. The tuning loop measures width after the
+pass (six rounds), so the 2.1px target and the band test hold. It is seeded from each source
+PNG's SHA-256, so reruns give the same bytes. Level `default` applies unless a QA record sets
+`"line": "light" | "default" | "strong" | "off"` (`off` for a drawing whose small parts
+suffer); the manifest lists each `line` and the credit's `changes` note names it. Licensed
+drawings never get the pass. It needs numpy; `scripts/catalog/generate.py` runs on Pillow alone.
 
 ## App-owned illustrations
 
