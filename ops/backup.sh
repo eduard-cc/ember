@@ -10,11 +10,10 @@ parent=$(dirname -- "$output")
 [[ -d "$parent" && $(stat -c %a "$parent") == 700 ]] || { printf '%s\n' 'Archive parent must be a private 0700 directory.' >&2; exit 1; }
 # shellcheck source=ops/docker-host.sh
 source "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/docker-host.sh"
+# shellcheck source=ops/postgres-image.sh
+source "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/postgres-image.sh"
 container=ember-postgres
-actual=$(docker inspect --format '{{.Config.Image}} {{.State.Health.Status}} {{range (index .NetworkSettings.Ports "5432/tcp")}}{{.HostIp}}:{{.HostPort}}{{end}}' "$container")
-# 55439 on the owner's development daemon, 55438 in the service account's (live) daemon.
-expected='postgres:17.12-bookworm healthy 127.0.0.1'
-[[ "$actual" == "$expected:55439" || "$actual" == "$expected:55438" ]] || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
+postgres_container_pinned || { printf '%s\n' 'Refusing unexpected PostgreSQL container/image/endpoint.' >&2; exit 1; }
 temporary=$(mktemp "$parent/.ember-dump.XXXXXX")
 trap 'rm -f -- "$temporary"' EXIT
 docker exec "$container" sh -c 'exec pg_dump -U "$POSTGRES_USER" -d "$1" --format=custom --no-owner --no-acl --exclude-table-data=public.sessions' sh "$db" > "$temporary"

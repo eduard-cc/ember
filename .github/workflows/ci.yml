@@ -136,20 +136,6 @@ jobs:
     timeout-minutes: 10
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
-    services:
-      postgres:
-        image: postgres:17.12-bookworm
-        env:
-          POSTGRES_USER: ember_ci
-          POSTGRES_PASSWORD: synthetic-ci-only
-          POSTGRES_DB: ember_dev
-        ports:
-          - '127.0.0.1:55439:5432'
-        options: >-
-          --health-cmd "pg_isready -h 127.0.0.1 -U ember_ci -d ember_dev"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     env:
       DOTENV_CONFIG_PATH: /dev/null
       EMBER_HOST: 127.0.0.1
@@ -172,12 +158,23 @@ jobs:
           cache-dependency-path: |
             apps/web/package-lock.json
             apps/api/package-lock.json
-      # The backup/restore regression test deliberately verifies this exact name,
-      # image and loopback port. Do not weaken the host-side isolation checks.
-      - name: Name the isolated test service
-        env:
-          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
-        run: docker rename "$POSTGRES_CONTAINER" ember-postgres
+      # The image ops/compose.local.yml pins, under the name and loopback port the backup/restore
+      # regression test verifies. Started here rather than as a service container, which cannot
+      # read the pin from the repository. Do not weaken the host-side isolation checks.
+      - name: Start the isolated test database
+        run: |
+          source ops/postgres-image.sh
+          docker run -d --name ember-postgres -p 127.0.0.1:55439:5432 \
+            -e POSTGRES_USER=ember_ci -e POSTGRES_PASSWORD=synthetic-ci-only -e POSTGRES_DB=ember_dev \
+            --health-cmd 'pg_isready -h 127.0.0.1 -U ember_ci -d ember_dev' \
+            --health-interval 2s --health-timeout 5s --health-retries 30 \
+            "$POSTGRES_IMAGE"
+          for _ in {1..60}; do
+            [[ $(docker inspect --format '{{.State.Health.Status}}' ember-postgres) == healthy ]] && exit 0
+            sleep 1
+          done
+          echo 'PostgreSQL did not become healthy' >&2
+          exit 1
       # Tests connect as an unprivileged role, as in local development; only the
       # backup scripts use the service superuser through docker exec.
       - name: Create the unprivileged development role
@@ -297,7 +294,7 @@ jobs:
       - run: >-
           shellcheck -x ops/host/setup-account.sh ops/host/setup-service-user.sh ops/install.sh ops/isolation-check.sh
           ops/notify.sh ops/test-install.sh ops/image-smoke.sh ops/ghcr-retention.sh ops/start.sh ops/lib.sh
-          ops/docker-host.sh ops/deploy.sh ops/rollback.sh ops/auto-deploy.sh ops/test-deploy.sh ops/test-auto-deploy.sh
+          ops/docker-host.sh ops/postgres-image.sh ops/backup.sh ops/restore-check.sh ops/deploy.sh ops/rollback.sh ops/auto-deploy.sh ops/test-deploy.sh ops/test-auto-deploy.sh
           ops/test-release-switch.sh
       - run: bash ops/test-install.sh
       - run: bash ops/test-deploy.sh

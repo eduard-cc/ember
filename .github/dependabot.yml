@@ -68,8 +68,9 @@ updates:
       - dependency-name: node
         update-types: ['version-update:semver-major']
 
-  # The PostgreSQL image in ops/compose.local.yml. A new minor needs a backup and a container
-  # recreate (ops/README.md, "PostgreSQL version"), so its PR carries the hold label and is never merged as is.
+  # The PostgreSQL image in ops/compose.local.yml, pinned by tag and digest. A new minor needs a backup
+  # and a container recreate (ops/README.md, "PostgreSQL version"), so its PR carries the hold label and
+  # is never merged as is.
   # No cooldown: minors carry security fixes, and a person applies them anyway.
   - package-ecosystem: docker-compose
     directory: /ops
