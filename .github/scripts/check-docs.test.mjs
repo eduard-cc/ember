@@ -52,12 +52,13 @@ test('reports an npm script missing from the package it runs in', () => {
   assert.deepEqual(
     run({
       'apps/demo/docs/guide.md':
-        'Run `npm run lint` and `npm --prefix apps/demo run test:e2e`.\n\n```sh\nnpm --prefix apps/none run build\n```\n',
+        'Run `npm run lint` and `npm --prefix apps/demo run test:e2e`.\n\n```sh\nnpm --prefix apps/none run build\n```sh\nnpm run deploy\n```\n',
     }),
     [
       'apps/demo/docs/guide.md:1: `npm run lint`: no such script in apps/demo/package.json',
       'apps/demo/docs/guide.md:1: `npm run test:e2e`: no such script in apps/demo/package.json',
       'apps/demo/docs/guide.md:4: `npm run build`: no package.json for apps/none',
+      'apps/demo/docs/guide.md:6: `npm run deploy`: no such script in apps/demo/package.json',
     ],
   );
 });

@@ -138,7 +138,9 @@ export function* codeSegments(text) {
     const lineNumber = index + 1;
     const fenceMatch = /^\s*(`{3,}|~{3,})/.exec(line);
     if (fence) {
-      if (fenceMatch && fenceMatch[1][0] === fence[0] && fenceMatch[1].length >= fence.length) {
+      // A closing fence is the fence character alone (at least as many), with no info string.
+      const close = /^\s*(`{3,}|~{3,})\s*$/.exec(line);
+      if (close && close[1][0] === fence[0] && close[1].length >= fence.length) {
         fence = null;
       } else {
         yield {kind: 'block', text: line, line: lineNumber};
@@ -294,9 +296,15 @@ function main(argv) {
     config,
   });
   const annotate = process.env.GITHUB_ACTIONS === 'true';
+  // Workflow-command escaping, as the Actions toolkit does it.
+  const escapeData = (value) =>
+    String(value).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+  const escapeProperty = (value) => escapeData(value).replaceAll(':', '%3A').replaceAll(',', '%2C');
   for (const {file, line, message} of problems) {
     console.error(
-      annotate ? `::error file=${file},line=${line}::${message}` : `${file}:${line}: ${message}`,
+      annotate
+        ? `::error file=${escapeProperty(file)},line=${line}::${escapeData(message)}`
+        : `${file}:${line}: ${message}`,
     );
   }
   if (problems.length > 0) {
