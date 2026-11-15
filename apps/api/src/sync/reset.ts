@@ -9,7 +9,7 @@ import {workout} from './schema';
 const INITIAL_EPOCH = 'initial';
 
 export async function currentEpoch(db: DataSource | EntityManager, owner: string): Promise<string> {
-	const [row] = await db.query('SELECT epoch FROM dataset_epochs WHERE owner_id=$1', [owner]);
+	const [row] = await db.query<{epoch: string}[]>('SELECT epoch FROM dataset_epochs WHERE owner_id=$1', [owner]);
 	return row?.epoch ?? INITIAL_EPOCH;
 }
 

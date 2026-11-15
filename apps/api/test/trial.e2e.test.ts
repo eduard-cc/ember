@@ -97,7 +97,7 @@ test('compiled trial serves the production shell and API on one loopback listene
 		assert.match(await html.text(), /Synthetic trial shell/);
 		const manifest = await fetch(url + '/manifest.webmanifest');
 		assert.equal(manifest.status, 200);
-		assert.equal(((await manifest.json()) as any).name, 'Synthetic trial');
+		assert.equal((await manifest.json()).name, 'Synthetic trial');
 		for (const path of [
 			'/sw.js',
 			'/assets/index-synthetic.js',
@@ -127,7 +127,7 @@ test('compiled trial serves the production shell and API on one loopback listene
 		const cookie = login.headers.get('set-cookie')!;
 		assert.match(cookie, /; Secure/);
 		assert.match(cookie, /HttpOnly/);
-		assert.equal(((await login.json()) as any).ownerId, 'owner');
+		assert.equal((await login.json()).ownerId, 'owner');
 		// Every response, shell file, API answer or 404, carries the enforced browser policy.
 		for (const path of ['/', '/sw.js', '/assets/drawing-synthetic-0-Ab_12-cd.webp', '/api/v1/health', '/private']) {
 			const response = await fetch(url + path);
@@ -151,7 +151,7 @@ test('compiled trial serves the production shell and API on one loopback listene
 		}
 		const session = await fetch(url + '/api/v1/session', {headers: {Cookie: cookie.split(';')[0]}});
 		assert.equal(session.status, 200);
-		assert.equal(((await session.json()) as any).ownerId, 'owner');
+		assert.equal((await session.json()).ownerId, 'owner');
 		for (const path of [
 			'/api/v1/missing',
 			'/api',
@@ -165,6 +165,8 @@ test('compiled trial serves the production shell and API on one loopback listene
 			'/@vite/client',
 		])
 			assert.equal((await fetch(url + path)).status, 404, path);
+		server.child.kill('SIGTERM');
+		assert.deepEqual(await server.exited, [0, null], 'SIGTERM closes the trial and exits cleanly');
 	} finally {
 		await server.stop();
 		await rm(root, {recursive: true, force: true});

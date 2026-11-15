@@ -4,9 +4,14 @@ import {config} from './config';
 async function main() {
 	const cfg = config();
 	const app = await createApp();
-	const shutdown = async () => {
-		await app.close();
-		process.exit(0);
+	const shutdown = () => {
+		app.close().then(
+			() => process.exit(0),
+			() => {
+				console.error('Ember API shutdown failed');
+				process.exit(1);
+			},
+		);
 	};
 	process.once('SIGINT', shutdown);
 	process.once('SIGTERM', shutdown);
