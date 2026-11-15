@@ -7,6 +7,7 @@ import hashlib
 import io
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -42,6 +43,11 @@ def bar(d):
     d.line((60, 600, 840, 600), fill=0, width=12)
 
 
+def diagonal(d):
+    """A long, shallow diagonal: thinning leaves staircase pixels that must not pinch it."""
+    d.line((60, 500, 840, 700), fill=0, width=12)
+
+
 def tee(d):
     """A T: a long bar and a stem that meets it."""
     d.line((100, 300, 800, 300), fill=0, width=12)
@@ -56,7 +62,7 @@ def rings(d):
         d.ellipse((x - 45, 700, x + 45, 790), outline=0, width=10)
 
 
-FIGURE, BAR, TEE, RINGS = png(figure), png(bar), png(tee), png(rings)
+FIGURE, BAR, DIAGONAL, TEE, RINGS = png(figure), png(bar), png(diagonal), png(tee), png(rings)
 # normalised_mask(FIGURE) and normalised_mask(FIGURE, box) before the pass existed (Pillow 12/13 builds agree):
 # the licensed path (no line level) must keep producing exactly these bytes.
 PLAIN_SHA = '0784aed3c752c0a615465a3e1cd28e35efcc64b10d1ffc9b7e896da2ae119e45'
@@ -139,8 +145,8 @@ class LineWidthBand(unittest.TestCase):
 
 class NoBrokenStrokes(unittest.TestCase):
     def test_a_long_line_never_breaks_or_thins_below_the_minimum_mid_stroke(self):
-        for level in ('light', 'default', 'strong'):
-            grid = ink(normalised_mask(BAR, line=level)[0])
+        for level, raw in [(level, raw) for level in ('light', 'default', 'strong') for raw in (BAR, DIAGONAL)]:
+            grid = ink(normalised_mask(raw, line=level)[0])
             self.assertEqual(len(components(grid)), 1, level)
             width = len(grid[0])
             # Away from the free ends (where tapers may thin it), every column keeps ink.
@@ -159,6 +165,33 @@ class NoBrokenStrokes(unittest.TestCase):
             row = grid[bar_rows[len(bar_rows) // 2]]
             first, last = row.index(True), len(row) - 1 - row[::-1].index(True)
             self.assertTrue(all(row[first:last + 1]), level)
+
+    def test_the_bar_of_a_t_is_not_thinned_where_the_stem_meets_it(self):
+        planned = {}
+
+        def spy(skeleton, distance, unit, level, seed):
+            planned['skeleton'], planned['scale'] = skeleton, plan(skeleton, distance, unit, level, seed)[0]
+            return plan(skeleton, distance, unit, level, seed)
+        plan = pencil.plan
+        # Strong junction thinning without width noise, so only thinning can change the planned width.
+        flat = dict(pencil.LEVELS['strong'], width_amp=0.0, jitter_amp=0.0, gap_rate=0.0)
+        with mock.patch.dict(pencil.LEVELS, {'flat': flat}), mock.patch.object(pencil, 'plan', spy):
+            normalised_mask(TEE, line='flat')
+        skeleton, scale = planned['skeleton'], planned['scale']
+        ys, xs = skeleton.nonzero()
+        bar_y = max(set(ys.tolist()), key=ys.tolist().count)
+        stem_x = int(round(float(xs[ys > bar_y + 40].mean())))
+        near_bar = skeleton.copy()
+        near_bar[:bar_y - 3] = False
+        near_bar[bar_y + 4:] = False
+        near_bar[:, :stem_x - 60] = False
+        near_bar[:, stem_x + 61:] = False
+        self.assertGreater(near_bar.sum(), 100)
+        self.assertEqual(float(scale[near_bar].min()), 1.0)
+        # The stem itself does thin as it runs into the bar.
+        stem = skeleton.copy()
+        stem[:bar_y + 4] = False
+        self.assertLess(float(scale[stem].min()), 1.0)
 
     def test_small_closed_parts_stay_closed(self):
         before = holes(ink(normalised_mask(RINGS)[0]))

@@ -57,7 +57,7 @@ def _noise(rng, shape, spacing):
     """Smooth unit-variance noise: a seeded coarse grid, bicubic-upsampled to `shape`."""
     height, width = shape
     grid = rng.standard_normal((height // spacing + 4, width // spacing + 4)).astype(np.float32)
-    image = Image.fromarray(grid, 'F').resize((grid.shape[1] * spacing, grid.shape[0] * spacing),
+    image = Image.fromarray(grid).resize((grid.shape[1] * spacing, grid.shape[0] * spacing),
                                                Image.BICUBIC)
     field = np.asarray(image, np.float32)[spacing:spacing + height, spacing:spacing + width]
     return field / (field.std() or 1)
@@ -269,7 +269,10 @@ def plan(skeleton, distance, unit, level, seed):
                 span = p['taper_len'] * unit * (0.7 + 0.6 * draws[k, 2])
                 t = p['taper_tip'] + (1 - p['taper_tip']) * np.sqrt(np.clip(along / span, 0, 1))
                 taper[ys, xs] = np.minimum(taper[ys, xs], t)
-            if kind == 'junc' and p['junction_tip'] < 1 and length >= 3 * unit:
+            # only a line that ends at another one thins; a line running through (the bar of a T,
+            # the arms of a crossing, a staircase pixel mid-line) keeps its width
+            if (kind == 'junc' and p['junction_tip'] < 1 and length >= 3 * unit
+                    and (k, side) in end_cluster and not runs_through(k, side)):
                 tip = points[0] if side == 0 else points[-1]
                 host = distance[max(0, tip[0] - 3):tip[0] + 4, max(0, tip[1] - 3):tip[1] + 4].max()
                 span = min(length / 2, p['junction_len'] * unit)
