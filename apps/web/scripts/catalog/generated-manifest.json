@@ -183,9 +183,11 @@
     {
       "name": "Glute Kickback (Machine)",
       "status": "accepted",
-      "attempts": 10,
-      "sha256": "ee7b6b62886bf95d328cb60cf7e67e17538c2b4da6766577c69514a8cbf7012f",
-      "startSha256": "408500705af4c148746181291475792da76b43b13ce2d17e9fe17ed3853a0870",
+      "attempts": 12,
+      "sha256": "3678cf584565f69314aaba4e6a14143afd4d3d383ae9fc94a07d3de48d31b672",
+      "startSha256": "387ab0c3f41223679a6dde24b5d510c7d7e90f2c0bd42a83bd75756b2beac18f",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
       "line": "default"
     },
     {
