@@ -117,8 +117,8 @@
       "name": "Crunch (Machine)",
       "status": "accepted",
       "attempts": 7,
-      "sha256": "226f927b8a10fd9a9f0aca1424cb0c4256a357e564e731d1624ab59a3a1e7b67",
-      "startSha256": "9def202c498299f92b9376361b2848a24b61a683ccd5358b720db47a3985da29",
+      "sha256": "ba919173858ed3163f0de8448b2fb04157b86029acbb42fc689937e8524821d7",
+      "startSha256": "c298f09d12c661f3e5c1e143bac10cf7ab6eb166eb1e5abb6548f6a74d9d6013",
       "sharedScale": true,
       "credit": "after-everkinetic",
       "line": "default"
@@ -305,8 +305,8 @@
       "name": "Lunge (Bodyweight)",
       "status": "accepted",
       "attempts": 9,
-      "sha256": "ff188cf500cb4f8e4e605ebb56fcd09c2bc5c9760b92fe3f3dc01d46a0ee89cd",
-      "startSha256": "5db64d8889f8c21faba2636216d290801865c92596c014e6ce8b07e6ed474281",
+      "sha256": "6f74bb9206aedb06cfa8161a41eb9d390060bd3b549f38d8b955467898b1f26f",
+      "startSha256": "c6d7ac0991b595cf44540d4738be89b418f0bf55fe656f1fa3a1821aedad0e19",
       "credit": "after-everkinetic",
       "line": "default"
     },
@@ -538,8 +538,8 @@
       "name": "Stiff Leg Deadlift (Barbell)",
       "status": "accepted",
       "attempts": 16,
-      "sha256": "297319f969546659d8a3bbc6a78695437bf3c313dc5e01613e458f77fe242ae5",
-      "startSha256": "dbb8d4a7311f49b08b1bf28840668bd382649916e34cd29629cd5ceebdbfb0d3",
+      "sha256": "d5c5f86c72762034caf14e3d339cf61253dbbd36e4747d174668b06532aac200",
+      "startSha256": "7567e97ac9dc791b761b856fe5e1ca73eb864dae61c4ef80b08d7e6a11ffcb0d",
       "credit": "after-everkinetic",
       "line": "default"
     },
