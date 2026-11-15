@@ -48,6 +48,19 @@ def diagonal(d):
     d.line((60, 500, 840, 700), fill=0, width=12)
 
 
+def box(d):
+    """A large rectangle: corners, but no T-junction."""
+    d.rectangle((100, 300, 800, 1000), outline=0, width=12)
+
+
+def frame(d):
+    """A large shape closed by four T-junctions: two bars cross between two longer posts."""
+    d.line((200, 100, 200, 1100), fill=0, width=12)
+    d.line((700, 100, 700, 1100), fill=0, width=12)
+    d.line((200, 350, 700, 350), fill=0, width=12)
+    d.line((200, 850, 700, 850), fill=0, width=12)
+
+
 def tee(d):
     """A T: a long bar and a stem that meets it."""
     d.line((100, 300, 800, 300), fill=0, width=12)
@@ -63,6 +76,7 @@ def rings(d):
 
 
 FIGURE, BAR, DIAGONAL, TEE, RINGS = png(figure), png(bar), png(diagonal), png(tee), png(rings)
+BOX, FRAME = png(box), png(frame)
 # normalised_mask(FIGURE) and normalised_mask(FIGURE, box) before the pass existed (Pillow 12/13 builds agree):
 # the licensed path (no line level) must keep producing exactly these bytes.
 PLAIN_SHA = '0784aed3c752c0a615465a3e1cd28e35efcc64b10d1ffc9b7e896da2ae119e45'
@@ -105,6 +119,33 @@ def components(grid, paper=False):
 
 def holes(grid):
     return sum(1 for cells, border in components(grid, paper=True) if not border and cells > 2)
+
+
+def planned_cuts(raw):
+    """Gap pixels pencil.plan picks for `raw` with every eligible gap forced (gap_rate 1)."""
+    planned = {}
+    plan = pencil.plan
+
+    def spy(*args):
+        result = plan(*args)
+        planned['cut'] = result[3]
+        return result
+    eager = dict(pencil.LEVELS['strong'], gap_rate=1.0)
+    with mock.patch.dict(pencil.LEVELS, {'eager': eager}), mock.patch.object(pencil, 'plan', spy):
+        normalised_mask(raw, line='eager')
+    cut = planned['cut']
+    pixels = {(int(y), int(x)) for y, x in zip(*cut.nonzero())}
+    pieces = 0
+    while pixels:
+        pieces += 1
+        stack = [pixels.pop()]
+        while stack:
+            y, x = stack.pop()
+            for q in [(y + dy, x + dx) for dy in (-1, 0, 1) for dx in (-1, 0, 1)]:
+                if q in pixels:
+                    pixels.discard(q)
+                    stack.append(q)
+    return pieces
 
 
 class LicensedDrawingsUntouched(unittest.TestCase):
@@ -192,6 +233,13 @@ class NoBrokenStrokes(unittest.TestCase):
         stem = skeleton.copy()
         stem[:bar_y + 4] = False
         self.assertLess(float(scale[stem].min()), 1.0)
+
+    def test_a_corner_is_not_a_t_and_never_gets_a_gap(self):
+        self.assertEqual(planned_cuts(BOX), 0)
+
+    def test_a_large_shape_is_opened_at_most_once(self):
+        # Four T-stems border one large enclosed shape; only one of them may lift off.
+        self.assertEqual(planned_cuts(FRAME), 1)
 
     def test_small_closed_parts_stay_closed(self):
         before = holes(ink(normalised_mask(RINGS)[0]))

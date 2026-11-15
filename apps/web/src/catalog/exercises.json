@@ -1006,7 +1006,7 @@
       },
       {
         "file": "chin-up-assisted-1.webp",
-        "width": 130,
+        "width": 131,
         "height": 240
       }
     ],
@@ -1192,7 +1192,7 @@
       },
       {
         "file": "lat-pulldown-cable-1.webp",
-        "width": 183,
+        "width": 184,
         "height": 240
       }
     ],
@@ -1378,7 +1378,7 @@
       },
       {
         "file": "pull-up-assisted-1.webp",
-        "width": 130,
+        "width": 131,
         "height": 240
       }
     ],
@@ -1409,7 +1409,7 @@
       },
       {
         "file": "pullover-machine-1.webp",
-        "width": 193,
+        "width": 194,
         "height": 240
       }
     ],
@@ -1497,7 +1497,7 @@
     "images": [
       {
         "file": "seated-row-machine-0.webp",
-        "width": 190,
+        "width": 191,
         "height": 240
       },
       {
@@ -2055,7 +2055,7 @@
     "images": [
       {
         "file": "lateral-raise-machine-0.webp",
-        "width": 159,
+        "width": 160,
         "height": 240
       },
       {
@@ -3207,7 +3207,7 @@
       },
       {
         "file": "one-arm-triceps-extension-dumbbell-1.webp",
-        "width": 84,
+        "width": 85,
         "height": 240
       }
     ],
@@ -4350,12 +4350,12 @@
       {
         "file": "glute-kickback-machine-0.webp",
         "width": 240,
-        "height": 174
+        "height": 173
       },
       {
         "file": "glute-kickback-machine-1.webp",
         "width": 240,
-        "height": 171
+        "height": 170
       }
     ],
     "sources": [
@@ -4690,12 +4690,12 @@
     "images": [
       {
         "file": "lunge-bodyweight-0.webp",
-        "width": 58,
+        "width": 59,
         "height": 240
       },
       {
         "file": "lunge-bodyweight-1.webp",
-        "width": 233,
+        "width": 234,
         "height": 240
       }
     ],
@@ -5187,7 +5187,7 @@
       {
         "file": "split-squat-dumbbell-0.webp",
         "width": 240,
-        "height": 238
+        "height": 237
       },
       {
         "file": "split-squat-dumbbell-1.webp",

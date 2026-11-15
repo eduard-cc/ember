@@ -141,8 +141,8 @@ def _junction_clusters(junctions):
 
 
 class _Paper:
-    """Paper regions (4-connected) of the centre-line image with a union-find, so a planned cut
-    can tell whether it would open a closed shape and how large that shape is."""
+    """Paper regions (4-connected) of the original centre-line image, so a planned cut can tell
+    which closed shapes it would open and how large they are."""
 
     def __init__(self, skeleton):
         h, w = skeleton.shape
@@ -180,24 +180,18 @@ class _Paper:
             for x0, x1, index in current:
                 self.label[y, x0:x1] = index
             previous = current
-        self.parent, self.area, self.border, self._root = parent, area, border, root
+        roots = np.array([root(i) for i in range(len(parent))] or [0], np.int32)
+        self.region = np.where(self.label >= 0, roots[np.maximum(self.label, 0)], -1)
+        self.area, self.border = area, border
 
     def regions_around(self, ys, xs):
-        h, w = self.label.shape
+        """Original regions 4-adjacent to the given centre pixels."""
+        h, w = self.region.shape
         found = set()
         for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0)):
             yy, xx = np.clip(ys + dy, 0, h - 1), np.clip(xs + dx, 0, w - 1)
-            found.update(self._root(int(i)) for i in self.label[yy, xx] if i >= 0)
+            found.update(int(i) for i in self.region[yy, xx] if i >= 0)
         return found
-
-    def merge(self, roots):
-        roots = sorted(roots)
-        for other in roots[1:]:
-            a, b = self._root(roots[0]), self._root(other)
-            if a != b:
-                self.parent[b] = a
-                self.area[a] += self.area[b]
-                self.border[a] = self.border[a] or self.border[b]
 
 
 def plan(skeleton, distance, unit, level, seed):
@@ -250,6 +244,15 @@ def plan(skeleton, distance, unit, level, seed):
         (v,) = [w for kk, ss, w in ends_at[c] if (kk, ss) == (k, side)]
         return any(np.dot(v, w) < -0.82 for kk, ss, w in ends_at[c] if (kk, ss) != (k, side))
 
+    def is_stem(k, side):
+        """True for the stem of a T: it ends at a bar that runs straight through the junction
+        (two other ends leaving opposite ways) and doesn't continue through itself. A corner
+        or a line's own staircase pixel is not a T."""
+        if (k, side) not in end_cluster or runs_through(k, side):
+            return False
+        others = [w for kk, ss, w in ends_at[end_cluster[(k, side)]] if (kk, ss) != (k, side)]
+        return any(np.dot(a, b) < -0.82 for i, a in enumerate(others) for b in others[i + 1:])
+
     taper = np.ones(shape, np.float32)
     thin = np.ones(shape, np.float32)
     cut = np.zeros(shape, bool)
@@ -269,10 +272,9 @@ def plan(skeleton, distance, unit, level, seed):
                 span = p['taper_len'] * unit * (0.7 + 0.6 * draws[k, 2])
                 t = p['taper_tip'] + (1 - p['taper_tip']) * np.sqrt(np.clip(along / span, 0, 1))
                 taper[ys, xs] = np.minimum(taper[ys, xs], t)
-            # only a line that ends at another one thins; a line running through (the bar of a T,
-            # the arms of a crossing, a staircase pixel mid-line) keeps its width
-            if (kind == 'junc' and p['junction_tip'] < 1 and length >= 3 * unit
-                    and (k, side) in end_cluster and not runs_through(k, side)):
+            # only the stem of a T thins into the bar; the bar, the arms of a crossing, corners and
+            # staircase pixels mid-line keep their width
+            if kind == 'junc' and p['junction_tip'] < 1 and length >= 3 * unit and is_stem(k, side):
                 tip = points[0] if side == 0 else points[-1]
                 host = distance[max(0, tip[0] - 3):tip[0] + 4, max(0, tip[1] - 3):tip[1] + 4].max()
                 span = min(length / 2, p['junction_len'] * unit)
@@ -280,8 +282,8 @@ def plan(skeleton, distance, unit, level, seed):
                 t = p['junction_tip'] + (1 - p['junction_tip']) * np.sin(f * np.pi / 2)
                 t[along <= host] = 1.0  # inside the line it meets: that line stays as drawn
                 thin[ys, xs] = np.minimum(thin[ys, xs], t)
-        stems = [side for side, kind in enumerate(kinds) if kind == 'junc' and (k, side) in end_cluster
-                 and not runs_through(k, side) and end_cluster[(k, side)] not in cut_clusters]
+        stems = [side for side, kind in enumerate(kinds) if kind == 'junc' and is_stem(k, side)
+                 and end_cluster[(k, side)] not in cut_clusters]
         if not stems or length < p['gap_min_seg'] * unit or draws[k, 3] >= p['gap_rate']:
             continue
         side = stems[int(draws[k, 4] * len(stems))]
@@ -295,13 +297,13 @@ def plan(skeleton, distance, unit, level, seed):
             continue
         regions = paper.regions_around(ys[lifted], xs[lifted])
         enclosed = {r for r in regions if not paper.border[r]}
+        if enclosed & opened:
+            continue  # each closed shape opens at most once
         if len(regions) >= 2 and enclosed:
-            # the gap would open a closed shape: only a large one, and only once
-            if any(paper.area[r] < min_hole for r in enclosed) or enclosed & opened:
+            # the gap would open a closed shape: only a large one
+            if any(paper.area[r] < min_hole for r in enclosed):
                 continue
             opened |= enclosed
-        paper.merge(regions)
-        opened = {paper._root(r) for r in opened}
         cut[ys[lifted], xs[lifted]] = True
         cut_clusters.add(end_cluster[(k, side)])
         # the pencil lifts off: the cut end tapers a little
