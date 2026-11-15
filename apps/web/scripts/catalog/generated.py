@@ -11,8 +11,9 @@ records without it bundle the single accepted/<slug>.png. Each drawing is croppe
 ink, except a pair with `"sharedScale": true` (both drawn on one canvas at one scale, e.g. a
 burpee's crouch and jump), which is cropped with one shared box. A record's `credit`
 picks the drawing's credit (`after-everkinetic`: drawn with Everkinetic drawings of other
-exercises as style references, CC BY-SA 4.0); without one it is app-owned. Only accepted records
-whose PNGs match their recorded SHA-256 are bundled.
+exercises as style references, CC BY-SA 4.0); without one it is app-owned. Every drawing gets the
+hand-drawn line pass (pencil.py, needs numpy) at its record's `line` level, `default` unless set.
+Only accepted records whose PNGs match their recorded SHA-256 are bundled.
 App-owned drawings that are no longer accepted are removed; licensed Everkinetic/wger
 drawings and their sources are never modified. All inputs are validated before any
 catalog file changes. PNGs stay outside git. Re-running with the same cache is
@@ -26,6 +27,7 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
+import pencil
 import stroke
 from generate import CACHE, OUT_IMAGES, OUT_JSON, ROOT, normalised_mask, slug
 
@@ -35,6 +37,9 @@ AUTHOR = 'Ember (AI-assisted, gpt-image-2)'
 LICENSE = 'app-owned'
 CHANGES = ('AI-assisted illustration made for Ember, not an Everkinetic or wger work; '
            'cropped, resized, recoloured and line width normalised')
+# Every AI-assisted drawing gets the hand-drawn line pass (pencil.py) at this level unless its QA
+# record sets `line` (light, default, strong or off).
+LINE_LEVELS = (*pencil.LEVELS, pencil.OFF)
 # A QA record's `credit` names how its drawing is credited; without one it is app-owned.
 CREDITS = {
     'after-everkinetic': {
@@ -54,14 +59,20 @@ def is_app_owned(source):
     return source['kind'] == 'illustration' and source['author'] in AUTHORS
 
 
-def credit_source(name, credit):
+def line_level(record):
+    """The hand-drawn line pass level of an AI-assisted drawing's QA record."""
+    return record.get('line', pencil.DEFAULT_LEVEL)
+
+
+def credit_source(name, credit, line=pencil.OFF):
+    texture = '' if line == pencil.OFF else f'; hand-drawn line texture added ({pencil.VERSION}, {line})'
     if credit is None:
         return {'kind': 'illustration', 'title': name, 'author': AUTHOR, 'license': LICENSE,
                 'licenseUrl': PROVENANCE_URL + '#app-owned-illustrations', 'url': PROVENANCE_URL,
-                'changes': CHANGES}
+                'changes': CHANGES + texture}
     return {'kind': 'illustration', 'title': name, 'author': CREDITS[credit]['author'],
             'license': CREDITS[credit]['license'], 'licenseUrl': CREDITS[credit]['licenseUrl'],
-            'url': PROVENANCE_URL, 'changes': CREDITS[credit]['changes']}
+            'url': PROVENANCE_URL, 'changes': CREDITS[credit]['changes'] + texture}
 
 
 def load_records(source_dir):
@@ -72,18 +83,21 @@ def load_records(source_dir):
             raise ValueError(f'{path.stem}: unknown QA status {record.get("status")!r}')
         if record.get('credit') is not None and record['credit'] not in CREDITS:
             raise ValueError(f'{path.stem}: unknown credit {record["credit"]!r}')
+        if line_level(record) not in LINE_LEVELS:
+            raise ValueError(f'{path.stem}: unknown line level {record["line"]!r}')
         records[path.stem] = record
     if not records:
         raise ValueError(f'no QA records in {source_dir / "qa"}')
     return records
 
 
-def pose_masks(raws, shared_scale=False):
+def pose_masks(raws, shared_scale=False, line=None):
     """Catalog masks of one exercise's drawings, each cropped to its own ink. A shared-scale pair
     (start and finish drawn on one canvas at one scale) is cropped with one box, the union of both
-    drawings' ink, so the app shows a crouch and a jump at their true relative size."""
+    drawings' ink, so the app shows a crouch and a jump at their true relative size. `line` is the
+    hand-drawn line pass level (each frame seeded from its own source)."""
     if not shared_scale:
-        return [normalised_mask(raw) for raw in raws]
+        return [normalised_mask(raw, line=line) for raw in raws]
     if len(raws) != 2:
         raise ValueError('a shared scale needs a start/finish pair')
     sizes, boxes = zip(*(stroke.ink_box(raw) for raw in raws))
@@ -91,7 +105,7 @@ def pose_masks(raws, shared_scale=False):
         raise ValueError('a shared-scale pair must be drawn on one canvas size')
     box = (min(b[0] for b in boxes), min(b[1] for b in boxes),
            max(b[2] for b in boxes), max(b[3] for b in boxes))
-    return [normalised_mask(raw, box) for raw in raws]
+    return [normalised_mask(raw, box, line) for raw in raws]
 
 
 def bundle(source_dir):
@@ -133,7 +147,7 @@ def bundle(source_dir):
                 raise ValueError(f'{entry["name"]}: {pose["file"]} does not match the reviewed PNG')
             raws.append(raw)
         try:
-            images = pose_masks(raws, record.get('sharedScale', False))
+            images = pose_masks(raws, record.get('sharedScale', False), line_level(record))
         except ValueError as error:
             raise ValueError(f'{entry["name"]}: {error}') from error
         if any(len(data) > 40 * 1024 for data, _ in images):
@@ -158,14 +172,17 @@ def bundle(source_dir):
         stale_files += [OUT_IMAGES / image['file'] for image in entry['images']]
         entry['images'] = [{'file': f'{key}-{i}.webp', 'width': size[0], 'height': size[1]}
                            for i, (_, size) in enumerate(images)]
-        entry['sources'] = [credit_source(entry['name'], records[key].get('credit'))]
+        entry['sources'] = [credit_source(entry['name'], records[key].get('credit'),
+                                          line_level(records[key]))]
 
     hashes = {key: shas for key, _, _, shas in prepared}
     manifest = {
         'schemaVersion': 3,
         'model': 'gpt-image-2 (image_generate)',
-        'conversion': ('generate.normalised_mask: stroke.normalise (line width 2.1px), then '
-                       'line_mask (MAX_SIDE=240, LEVELS=8, lossless WebP method=4)'),
+        'conversion': ('generate.normalised_mask: stroke.normalise (line width 2.1px, measured '
+                       f'after the hand-drawn line pass {pencil.VERSION} at each exercise\'s `line` '
+                       'level, seeded from its source SHA-256), then line_mask (MAX_SIDE=240, '
+                       'LEVELS=8, lossless WebP method=4)'),
         'review': ('Accepted only after a style audit against Everkinetic references, an '
                    'independent strict physical-logic audit of the raw image, and a 240px '
                    'mask check beside licensed drawings on light and dark backgrounds.'),
@@ -178,6 +195,7 @@ def bundle(source_dir):
                 **({'startSha256': hashes[key][0]} if len(hashes.get(key, [])) == 2 else {}),
                 **({'sharedScale': True} if key in hashes and record.get('sharedScale') else {}),
                 **({'credit': record['credit']} if key in hashes and record.get('credit') else {}),
+                **({'line': line_level(record)} if key in hashes else {}),
                 **({'postProcessed': 'local line cleanup or thickening, re-audited'}
                    if record['status'] == 'accepted' and record.get('derived_from') else {}),
             }

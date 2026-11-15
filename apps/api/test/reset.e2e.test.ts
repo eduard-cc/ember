@@ -120,7 +120,7 @@ test('a reset refuses invalid seed documents and leaves history untouched', asyn
 	try {
 		const before = await db.query('SELECT count(*) FROM records');
 		const broken = {...workout('import:bad:0'), date: 'not a date'};
-		await assert.rejects(resetDataset(db, 'owner', [broken as any]));
+		await assert.rejects(resetDataset(db, 'owner', [broken]));
 		assert.deepEqual(await db.query('SELECT count(*) FROM records'), before);
 	} finally {
 		await db.destroy();

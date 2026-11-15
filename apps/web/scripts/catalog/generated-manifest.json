@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "model": "gpt-image-2 (image_generate)",
-  "conversion": "generate.normalised_mask: stroke.normalise (line width 2.1px), then line_mask (MAX_SIDE=240, LEVELS=8, lossless WebP method=4)",
+  "conversion": "generate.normalised_mask: stroke.normalise (line width 2.1px, measured after the hand-drawn line pass pencil-v1 at each exercise's `line` level, seeded from its source SHA-256), then line_mask (MAX_SIDE=240, LEVELS=8, lossless WebP method=4)",
   "review": "Accepted only after a style audit against Everkinetic references, an independent strict physical-logic audit of the raw image, and a 240px mask check beside licensed drawings on light and dark backgrounds.",
   "exercises": [
     {
@@ -21,6 +21,7 @@
       "sha256": "6792e2688664485792f6cac22fef8a0cae0ab2b24a8829e8ef65640b69109b2f",
       "startSha256": "7383b65b3fd11125c45b0077244c089988af28f1c8bc45fdfc649ce45a9845f9",
       "credit": "after-everkinetic",
+      "line": "default",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
@@ -29,7 +30,8 @@
       "attempts": 8,
       "sha256": "19799b2b042c36a9ab4e917b21047cf85dcdc300ae7983927d5b10c77151f5a2",
       "startSha256": "af46b043ef162da42c9b4b63e3bc220ebd415643779f89eebd9081a1f80d71c2",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Bent Over Row (Dumbbell)",
@@ -37,6 +39,7 @@
       "attempts": 11,
       "sha256": "79129d0593f9c62abbc1bd7f512c6746a8a1529ecd35b6a4ccbd775b9753c8ce",
       "startSha256": "9ecfdd297a1555c73b3c8eef2e5a94d3637ee7ce6f7f10f34e7037dc06f09b51",
+      "line": "default",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
@@ -51,7 +54,8 @@
       "sha256": "287d45367404ec7c3134f0af7aaca4beda9757eb2b6655cb2fbe916c3144a8c4",
       "startSha256": "6c3e06b02b23f67d23c7d74137ab9e9fbeae3581c0ce53250831e2c0ed6c118f",
       "sharedScale": true,
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Bulgarian Split Squat",
@@ -59,7 +63,8 @@
       "attempts": 8,
       "sha256": "65457a75a7db415d4b39d3ca1780e2234a17b2848009902db3fceff9c81ebb98",
       "startSha256": "688cf219fd7ad51e92c392c2837ff69fbbcb8b7b8412899c6955ac474db52465",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Burpee",
@@ -67,7 +72,8 @@
       "attempts": 6,
       "sha256": "a7b990d1bcb1890538de0b156ef24bdfc8ed764de7e331cd74e0f20771ce88fd",
       "startSha256": "569ab9d5a9de25de95c6875bfd177a753f1dabadff537e27a06a62e14e015931",
-      "sharedScale": true
+      "sharedScale": true,
+      "line": "default"
     },
     {
       "name": "Cable Crunch",
@@ -79,35 +85,43 @@
       "status": "accepted",
       "attempts": 1,
       "sha256": "f3ac8297da82b5070069a1a24f99927678926e318db925c23a8b8bab9f6b5b6c",
-      "startSha256": "9721eff8f44d0d8f3d031e661e31f08b89c941031f61813d934792d61e9c33d0"
+      "startSha256": "9721eff8f44d0d8f3d031e661e31f08b89c941031f61813d934792d61e9c33d0",
+      "line": "default"
     },
     {
       "name": "Chin Up (Assisted)",
       "status": "accepted",
       "attempts": 13,
-      "sha256": "2faa3e5a5826205cc05762b9586415a7874d047805c6e6d17f5e86246fbc2c75",
-      "startSha256": "56f8c05ea9db70f698cdef5b6e2c682db56822ba73865aab69a458863dff1407"
+      "sha256": "4aa24b88ce23ab77331d24fb7207603745561856b817866cafc32db48532e0d7",
+      "startSha256": "1b5d0be8c652af51cc19e0b9c1ea25a50167e73a4dbb199848de44eb3c7f35e2",
+      "sharedScale": true,
+      "line": "default"
     },
     {
       "name": "Clean and Press (Barbell)",
       "status": "accepted",
       "attempts": 6,
       "sha256": "8e9218ed1a657a0dbac3183fa8a7a37743dd3807d16f353be896851d32caae13",
-      "startSha256": "82d0b465463c08e5bf8e302cc541253e00a14e334741ba1fb68ae68436cb1890"
+      "startSha256": "82d0b465463c08e5bf8e302cc541253e00a14e334741ba1fb68ae68436cb1890",
+      "line": "default"
     },
     {
       "name": "Clean (Barbell)",
       "status": "accepted",
       "attempts": 7,
       "sha256": "087b5ffde14b54ca746e8acca63f41d3ddc65948f6bf8fa85f0d3913b37199cb",
-      "startSha256": "ef4d382f5500d96f8e3c1ab4258cf2023cb73b49d17d012cf02ea6fafa7edf69"
+      "startSha256": "ef4d382f5500d96f8e3c1ab4258cf2023cb73b49d17d012cf02ea6fafa7edf69",
+      "line": "default"
     },
     {
       "name": "Crunch (Machine)",
       "status": "accepted",
-      "attempts": 4,
-      "sha256": "f948c48368fa6e67c72b4c6a2734a7664288c4b6e55492fae956d2067e367aab",
-      "startSha256": "4ade0cfa8903c175bdb18269eb48d64e3624d972a2b3b2bb1a07c36ac9cb8a6a"
+      "attempts": 7,
+      "sha256": "226f927b8a10fd9a9f0aca1424cb0c4256a357e564e731d1624ab59a3a1e7b67",
+      "startSha256": "9def202c498299f92b9376361b2848a24b61a683ccd5358b720db47a3985da29",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Cycling (Stationary Bike)",
@@ -116,7 +130,8 @@
       "sha256": "5534c283e094ad61c243c7cd884c7210462adb4c66ed29e31c02dfe8b0284a00",
       "startSha256": "4bf268cf9613d99ed47236c89baf1b7a8e0cf374390ee23d1750be682767348b",
       "sharedScale": true,
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Elliptical Trainer",
@@ -124,7 +139,8 @@
       "attempts": 18,
       "sha256": "cbe8120a2267281426f5c637eec82657f5a67d450f9a9ed7789a2aba64aa8530",
       "startSha256": "ad817826861bc43fa811dc5da58f9678d688da2a8481bad780198c178dda04e0",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "External Rotation (Cable)",
@@ -132,28 +148,32 @@
       "attempts": 4,
       "sha256": "707c5e76826b2bfbc79f93032bd0a55ed1dd26c188cd3512ccc483530f73320c",
       "startSha256": "2469c03320b85a2a0de1dd0efb30aaac622909fce76ef77450771c6c468a452b",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Face Pull (Cable)",
       "status": "accepted",
       "attempts": 11,
       "sha256": "82140aa14ceefb682c76f652ef13c74430637a9892819a74ed6476a1239000cd",
-      "startSha256": "824cf1c6698e85eb433e58718b491e2e5b281f678b430b2d048d14837a137ee6"
+      "startSha256": "824cf1c6698e85eb433e58718b491e2e5b281f678b430b2d048d14837a137ee6",
+      "line": "default"
     },
     {
       "name": "Farmer's Walk (Dumbbell)",
       "status": "accepted",
       "attempts": 2,
       "sha256": "1b0532ba2178408d6ea1eed8ee993f9b6b35c885d50ac98dc390a01fda495001",
-      "startSha256": "0f2879c61fcc08eb47c88b12bea44e99bf79d3dece93cf8152db2e0233f53c29"
+      "startSha256": "0f2879c61fcc08eb47c88b12bea44e99bf79d3dece93cf8152db2e0233f53c29",
+      "line": "default"
     },
     {
       "name": "Floor Press (Dumbbell)",
       "status": "accepted",
       "attempts": 1,
       "sha256": "64a40234834b6d41b8f2a6a8b5c3e0aa5c9ee6e86f8ac3417eef4bf90a82538b",
-      "startSha256": "ad79dde39afe4dd8dab685d06504be5bd6ec7ccfbbdcf5d0957a65e1b92689aa"
+      "startSha256": "ad79dde39afe4dd8dab685d06504be5bd6ec7ccfbbdcf5d0957a65e1b92689aa",
+      "line": "default"
     },
     {
       "name": "Front Raise (Barbell)",
@@ -163,16 +183,20 @@
     {
       "name": "Glute Kickback (Machine)",
       "status": "accepted",
-      "attempts": 10,
-      "sha256": "ee7b6b62886bf95d328cb60cf7e67e17538c2b4da6766577c69514a8cbf7012f",
-      "startSha256": "408500705af4c148746181291475792da76b43b13ce2d17e9fe17ed3853a0870"
+      "attempts": 12,
+      "sha256": "3678cf584565f69314aaba4e6a14143afd4d3d383ae9fc94a07d3de48d31b672",
+      "startSha256": "387ab0c3f41223679a6dde24b5d510c7d7e90f2c0bd42a83bd75756b2beac18f",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Goblet Squat (Dumbbell)",
       "status": "accepted",
       "attempts": 4,
       "sha256": "f398a4b45056b5d29ce8d687cec5e438c9b5007ee71bacb1f772627e6c61bee9",
-      "startSha256": "de541bfe27f735fe6ae26b319e401fcacca5449453fff06cbbd8d84a2b2bd192"
+      "startSha256": "de541bfe27f735fe6ae26b319e401fcacca5449453fff06cbbd8d84a2b2bd192",
+      "line": "default"
     },
     {
       "name": "Hanging Knee Raise",
@@ -189,7 +213,8 @@
       "status": "accepted",
       "attempts": 21,
       "sha256": "f05b90587ea51bc4a4143e3afbbef9f1c9b3939c2babd581068e24b15a683694",
-      "startSha256": "dd3ee24f220fc9b2f3ae60f28a5075e228af531b528c9782828ea9dc15b2bc93"
+      "startSha256": "dd3ee24f220fc9b2f3ae60f28a5075e228af531b528c9782828ea9dc15b2bc93",
+      "line": "default"
     },
     {
       "name": "Hollow Hold",
@@ -197,7 +222,8 @@
       "attempts": 14,
       "sha256": "f24d3c87434af0143c13d698011d1319e04d18da10d76c589d12de8a4c16c636",
       "startSha256": "f7c41c064b4052f0dcfb4861860b4ab955befbf76233996be1621a688f6823f0",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Incline Chest Press (Machine)",
@@ -211,14 +237,16 @@
       "sha256": "c3f6f86e35c10c1089f6dd42be0eb72f5f6a94d289d842b29865ff8c38734495",
       "startSha256": "f8feb3feb040b71a3f5fff5e0677643c63835a3736e210275c6ac97fe677fc4b",
       "sharedScale": true,
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Jump Rope",
       "status": "accepted",
       "attempts": 15,
       "sha256": "5b06aa59bcd3ed808ec912c5e62c5406f36f4428abd2b4873f4012f5b9041adb",
-      "startSha256": "c184b72ee0d585a6e0491bd256359ec4064a1e0a261aa3f3f0d721621cab45f8"
+      "startSha256": "c184b72ee0d585a6e0491bd256359ec4064a1e0a261aa3f3f0d721621cab45f8",
+      "line": "default"
     },
     {
       "name": "Jumping Jack",
@@ -227,6 +255,7 @@
       "sha256": "57a0f13141143c1825a1b4c01095bb4b2569f76571c9a83fad9bb9f1cf3fe7c9",
       "startSha256": "961cf86e6eb8edf2a5a1c257d15c6fff47928707e4c03bafaace5c0087309f10",
       "credit": "after-everkinetic",
+      "line": "default",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
@@ -234,35 +263,43 @@
       "status": "accepted",
       "attempts": 3,
       "sha256": "82b87402bc0e95c433ce6c89173d8cbac6358a9c16f793db6476bc8d406409a3",
-      "startSha256": "f2e0edeb5df11205150333d543ba6ee1968bca5697976bc5026967c4d697bb1b"
+      "startSha256": "f2e0edeb5df11205150333d543ba6ee1968bca5697976bc5026967c4d697bb1b",
+      "line": "default"
     },
     {
       "name": "Lat Pulldown (Cable)",
       "status": "accepted",
       "attempts": 12,
-      "sha256": "69b3e3ca1a0d5812362c8697ec372c1c90ff58541475e52ff5362018796e2f34",
-      "startSha256": "a0d9109faa3f2c322d87cba4fa9c56026715ea0995ffb72f04766b15e588b288"
+      "sha256": "7159af0c7850821ace9fbdb7c1580e3a8527cd162f6a75af9a15aa740b303c4d",
+      "startSha256": "9175b16e7139298c976ee526234075203d6f4116cda42c3de135277e3065a1b2",
+      "sharedScale": true,
+      "line": "default"
     },
     {
       "name": "Lat Pulldown (Machine)",
       "status": "accepted",
-      "attempts": 11,
-      "sha256": "d031ea3b56f77ce2ba8c2542aa5659fbf2c07dba32ac3dd69fe711c2b015250c",
-      "startSha256": "c10268866d53816347f4b07823c446609ded84be0178aa25affdb23ec9a99467"
+      "attempts": 13,
+      "sha256": "4d8cfafe131a3b8f699191dc1ee62f4e92879a61918e80755f4952d4fe5efd64",
+      "startSha256": "87c1eeb7b8555a0c7709f114d75952ecd294e6af949cd8f6326b78b17c43a402",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Lateral Raise (Cable)",
       "status": "accepted",
       "attempts": 2,
       "sha256": "3cf36aeee84525e32b1917843081ded5117472d2fa5ee635f936bfa6aec2c454",
-      "startSha256": "c6ced7271be5b6a7066f8d98b245003c72f41d5ab91d225d57a0d78f26707fc3"
+      "startSha256": "c6ced7271be5b6a7066f8d98b245003c72f41d5ab91d225d57a0d78f26707fc3",
+      "line": "default"
     },
     {
       "name": "Lateral Raise (Machine)",
       "status": "accepted",
       "attempts": 15,
       "sha256": "bd838b9f1f48654089828e3dbc16e3e2cde4f835a32532ee70153a17eb8c3413",
-      "startSha256": "1706a1ddf7b0893d584854793aeaee35b0566cacaafba23b7c28c33659db2ffe"
+      "startSha256": "1706a1ddf7b0893d584854793aeaee35b0566cacaafba23b7c28c33659db2ffe",
+      "line": "default"
     },
     {
       "name": "Lunge (Bodyweight)",
@@ -270,7 +307,8 @@
       "attempts": 9,
       "sha256": "ff188cf500cb4f8e4e605ebb56fcd09c2bc5c9760b92fe3f3dc01d46a0ee89cd",
       "startSha256": "5db64d8889f8c21faba2636216d290801865c92596c014e6ce8b07e6ed474281",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Mountain Climber",
@@ -279,6 +317,7 @@
       "sha256": "eb73019b1a7ba5a6dbec3617401936cc7eb9dbce20c9199dff5b53c9c008f388",
       "startSha256": "72775d054983615211a97ba2bb990a162ccbf171ecaac8c2b4ed6e4ba5c6c8c4",
       "credit": "after-everkinetic",
+      "line": "default",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
@@ -286,14 +325,16 @@
       "status": "accepted",
       "attempts": 2,
       "sha256": "24724b778304c766174fdc92ab715b341f6bbdd619fbefe1e540a19bb254e666",
-      "startSha256": "0402d3dac97f0b687488c2db1e5e30b8893276b281543f8b47700105259424cb"
+      "startSha256": "0402d3dac97f0b687488c2db1e5e30b8893276b281543f8b47700105259424cb",
+      "line": "default"
     },
     {
       "name": "Overhead Press (Smith Machine)",
       "status": "accepted",
       "attempts": 3,
       "sha256": "435a3b12f3220e476b6eb0248559dfdfc2776b72a294412680cf18981e700974",
-      "startSha256": "22f8e777bc046eaae09beec2ab20c17a750ab09218c4571ce23e6ed63e81c72e"
+      "startSha256": "22f8e777bc046eaae09beec2ab20c17a750ab09218c4571ce23e6ed63e81c72e",
+      "line": "default"
     },
     {
       "name": "Pallof Press (Cable)",
@@ -301,6 +342,7 @@
       "attempts": 10,
       "sha256": "92f7f1a3be53853bb24b8a6963f2b683f49c18eb56caf0beeefa589a943ebcbb",
       "startSha256": "bb182cc9fdf2ced59309f25b33c4098fd89c317139d8a83ad864ce20a4d1a853",
+      "line": "default",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
@@ -313,13 +355,15 @@
       "status": "accepted",
       "attempts": 1,
       "sha256": "8ac6117188bd516a8c31a7ccbfa8e643d030a25630fcdc71b6b059736f68658c",
-      "startSha256": "5c1dad80ab7c37fd018e0876caadf04ae495b531b84ac9bb600451cad43d4058"
+      "startSha256": "5c1dad80ab7c37fd018e0876caadf04ae495b531b84ac9bb600451cad43d4058",
+      "line": "default"
     },
     {
       "name": "Plank",
       "status": "accepted",
       "attempts": 1,
-      "sha256": "4a46d111402771ff895987e3755676e0b84cfa2e633741bf8983165ada815945"
+      "sha256": "4a46d111402771ff895987e3755676e0b84cfa2e633741bf8983165ada815945",
+      "line": "default"
     },
     {
       "name": "Power Clean (Barbell)",
@@ -327,28 +371,35 @@
       "attempts": 16,
       "sha256": "0b5aaa547920d3ad9c778f951820a8ec342d9b37df42665537bda0db65281a55",
       "startSha256": "a961740c47c3465f0bf25c3b70c2e842c06ec930fb176c0524e07d1a1614ab7a",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Pull Up (Assisted)",
       "status": "accepted",
       "attempts": 0,
-      "sha256": "2faa3e5a5826205cc05762b9586415a7874d047805c6e6d17f5e86246fbc2c75",
-      "startSha256": "56f8c05ea9db70f698cdef5b6e2c682db56822ba73865aab69a458863dff1407"
+      "sha256": "4aa24b88ce23ab77331d24fb7207603745561856b817866cafc32db48532e0d7",
+      "startSha256": "1b5d0be8c652af51cc19e0b9c1ea25a50167e73a4dbb199848de44eb3c7f35e2",
+      "sharedScale": true,
+      "line": "default"
     },
     {
       "name": "Pullover (Machine)",
       "status": "accepted",
-      "attempts": 11,
-      "sha256": "da097d56ee3a62c0af4324f82a1c8e18b9d9a4df886f88d4d869294f30e7ea92",
-      "startSha256": "3e72ba75100f8bfe90dbe02b6bec34051ae4ac8249b4802cd0865e47eb1169e6"
+      "attempts": 14,
+      "sha256": "596fbf5bc52a39e763f0c0da71c235073928850fc8e7af398f3637ab591e163c",
+      "startSha256": "1ce17c5652dfb47b802229aedf774b4d7f8c494b5201a88966355c47eb4972f9",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Push Press (Barbell)",
       "status": "accepted",
       "attempts": 1,
       "sha256": "d64d62d07cf0402dce0ca44f96241501849db7cd972fbdda707fe210f149fc9f",
-      "startSha256": "55c1bd411e1cdaa5b44e5333399a0413de2784238466a8e5c2677c48778f21c2"
+      "startSha256": "55c1bd411e1cdaa5b44e5333399a0413de2784238466a8e5c2677c48778f21c2",
+      "line": "default"
     },
     {
       "name": "Reverse Fly (Machine)",
@@ -357,35 +408,40 @@
       "sha256": "1752308a3a2d50522bea8354cc0370bac873d3b41926505d35fce461ad3bf0f0",
       "startSha256": "c8ab3db663f35ea1164d908a77cda51e186ebf3fa5a15318837413a9871374fa",
       "sharedScale": true,
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Reverse Wrist Curl (Barbell)",
       "status": "accepted",
       "attempts": 3,
       "sha256": "05ab6c5c286cf52095dcd07d2d8b3a3443ea829e1f525f48f442fce982d00f15",
-      "startSha256": "e8a58ffe43666ac616531b1555e1819c9b8e995c02b6329501fdefc35ec6cf69"
+      "startSha256": "e8a58ffe43666ac616531b1555e1819c9b8e995c02b6329501fdefc35ec6cf69",
+      "line": "default"
     },
     {
       "name": "Romanian Deadlift (Dumbbell)",
       "status": "accepted",
       "attempts": 10,
       "sha256": "87187f0bb77a0810e5be0e244e2ad7ddc78ecbe88613b0ce812fdf40922860e5",
-      "startSha256": "3865b34c42c952d67b2c249b31dad2ae9c5bb1423a28df525989f9ffc620ac26"
+      "startSha256": "3865b34c42c952d67b2c249b31dad2ae9c5bb1423a28df525989f9ffc620ac26",
+      "line": "default"
     },
     {
       "name": "Rowing (Machine)",
       "status": "accepted",
       "attempts": 17,
       "sha256": "fcaa8341a8ff976b06ff932c9cf58ff945837e26a34cb11cfb7fc6c1d7a5cc92",
-      "startSha256": "ef9e6794fdb3d4f1f0c757851c72f19b9a839e419fa256029bf8b83f8383bc66"
+      "startSha256": "ef9e6794fdb3d4f1f0c757851c72f19b9a839e419fa256029bf8b83f8383bc66",
+      "line": "default"
     },
     {
       "name": "Running (Treadmill)",
       "status": "accepted",
       "attempts": 4,
       "sha256": "5455d7cc45ed767e97b6be4695d15ac435daee752c1bfc14038e2c4b43b5e720",
-      "startSha256": "51303d9e155ec847ae92c0bb3814576d798c34285827cc9f14af42c6ef2dc954"
+      "startSha256": "51303d9e155ec847ae92c0bb3814576d798c34285827cc9f14af42c6ef2dc954",
+      "line": "default"
     },
     {
       "name": "Russian Twist",
@@ -398,28 +454,34 @@
       "attempts": 15,
       "sha256": "f1c70fbaff703485b379cb33080e906db86bc1c7824dac8b06b4d01a10b085db",
       "startSha256": "40ed8d81f6420b12326281bafe3ebf164cb5d9ce6ac5de7d06bd9ffb664577e7",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Seated Row (Machine)",
       "status": "accepted",
-      "attempts": 3,
-      "sha256": "f46ad63380dea4723a7806cd2e17749a84833ca0d50fd4b110a04112eff4c0a3",
-      "startSha256": "c67a2358137407c5e7a826af0e0c28501ca44b79a4348f7521c063a0f612427d"
+      "attempts": 11,
+      "sha256": "f0702e6f2a6520d57587f136ce2313443780d1434da093ca4ad84359ec7c90b3",
+      "startSha256": "12d3c2ed7e9ae18bf2a96e93bc97f1cec016fc2270e5d866437c97be6d2eda5c",
+      "sharedScale": true,
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Single Leg Deadlift (Dumbbell)",
       "status": "accepted",
       "attempts": 4,
       "sha256": "a71143722e1f93ca8df9543f1db9a8ab6237d52b66770ffe19856b447b0db4b1",
-      "startSha256": "d467d77fcb3fde69204bfc9eb012bb893d2fb32bf1fa0cb60298338f0bc04c49"
+      "startSha256": "d467d77fcb3fde69204bfc9eb012bb893d2fb32bf1fa0cb60298338f0bc04c49",
+      "line": "default"
     },
     {
       "name": "Sit Up",
       "status": "accepted",
       "attempts": 5,
       "sha256": "e350aec2c4e51feab2ef2068920a5561afe5cddc355458599659ce9460f85812",
-      "startSha256": "a6f9723064fd56e2977623f26b757208f83f4aca4a09d4a636cc5be8cc81d919"
+      "startSha256": "a6f9723064fd56e2977623f26b757208f83f4aca4a09d4a636cc5be8cc81d919",
+      "line": "default"
     },
     {
       "name": "Ski Erg",
@@ -427,21 +489,24 @@
       "attempts": 19,
       "sha256": "3310f413fb1cb4b5e5443591965d7d5fbad0ede1c5a303db87003066a0e0ea05",
       "startSha256": "a6298af564df938931f03fdd761b4630926ed5178d10917844601085895f5456",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Snatch (Barbell)",
       "status": "accepted",
       "attempts": 9,
       "sha256": "7a153f4980172c4fa2753c785e2d4222243095db144714c53be486f39af5dc35",
-      "startSha256": "10b93c5c94ce37f172247ebfdb48d0c806751a3175e73e311a4a5f2420c5c90c"
+      "startSha256": "10b93c5c94ce37f172247ebfdb48d0c806751a3175e73e311a4a5f2420c5c90c",
+      "line": "default"
     },
     {
       "name": "Split Squat (Dumbbell)",
       "status": "accepted",
       "attempts": 1,
       "sha256": "4ca10b40d948249649591b75e02118193a83b10ba664e61af8aed639ea1fb2dd",
-      "startSha256": "7badcd5e7c499d080a4548bc1473dd9efcbffc6f48a6555217af05f95c09eb6f"
+      "startSha256": "7badcd5e7c499d080a4548bc1473dd9efcbffc6f48a6555217af05f95c09eb6f",
+      "line": "default"
     },
     {
       "name": "Squat (Bodyweight)",
@@ -449,7 +514,8 @@
       "attempts": 12,
       "sha256": "8fdd345c923baee0bd3963755b00f592eecd653e491ff51ea2e5c64ea44cf23a",
       "startSha256": "7b38dcf7b64e989e458b62e6cd0dff7f6bd7add27f24580099eaf4a606cc6946",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Stair Climber",
@@ -457,6 +523,7 @@
       "attempts": 16,
       "sha256": "eef72cfe55f8a11711378414690b2c64fbffe35052c3a6669183599079746208",
       "startSha256": "e9a91e58493005a935fad7c9264745e799059900d1b0e894e0a1530cfa1ca9c2",
+      "line": "default",
       "postProcessed": "local line cleanup or thickening, re-audited"
     },
     {
@@ -464,7 +531,8 @@
       "status": "accepted",
       "attempts": 10,
       "sha256": "d121e31a6beb694cc0d0bb48152db9f1346acf7c3d59dc67d1669cd08550540b",
-      "startSha256": "9537337d053c658e4b834f949e6a7d83595ffccfc48501e5030d5082408b717d"
+      "startSha256": "9537337d053c658e4b834f949e6a7d83595ffccfc48501e5030d5082408b717d",
+      "line": "default"
     },
     {
       "name": "Stiff Leg Deadlift (Barbell)",
@@ -472,21 +540,24 @@
       "attempts": 16,
       "sha256": "297319f969546659d8a3bbc6a78695437bf3c313dc5e01613e458f77fe242ae5",
       "startSha256": "dbb8d4a7311f49b08b1bf28840668bd382649916e34cd29629cd5ceebdbfb0d3",
-      "credit": "after-everkinetic"
+      "credit": "after-everkinetic",
+      "line": "default"
     },
     {
       "name": "Sumo Deadlift (Barbell)",
       "status": "accepted",
       "attempts": 3,
       "sha256": "d8247b450dac99066cde6edd75557699412196cbb200823c64040f0503ea0597",
-      "startSha256": "89c5a9d6d3293ceb25780edd8f1c627d5aaac1658aae6ca29b8c0b16054a6c4c"
+      "startSha256": "89c5a9d6d3293ceb25780edd8f1c627d5aaac1658aae6ca29b8c0b16054a6c4c",
+      "line": "default"
     },
     {
       "name": "Thruster (Barbell)",
       "status": "accepted",
       "attempts": 9,
       "sha256": "ce1fc5421c90ca5c79a0fb00bc25aa92f31059fb2ff6edfe3af83358b94ed01f",
-      "startSha256": "b3ed741240a7c43777d40d2da65c618a37171121f5458fdd1eb5688432f0ca0f"
+      "startSha256": "b3ed741240a7c43777d40d2da65c618a37171121f5458fdd1eb5688432f0ca0f",
+      "line": "default"
     },
     {
       "name": "Woodchopper (Cable)",
@@ -498,7 +569,8 @@
       "status": "accepted",
       "attempts": 7,
       "sha256": "a7e784938a9041b5d3bcebf0db7f639b4176f9088d075c57595e9ca496ba9540",
-      "startSha256": "172d9d6cef4b082cee15c2e0d179abdc951536d3735319c60533788b81669cda"
+      "startSha256": "172d9d6cef4b082cee15c2e0d179abdc951536d3735319c60533788b81669cda",
+      "line": "default"
     }
   ]
 }

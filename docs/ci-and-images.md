@@ -27,7 +27,7 @@ Workflow: `.github/workflows/ci.yml` (`CI`). It runs for every PR and every push
 - Dependabot (`.github/dependabot.yml`) opens weekly grouped minor/patch PRs for both npm packages and the workflow actions after a 7-day cooldown. It checks the Dockerfile's Node base image daily with no cooldown, so security releases arrive within a day, and the PostgreSQL pin in `ops/compose.local.yml` weekly, labelled `hold` (`ops/README.md`, "PostgreSQL version"). It never bumps `@types/node` or the base image past the `.nvmrc` major, and it holds back the majors the lint plugins cannot run yet (ESLint 10 for the web app, TypeScript 7), as `.github/dependabot.yml` notes. Patch and minor PRs with green `CI` and no `hold` label are merged by the owner's automation; majors are decided one at a time.
 
 - The docs check (`.github/scripts/check-docs.mjs`; run it with `node`) fails when a living doc names a backticked path or an `npm run` script that doesn't exist, or exceeds its word budget. Budgets, the extensions that mark a path, and paths that exist only after a build or outside git live in `.github/scripts/check-docs.json`; an override or allowlisted path needs a one-line reason there. The rules are in the script's header.
-- Each app has its own ESLint config: type-aware `typescript-eslint` and React hooks rules for the web app, `typescript-eslint` recommended for the API; each rule turned off or narrowed carries a one-line reason in the config.
+- Each app has its own ESLint config: type-aware `typescript-eslint` and React hooks rules for the web app, type-aware `typescript-eslint` for the API; each rule turned off or narrowed carries a one-line reason in the config.
 
 ## Image
 

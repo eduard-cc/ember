@@ -466,15 +466,24 @@ def despeck(raw, speck=50):
     return flat
 
 
-def normalised_mask(image, box=None):
+def normalised_mask(image, box=None, line=None):
     """line_mask of a drawing (encoded bytes or white-ground image) after its lines are redrawn
     at the catalog line width (stroke.normalise). It is cropped to its own ink, or to `box`
-    (source pixels) when given: drawings on one canvas masked with one box share one scale."""
+    (source pixels) when given: drawings on one canvas masked with one box share one scale.
+    `line` names a hand-drawn line pass level (pencil.LEVELS, seeded from the source bytes) for
+    AI-assisted drawings; licensed drawings never set it, and None or 'off' is the plain redraw."""
     crop = None if box is None else stroke.work_box(box, MASK_PAD)
+    texture = None
+    if line not in (None, 'off'):
+        import pencil
+        pencil.level_params(line)
+        if not isinstance(image, (bytes, bytearray)):
+            raise ValueError('the line pass is seeded from the encoded source drawing')
+        texture = (line, pencil.seed_of(image))
 
     def measure(png):
         return stroke.stroke_width(line_mask(png, crop)[0])
-    return line_mask(stroke.normalise(image, measure, box), crop)
+    return line_mask(stroke.normalise(image, measure, box, texture), crop)
 
 
 def crop_fraction(raw, box):

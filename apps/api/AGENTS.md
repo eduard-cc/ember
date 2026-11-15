@@ -11,7 +11,7 @@ NestJS 12 sync API with TypeORM and explicit PostgreSQL migrations. Paths below 
 ## Commands
 
 - Setup: `npm ci --include=dev`; the git-ignored `.env` (mode 0600) points at the `ember_dev` database on 127.0.0.1:55439.
-- `contracts:build` compiles the root `packages/contracts` into the git-ignored `contracts/`, imported as `#contracts`; `build`, `typecheck`, `dev`, `migration` and `start:trial` run it first. Rerun it after editing the package.
+- `contracts:build` compiles the root `packages/contracts` into the git-ignored `contracts/`, imported as `#contracts`; `build`, `typecheck`, `lint`, `lint:check`, `dev`, `migration` and `start:trial` run it first. Rerun it after editing the package.
 - Checks: `npm run lint:check`, `typecheck`, `build`, `test:e2e`. `lint` rewrites files; formatting runs from `apps/web` (`npm --prefix apps/web run format:check`).
 - `test:e2e` builds first, runs every `test/*.e2e.test.ts` serially through `ops/limited.sh` (in `ember-jobs.slice`; without the installed slice or a user systemd session it exits with an error, and under `CI=true` it runs the command directly), and creates and drops its own `ember_test_<pid>` databases in the development container. Check that no other run uses that container before starting one.
 
