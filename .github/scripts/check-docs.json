@@ -47,8 +47,8 @@
   "defaultBudget": 2500,
   "overrides": {
     "AGENTS.md": {
-      "words": 1250,
-      "reason": "the four protected sections and the shared Writing tests section stay word for word"
+      "words": 1300,
+      "reason": "the four protected sections and the shared Writing tests section stay word for word, plus the agent skills block"
     }
   },
   "allowMissing": [
@@ -99,6 +99,11 @@
       "paths": ["dist/png", "src/images-png-unknown"],
       "docs": ["apps/web/docs/catalog.md"],
       "reason": "paths in the external Everkinetic source checkout"
+    },
+    {
+      "paths": ["GLOSSARY.md", "docs/adr"],
+      "docs": ["AGENTS.md", "docs/agents/domain.md"],
+      "reason": "domain docs the domain-modeling skill creates when first needed"
     }
   ]
 }
