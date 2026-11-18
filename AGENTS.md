@@ -60,3 +60,17 @@ This repository and everything attached to it (commits, PRs, comments, issues, C
 ## Docs
 
 Living docs (`README.md`, `AGENTS.md`, `PRODUCT.md`, `DESIGN.md`, `docs/` folders) state current durable facts: no dates, history or rename narration. Edit Markdown by hand. CI checks their paths, npm scripts and word budgets (`.github/scripts/check-docs.mjs`).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in the Linear project Ember; GitHub Issues are disabled. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default triage labels, unchanged. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: root `GLOSSARY.md` and `docs/adr/`. See `docs/agents/domain.md`.
