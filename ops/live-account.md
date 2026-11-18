@@ -28,7 +28,7 @@ It prints the current release and the account checkout's head, the last auto-dep
 A schema migration, bulk data change or data repair, and merges such as a Node major or the PostgreSQL pin (`ops/README.md`), need a fresh backup, a verified restore and row counts from before and after. For a release that adds migrations, `ops/deploy.sh` takes and checks the backup itself; the comparison after the migration, and every step of a manual change, are yours.
 
 1. Stop auto-deploy before merging: `sudo /usr/local/sbin/ember-run -- systemctl --user stop ember-auto-deploy.timer`.
-2. In one script on stdin that holds the deploy lock on file descriptor 9 (as in `ops/README.md`, Deploying): record each table's row count, run `ops/backup.sh ember <archive>` into a private 0700 directory, `ops/restore-check.sh <archive> ember_restore_validation_<n>`, compare the restored counts, make the switch, then record the counts again.
+2. In one script on stdin that holds the deploy lock on file descriptor 9 (as in `ops/README.md`, Deploying): record each table's row count, run `ops/backup.sh ember <archive>` into a private 0700 directory, `ops/restore-check.sh <archive> ember_restore_validation_<n>`, compare the restored counts, drop the validation database (`ops/docker.sh exec ember-postgres dropdb -U ember ember_restore_validation_<n>`), make the switch, then record the counts again.
 3. Start the timer again (`systemctl --user start ember-auto-deploy.timer` in the account).
 
 `ops/backup.sh` leaves out the `sessions` table's rows, so compare every other table.
