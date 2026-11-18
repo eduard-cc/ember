@@ -1,6 +1,6 @@
 # Ember operations
 
-Read before merging, deploying, adding a static asset type, touching the shell or service worker, checking the live app, or touching backups, the database, the Docker daemon, units, slices or anything else shared with the host. The Production data rules in the root `AGENTS.md` are hard limits on top of this. Each script's header says what it does; `ops/test-*.sh` and `ops/test-ember-run.py` are synthetic checks, and CI runs all but `ops/test-release-switch.sh`, which needs a systemd user session (`docs/ci-and-images.md`).
+Read before merging, deploying, adding a static asset type, touching the shell or service worker, checking the live app, or touching backups, the database, the Docker daemon, units, slices or anything else shared with the host. The Production data rules in the root `AGENTS.md` are hard limits on top of this. Each script's header says what it does; `ops/test-*.sh`, `ops/test-ember-run.py` and `ops/test-wait-for-deploy.py` are synthetic checks, and CI runs all but `ops/test-release-switch.sh`, which needs a systemd user session (`docs/ci-and-images.md`).
 
 ## Releases and deploy
 

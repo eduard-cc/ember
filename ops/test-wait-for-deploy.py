@@ -18,14 +18,21 @@ SHA, OLD, NEW = "a" * 40, "b" * 40, "c" * 40
 ANCESTORS = {(OLD, SHA), (SHA, NEW), (OLD, NEW)}
 
 
+UNFETCHED = set()  # commits the checkout lacks until the next fetch
+
+
 class Git:
     def __init__(self, args):
         self.args = args
+        if args[0] == "fetch":
+            UNFETCHED.clear()
 
     @property
     def returncode(self):
         a = self.args
         if a[0] == "merge-base":
+            if a[3] in UNFETCHED:
+                return 128
             return 0 if (a[2], a[3]) in ANCESTORS else 1
         return 0
 
@@ -36,8 +43,13 @@ class Git:
 
 def run(states, timeout_min=40):
     seq = iter(states)
+
+    def next_state():
+        s = next(seq)
+        return s() if callable(s) else s
+
     with patch.object(wfd, "git", side_effect=lambda *a: Git(a)), \
-         patch.object(wfd, "state", side_effect=lambda: next(seq)), \
+         patch.object(wfd, "state", side_effect=next_state), \
          patch.object(wfd.time, "sleep"), \
          patch.object(sys, "argv", ["wait-for-deploy", SHA, "--timeout-min", str(timeout_min)]):
         return wfd.main()
@@ -53,6 +65,13 @@ class WaitForDeployTest(unittest.TestCase):
 
     def test_waits_while_the_deploy_restarts_the_switched_release(self):
         self.assertEqual(run([st(SHA, SHA, "active", app="activating"), st(SHA, SHA)]), 0)
+
+    def test_release_merged_after_the_wait_started_is_fetched(self):
+        def merged_meanwhile():
+            UNFETCHED.add(NEW)  # merged and deployed after the startup fetch
+            return st(NEW, NEW)
+
+        self.assertEqual(run([merged_meanwhile]), 0)
 
     def test_newer_release_containing_commit_counts(self):
         self.assertEqual(run([st(NEW, NEW)]), 0)

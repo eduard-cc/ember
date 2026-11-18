@@ -30,8 +30,17 @@ def git(*args):
 
 
 def contains(release, sha):
-    """True when the release commit is sha or a descendant of it."""
-    return bool(release) and (release == sha or git("merge-base", "--is-ancestor", sha, release).returncode == 0)
+    """True when the release commit is sha or a descendant of it. A release merged after the
+    wait started is not in the checkout yet, so fetch once more before deciding."""
+    if not release:
+        return False
+    if release == sha:
+        return True
+    rc = git("merge-base", "--is-ancestor", sha, release).returncode
+    if rc not in (0, 1):
+        git("fetch", "--quiet", "origin")
+        rc = git("merge-base", "--is-ancestor", sha, release).returncode
+    return rc == 0
 
 
 def state():
