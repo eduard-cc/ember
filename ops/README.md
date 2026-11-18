@@ -1,6 +1,6 @@
 # Ember operations
 
-Read before merging, deploying, adding a static asset type, touching the shell or service worker, checking the live app, or touching backups, the database, the Docker daemon, units, slices or anything else shared with the host. The Production data rules in the root `AGENTS.md` are hard limits on top of this. Each script's header says what it does; `ops/test-*.sh` and `ops/test-ember-run.py` are synthetic checks, and CI runs all but `ops/test-release-switch.sh`, which needs a systemd user session (`docs/ci-and-images.md`).
+Read before merging, deploying, adding a static asset type, touching the shell or service worker, checking the live app, or touching backups, the database, the Docker daemon, units, slices or anything else shared with the host. The Production data rules in the root `AGENTS.md` are hard limits on top of this. Each script's header says what it does; `ops/test-*.sh`, `ops/test-ember-run.py` and `ops/test-wait-for-deploy.py` are synthetic checks, and CI runs all but `ops/test-release-switch.sh`, which needs a systemd user session (`docs/ci-and-images.md`).
 
 ## Releases and deploy
 
@@ -49,7 +49,7 @@ Routine updates come from Dependabot (`docs/ci-and-images.md`). A Dependabot ale
 - Verify a deploy by comparing live `/sw.js` with `~/.local/share/ember/releases/<sha>/dist/sw.js`, and check that `ember-app` runs the digest in `releases/<sha>/IMAGE` (`ops/docker.sh inspect --format '{{.Image}}' ember-app` against `ops/docker.sh image inspect --format '{{.Id}}' <image>`). The app's log is `journalctl --user -u ember.service`.
 - The server gzips only for clients that send `Accept-Encoding` (never Range requests); plain `curl` sends none, so byte-for-byte comparisons see the uncompressed files.
 - Vite inlines small images into the JS bundle: compare hashes of non-inlined assets rather than grepping for file names.
-- `ops/livecheck.sh` prints a read-only summary of the live app. How to run it, read-only UI checks and changes that need backup evidence: `ops/live-account.md`.
+- `ops/livecheck.sh` prints a read-only summary of the live app. `ops/wait-for-deploy <sha>` waits for a merged commit to go live. How to run both, read-only UI checks and changes that need backup evidence: `ops/live-account.md`.
 
 ### Crash loops
 
