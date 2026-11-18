@@ -36,3 +36,11 @@ Read before changing the sync feed or outbox, local persistence, recovery export
 
 - `getHistory` (`apps/web/src/domain/model.ts`) returns exercise-block entries, not unique workouts: a workout with repeated blocks of one exercise yields several entries.
 - Aggregate per-session exercise volume across matching blocks by `workoutId`, without merging or deleting raw blocks or sets.
+
+## Testing sync and storage
+
+- Lost acknowledgements: forward the request to the real API, wait for its response, then abort only the browser's delivery. Compare the retried operation's body and the feed revisions.
+- Playwright `storageState` does not capture IndexedDB. Test reopening with a fresh page in the same context.
+- Chromium rejects a Web Lock request that has both `ifAvailable` and `signal`, so `apps/web/src/storage/draft-lock.ts` checks the signal inside the callback and chains acquisitions, which keeps a StrictMode remount from seeing its own earlier lock as another writer.
+- CDP `Storage.overrideQuotaForOrigin` is a probe, not proof. To test a full disk, throw `QuotaExceededError` at the native IndexedDB write inside a real transaction and name the test as an injection (`apps/web/tests/e2e/local-workflows.spec.ts`).
+- Wait for a field to be enabled after hydration before focusing it: focusing a disabled field does nothing, silently.

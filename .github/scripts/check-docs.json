@@ -1,5 +1,12 @@
 {
-  "docs": ["**/README.md", "**/AGENTS.md", "**/PRODUCT.md", "**/DESIGN.md", "**/docs/**/*.md"],
+  "docs": [
+    "**/README.md",
+    "**/AGENTS.md",
+    "**/PRODUCT.md",
+    "**/DESIGN.md",
+    "**/docs/**/*.md",
+    "ops/*.md"
+  ],
   "extensions": [
     ".ts",
     ".tsx",
@@ -45,12 +52,7 @@
     }
   ],
   "defaultBudget": 2500,
-  "overrides": {
-    "AGENTS.md": {
-      "words": 1300,
-      "reason": "the four protected sections and the shared Writing tests section stay word for word, plus the agent skills block"
-    }
-  },
+  "overrides": {},
   "allowMissing": [
     {
       "paths": ["**/dist/**", "**/dist-e2e/**"],
@@ -101,9 +103,9 @@
       "reason": "paths in the external Everkinetic source checkout"
     },
     {
-      "paths": ["GLOSSARY.md", "docs/adr"],
+      "paths": ["GLOSSARY.md"],
       "docs": ["AGENTS.md", "docs/agents/domain.md"],
-      "reason": "domain docs the domain-modeling skill creates when first needed"
+      "reason": "the glossary the domain-modeling skill creates when the first term is resolved"
     }
   ]
 }

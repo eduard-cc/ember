@@ -64,7 +64,7 @@ Production holds the owner's real history, including Strong imports (no template
 
 ## Open Decisions
 
-Conflict-resolution UX; future watch or health integration. Amber is the only accent.
+Conflict-resolution UX; future watch or health integration (`docs/product-decisions.md`). Amber is the only accent.
 
 ## Remaining Release Gates
 

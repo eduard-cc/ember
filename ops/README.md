@@ -49,10 +49,7 @@ Routine updates come from Dependabot (`docs/ci-and-images.md`). A Dependabot ale
 - Verify a deploy by comparing live `/sw.js` with `~/.local/share/ember/releases/<sha>/dist/sw.js`, and check that `ember-app` runs the digest in `releases/<sha>/IMAGE` (`ops/docker.sh inspect --format '{{.Image}}' ember-app` against `ops/docker.sh image inspect --format '{{.Id}}' <image>`). The app's log is `journalctl --user -u ember.service`.
 - The server gzips only for clients that send `Accept-Encoding` (never Range requests); plain `curl` sends none, so byte-for-byte comparisons see the uncompressed files.
 - Vite inlines small images into the JS bundle: compare hashes of non-inlined assets rather than grepping for file names.
-
-### Read-only live offline-shell check
-
-Use a fresh Pixel 6 browser context and intercept only `**/api/**` with a synthetic unavailable response, so owner history and mutations stay off the wire. Avoid a catch-all `context.route('**/*')`, even with `route.continue()`: in Chrome it leaves the reloaded page without a service-worker controller. Wait for activation, reload under the worker, then test offline reload and reopening in a fresh tab. Never print private page text.
+- `ops/livecheck.sh` prints a read-only summary of the live app. How to run it, read-only UI checks and changes that need backup evidence: `ops/live-account.md`.
 
 ### Crash loops
 
@@ -66,7 +63,7 @@ If the service crash-loops, systemd stops it and `ember-notify-failure@` alerts.
 
 ### Off-device backup
 
-A nightly root-owned backup job outside this repository dumps the live `ember` database with `pg_dump -Fc` through the service account's Docker socket (`$XDG_RUNTIME_DIR/ember/docker.sock`), skipping the daemon's raw data directory, into an encrypted off-device backup; keep its names stable (root `AGENTS.md`, Production data).
+A nightly root-owned backup job outside this repository dumps the live `ember` database with `pg_dump -Fc` through the service account's Docker socket (`$XDG_RUNTIME_DIR/ember/docker.sock`), skipping the daemon's raw data directory, into an encrypted off-device backup. Keep the `ember-postgres` container, the `ember` database and user, and that socket stable: a change to any of them needs the backup job changed with it and the next nightly dump confirmed.
 
 Restore drill: fetch the newest off-device dump read-only (never run `forget`, `prune` or `unlock` on the backup repository by hand), restore it with `ops/restore-check.sh <dump> <db>` as the service account into a new validation database, then compare every table with `ember`: row count and an ordered `md5` of all rows, plus the schema from `pg_dump -s`. Differences must be explained by writes after the snapshot time, typically new sessions or synced records. This dump includes the `sessions` table, so treat the validation database and the local file as secret: drop the database (`ops/docker.sh exec ember-postgres dropdb -U ember <db>`) and `shred -u` the file promptly. Repeat the drill after database changes. Recovery on a rebuilt machine is a release gate (`apps/web/PRODUCT.md`).
 
@@ -89,11 +86,11 @@ Accepted exposure: the account can read world-readable files and see other users
 
 ### Rootless Docker daemon
 
-Ember runs its PostgreSQL container in its own rootless Docker daemon, `ember-docker.service` in the service account, with the socket at `$XDG_RUNTIME_DIR/ember/docker.sock` and data under `~/.local/share/ember-docker`. The live `ember` database is published on 127.0.0.1:55438 (`EMBER_PG_PORT=55438 ops/docker.sh compose -f ops/compose.local.yml up -d --wait`); the server accepts that port for the `ember` database only. Development databases stay on the owner's own daemon (root `AGENTS.md`, Architecture). Use `ops/docker.sh` (the Docker CLI pointed at that socket, ignoring any exported `DOCKER_HOST`) for every Ember container command.
+Ember runs its PostgreSQL container in its own rootless Docker daemon, `ember-docker.service` in the service account, with the socket at `$XDG_RUNTIME_DIR/ember/docker.sock` and data under `~/.local/share/ember-docker`. The live `ember` database is published on 127.0.0.1:55438 (`EMBER_PG_PORT=55438 ops/docker.sh compose -f ops/compose.local.yml up -d --wait`); the server accepts that port for the `ember` database only. Development databases stay on the owner's own daemon (root `AGENTS.md`). Use `ops/docker.sh` (the Docker CLI pointed at that socket, ignoring any exported `DOCKER_HOST`) for every Ember container command.
 
 ### PostgreSQL version
 
-The image is pinned once, by tag and digest (`postgres:17.N-bookworm@sha256:…`), in `ops/compose.local.yml`. `ops/postgres-image.sh` reads it for `ops/backup.sh`, `ops/restore-check.sh`, `ops/image-smoke.sh` and CI (checked by `apps/web/tests/postgres-image.test.ts`); the backup scripts refuse a container with another image digest. Dependabot's minor PR moves tag and digest and carries the `hold` label, so it is never merged as is. Minors keep the data directory. Back up and restore-check, merge the new pin, then recreate the live container at once, as the service account, with `EMBER_PG_PORT=55438 ops/docker.sh compose -f ops/compose.local.yml up -d --wait` (the development one with plain `ops/docker.sh compose …`). Until then `ops/backup.sh` and deploys that add migrations refuse. To go back, pin the previous one and recreate again.
+The image is pinned once, by tag and digest (`postgres:17.N-bookworm@sha256:…`), in `ops/compose.local.yml`. `ops/postgres-image.sh` reads it for `ops/backup.sh`, `ops/restore-check.sh`, `ops/image-smoke.sh` and CI (checked by `apps/web/tests/postgres-image.test.ts`); the backup scripts refuse a container with another image digest. Dependabot's minor PR moves tag and digest and carries the `hold` label, so it is never merged as is. Minors keep the data directory. Back up and restore-check (`ops/live-account.md`), merge the new pin, then recreate the live container at once, as the service account, with `EMBER_PG_PORT=55438 ops/docker.sh compose -f ops/compose.local.yml up -d --wait` (the development one with plain `ops/docker.sh compose …`). Until then `ops/backup.sh` and deploys that add migrations refuse. To go back, pin the previous one and recreate again.
 
 ## Resource limits
 
