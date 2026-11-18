@@ -17,6 +17,10 @@ sudo -n /usr/local/sbin/ember-run -- bash -s < ops/livecheck.sh
 
 It prints the current release and the account checkout's head, the last auto-deploy journal lines, the release's `IMAGE`, `/api/v1/health` on loopback and through Serve, whether `/sw.js` and the shell match the release byte for byte, the hold file and whether `ember.service` is active. It never prints the origin or other `runtime.env` values. A hold equal to the healthy current release is normal.
 
+## Waiting for a deploy
+
+After a merge, `ops/wait-for-deploy <merge sha>` waits until the auto-deploy serves a release containing that commit with `ember.service` active, and reports a hold (CI failure, deploy failure or rollback) or a timeout instead. It reads the account's state read-only through `ember-run`. Exit 0: live and healthy; 1: failed or held; 2: still waiting at `--timeout-min` (default 40).
+
 ## Read-only UI checks
 
 - Offline shell: use a fresh Pixel 6 browser context and intercept only `**/api/**` with a synthetic unavailable response, so owner history and mutations stay off the wire. Avoid a catch-all `context.route('**/*')`, even with `route.continue()`: in Chrome it leaves the reloaded page without a service-worker controller. Wait for activation, reload under the worker, then test offline reload and reopening in a fresh tab.

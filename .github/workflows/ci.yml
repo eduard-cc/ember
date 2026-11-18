@@ -300,6 +300,7 @@ jobs:
       - run: bash ops/test-deploy.sh
       - run: bash ops/test-auto-deploy.sh
       - run: python3 -B ops/test-ember-run.py
+      - run: python3 -B ops/test-wait-for-deploy.py
 
   # Builds the production image (the Dockerfile runs the build-time smoke check) and runs
   # ops/image-smoke.sh on it. Nothing here can push: the job never logs in to a registry. A

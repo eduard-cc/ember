@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""Block until Ember's auto-deploy has a merged commit live, or report why not.
+
+  ops/wait-for-deploy <sha> [--timeout-min 40]
+
+Exit 0: "deployed <sha> and healthy" (the serving release contains the commit; the deploy's
+own health checks passed, since a failed check rolls back). Exit 1: the deploy failed or the
+commit is held (CI failure, deploy failure, rollback). Exit 2: timed out still waiting.
+Reads the service account's state read-only through `sudo -n /usr/local/sbin/ember-run`.
+"""
+import argparse
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+REPO = str(Path(__file__).resolve().parents[1])  # the checkout this script runs from
+POLL_S = 30
+STATE = (
+    'cd ~/.local/share/ember; '
+    'echo "current=$(basename "$(readlink -f current)")"; '
+    'echo "hold=$(cat auto-deploy.hold 2>/dev/null)"; '
+    'echo "deployer=$(systemctl --user is-active ember-auto-deploy.service)"; '
+    'echo "app=$(systemctl --user is-active ember.service)"'
+)
+
+
+def git(*args):
+    return subprocess.run(["git", "-C", REPO, *args], capture_output=True, text=True)
+
+
+def contains(release, sha):
+    """True when the release commit is sha or a descendant of it."""
+    return bool(release) and (release == sha or git("merge-base", "--is-ancestor", sha, release).returncode == 0)
+
+
+def state():
+    out = subprocess.run(["sudo", "-n", "/usr/local/sbin/ember-run", "--", "bash", "-c", STATE],
+                         capture_output=True, text=True, timeout=60)
+    if out.returncode != 0:
+        raise RuntimeError(out.stderr.strip()[-300:] or "ember-run failed")
+    return dict(line.split("=", 1) for line in out.stdout.splitlines() if "=" in line)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("sha")
+    ap.add_argument("--timeout-min", type=int, default=40)
+    args = ap.parse_args()
+    git("fetch", "--quiet", "origin")
+    full = git("rev-parse", "--verify", "--quiet", args.sha + "^{commit}")
+    if full.returncode != 0:
+        sys.exit(f"unknown commit {args.sha} in {REPO}")
+    sha = full.stdout.strip()
+    deadline = time.time() + args.timeout_min * 60
+    last = None
+    while True:
+        try:
+            s = state()
+        except (RuntimeError, subprocess.TimeoutExpired) as e:
+            print(f"cannot read Ember deploy state: {e}", file=sys.stderr)
+            return 1
+        last = s
+        busy = s.get("deployer") in ("active", "activating")
+        if contains(s.get("current"), sha) and not busy:
+            if s.get("app") != "active":
+                print(f"release {s['current'][:12]} contains {sha[:12]} but ember.service is {s.get('app')}")
+                return 1
+            print(f"deployed {sha[:12]} and healthy (serving {s['current'][:12]})")
+            return 0
+        hold = s.get("hold", "")
+        if not busy and hold and not contains(s.get("current"), sha) and (hold == sha or contains(hold, sha)):
+            print(f"not live: auto-deploy holds {hold[:12]} (CI failure, deploy failure or rollback); "
+                  f"serving {s.get('current', '?')[:12]}. "
+                  "Details: sudo /usr/local/sbin/ember-run -- journalctl --user -u ember-auto-deploy -n 80")
+            return 1
+        if time.time() > deadline:
+            print(f"timed out after {args.timeout_min} min; last state: {last}")
+            return 2
+        time.sleep(POLL_S)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
