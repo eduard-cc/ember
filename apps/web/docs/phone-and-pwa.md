@@ -8,6 +8,8 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. `apps/web/
 - Amber is the only accent. Every border names a token (`border-border`); there is no global border colour.
 - Shared primitives live in `apps/web/src/components/ui/`.
 - Keep hook classes such as `app-shell`, `settings-panel` and `nav-item`: tests and JS select on them.
+- Tailwind `max-[480px]:` applies below 480px, not at it.
+- A Recharts `<Cell>` without `fill` renders black: give every cell its own fill (`apps/web/src/views/ProfileView.tsx`).
 
 ## Layout and rendered size
 
@@ -19,8 +21,17 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. `apps/web/
 - The editors' Discard changes? drawer covers the editor, so Radix hides the editor from the accessibility tree while it is open: role queries scoped to the editor dialog find nothing then. Select it by its class (`.history-editor`, `.template-editor`) in tests, and check that Keep editing, Escape and back each return focus to the last field.
 - Never toggle a CSS animation by focus modality on a surface that stays open (`.pushed-page:has(:focus-visible)` sets `animation: none`): the pointer press that moves focus off a programmatically focused field restores the animation and replays the slide-in, so the press lands on whatever slid under it. The pushed editor uses its own `.editor-pushed` class for that reason.
 - Dialogs stack (`apps/web/DESIGN.md` "Nested surfaces stack"): keep the parent open under its child rather than closing and reopening it. The Dialog scrim shares the surfaces' `z-50`, so stacked portals layer in opening order; a lower scrim would leave the parent undimmed above the child's scrim.
+- Keep a dialog's content in state that outlives `open` (for example `{id, open}`), or the content blanks during the close fade.
+- Take a layer's focus-return target from the opening event's `currentTarget`, never `document.activeElement`: Safari on iPhone doesn't focus a tapped button.
+- Block dismissal of a vaul drawer with `dismissible={false}` (as the Finish drawer does while saving), not only in `onOpenChange`: by then the drawer has already slid away.
+- Radix handles Escape before an inline menu sees it; give an open menu the first chance at Escape.
+- If the tabs or another fixed control vanish from the accessibility tree, look for `inert` or `aria-hidden` ancestors first: the logger sheet makes the tabs and the covered library inert (`apps/web/src/App.tsx`).
 - `<main>` is `hidden` while `sync.locked`, but Radix dialogs portal outside it: anything showing history must unmount while `sync.locked`.
 - Never put an `aria-live` region inside the logger or an editor. Radix's `hideOthers` keeps every `[aria-live]` element and its ancestors exposed, so the logger behind a modal stays in the accessibility tree. Portal live regions to `document.body` (see the reorder announcement in `apps/web/src/views/WorkoutView.tsx` and `Announcement` in `apps/web/src/components/StateNotice.tsx`, which condition pills and strips use).
+
+## Number inputs (`apps/web/src/components/ReplaceInput.tsx`)
+
+Focus dims the value and the first typed digit replaces it. Never select the text on focus (`select()` or a whole-value `setSelectionRange`): that opens the phone's native Cut/Copy bar, which nothing can suppress. The replacement uses a native `beforeinput` listener, because React's `onBeforeInput` has no `inputType`, and parks the caret by switching the field to `type='text'` for one `setSelectionRange` (otherwise typing 62.5 can give 2.56). The fallback `onChange` diffs against the text captured on focus, not the stored number: `080` against a stored `80` once saved 805. Browser tests can't prove the native bar stays away; that needs a real phone.
 
 ## Back gesture (`apps/web/src/state/back.ts`)
 
@@ -29,6 +40,8 @@ Chrome lets the back gesture skip history entries a page added without a fresh u
 ## Drag gestures
 
 A release between a hold timer and the React effect that attaches listeners is lost and leaves scrolling blocked. Hand the pointer over explicitly (track up/cancel until the new owner claims it), register a non-passive window `touchmove` only for the press, and let the click-swallow guard expire after release and ignore `detail === 0`. Test with an injected pointerup right after the timer, and assert the held row starts under the finger in a list too short to scroll.
+
+Row handlers check physical DOM containment (`event.currentTarget.contains(event.target)`), because events from a portaled dialog bubble through the React tree. Moving pointer capture from a pressed control to its row also fires `lostpointercapture` on that control, so the row cancels only on losing its own capture (`apps/web/src/components/SetRow.tsx`). Set deletions are functional updates by stable exercise and set ids: two exit animations can finish in the same frame.
 
 ## Installed Android PWA
 

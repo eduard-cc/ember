@@ -35,7 +35,18 @@ cp -p <main checkout>/apps/api/.env <worktree>/apps/api/      # keep mode 0600
 ## Writing Playwright tests
 
 - Before capturing a baseline row/card count, await the expected seeded ledger or an enabled field. `data-save='saved'` can be observed before the hydrated draft renders, giving a false zero baseline.
-- Phone flows use the Pixel 6 device (`devices['Pixel 6']`); the default `mobile` project is a 390×844 viewport.
+- Phone flows use the Pixel 6 device (`devices['Pixel 6']`); the default `mobile` project is only a 390×844 viewport, with no touch and `isMobile` false, so a test that taps enables touch itself (`hasTouch: true`).
+- Tap and click by coordinates (`page.touchscreen.tap` or `page.mouse.click` at the box centre) when the test is about what receives the tap: `locator.click()`, `fill()` and `toBeInViewport()` pass even when another layer swallows it. Prove native touch handling with CDP `Input.dispatchTouchEvent` after resetting scroll (`apps/web/tests/e2e/exercise-reorder.spec.ts`).
+- Before measuring geometry, await every animation: `Promise.all(document.getAnimations({subtree: true}).map((a) => a.finished))`. Take phone screenshots of the viewport, never `fullPage`: the fixed tab bar gets painted mid-list.
+- The logger need not open at its top: set `.workout-scroll`'s `scrollTop` to 0 before measuring or touching a header. Drill-through tab switches share the `.library-scroll` scroller: assert its `scrollTop` is 0 after the switch.
+- Keyboard bugs: stub `visualViewport` shrinking in steps of about 40px, one `resize` per step, and shrink `innerHeight` too. An instant jump passes against broken code.
+- Number fields: type with `page.keyboard.type('62.5')` after a click, never `fill()`, which replaces the whole value and never exercises the first-digit replacement (`docs/phone-and-pwa.md`, Number inputs).
+- Escape races with a Radix menu: `escapeAsMenuTakesFocus` in `apps/web/tests/navigation.ts` sends a cancelable Escape the moment the first `menuitem` takes focus, before Radix has made the menu the top layer.
+- Charts: after focusing one, await its first inspected value before pressing arrow keys.
+- CI's headless Chromium reports `Notification.permission` as denied even after `grantPermissions`; stub only that property (`apps/web/tests/pwa/notification.spec.ts`).
+- IndexedDB fixtures: Dexie's `liveQuery` views see only writes made through Dexie, so mutate fixtures through Dexie inside the page (evaluate the local Dexie UMD bundle with `page.evaluate`), not with raw IndexedDB calls. Never relax the CSP to load it.
+- A failure only on CI with empty received text: compare the trace's first and last action times with the 30-second test timeout before debugging product code. If the test is just long, give it `test.setTimeout(60_000)`; never weaken its assertions.
+- Before shipping a test-only fix for a flake, reproduce it deterministically on the old code: an Ember flake can be a real product race.
 - CI Playwright settings live in `playwright.config.ts`: 4 workers, `retries: 1` with `failOnFlakyTests` (a pass on retry still fails), trace `on-first-retry`, `maxFailures: 10`. Per-test tracing cost about a quarter of the run, which is why it is retry-only.
 - A test that passes only on retry fails the job. Fix the wait, don't raise retries: for example, a menu opened by a click takes focus asynchronously, so assert that its first item is focused before pressing Escape.
 - Before adding e2e tests, compare `Playwright (phone)`'s recent duration with its `timeout-minutes`. Test time is evenly spread, so there is no single slow test to cut. Per-page cost is why most tests run against the bundled build: keep new tests off the dev server unless they need source modules.

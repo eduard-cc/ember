@@ -106,6 +106,11 @@ A new record kind ships compatibly:
 - Deploy the compatible server bridge before the UI, so a one-command rollback keeps API support.
 - Filter opt-in kinds before pagination for legacy clients (`apps/api/src/sync/service.ts`), so a legacy cursor is always the last change it could see.
 - Keep an independent opt-in cursor (see `DELETES_CURSOR` in `apps/web/src/sync/engine.ts`). A one-time replay boolean is not enough: a rolled-back frontend can advance the shared cursor past hidden creates, edits or tombstones. Test upgrade, legacy cursor advancement and return to the new frontend.
+- Before writing it, read the deployed client's validator (`git show <deployed-sha>:apps/web/src/sync/engine.ts`); `ops/livecheck.sh` prints the deployed release. The bridge and the UI are separate PRs: merge and deploy the bridge before merging the UI.
+- A parallel feature with its own opt-in kind conflicts in the kind enum, the headers, the apply branch and the cursor writes. Resolve to the union and keep both headers; one feature's header never exposes another feature's kind.
+- On every legacy page, at limits 1, 2 and 100, assert that `nextCursor` is the last `changeSeq` (or `after` when the page is empty), that a page is never empty while `hasMore`, and that every kind is in the old strict enum. Checking only that the hidden kind is absent also passes when filtering runs after pagination. Cover the hidden record being the newest change.
+- The kind-compatibility table is a `Record<OperationKind, readonly OperationKind[]>` (`allowedKinds` in `apps/api/src/sync/service.ts`), so a missing entry fails to compile instead of failing mid-batch.
+- Unit-test export with a pending tombstone in the outbox: strict backup validators reject payloads they didn't expect. Prove the whole path with one two-device integration test against a real database; mocked-feed unit tests miss header and cursor wiring.
 
 ## Retiring a stored field
 
