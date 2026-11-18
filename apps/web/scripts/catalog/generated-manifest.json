@@ -369,8 +369,8 @@
       "name": "Power Clean (Barbell)",
       "status": "accepted",
       "attempts": 16,
-      "sha256": "0b5aaa547920d3ad9c778f951820a8ec342d9b37df42665537bda0db65281a55",
-      "startSha256": "a961740c47c3465f0bf25c3b70c2e842c06ec930fb176c0524e07d1a1614ab7a",
+      "sha256": "df2de6a3610337f0aeed8014e7309323411157e61b77954728717ce1c8340688",
+      "startSha256": "05673118272ca42a576ccfdf7aaeb811be502c299c707354a5033e51da055413",
       "credit": "after-everkinetic",
       "line": "default"
     },
