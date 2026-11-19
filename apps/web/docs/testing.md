@@ -27,7 +27,7 @@ cp -p <main checkout>/apps/api/.env <worktree>/apps/api/      # keep mode 0600
 
 ## Flaky or killed local runs
 
-- Missing-element failures that move between tests on each run usually mean host load. Check `uptime`, rerun with `--workers=2`, and only debug failures that repeat.
+- Missing-element failures that move between tests on each run usually mean host load. Check `uptime`, rerun with `--workers=1`, and only debug failures that repeat.
 - A chain that dies with exit 143 / `Terminated` and no failing test is usually the OOM killer (the jobs slice has `MemoryMax=4G`, see `ops/systemd/ember-jobs.slice`). Confirm with `journalctl --user --since -30min --grep='oom|Out of memory' --no-pager` and `free -h`, then rerun with `--workers=1` rather than debugging code.
 - Every remaining test failing with `net::ERR_CONNECTION_REFUSED` on 5188 means the e2e web server died mid-run; under heavy host load Node has crashed with `abort: Lazy deopt after a fast API call` in the `[WebServer]` output. It is not the change under test: rerun with `--last-failed` and debug only what still fails.
 - If `--workers=1` is also OOM-killed, stop retrying locally and do not raise the limits: stop task-owned previews, open a feature PR so CI runs the full suite in isolation, and merge only after its exact head is green. Main must then pass its own push CI before `ops/deploy.sh` accepts the release.
@@ -47,6 +47,6 @@ cp -p <main checkout>/apps/api/.env <worktree>/apps/api/      # keep mode 0600
 - IndexedDB fixtures: Dexie's `liveQuery` views see only writes made through Dexie, so mutate fixtures through Dexie inside the page (evaluate the local Dexie UMD bundle with `page.evaluate`), not with raw IndexedDB calls. Never relax the CSP to load it.
 - A failure only on CI with empty received text: compare the trace's first and last action times with the 30-second test timeout before debugging product code. If the test is just long, give it `test.setTimeout(60_000)`; never weaken its assertions.
 - Before shipping a test-only fix for a flake, reproduce it deterministically on the old code: an Ember flake can be a real product race.
-- CI Playwright settings live in `playwright.config.ts`: 4 workers, `retries: 1` with `failOnFlakyTests` (a pass on retry still fails), trace `on-first-retry`, `maxFailures: 10`. Per-test tracing cost about a quarter of the run, which is why it is retry-only.
+- CI's Playwright settings (workers, retries, tracing, failure cap) and their reasons are in `playwright.config.ts`.
 - A test that passes only on retry fails the job. Fix the wait, don't raise retries: for example, a menu opened by a click takes focus asynchronously, so assert that its first item is focused before pressing Escape.
 - Before adding e2e tests, compare `Playwright (phone)`'s recent duration with its `timeout-minutes`. Test time is evenly spread, so there is no single slow test to cut. Per-page cost is why most tests run against the bundled build: keep new tests off the dev server unless they need source modules.

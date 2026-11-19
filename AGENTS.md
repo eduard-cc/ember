@@ -8,13 +8,13 @@ Rules and traps the code doesn't show. Each app's `AGENTS.md`, `packages/contrac
 - Run npm inside each app (`npm --prefix apps/web …`); each has its own lockfile. Prettier runs once, from `apps/web`, over the whole repository.
 - Product rules: `apps/web/PRODUCT.md`; the visual contract: `apps/web/DESIGN.md`. Design, test and verify at phone sizes only.
 - Commit messages follow Conventional Commits (`feat(catalog): …`, `docs: …`).
-- Before handoff: `npm --prefix apps/web run format:check`, then the checks the touched app's `AGENTS.md` lists (both apps' for `packages/contracts`). Run the local-only `test:integration` whenever sync, imported history or recovery is touched.
+- Before handoff run `npm --prefix apps/web run format:check`, the touched app's `lint:check` and `typecheck` (both apps' for `packages/contracts`), and the tests covering your change; CI runs the full suites. `test:integration` is not in CI: run it whenever sync, imported history or recovery is touched.
 
 ## Host and live app
 
 - Development and tests use only the development `ember-postgres` on 127.0.0.1:55439 (`ember_dev` and per-run `ember_*` databases) and the API on 127.0.0.1:5190. The live database is `ember` on 127.0.0.1:55438, in the service account's own Docker daemon, served on 5191; on that port the API accepts only the `ember` database.
 - The API stays loopback-only behind Tailscale Serve, which strips spoofed identity headers, and production accepts only the owner's exact Tailscale login. Never enable Funnel or accept other tailnet users (`docs/adr/0002-loopback-identity-trust.md`).
-- The live app runs from built releases in a dedicated service account. Never build in or serve from a checkout, and run live commands only as `ops/README.md` and `ops/live-account.md` describe.
+- The live app runs from built releases in a dedicated service account. Never build, install or run dev servers in either `~/src/ember` checkout (the service account's or the owner's); use a worktree. Run live commands only as `ops/README.md` and `ops/live-account.md` describe.
 - Other apps share this host. Run Ember containers only in Ember's own rootless Docker daemon through `ops/docker.sh`, with explicit container and project names. Never run `docker system/volume/image prune` or an unscoped `compose down -v`. Change Tailscale Serve only on Ember's own device.
 
 ## Production data

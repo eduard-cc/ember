@@ -1,63 +1,3 @@
----
-name: Ember
-description: Mobile-first workout ledger with inspectable evidence and durable local saving.
-colors:
-  paper-bg: 'hsl(38.6 43.8% 93.7%)'
-  ink-fg: 'hsl(270 7.5% 15.7%)'
-  paper-surface: 'hsl(42 55.6% 96.5%)'
-  paper-muted: 'hsl(37.9 20% 81.4%)'
-  paper-muted-fg: 'hsl(33.7 7.8% 40%)'
-  paper-border: 'hsl(39.1 19.7% 77.1%)'
-  paper-accent: 'hsl(37.1 36.8% 88.8%)'
-  night-bg: 'hsl(252 10.2% 9.6%)'
-  night-fg: 'hsl(38.6 31.8% 91.4%)'
-  night-surface: 'hsl(260 9.1% 12.9%)'
-  night-muted: 'hsl(266.7 8.7% 20.2%)'
-  night-muted-fg: 'hsl(36 9.2% 68%)'
-  night-border: 'hsl(270 6.9% 22.7%)'
-  night-accent: 'hsl(262.5 9.1% 17.3%)'
-  primary: '#9e5700'
-  primary-foreground: 'hsl(38.6 43.8% 93.7%)'
-  primary-tint: '#f5ead6'
-  secondary: 'hsl(34.3 38.2% 89.2%)'
-  secondary-foreground: '#9e5700'
-  night-primary: '#f5b13d'
-  night-primary-foreground: 'hsl(252 10.2% 9.6%)'
-  night-primary-tint: '#332b1f'
-  night-secondary: 'hsl(265.7 8.2% 16.7%)'
-  night-secondary-foreground: '#f5b13d'
-  destructive: 'hsl(6 62% 42%)'
-  destructive-foreground: 'hsl(8 60% 96%)'
-  night-destructive: 'hsl(4 70% 66%)'
-  night-destructive-foreground: 'hsl(4 40% 12%)'
-  warning: 'hsl(34 80% 30%)'
-  night-warning: 'hsl(36 70% 58%)'
-  info: 'hsl(200 60% 33%)'
-  night-info: 'hsl(200 55% 62%)'
-  success: 'hsl(150 50% 27%)'
-  night-success: 'hsl(148 40% 55%)'
-  chart-primary: 'hsl(270 7% 30%)'
-  chart-secondary: 'hsl(37 16% 74%)'
-  chart-secondary-edge: 'hsl(37 12% 48%)'
-  night-chart-primary: 'hsl(38 28% 80%)'
-  night-chart-secondary: 'hsl(36 6% 48%)'
-  scrim: 'hsl(252 10.2% 9.6%)'
-  night-scrim: 'hsl(252 12% 3%)'
-typography:
-  body: {fontFamily: 'Inter, system-ui, sans-serif', fontSize: '14px', lineHeight: 1.5}
-  page-title: {fontSize: '24px', fontWeight: 600, lineHeight: 1.333, letterSpacing: '-0.025em'}
-  section-title: {fontSize: '18px', fontWeight: 600, lineHeight: 1.35}
-  card-title: {fontSize: '16px', fontWeight: 600, lineHeight: 1.5}
-  label: {fontSize: '12px', fontWeight: 500, lineHeight: 1.333}
-  caption: {fontSize: '11px', lineHeight: 1}
-  set-value: {fontSize: '18px', fontWeight: 600, lineHeight: 1.5}
-  stat: {fontSize: '28px', fontWeight: 600, lineHeight: 1.1, letterSpacing: '-0.02em'}
-rounded:
-  button: '6px'
-  input: '6px'
-  card: '12px'
----
-
 # Design System: Ember
 
 ## Scope and character
@@ -68,11 +8,11 @@ A visual change never replaces storage, sync or ownership behaviour (`docs/sync-
 
 ## Palette, type and shape
 
-- `src/index.css` is the only stylesheet and the source of the tokens above; `[data-theme='dark']` selects Night. Amber is the only accent (no accent picker), and the focus ring equals primary.
+- `src/index.css` is the only stylesheet and the single source of the colour, type and radius tokens; `[data-theme='dark']` selects Night. Amber is the only accent (no accent picker), and the focus ring equals primary.
 - Primary marks Start, Finish, confirmed checks, navigation and personal-record dots. Secondary is the selected-segment wash with Amber text. Chart series stay neutral (`chart-primary`); past weekly bars use `chart-secondary` with its edge stroke, the current week Amber. Volume is not a strength colour. Body-weight changes carry no good/bad colour.
 - Destructive text identifies removal; solid destructive fill is reserved for a confirmation. Cancel workout and undoable Delete entry are outlined destructive-text actions. Storage errors use destructive; check the unused warning token's distinction from Amber before using it.
 - System theme is the default and follows live OS changes; Light/Dark override it. The appearance preference (`ember:appearance:v1`) is separate from workout data; a failed preference write keeps the tab usable, says so and never changes workout-saving claims.
-- Inter Variable is bundled locally: no CDN, display font or ornamental monospace. Use the type styles above and weights 400/500/600/700. Input text is at least 16px; chart axes at least 11 CSS px. Every value, count and date used for comparison uses tabular numerals.
+- Inter Variable is bundled locally: no CDN, display font or ornamental monospace. Use its type styles (`--text-*`) and weights 400/500/600/700. Input text is at least 16px; chart axes at least 11 CSS px. Every value, count and date used for comparison uses tabular numerals.
 - Corners: controls and tinted notes `rounded-md` (6px); set checks, inline menu rows and PR tags `rounded-sm` (4px); cards, banners, centred dialogs and drawer tops `rounded-card` (12px). Full-screen panels, edge-to-edge bands and chart bars stay square. Flat cards have 1px token borders, not decorative shadows. Dialog elevation uses `--shadow` and a 60% Paper / 85% Night scrim.
 - The icon is the Ember heart (`EmberHeart`), also the launch splash and celebration heart. The `public/icons/` PNGs (maskable glyph inside the 40% safe circle) and `favicon.svg` share its traced paths: change the mark in all of them together. Manifest splash and gesture-strip colours stay Night: Android ignores the page theme there.
 
@@ -87,13 +27,12 @@ A visual change never replaces storage, sync or ownership behaviour (`docs/sync-
 
 `src/components/ui/` is the shared primitive layer, keeping one visual and disabled-state vocabulary. Buttons and set actions are at least 44px, primary drawer actions 48px, menu rows 56px. Focus is a visible 2px primary ring with 2px offset, inset where the control fills its row.
 
-- `ResponsiveDialog` is a vaul bottom drawer below 1000px and a centred Dialog above. Every confirmation (wording: `docs/product-decisions.md`) and phone ⋯ menu uses it, never a browser confirm. Phone confirmations put the primary action on top but initially focus the safe choice. Descriptions, Escape, focus trapping/return and scrim dismissal are part of the contract.
+- `ResponsiveDialog` is a vaul bottom drawer below 1000px and a centred Dialog above. Every confirmation (wording: "Copy" below) and phone ⋯ menu uses it, never a browser confirm. Phone confirmations put the primary action on top but initially focus the safe choice. Descriptions, Escape, focus trapping/return and scrim dismissal are part of the contract.
 - Drawers are bounded by the visible viewport, with contained scrolling and safe-area footer padding. On phones a drawer ends where the keyboard begins and returns to its own height when the keyboard goes, even if a field keeps focus (`ResponsiveDialogContent` follows `visualViewport`; vaul's `repositionInputs` is off).
 - Full-screen exceptions: Settings, the template and history editors, the exercise picker, the pushed exercise page and the celebration. They never become centred cards on phones. Editors ask before discarding a changed draft in a Discard changes? drawer, which is its own back layer.
 - Nested surfaces stack. A surface opened from another leaves its parent mounted underneath; dismissing it (control, Escape, back gesture) returns to the parent as it was, with the same scroll and focus on the control that opened it. Full-screen children that cover their parent show ← Back before the title instead of ✕; partial drawers and confirmations keep ✕ or their Keep button. Stacked dialogs layer in opening order, each scrim dimming everything beneath it. Source links open the workout drawer over the surface they sit on, and closing it returns to the tapped row. Actions that leave for another place (Repeat, Save as template) close the stack; a menu row closes its menu before its action runs.
 - `ActionSheet` focuses its first row and supports arrow/Home/End; closing returns focus before handing off the action. An outside closing tap is consumed, never passed through to a set.
 - Segments, chips and sort share one selected styling; chips scroll horizontally without widening the page. No selection animation on frequently used filters.
-- Toasts (`src/components/toasts.tsx`) show one at a time. App hides its Toaster while Settings is open, because the modal's focus trap would keep the keyboard from a toast's action; the exercise picker mounts its own.
 - No tap highlight or text-size inflation; controls use `touch-action: manipulation`, with no selection or iOS callout, while input editing stays native. Page overscroll is disabled. Hover is capability-gated. Never truncate comparison values or dates: wrap or move metadata before shrinking an action.
 
 ## Motion and feedback
@@ -135,7 +74,7 @@ Reduced motion removes movement, smooth scrolling, transitions, the live ping an
 
 ## Exercises and inspectable analytics
 
-- The list never fuzzy-merges names. A repeated block counts once in the workout count, never once in its analytics. Picker All rows stay A–Z whatever the saved browsing sort. Details receive only finished and imported history.
+- A repeated block counts once in the workout count, never once in its analytics. Picker All rows stay A–Z whatever the saved browsing sort. Details receive only finished and imported history.
 - About shows drawings, equipment and muscles, with an explicit missing-drawing state and no instruction or credit text. Custom names keep history, charts and records with a not-in-catalog state. AI-assisted drawings stay marked as such in the data (`docs/catalog.md`); restore a credits view before any public release.
 - Metrics per exercise type, records and the Epley bounds: `PRODUCT.md`. Duration/distance trends show a clear empty state.
 - Charts open on 3M, widened to 6M, 1Y, then All until at least two sessions fall inside. `TrendArea` uses calendar-month ticks and readable 11px labels; distinct tick values must stay distinct after formatting.
@@ -182,10 +121,15 @@ The logger autosaves without a notice; a failed save surfaces through its error 
 - Settings never gains the controls `PRODUCT.md` excludes. Owned history, including portaled forms, unmounts while sync is locked; body weight also while saved data is unreadable.
 - App update appears only with a waiting production shell and applies through an explicit confirmation that requires the saved, draft-free, trusted installation-lock transition, including cross-tab checks. Applying never reloads the current page. The unreadable-data reset also needs its own confirmation, keeps the original bytes and is never a server-history reset.
 
+## Copy
+
+- Confirmations name the affected item and the immediate consequence, state only real risks and offer a safe cancel. They never reassure about history, records or sync.
+- Public descriptions of the app say what it does, never what it lacks.
+
 ## Back, safety and verification
 
 Every transient layer (picker, details, drawer, menu, Settings, editors, celebration, the expanded phone logger) holds one same-document back entry. Back closes only the newest; dirty edits ask and keep the changes. Main tabs add no history. Preserve `src/state/back.ts`'s forward-onto-existing-entry strategy (`docs/phone-and-pwa.md`). A launch-restored logger arms on the first tap.
 
 Hook classes, live regions and sync-lock unmounting: `docs/phone-and-pwa.md`. Saved means the IndexedDB transaction committed, never a cosmetic timer.
 
-Verify the populated app at Pixel 6 (412×915), 320px and short landscape, in Paper and Night. Stress long, unbreakable and non-Latin names, four-digit counts and loads, many sets, empty/one/large histories and enlarged text; measure overflow, reachable 44px actions and chart labels, then inspect screenshots. Use synthetic data; abort API writes in live checks. Chromium emulation does not satisfy real Android or iPhone keyboard, gesture, audio or haptic acceptance (release gates in `PRODUCT.md`).
+Verify the populated app at Pixel 6 (412×915), 320px and short landscape, in Paper and Night, with worst-case data; measure overflow, reachable 44px actions and chart labels, then inspect screenshots. Use synthetic data; abort API writes in live checks. Chromium emulation does not satisfy real Android or iPhone keyboard, gesture, audio or haptic acceptance (release gates in `PRODUCT.md`).

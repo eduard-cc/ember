@@ -5,7 +5,7 @@ Read before UI, layout, gesture, accessibility or installed-PWA work. `apps/web/
 ## Styling conventions
 
 - `apps/web/src/index.css` is the only stylesheet; everything else is Tailwind v4 utilities, with no `!` important modifiers.
-- Amber is the only accent. Every border names a token (`border-border`); there is no global border colour.
+- Every border names a token (`border-border`); there is no global border colour.
 - Shared primitives live in `apps/web/src/components/ui/`.
 - Keep hook classes such as `app-shell`, `settings-panel` and `nav-item`: tests and JS select on them.
 - Tailwind `max-[480px]:` applies below 480px, not at it.
