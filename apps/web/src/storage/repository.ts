@@ -2,6 +2,7 @@ import {
   AppStateSchema,
   type BodyWeight,
   BodyWeightSchema,
+  DraftWorkoutSchema,
   type LocalOperation,
   WorkoutSchema,
 } from '@ember/contracts';
@@ -132,7 +133,7 @@ export class WorkoutRepository {
     return this.db.bodyWeights.toArray();
   }
   async commitDraft(workout: Workout): Promise<void> {
-    const snapshot = WorkoutSchema.parse(workout);
+    const snapshot = DraftWorkoutSchema.parse(workout);
     return this.enqueue(async () => {
       await this.db.transaction('rw', this.db.drafts, async () => {
         await this.db.drafts.put({key: 'active', workout: snapshot});
@@ -140,7 +141,10 @@ export class WorkoutRepository {
     });
   }
   async finishWorkout(workout: Workout): Promise<Workout> {
-    const parsed = WorkoutSchema.parse(workout);
+    // The template link belongs to the draft; saved history never carries it.
+    const recorded = {...workout};
+    delete recorded.templateId;
+    const parsed = WorkoutSchema.parse(recorded);
     const finished = {
       ...parsed,
       duration: elapsedMinutes(parsed.date, this.now()),

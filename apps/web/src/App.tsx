@@ -51,6 +51,7 @@ import {SectionHeading} from './components/ui/section-heading';
 import {routineTargets} from './components/workout-targets';
 import {newRecords} from './domain/finish-summary';
 import {countedSets} from './domain/sets';
+import {type TemplateUpdate, templateUpdate} from './domain/template-update';
 import type {Workout} from './domain/types';
 import {cue} from './feedback';
 import {MOBILE_QUERY, useIsMobile} from './hooks/use-is-mobile';
@@ -164,8 +165,13 @@ export default function App() {
 
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
+  // Asked between a committed finish and its celebration, for a workout that changed its template.
+  const [templateOffer, setTemplateOffer] = useState<
+    (TemplateUpdate & {name: string; celebration: Celebration}) | null
+  >(null);
   // A sync lock hides history, so the celebration ends there rather than replaying on unlock.
   if (celebration && sync.locked) setCelebration(null);
+  if (templateOffer && sync.locked) setTemplateOffer(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [deletingSets, setDeletingSets] = useState(false);
   const [pendingWorkout, setPendingWorkout] = useState<Workout | null>(null);
@@ -274,7 +280,7 @@ export default function App() {
     else {
       askOnStart();
       cue('start');
-      void setState((s) => ({...s, active: newWorkout(workout)}));
+      void setState((s) => ({...s, active: newWorkout(workout, workout.templateId)}));
       setView('Workout');
       expand(true);
     }
@@ -308,6 +314,7 @@ export default function App() {
   const completed = state.active?.exercises.reduce((n, ex) => n + countedSets(ex).length, 0) ?? 0;
   const finish = async () => {
     if (!completed || deletingSets) return;
+    const templateId = state.active?.templateId;
     const workout = await finishWorkout();
     // Only a committed finish celebrates; a failed one keeps the confirmation and its error.
     if (workout) {
@@ -316,8 +323,32 @@ export default function App() {
       setHistorySearch(false);
       setView('History');
       setExercise(null);
-      setCelebration({workout, records: newRecords(workout, allDataset)});
+      const celebration = {workout, records: newRecords(workout, allDataset)};
+      const template = templateId && state.templates?.find((t) => t.id === templateId);
+      const update = template && templateUpdate(template, workout);
+      if (update) setTemplateOffer({...update, name: template.name, celebration});
+      else setCelebration(celebration);
     }
+  };
+  // Either answer goes on to the celebration; a failed update keeps a Retry toast.
+  const answerTemplateOffer = (accept: boolean) => {
+    if (!templateOffer) return;
+    const {template, celebration} = templateOffer;
+    setTemplateOffer(null);
+    setCelebration(celebration);
+    if (!accept) return;
+    const save = () =>
+      void setState((s) => ({
+        ...s,
+        // Only the exercises change: a rename synced meanwhile keeps its name.
+        templates:
+          s.templates?.map((t) =>
+            t.id === template.id ? {...t, exercises: template.exercises} : t,
+          ) ?? null,
+      })).then((saved) => {
+        if (!saved) toastFailed('Template not saved', save);
+      });
+    save();
   };
   const disabled = !hydrated || readOnly || sync.locked || maintenance || !!recoveryError;
   // Only the tab that owns the draft, once it is loaded, shows or clears the notification, also
@@ -400,6 +431,7 @@ export default function App() {
   useBackLayer(confirmFinish && !sync.locked, () => {
     if (saveStatus !== 'saving') setConfirmFinish(false);
   });
+  useBackLayer(!!templateOffer, () => answerTemplateOffer(false));
   useBackLayer(!!celebration, () => setCelebration(null));
   // Sync is silent. Only conditions that need the owner, or heal by themselves, show, each in one
   // place: the logger while it is open, otherwise the page (or Settings over it).
@@ -529,7 +561,9 @@ export default function App() {
                     locked={sync.locked}
                     dataset={allDataset}
                     onChange={(templates, base) => setState((s) => ({...s, templates}), base)}
-                    onStart={(workout) => start(routineTargets(workout, allDataset))}
+                    onStart={(workout) =>
+                      start({...routineTargets(workout, allDataset), templateId: workout.id})
+                    }
                   />
                 </>
               )}
@@ -846,7 +880,10 @@ export default function App() {
                 if (!pendingWorkout) return;
                 askOnStart();
                 cue('start');
-                void setState((s) => ({...s, active: newWorkout(pendingWorkout)}));
+                void setState((s) => ({
+                  ...s,
+                  active: newWorkout(pendingWorkout, pendingWorkout.templateId),
+                }));
                 setPendingWorkout(null);
                 showLogger();
               }}
@@ -928,6 +965,43 @@ export default function App() {
               onClick={finish}
             >
               {saveStatus === 'saving' ? 'Saving…' : 'Save finished workout'}
+            </Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+      <ResponsiveDialog
+        open={!!templateOffer}
+        onOpenChange={(open) => {
+          if (!open) answerTemplateOffer(false);
+        }}
+      >
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader className='text-left'>
+            <ResponsiveDialogTitle>Update {templateOffer?.name}?</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription className='mt-2'>
+              This workout changed the template&apos;s exercises or sets. Updating saves its
+              exercises, sets and weights as the template.
+            </ResponsiveDialogDescription>
+            {!!templateOffer?.removed.length && (
+              <StateNotice
+                title={`Removes ${plural(templateOffer.removed.length, 'exercise')}`}
+                announcement={templateOffer.removed.join(', ')}
+                className='mt-3'
+              >
+                <ul className='text-inherit'>
+                  {templateOffer.removed.map((name, i) => (
+                    <li key={i}>{name}</li>
+                  ))}
+                </ul>
+              </StateNotice>
+            )}
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter className={confirmFooter}>
+            <ResponsiveDialogClose asChild>
+              <Button>Keep original</Button>
+            </ResponsiveDialogClose>
+            <Button variant='primary' disabled={disabled} onClick={() => answerTemplateOffer(true)}>
+              Update template
             </Button>
           </ResponsiveDialogFooter>
         </ResponsiveDialogContent>

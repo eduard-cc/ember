@@ -1,7 +1,7 @@
 import {z} from 'zod';
 
 import {RETIRED_WARNING_KEYS, withoutKeys} from './retired-keys.js';
-import {WorkoutSchema} from './workouts.js';
+import {DraftWorkoutSchema, WorkoutSchema} from './workouts.js';
 
 const DatasetSchema = z.strictObject({
   sourceLabel: z.string(),
@@ -19,7 +19,7 @@ const DatasetSchema = z.strictObject({
 export const AppStateSchema = z.strictObject({
   version: z.literal(1),
   dataset: DatasetSchema.nullable(),
-  active: WorkoutSchema.nullable(),
+  active: DraftWorkoutSchema.nullable(),
   finished: z.array(WorkoutSchema),
   templates: z.array(WorkoutSchema).nullable(),
 });

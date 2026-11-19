@@ -8,8 +8,10 @@ import {WorkoutRepository} from '../storage/repository';
 import {localTimestamp} from '../utils/date';
 
 const KEY = 'ember:v1';
-export function newWorkout(workout?: Workout): Workout {
+/** A fresh unfinished workout from `workout`'s exercises; `templateId` links it to its template. */
+export function newWorkout(workout?: Workout, templateId?: string): Workout {
   return {
+    ...(templateId && {templateId}),
     id: crypto.randomUUID(),
     name: workout?.name ?? 'Untitled workout',
     date: localTimestamp(new Date()),

@@ -344,3 +344,53 @@ test('invalid numbers cannot be completed and untick a completed set', async ({p
   await expect(complete).toBeDisabled();
   await expect(page.getByRole('button', {name: 'Finish workout'})).toBeDisabled();
 });
+/** Start Lower body, complete only its first Squat set and save the finished workout. */
+async function finishChangedLowerBody(page: Page) {
+  await page.goto('/?demo=1');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-save', 'saved');
+  await page.getByRole('button', {name: 'Cancel workout'}).click();
+  await page.getByRole('button', {name: 'Discard workout'}).click();
+  await navigate(page, 'Workouts');
+  const card = page.locator('.template-card', {hasText: 'Lower body'});
+  await expect(card).toContainText('4 exercises');
+  await pressAt(page, card.locator('.drawing').first());
+  await page.getByRole('button', {name: 'Start template Lower body', exact: true}).click();
+  await page.getByRole('button', {name: 'Complete Squat (Barbell) set 1'}).click();
+  await page.getByRole('button', {name: 'Finish workout'}).click();
+  await page.getByRole('button', {name: 'Save finished workout'}).click();
+  const offer = page.getByRole('dialog', {name: 'Update Lower body?'});
+  await expect(offer).toBeVisible();
+  await expect(offer.getByRole('button', {name: 'Keep original'})).toBeFocused();
+  // The saved workout drops the three exercises with no completed set, so the note names them.
+  const removed = offer.getByRole('region', {name: 'Removes 3 exercises'});
+  await expect(removed.getByRole('listitem')).toHaveText([
+    'Leg Extension (Machine)',
+    'Lying Leg Curl (Machine)',
+    'Standing Calf Raise (Machine)',
+  ]);
+  return {offer, card};
+}
+test('finishing a changed template workout offers to update the template, then celebrates', async ({
+  page,
+}) => {
+  const {offer, card} = await finishChangedLowerBody(page);
+  await offer.getByRole('button', {name: 'Update template'}).click();
+  const celebration = page.getByRole('dialog', {name: 'Workout complete'});
+  await expect(celebration).toBeVisible();
+  await celebration.getByRole('button', {name: 'Done'}).click();
+  await navigate(page, 'Workouts');
+  await expect(card).toContainText('1 exercise');
+  await expect(card.locator('.exercise-line')).toHaveCount(1);
+  await expect(card.locator('.exercise-line')).toContainText('Squat (Barbell)');
+});
+test('keeping the original template after a changed workout leaves it as it was', async ({
+  page,
+}) => {
+  const {offer, card} = await finishChangedLowerBody(page);
+  await offer.getByRole('button', {name: 'Keep original'}).click();
+  const celebration = page.getByRole('dialog', {name: 'Workout complete'});
+  await expect(celebration).toBeVisible();
+  await celebration.getByRole('button', {name: 'Done'}).click();
+  await navigate(page, 'Workouts');
+  await expect(card).toContainText('4 exercises');
+});
