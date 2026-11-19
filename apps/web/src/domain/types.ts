@@ -19,6 +19,8 @@ export interface Workout {
   date: string;
   duration: number;
   exercises: ExerciseLog[];
+  /** Only on the unfinished workout: the template it was started from. */
+  templateId?: string;
 }
 export interface Dataset {
   sourceLabel: string;

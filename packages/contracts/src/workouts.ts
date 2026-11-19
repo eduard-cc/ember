@@ -29,3 +29,5 @@ export const WorkoutSchema = z.strictObject({
   exercises: z.array(ExerciseSchema),
 });
 export type WorkoutDocument = z.infer<typeof WorkoutSchema>;
+/** The unfinished workout kept on one device: a workout plus the template it was started from. */
+export const DraftWorkoutSchema = WorkoutSchema.extend({templateId: id.optional()});

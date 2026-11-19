@@ -94,7 +94,7 @@ Reduced motion removes movement, smooth scrolling, transitions, the live ping an
 
 ## Finish celebration
 
-Only a successful finished-workout commit opens "Workout complete"; its records are `PRODUCT.md`'s, never ties. Done stays pinned in short landscape. Done/Escape/back closes onto the new History card.
+Only a successful finished-workout commit opens "Workout complete", after the update-template confirmation when one is asked (Keep original focused; exercises the update removes listed in a neutral notice, not destructive text); its records are `PRODUCT.md`'s, never ties. Done stays pinned in short landscape. Done/Escape/back closes onto the new History card.
 
 ## Save and connection states
 

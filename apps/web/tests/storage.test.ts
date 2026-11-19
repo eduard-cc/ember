@@ -37,6 +37,7 @@ describe('durable repository', () => {
     const active = {
       ...fixture,
       duration: 0,
+      templateId: 'template-1',
       exercises: [
         {...fixture.exercises[0], sets: [{...fixture.exercises[0].sets[0], completed: true}]},
       ],
@@ -53,8 +54,11 @@ describe('durable repository', () => {
       finished: [past],
       templates: [],
     });
+    // The draft keeps the template it was started from; the saved workout does not.
+    expect((await repository.readState()).active?.templateId).toBe('template-1');
     const finished = await repository.finishWorkout(active);
     expect(finished.duration).toBe(45);
+    expect(finished).not.toHaveProperty('templateId');
     expect(await repository.db.workouts.get(active.id)).toEqual(finished);
     expect(await repository.db.outbox.toArray()).toMatchObject([
       {kind: 'putWorkout', entityId: active.id, payload: finished},
