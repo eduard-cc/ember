@@ -72,9 +72,9 @@ still needs at least one set and no uncompleted set. `deleteWorkout` tombstones 
 workout at its current revision and is final. Every earlier revision stays in `changes`.
 Each kind revises only its own records: native and imported history, templates and
 measurements can never overwrite one another.
-Imported history uses separate operation kinds. Strong import is retired in the app, but the
-kinds stay for existing imported history: deletion tombstones only imported records at the
-current revision, and a put at an imported tombstone's exact revision revives it.
+Imported history uses its own operation kinds; the app has no import flow, so they carry only
+history already imported. Deletion tombstones only imported records at the current revision,
+and a put at an imported tombstone's exact revision revives it.
 
 `GET /sync/changes?after=0&limit=100` accepts safe integer cursor and limit 1–100.
 Returns `{changes,nextCursor,hasMore}`; each change has
@@ -90,10 +90,6 @@ workout-deletes cursor even if a legacy cursor has advanced meanwhile. A rolled-
 backup validator cannot export a still-pending `deleteWorkout`; let that operation sync or
 return to the updated app before exporting.
 
-Rollout is two releases: deploy this API compatibility bridge without the new frontend first,
-then deploy the body-weight UI. Keep the bridge as the immediate rollback release: it accepts
-measurement operations from cached new apps while keeping old apps' change feeds compatible.
-Reverting the UI must retain the bridge; do not deploy a pre-bridge API after measurements exist.
 Records, feed writes, sequence allocation and ledger writes commit atomically.
 An owner-scoped transaction advisory lock is acquired **before** allocating sequence
 values; the transactional sequence row prevents uncommitted writes from being skipped.

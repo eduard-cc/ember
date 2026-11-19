@@ -6,7 +6,7 @@ Read before merging, deploying, adding a static asset type, touching the shell o
 
 ### Release layout
 
-The live app runs from releases, never from a checkout, as the `ember` service account (Service account below); every `~` below is that account's home. The release layout under `~/.local/share/ember` is in `ops/lib.sh`'s header. `ember.service` runs `current` as the `ember-app` container in Ember's own Docker daemon, published on `127.0.0.1` only, through `~/.local/lib/ember/start.sh`, the copy of `ops/start.sh` that `ops/install.sh` installs (its header says what it passes and refuses), so advancing the checkout never changes what the unit runs. The daemon never pulls at start. The account has no Node; the app runs on the image's. Releases without `IMAGE` cannot run, and `ops/rollback.sh` skips them.
+The live app runs from releases, never from a checkout, as the `ember` service account (Service account below); every `~` below is that account's home. The release layout under `~/.local/share/ember` is in `ops/lib.sh`'s header. `ember.service` runs `current` as the `ember-app` container in Ember's own Docker daemon, published on `127.0.0.1` only, through `~/.local/lib/ember/start.sh`, the copy of `ops/start.sh` that `ops/install.sh` installs (its header says what it passes and refuses), so advancing the checkout never changes what the unit runs. The daemon never pulls at start. The account has no Node; the app runs on the image's.
 
 Runtime settings and secrets live in `~/.config/ember/runtime.env` (mode 0600). The app has its own tailnet device, `ember`, run by `ember-tailscale.service` (userspace networking, state in `~/.local/share/ember-tailscale`); its Tailscale Serve config proxies HTTPS 443 to the service on loopback. `EMBER_ORIGIN` must be that address.
 
@@ -21,9 +21,7 @@ Runtime settings and secrets live in `~/.config/ember/runtime.env` (mode 0600). 
 
 ### Shipping through a PR
 
-- Every change reaches `main` through a PR; the `main` ruleset refuses direct pushes, force pushes and deletion, and requires the `CI` check (`docs/ci-and-images.md`). The PR description opens with one or two short sentences on what it changes and why, adds short bullets only when the PR does several separate things, puts anything the reviewer must act on (deploy order, migration, risk) on a line starting with **Note:**, and doesn't restate what CI reports.
-- Merge with `gh pr merge <n> --squash --auto --match-head-commit <sha>`, where `<sha>` is the head you verified and had reviewed: GitHub squashes once `CI` passes on that exact head and refuses if the branch moved meanwhile. Merging is shipping.
-- If `main` moved after the PR's CI ran, merge `origin/main` into the branch (never force-push a pushed branch) and let CI run on the new head.
+Every change reaches `main` through a PR; the `main` ruleset refuses direct pushes, force pushes and deletion, and requires the `CI` check (`docs/ci-and-images.md`).
 
 ### Deploying
 
@@ -41,7 +39,7 @@ The production server sends only files allowed by `packages/contracts/src/static
 
 ### npm dependencies and Node
 
-Routine updates come from Dependabot (`docs/ci-and-images.md`). A Dependabot alert still open a day after it was raised becomes a card on the owner's task board. Fix advisories with in-major updates, never `npm audit fix --force`.
+Routine updates come from Dependabot (`docs/ci-and-images.md`). Fix advisories with in-major updates, never `npm audit fix --force`.
 
 ## Live checks
 
@@ -96,7 +94,7 @@ The image is pinned once, by tag and digest (`postgres:17.N-bookworm@sha256:…`
 
 `ops/install.sh` installs the slices in `ops/systemd/`, which hold the caps:
 
-- `ember-live.slice`: `ember.service`, the Docker daemon, the PostgreSQL container and the `ember-app` container, whose own limits (`ops/start.sh`) keep it from crowding the database.
+- `ember-live.slice`: `ember.service`, the Tailscale device (`ember-tailscale.service`), the Docker daemon, the PostgreSQL container and the `ember-app` container, whose own limits (`ops/start.sh`) keep it from crowding the database.
 - `ember-jobs.slice`: test runs in the owner's user manager (through `ops/limited.sh`) and auto-deploy runs in the service account's. The API build in `pretest:e2e` runs outside it, and tests' database work counts against the live slice.
 
 Other host services run in the system slice, so these hard caps, not CPU weights, protect them. Low I/O priority needs a priority-aware disk scheduler; without one (common for NVMe) disk I/O is uncapped.

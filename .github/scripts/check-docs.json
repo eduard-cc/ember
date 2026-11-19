@@ -75,10 +75,6 @@
       "reason": "local settings each checkout creates, git-ignored"
     },
     {
-      "paths": ["origin/main"],
-      "reason": "a git ref, not a path"
-    },
-    {
       "paths": ["ghcr.io/eduard-cc/ember"],
       "reason": "the container image name, not a path"
     },

@@ -4,7 +4,7 @@ Paths are relative to `apps/web` unless they start at the repository root.
 
 ## Read before touching
 
-- `PRODUCT.md`: product scope, exclusions and release gates; `docs/product-decisions.md`: naming, watch integration and copy rules.
+- `PRODUCT.md`: product scope, exclusions, open decisions and release gates.
 - UI, layout, accessibility, phone gestures, installed PWA: `DESIGN.md` and `docs/phone-and-pwa.md`.
 - Local storage, sync client, recovery, history editing: `docs/sync-and-history.md`; sync protocol rules: `packages/contracts/README.md` (root).
 - Catalog data and drawings: `docs/catalog.md`. Never hand-edit `src/catalog/exercises.json`; change the inputs and run the scripts.
@@ -13,8 +13,8 @@ Paths are relative to `apps/web` unless they start at the repository root.
 ## Commands
 
 - Install with `npm ci --include=dev` here and in `apps/api`: a unit test imports the API's security headers, and the integration harness builds the API and loads its `pg`, `argon2` and `dotenv`.
-- Checks: `npm run format:check` (Prettier over the whole repository), `lint:check`, `typecheck`, `build`, `test:run`, `test:e2e`, `test:pwa`, `test:integration`. `format` and `lint` rewrite files.
-- Tag every e2e test that imports or routes source modules (`/src/...`) with `@dev-server`. Against the bundled build such an import fails and such a route matches nothing, so the test passes without testing anything.
+- Checks: `npm run format:check` (Prettier over the whole repository), `lint:check`, `typecheck`, `build`, `test:run`, `test:e2e`, `test:pwa`, `test:integration`. Which to run before handoff: the root `AGENTS.md`. `format` and `lint` rewrite files.
+- Tag every e2e test that imports or routes source modules (`/src/...`) with `@dev-server` (why: `docs/testing.md`, Ports).
 - `?demo=1` seeds data only in development and the e2e build.
 
 ## Analytics invariants
