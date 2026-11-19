@@ -7,7 +7,7 @@ export function ExercisesView({
   onOpen,
 }: {
   dataset: Dataset;
-  onOpen: (name: string) => void;
+  onOpen: (name: string, row: HTMLElement) => void;
 }) {
   return <ExerciseList dataset={dataset} onSelect={onOpen} sortable />;
 }

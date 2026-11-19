@@ -52,7 +52,7 @@ function ExerciseRow({
 }: {
   name: string;
   sessions: number;
-  onSelect: (name: string) => void;
+  onSelect: (name: string, row: HTMLElement) => void;
   unavailable?: string;
 }) {
   const id = useId();
@@ -62,8 +62,8 @@ function ExerciseRow({
         className={exerciseRowClass}
         aria-label={name}
         aria-describedby={sessions || unavailable ? id : undefined}
-        onClick={() => {
-          onSelect(name);
+        onClick={(event) => {
+          onSelect(name, event.currentTarget);
         }}
       >
         <ExerciseThumb name={name} />
@@ -106,7 +106,7 @@ export function ExerciseList({
   contained = false,
 }: {
   dataset: Dataset;
-  onSelect: (name: string) => void;
+  onSelect: (name: string, row: HTMLElement) => void;
   /** Offer the persisted Most done / A–Z order (Exercises tab). The picker stays A–Z. */
   sortable?: boolean;
   existingNames?: string[];
