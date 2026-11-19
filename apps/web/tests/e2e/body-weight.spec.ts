@@ -119,6 +119,12 @@ test('adds, backdates, corrects and deletes entries that survive reload, newest 
   await expect(undoToast(page)).toHaveAttribute('data-mounted', 'true');
   await undoToast(page).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   expect((await undoButton(page).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  // Toasts use the app's body type and surface radius (DESIGN.md).
+  await expect(undoToast(page)).toHaveCSS('font-family', /^"Inter Variable"/);
+  await expect(undoToast(page)).toHaveCSS('font-size', '14px');
+  await expect(undoToast(page)).toHaveCSS('border-radius', '12px');
+  await expect(undoButton(page)).toHaveCSS('font-size', '14px');
+  await expect(undoButton(page)).toHaveCSS('border-radius', '6px');
   await undoButton(page).click();
   await expect(rows(section)).toHaveCount(3);
   await expect(undoToast(page)).toHaveCount(0);
