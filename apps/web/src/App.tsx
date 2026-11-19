@@ -548,9 +548,10 @@ export default function App() {
                   <div hidden={!!exercise && !mobile}>
                     <ExercisesView
                       dataset={allDataset}
-                      onOpen={(name) => {
-                        exerciseTrigger.current = document.activeElement as HTMLElement;
-                        const scroller = exerciseTrigger.current.closest('.library-scroll');
+                      onOpen={(name, row) => {
+                        // The tapped row, not the focused element: iPhone Safari doesn't focus a tapped button.
+                        exerciseTrigger.current = row;
+                        const scroller = row.closest('.library-scroll');
                         exerciseScroll.current = scroller?.scrollTop ?? 0;
                         setExercise(name);
                         if (!mobile)

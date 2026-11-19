@@ -35,9 +35,23 @@ async function editNewestWorkout(page: Page) {
 test('back closes exercise details in the library, then a main tab has nothing left to close', async ({
   page,
 }) => {
+  // iPhone Safari doesn't focus a tapped button: closing the page returns focus to the tapped row.
+  await page.addInitScript(() =>
+    addEventListener(
+      'mousedown',
+      (event) => {
+        if ((event.target as Element).closest('[aria-label="All exercises"] button'))
+          event.preventDefault();
+      },
+      true,
+    ),
+  );
   await start(page);
   await navigate(page, 'Exercises');
-  await page.getByRole('button', {name: /^Bench Press \(Barbell\)/}).click();
+  const row = page
+    .getByRole('region', {name: 'All exercises'})
+    .getByRole('button', {name: 'Bench Press (Barbell)', exact: true});
+  await row.click();
   await expect(page.getByRole('button', {name: 'Back to exercises'})).toBeVisible();
   if (page.viewportSize()!.width < 1000) {
     const panel = page.getByRole('dialog', {name: 'Bench Press (Barbell)', exact: true});
@@ -68,12 +82,10 @@ test('back closes exercise details in the library, then a main tab has nothing l
   await back(page);
   await expect(page.getByRole('button', {name: 'Back to exercises'})).toBeHidden();
   await expect(page.getByLabel('Search exercises')).toBeVisible();
+  await expect(row).toBeFocused();
   await expect.poll(() => depth(page)).toBe(0);
   // Keyboard activation opens the page immediately; the on-screen arrow returns its entry too.
-  await page
-    .getByRole('region', {name: 'All exercises'})
-    .getByRole('button', {name: 'Bench Press (Barbell)', exact: true})
-    .focus();
+  await row.focus();
   await page.keyboard.press('Enter');
   if (page.viewportSize()!.width < 1000) {
     expect(
