@@ -10,12 +10,6 @@ import {z} from 'zod';
 import type {Workout} from '../domain/types';
 import type {WorkoutRepository} from '../storage/repository';
 
-/**
- * Opt-in feed kinds (body weight, workout deletions) share one cursor of their own: an older
- * app version's cursor may already be past records it never saw, so the first sync of an app
- * that understands every kind replays the feed from zero.
- */
-export const DELETES_CURSOR = 'workout-deletes-cursor';
 /** Set once a feed read reaches its last page; until then the local history is incomplete. */
 export const HISTORY_DOWNLOADED = 'history-downloaded';
 // Unknown kinds fail the whole page before the cursor moves, so a newer server's
@@ -149,11 +143,10 @@ export class SyncEngine {
         }
       });
     }
-    let cursor = Number((await db.syncState.get(DELETES_CURSOR))?.value ?? 0);
+    let cursor = Number((await db.syncState.get('cursor'))?.value ?? 0);
     for (;;) {
       const response = await this.call('/api/v1/sync/changes?after=' + cursor + '&limit=100', {
         credentials: 'same-origin',
-        headers: {'X-Sync-Body-Weight': '1', 'X-Sync-Workout-Deletes': '1'},
       });
       if (response.status === 401) throw new SessionExpired('Sign in to resume sync');
       if (!response.ok) throw new Error('Could not read server changes');
@@ -211,10 +204,7 @@ export class SyncEngine {
               }
             }
           }
-          // The legacy cursor stays current too, so a rolled-back app resumes from here.
           await db.syncState.put({key: 'cursor', value: page.nextCursor});
-          await db.syncState.put({key: 'body-weight-cursor', value: page.nextCursor});
-          await db.syncState.put({key: DELETES_CURSOR, value: page.nextCursor});
           if (!page.hasMore) await db.syncState.put({key: HISTORY_DOWNLOADED, value: true});
         },
       );

@@ -7,7 +7,7 @@ import {editableCopy, editedHistory} from '../src/domain/history-edit';
 import type {Workout} from '../src/domain/types';
 import {exportBackup} from '../src/storage/backup';
 import {WorkoutRepository} from '../src/storage/repository';
-import {DELETES_CURSOR, SyncEngine} from '../src/sync/engine';
+import {SyncEngine} from '../src/sync/engine';
 
 // Synthetic values only.
 const native: Workout = {
@@ -254,19 +254,17 @@ it('edits and deletes a never-synchronized import in the local dataset copy only
   repository.close();
 });
 
-it('applies a peer deletion from the opt-in feed and replays from zero once', async () => {
+it('applies a peer deletion from the feed and resumes after it', async () => {
   const repository = repo();
   await repository.db.workouts.add(native);
   await repository.db.syncState.put({key: 'revision:native', value: 1});
-  // A legacy cursor past the tombstone must not hide it from the upgraded app.
-  await repository.db.syncState.put({key: 'cursor', value: 7});
-  const requests: {url: string; headers: Headers}[] = [];
-  const engine = new SyncEngine(repository, async (url, init) => {
-    requests.push({url: String(url), headers: new Headers(init?.headers)});
+  const starts: string[] = [];
+  const engine = new SyncEngine(repository, async (url) => {
+    starts.push(new URL(String(url), 'http://synthetic.test').searchParams.get('after')!);
     return new Response(
       JSON.stringify({
         changes:
-          requests.length === 1
+          starts.length === 1
             ? [
                 {
                   entityId: 'native',
@@ -278,13 +276,6 @@ it('applies a peer deletion from the opt-in feed and replays from zero once', as
               ]
             : [
                 {
-                  entityId: 'other',
-                  kind: 'deleteWorkout',
-                  revision: 2,
-                  changeSeq: 6,
-                  payload: null,
-                },
-                {
                   entityId: 'latest',
                   kind: 'putWorkout',
                   revision: 1,
@@ -292,28 +283,17 @@ it('applies a peer deletion from the opt-in feed and replays from zero once', as
                   payload: {...native, id: 'latest'},
                 },
               ],
-        nextCursor: requests.length === 1 ? 5 : 8,
+        nextCursor: starts.length === 1 ? 5 : 8,
         hasMore: false,
       }),
     );
   });
   await engine.sync({ownerId: 'owner', csrfToken: 'test'});
-  expect(requests[0].url).toContain('after=0&');
-  expect(requests[0].headers.get('X-Sync-Workout-Deletes')).toBe('1');
-  expect(requests[0].headers.get('X-Sync-Body-Weight')).toBe('1');
   expect(await repository.db.workouts.get('native')).toBeUndefined();
-  expect((await repository.db.syncState.get(DELETES_CURSOR))?.value).toBe(5);
   expect((await repository.db.syncState.get('cursor'))?.value).toBe(5);
-  // Roll back to the body-weight app: its cursors can pass a tombstone it cannot read.
-  await repository.db.workouts.put({...native, id: 'other'});
-  await repository.db.syncState.put({key: 'revision:other', value: 1});
-  await repository.db.syncState.put({key: 'cursor', value: 8});
-  await repository.db.syncState.put({key: 'body-weight-cursor', value: 8});
-  // Re-upgrade resumes the independent cursor, not either legacy cursor, and catches it.
   await engine.sync({ownerId: 'owner', csrfToken: 'test'});
-  expect(requests[1].url).toContain('after=5&');
-  expect(await repository.db.workouts.get('other')).toBeUndefined();
+  expect(starts).toEqual(['0', '5']);
   expect(await repository.db.workouts.get('latest')).toEqual({...native, id: 'latest'});
-  expect((await repository.db.syncState.get(DELETES_CURSOR))?.value).toBe(8);
+  expect((await repository.db.syncState.get('cursor'))?.value).toBe(8);
   repository.close();
 });

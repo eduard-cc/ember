@@ -359,52 +359,6 @@ export class WorkoutRepository {
       );
     });
   }
-  /**
-   * Legacy (pre-body-weight) frontends adopt dataset resets without seeing the
-   * bodyWeights table, so its rows and body-weight-epoch outlive the reset. Their
-   * private reset archives keep the revisions they cleared: measurements acknowledged
-   * in the measurement epoch were purged by the server and must not be re-created.
-   * Runs inside a transaction covering meta, bodyWeights and outbox; returns the
-   * current dataset epoch.
-   */
-  private async dropLegacyPurgedMeasurements(): Promise<string> {
-    const epoch = ((await this.db.meta.get('dataset-epoch'))?.value as string) ?? 'initial';
-    const measurementEpoch = (await this.db.meta.get('body-weight-epoch'))?.value ?? 'initial';
-    if (measurementEpoch === epoch) return epoch;
-    // Every reset since the measurement epoch ended purged what it acknowledged,
-    // including measurements a legacy app uploaded in a later epoch.
-    const archives = (await this.db.meta.toArray())
-      .filter((r) => r.key.startsWith('dataset-reset-archive:'))
-      .map((r) => r.value as {epoch: string; resetAt?: string; syncState?: {key: string}[]});
-    const since = archives
-      .filter((a) => a.epoch === measurementEpoch && a.resetAt)
-      .map((a) => a.resetAt!)
-      .sort()[0];
-    const acknowledged = new Set(
-      archives
-        .filter((a) => since !== undefined && a.resetAt !== undefined && a.resetAt >= since)
-        .flatMap((archive) => archive.syncState ?? [])
-        .filter((r) => r.key.startsWith('revision:'))
-        .map((r) => r.key.slice(9)),
-    );
-    const purged = (await this.db.bodyWeights.toArray()).filter((m) => acknowledged.has(m.id));
-    if (purged.length) {
-      const ids = new Set(purged.map((m) => m.id));
-      const outbox = (await this.db.outbox.toArray()).filter((o) => ids.has(o.entityId));
-      await this.db.meta.put({
-        key: 'dataset-reset-archive:' + crypto.randomUUID(),
-        value: {
-          epoch: measurementEpoch,
-          resetAt: new Date().toISOString(),
-          bodyWeights: purged,
-          outbox,
-        },
-      });
-      await this.db.bodyWeights.bulkDelete([...ids]);
-      await this.db.outbox.bulkDelete(outbox.map((o) => o.operationId));
-    }
-    return epoch;
-  }
   async bootstrapSync(): Promise<void> {
     await this.enqueue(async () => {
       await this.db.transaction(
@@ -423,7 +377,6 @@ export class WorkoutRepository {
             throw new Error(
               'Demo data cannot be synchronized. Use a separate empty browser profile for real data.',
             );
-          const epoch = await this.dropLegacyPurgedMeasurements();
           if (!(await this.db.meta.get('imported-sync-active'))?.value) {
             const dataset = await this.storedDataset();
             if (dataset) {
@@ -458,7 +411,6 @@ export class WorkoutRepository {
               }
           }
           await this.queueOperations(queued);
-          await this.db.meta.put({key: 'body-weight-epoch', value: epoch});
         },
       );
     });
@@ -484,7 +436,6 @@ export class WorkoutRepository {
           db.importSources,
         ],
         async () => {
-          await this.dropLegacyPurgedMeasurements();
           // Keep a private, non-replayed snapshot before dropping stale synced copies.
           // Offline template/import edits and legacy evidence remain recoverable here.
           const outbox = await db.outbox.toArray();
@@ -547,7 +498,6 @@ export class WorkoutRepository {
           // Imported history now arrives only from the server feed; nothing local re-uploads.
           await db.meta.put({key: 'imported-sync-active', value: true});
           await db.meta.put({key: 'dataset-epoch', value: epoch});
-          await db.meta.put({key: 'body-weight-epoch', value: epoch});
         },
       );
     });

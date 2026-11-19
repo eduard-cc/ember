@@ -3,14 +3,7 @@ import {liveQuery} from 'dexie';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 import type {WorkoutRepository} from '../storage/repository';
-import {
-  DELETES_CURSOR,
-  DatasetReset,
-  HISTORY_DOWNLOADED,
-  type Session,
-  SessionExpired,
-  SyncEngine,
-} from './engine';
+import {DatasetReset, HISTORY_DOWNLOADED, type Session, SessionExpired, SyncEngine} from './engine';
 
 const HISTORY_DOWNLOAD_STARTED = 'history-download-started';
 
@@ -84,7 +77,7 @@ export function useSync(
         historyIncomplete:
           !!(await repository.db.meta.get('ownerId'))?.value &&
           !(await repository.db.syncState.get(HISTORY_DOWNLOADED)) &&
-          (!(await repository.db.syncState.get(DELETES_CURSOR)) ||
+          (!(await repository.db.syncState.get('cursor')) ||
             !!(await repository.db.syncState.get(HISTORY_DOWNLOAD_STARTED))) &&
           !(await repository.isDemo()),
         issues,
@@ -155,7 +148,7 @@ export function useSync(
             setLocked(false);
           }
           if (await repository.needsReconnect()) return;
-          if (!(await repository.db.syncState.get(DELETES_CURSOR)))
+          if (!(await repository.db.syncState.get('cursor')))
             await repository.db.syncState.put({key: HISTORY_DOWNLOAD_STARTED, value: true});
           try {
             await new SyncEngine(repository).sync(current.current);

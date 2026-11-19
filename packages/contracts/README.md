@@ -79,16 +79,8 @@ and a put at an imported tombstone's exact revision revives it.
 `GET /sync/changes?after=0&limit=100` accepts safe integer cursor and limit 1–100.
 Returns `{changes,nextCursor,hasMore}`; each change has
 `{entityId,kind,revision,changeSeq,payload}`. Deleted-template payloads are null.
-Body-weight changes require `X-Sync-Body-Weight: 1`; older apps receive only the kinds they
-understand. Filtering happens before pagination, so the cursor remains the last returned change.
-Upgraded apps replay from zero once to recover measurements hidden behind an older cursor.
-`deleteWorkout` tombstones likewise require `X-Sync-Workout-Deletes: 1`, filtered before
-pagination, and apps that send it keep their own cursor and replay from zero once.
-Legacy or rolled-back apps keep displaying deleted native workouts until upgraded; edits to
-those stale copies conflict rather than resurrect them. Re-upgrading resumes the independent
-workout-deletes cursor even if a legacy cursor has advanced meanwhile. A rolled-back app's
-backup validator cannot export a still-pending `deleteWorkout`; let that operation sync or
-return to the updated app before exporting.
+Every client receives every record kind, so `nextCursor` is the last returned change (or
+`after` when the page is empty).
 
 Records, feed writes, sequence allocation and ledger writes commit atomically.
 An owner-scoped transaction advisory lock is acquired **before** allocating sequence
@@ -100,8 +92,8 @@ Concurrent stale edits, delayed commits, rollback/retry and pagination use real 
 A new record kind ships compatibly:
 
 - Deploy the compatible server bridge before the UI, so a one-command rollback keeps API support.
-- Filter opt-in kinds before pagination for legacy clients (`apps/api/src/sync/service.ts`), so a legacy cursor is always the last change it could see.
-- Keep an independent opt-in cursor (see `DELETES_CURSOR` in `apps/web/src/sync/engine.ts`). A one-time replay boolean is not enough: a rolled-back frontend can advance the shared cursor past hidden creates, edits or tombstones. Test upgrade, legacy cursor advancement and return to the new frontend.
+- Filter opt-in kinds for legacy clients in the feed query, before pagination (`apps/api/src/sync/service.ts`), so a legacy cursor is always the last change it could see.
+- Keep an independent opt-in cursor in the web app's `syncState`, read in place of `cursor` and written beside it in the same transaction. A one-time replay boolean is not enough: a rolled-back frontend can advance the shared cursor past hidden creates, edits or tombstones. Test upgrade, legacy cursor advancement and return to the new frontend.
 - Before writing it, read the deployed client's validator (`git show <deployed-sha>:apps/web/src/sync/engine.ts`); `ops/livecheck.sh` prints the deployed release. The bridge and the UI are separate PRs: merge and deploy the bridge before merging the UI.
 - A parallel feature with its own opt-in kind conflicts in the kind enum, the headers, the apply branch and the cursor writes. Resolve to the union and keep both headers; one feature's header never exposes another feature's kind.
 - On every legacy page, at limits 1, 2 and 100, assert that `nextCursor` is the last `changeSeq` (or `after` when the page is empty), that a page is never empty while `hasMore`, and that every kind is in the old strict enum. Checking only that the hidden kind is absent also passes when filtering runs after pagination. Cover the hidden record being the newest change.

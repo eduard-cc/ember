@@ -23,24 +23,6 @@ const measurement = {
   deleted: false,
 };
 const repo = () => new WorkoutRepository('body-weight-' + crypto.randomUUID());
-const adoptLegacyReset = async (repository: WorkoutRepository, epoch: string) => {
-  const db = repository.db;
-  // The bridge archives and clears known sync state, but leaves the unknown
-  // bodyWeights table and body-weight-epoch metadata untouched.
-  await db.meta.put({
-    key: 'dataset-reset-archive:' + crypto.randomUUID(),
-    value: {
-      epoch: (await db.meta.get('dataset-epoch'))?.value ?? 'initial',
-      resetAt: new Date().toISOString(),
-      syncState: await db.syncState.toArray(),
-      outbox: await db.outbox.toArray(),
-    },
-  });
-  await db.syncState.clear();
-  await db.outbox.clear();
-  await db.meta.put({key: 'dataset-epoch', value: epoch});
-};
-
 it('accepts positive finite kg with at most two decimals and real local wall times', () => {
   expect(BodyWeightSchema.parse(measurement)).toEqual(measurement);
   for (const patch of [
@@ -270,71 +252,6 @@ it('pulls measurement changes from peers and refuses unknown record kinds withou
   repository.close();
 });
 
-it('an upgraded client opts in and replays measurements hidden behind its legacy cursor only once', async () => {
-  const repository = repo();
-  await repository.db.syncState.put({key: 'cursor', value: 99});
-  const starts: number[] = [];
-  const engine = new SyncEngine(repository, async (url, init) => {
-    expect(new Headers(init?.headers).get('X-Sync-Body-Weight')).toBe('1');
-    const after = Number(new URL(String(url), 'http://synthetic.test').searchParams.get('after'));
-    starts.push(after);
-    const changes =
-      after === 0
-        ? [
-            {
-              entityId: measurement.id,
-              kind: 'putBodyWeight',
-              revision: 1,
-              changeSeq: 7,
-              payload: measurement,
-            },
-          ]
-        : [];
-    return new Response(
-      JSON.stringify({changes, nextCursor: changes.length ? 7 : after, hasMore: false}),
-    );
-  });
-  await engine.sync({ownerId: 'owner', csrfToken: 'test'});
-  expect(await repository.readBodyWeights()).toEqual([measurement]);
-  await engine.sync({ownerId: 'owner', csrfToken: 'test'});
-  expect(starts).toEqual([0, 7]);
-  repository.close();
-});
-
-it('keeps its measurement cursor when a rolled-back app advances the legacy cursor', async () => {
-  const repository = repo();
-  const starts: number[] = [];
-  let measurementExists = false;
-  const engine = new SyncEngine(repository, async (url) => {
-    const after = Number(new URL(String(url), 'http://synthetic.test').searchParams.get('after'));
-    starts.push(after);
-    const changes =
-      measurementExists && after < 1
-        ? [
-            {
-              entityId: measurement.id,
-              kind: 'putBodyWeight',
-              revision: 1,
-              changeSeq: 1,
-              payload: measurement,
-            },
-          ]
-        : [];
-    return new Response(
-      JSON.stringify({changes, nextCursor: changes.length ? 1 : after, hasMore: false}),
-    );
-  });
-  await engine.sync({ownerId: 'owner', csrfToken: 'test'});
-  // The bridge's old frontend skips a peer measurement and consumes a later
-  // template at sequence 2, updating only the shared legacy cursor.
-  measurementExists = true;
-  await repository.db.syncState.put({key: 'cursor', value: 2});
-  await engine.sync({ownerId: 'owner', csrfToken: 'test'});
-  expect(await repository.readBodyWeights()).toEqual([measurement]);
-  expect(starts).toEqual([0, 0]);
-  repository.close();
-});
-
 it.each(['putWorkout', 'putTemplate', 'putImportedWorkout', 'putBodyWeight'])(
   'refuses a valid but wrong payload for %s without writing a document or moving the cursor',
   async (kind) => {
@@ -427,7 +344,6 @@ it('a server dataset reset drops synced measurements but keeps and re-queues uns
   await db.syncState.put({key: 'revision:synced', value: 1});
   await repository.putBodyWeight({...measurement, id: 'unsent'}, null);
   await repository.resetToEpoch('epoch-2');
-  expect((await db.meta.get('body-weight-epoch'))?.value).toBe('epoch-2');
   expect((await db.bodyWeights.toArray()).map((m) => m.id)).toEqual(['unsent']);
   expect((await db.outbox.toArray()).map((o) => [o.kind, o.entityId, o.expectedRevision])).toEqual([
     ['putBodyWeight', 'unsent', null],
@@ -436,144 +352,3 @@ it('a server dataset reset drops synced measurements but keeps and re-queues uns
   expect((archive?.value as {bodyWeights: unknown[]}).bodyWeights).toHaveLength(2);
   repository.close();
 });
-
-it('does not re-upload measurements purged by a reset adopted while the legacy app ran', async () => {
-  const repository = repo();
-  const db = repository.db;
-  await db.bodyWeights.put(measurement);
-  await db.syncState.put({key: 'revision:' + measurement.id, value: 1});
-  await repository.bootstrapSync();
-  await adoptLegacyReset(repository, 'epoch-2');
-  await repository.bootstrapSync();
-  expect(await db.bodyWeights.count()).toBe(0);
-  expect(await db.outbox.count()).toBe(0);
-  const archive = (await db.meta.toArray()).find(
-    (r) =>
-      r.key.startsWith('dataset-reset-archive:') &&
-      Array.isArray((r.value as {bodyWeights?: unknown[]}).bodyWeights),
-  );
-  expect((archive?.value as {bodyWeights: unknown[]}).bodyWeights).toEqual([measurement]);
-  repository.close();
-});
-
-it('a new-frontend reset after a legacy reset drops measurements purged by the legacy one', async () => {
-  const repository = repo();
-  const db = repository.db;
-  const offline = {...measurement, id: 'offline'};
-  await db.bodyWeights.bulkPut([measurement, offline]);
-  await db.syncState.put({key: 'revision:' + measurement.id, value: 1});
-  await repository.bootstrapSync();
-  await adoptLegacyReset(repository, 'epoch-2');
-  // The server resets again before the new frontend reopens; it adopts epoch-3
-  // through resetToEpoch before bootstrapSync runs.
-  await repository.resetToEpoch('epoch-3');
-  await repository.bootstrapSync();
-  expect(await db.bodyWeights.toArray()).toEqual([offline]);
-  expect((await db.outbox.toArray()).map((o) => [o.entityId, o.expectedRevision])).toEqual([
-    [offline.id, null],
-  ]);
-  repository.close();
-});
-
-it.each(['bootstrap', 'reset'])(
-  'drops a measurement the legacy app uploaded in a later epoch before that epoch was reset (%s first)',
-  async (first) => {
-    const repository = repo();
-    const db = repository.db;
-    await repository.bootstrapSync();
-    await adoptLegacyReset(repository, 'epoch-1');
-    // Added offline on the new frontend, then uploaded by the rolled-back app in epoch-1.
-    const later = {...measurement, id: 'later'};
-    await repository.putBodyWeight(later, null);
-    await db.outbox.clear();
-    await db.syncState.put({key: 'revision:' + later.id, value: 1});
-    await adoptLegacyReset(repository, 'epoch-2');
-    if (first === 'reset') await repository.resetToEpoch('epoch-3');
-    await repository.bootstrapSync();
-    expect(await db.bodyWeights.count()).toBe(0);
-    expect(await db.outbox.count()).toBe(0);
-    repository.close();
-  },
-);
-
-it('legacy reset reconciliation preserves never-acknowledged offline measurements and removes only purged pending writes', async () => {
-  const repository = repo();
-  const db = repository.db;
-  await db.bodyWeights.put(measurement);
-  await db.syncState.put({key: 'revision:' + measurement.id, value: 1});
-  const offline = {...measurement, id: 'offline'};
-  const corrected = {...offline, kg: 82};
-  await repository.putBodyWeight(offline, null);
-  await repository.putBodyWeight(corrected, offline);
-  // A local update can expect revision 1 without any server acknowledgement.
-  expect(new Set((await db.outbox.toArray()).map((o) => o.expectedRevision))).toEqual(
-    new Set([null, 1]),
-  );
-  const unqueued = {...measurement, id: 'unqueued'};
-  await db.bodyWeights.put(unqueued);
-  // No bootstrap yet: the missing measurement epoch also means 'initial'.
-  await adoptLegacyReset(repository, 'epoch-2');
-  const pendingOffline = {...measurement, id: 'pending-offline'};
-  await repository.putBodyWeight(pendingOffline, null);
-  const keptOperations = await db.outbox.toArray();
-  // A stale local correction must not resurrect an acknowledged, purged ID.
-  const stale = {...measurement, kg: 83};
-  await repository.putBodyWeight(stale, measurement);
-  const purgedOperations = (await db.outbox.toArray()).filter((o) => o.entityId === measurement.id);
-
-  await repository.bootstrapSync();
-  expect(await db.bodyWeights.toArray()).toEqual([corrected, pendingOffline, unqueued]);
-  const operations = await db.outbox.toArray();
-  expect(operations).toEqual(expect.arrayContaining(keptOperations));
-  expect(operations.map((o) => [o.entityId, o.expectedRevision]).sort()).toEqual([
-    ['offline', null],
-    ['pending-offline', null],
-    ['unqueued', null],
-  ]);
-  const archive = (await db.meta.toArray()).find(
-    (r) =>
-      r.key.startsWith('dataset-reset-archive:') &&
-      Array.isArray((r.value as {bodyWeights?: unknown[]}).bodyWeights),
-  );
-  expect(archive?.value).toMatchObject({bodyWeights: [stale], outbox: purgedOperations});
-  expect((await db.meta.get('body-weight-epoch'))?.value).toBe('epoch-2');
-  const metadata = await db.meta.toArray();
-  await repository.bootstrapSync();
-  expect(await db.outbox.toArray()).toEqual(operations);
-  expect(await db.meta.toArray()).toEqual(metadata);
-  repository.close();
-});
-
-it.each(['initial', 'epoch-1'])(
-  'finds the acknowledgement from measurement epoch %s across multiple legacy resets',
-  async (epoch) => {
-    const repository = repo();
-    const db = repository.db;
-    if (epoch !== 'initial') await repository.resetToEpoch(epoch);
-    const offline = {...measurement, id: 'offline'};
-    await db.bodyWeights.bulkPut([measurement, offline]);
-    await db.syncState.put({key: 'revision:' + measurement.id, value: 1});
-    await repository.bootstrapSync();
-    expect((await db.meta.get('body-weight-epoch'))?.value).toBe(epoch);
-    // Evidence from another measurement epoch must not purge this offline entry.
-    await db.meta.put({
-      key: 'dataset-reset-archive:unrelated',
-      value: {
-        epoch: 'unrelated',
-        resetAt: '2000-01-01T00:00:00.000Z',
-        syncState: [{key: 'revision:' + offline.id, value: 1}],
-      },
-    });
-    await adoptLegacyReset(repository, 'epoch-2');
-    await adoptLegacyReset(repository, 'epoch-3');
-    expect((await db.meta.get('body-weight-epoch'))?.value).toBe(epoch);
-
-    await repository.bootstrapSync();
-    expect(await db.bodyWeights.toArray()).toEqual([offline]);
-    expect((await db.outbox.toArray()).map((o) => [o.entityId, o.expectedRevision])).toEqual([
-      [offline.id, null],
-    ]);
-    expect((await db.meta.get('body-weight-epoch'))?.value).toBe('epoch-3');
-    repository.close();
-  },
-);

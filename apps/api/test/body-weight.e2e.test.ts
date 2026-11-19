@@ -47,55 +47,10 @@ async function env() {
 		feed: (after = 0) =>
 			s.http
 				.get('/api/v1/sync/changes?after=' + after + '&limit=100')
-				.set('X-Sync-Body-Weight', '1')
 				.set('Cookie', s.cookie)
 				.expect(200),
 	};
 }
-
-test('legacy clients paginate workouts without receiving measurements, upgraded clients can replay them', async () => {
-	const s = await env();
-	try {
-		const existing = await s.feed();
-		const start = existing.body.nextCursor;
-		const id = 'compat-weight-' + randomUUID();
-		await s.send([put(id, null)]).expect(201);
-		const native = (id: string) => ({
-			operationId: randomUUID(),
-			entityId: id,
-			kind: 'putWorkout',
-			expectedRevision: null,
-			payload: workout(id),
-		});
-		const first = native('compat-workout-' + randomUUID());
-		const second = native('compat-workout-' + randomUUID());
-		await s.send([first, put(id, 1, {kg: 83}), second, put(id, 2, {deleted: true})]).expect(201);
-		const legacy = (after: number) =>
-			s.http
-				.get('/api/v1/sync/changes?after=' + after + '&limit=1')
-				.set('Cookie', s.cookie)
-				.expect(200);
-		const page1 = (await legacy(start)).body;
-		assert.deepEqual(
-			page1.changes.map((c: any) => c.entityId),
-			[first.entityId],
-		);
-		assert.equal(page1.nextCursor, page1.changes[0].changeSeq);
-		assert.equal(page1.hasMore, true);
-		const page2 = (await legacy(page1.nextCursor)).body;
-		assert.deepEqual(
-			page2.changes.map((c: any) => c.entityId),
-			[second.entityId],
-		);
-		assert.equal(page2.hasMore, false);
-		const tail = (await legacy(page2.nextCursor)).body;
-		assert.deepEqual(tail, {changes: [], nextCursor: page2.nextCursor, hasMore: false});
-		const upgraded = (await s.feed(start)).body;
-		assert.equal(upgraded.changes.filter((c: any) => c.entityId === id).length, 3);
-	} finally {
-		await s.app.close();
-	}
-});
 
 test('measurements are created, corrected and tombstoned with revision checks in the feed', async () => {
 	const s = await env();
