@@ -26,7 +26,7 @@ import {newWorkout} from '../state/workout';
 import {relativeDay} from '../utils/date';
 import {plural} from '../utils/plural';
 
-const CARD_LINES = 4;
+const CARD_LINES = 5;
 
 /** Latest finished session with the template's exact name, if any. */
 function lastPerformed(dataset: Dataset, name: string): string | undefined {

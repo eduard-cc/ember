@@ -232,7 +232,13 @@ test('the template editor adds exercises through the same picker', async ({page}
   );
   await picker.getByRole('button', {name: 'Back to template'}).click();
   await expect(page.locator('.template-editor .exercise-card')).toHaveCount(1);
-  for (const name of ['Pull Up', 'Plank', 'Rowing (Machine)', 'Pull Up (Assisted)'])
+  for (const name of [
+    'Pull Up',
+    'Plank',
+    'Rowing (Machine)',
+    'Pull Up (Assisted)',
+    'Bench Press (Barbell)',
+  ])
     await addExercise(page, name);
   const editor = page.locator('.template-editor');
   // The logger's columns without Done, so each value sits where it does while logging.
@@ -256,7 +262,7 @@ test('the template editor adds exercises through the same picker', async ({page}
   // A template may keep blank targets; it does not invent completed sets.
   await page.getByRole('button', {name: 'Save template', exact: true}).click();
   const card = page.locator('.template-card', {hasText: 'Picker template'});
-  await expect(card.locator('.exercise-line')).toHaveCount(4);
+  await expect(card.locator('.exercise-line')).toHaveCount(5);
   await expect(card).toContainText('+ 1 more');
   await expect(card.locator('.exercise-line').first()).toContainText('Squat (Barbell)');
 });
