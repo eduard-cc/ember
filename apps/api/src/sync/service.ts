@@ -156,14 +156,7 @@ export class SyncService {
 		}
 		return {results};
 	}
-	async changes(
-		owner: string,
-		after: string = '0',
-		limit: string = '100',
-		epoch?: unknown,
-		includeBodyWeight = false,
-		includeWorkoutDeletes = false,
-	) {
+	async changes(owner: string, after: string = '0', limit: string = '100', epoch?: unknown) {
 		if (
 			typeof after !== 'string' ||
 			!/^(0|[1-9][0-9]*)$/.test(after) ||
@@ -176,12 +169,11 @@ export class SyncService {
 		const rows = await this.db.transaction(async (tx) => {
 			await lockOwner(tx, owner);
 			await requireEpoch(tx, owner, epoch);
-			// Filter before pagination: legacy cursors remain the last visible change,
-			// never a skipped record kind that their strict page validator cannot read.
-			return tx.query<ChangeRow[]>(
-				"SELECT * FROM changes WHERE owner_id=$1 AND seq>$2 AND ($4 OR kind <> 'putBodyWeight') AND ($5 OR kind <> 'deleteWorkout') ORDER BY seq LIMIT $3",
-				[owner, after, Number(limit) + 1, includeBodyWeight, includeWorkoutDeletes],
-			);
+			return tx.query<ChangeRow[]>('SELECT * FROM changes WHERE owner_id=$1 AND seq>$2 ORDER BY seq LIMIT $3', [
+				owner,
+				after,
+				Number(limit) + 1,
+			]);
 		});
 		const hasMore = rows.length > Number(limit);
 		const page = rows.slice(0, Number(limit));

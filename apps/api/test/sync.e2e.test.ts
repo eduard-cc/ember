@@ -337,19 +337,17 @@ test('set flags from older clients and stored records are dropped, everything el
 		await s.app.close();
 	}
 });
-test('deleted native workout leaves a tombstone only opted-in clients receive', async () => {
+test('deleted native workout leaves a final tombstone in the feed', async () => {
 	const s = await env();
 	try {
-		const page = (after: number, limit: number, optIn: boolean) => {
-			const request = s.http
-				.get('/api/v1/sync/changes?after=' + after + '&limit=' + limit)
-				.set('Cookie', s.cookie);
-			if (optIn) request.set('X-Sync-Workout-Deletes', '1');
-			return request.expect(200);
-		};
+		const page = (after: number) =>
+			s.http
+				.get('/api/v1/sync/changes?after=' + after + '&limit=100')
+				.set('Cookie', s.cookie)
+				.expect(200);
 		let start = 0;
 		for (;;) {
-			const r = (await page(start, 100, true)).body;
+			const r = (await page(start)).body;
 			start = r.nextCursor;
 			if (!r.hasMore) break;
 		}
@@ -387,49 +385,6 @@ test('deleted native workout leaves a tombstone only opted-in clients receive', 
 		// The tombstone cannot be resurrected or edited.
 		const revive = await s.send([{...native, operationId: randomUUID(), expectedRevision: 2}]).expect(201);
 		assert.equal(revive.body.results[0].status, 'conflict');
-		// Older apps can't read the new kind: it is filtered out before pagination.
-		// Each legacy page must satisfy the old client's checks: known kinds, a cursor at the
-		// last returned change, and never an empty page that claims more.
-		const legacyKinds = [
-			'putWorkout',
-			'putTemplate',
-			'deleteTemplate',
-			'putImportedWorkout',
-			'deleteImportedWorkout',
-		];
-		const readLegacy = async (limit: number, header?: [string, string]) => {
-			const seen: any[] = [];
-			for (let cursor = start; ;) {
-				const request = s.http
-					.get('/api/v1/sync/changes?after=' + cursor + '&limit=' + limit)
-					.set('Cookie', s.cookie);
-				if (header) request.set(...header);
-				const r = (await request.expect(200)).body;
-				assert.equal(r.nextCursor, r.changes.length ? r.changes.at(-1).changeSeq : cursor);
-				assert.ok(!(r.hasMore && r.changes.length === 0));
-				assert.ok(r.changes.every((c: any) => legacyKinds.includes(c.kind) || c.kind === 'putBodyWeight'));
-				seen.push(...r.changes);
-				cursor = r.nextCursor;
-				if (!r.hasMore) break;
-			}
-			return seen;
-		};
-		for (const limit of [1, 2, 100]) {
-			const legacy = await readLegacy(limit);
-			assert.ok(legacy.every((c: any) => c.kind !== 'deleteWorkout'));
-			assert.ok(legacy.some((c: any) => c.entityId === third.entityId));
-		}
-		// The body-weight opt-in alone never exposes workout tombstones.
-		const bodyWeightOnly = await readLegacy(1, ['X-Sync-Body-Weight', '1']);
-		assert.ok(bodyWeightOnly.every((c: any) => c.kind !== 'deleteWorkout'));
-		// A tombstone as the newest change: the legacy feed ends at the change before it.
-		const last = op();
-		await s.send([last]).expect(201);
-		const lastDeleted = await s.send([remove(last.entityId, 1)]).expect(201);
-		assert.equal(lastDeleted.body.results[0].status, 'accepted');
-		const tail = await readLegacy(1);
-		assert.equal(tail.at(-1).entityId, last.entityId);
-		assert.equal(tail.at(-1).kind, 'putWorkout');
 		// Cross-kind revival of a native tombstone is refused, and deletes are not repeatable.
 		const crossRevive = await s
 			.send([
@@ -447,13 +402,13 @@ test('deleted native workout leaves a tombstone only opted-in clients receive', 
 			crossRevive.body.results.map((a: any) => a.status),
 			['conflict', 'conflict'],
 		);
-		const upgraded = (await page(start, 100, true)).body.changes;
-		const tombstone = upgraded.find((c: any) => c.kind === 'deleteWorkout');
+		const feed = (await page(start)).body.changes;
+		const tombstone = feed.find((c: any) => c.kind === 'deleteWorkout');
 		assert.deepEqual(
 			{entityId: tombstone.entityId, revision: tombstone.revision, payload: tombstone.payload},
 			{entityId: native.entityId, revision: 2, payload: null},
 		);
-		assert.ok(upgraded.some((c: any) => c.entityId === kept.entityId && c.kind === 'putWorkout'));
+		assert.ok(feed.some((c: any) => c.entityId === kept.entityId && c.kind === 'putWorkout'));
 	} finally {
 		await s.app.close();
 	}
