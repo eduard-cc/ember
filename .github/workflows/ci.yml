@@ -86,6 +86,41 @@ jobs:
       - run: node --test .github/scripts/
       - run: node .github/scripts/check-docs.mjs
 
+  # PRs only, for every change: scans what the PR adds for the owner's private denylist, which
+  # lives only in the PRIVACY_DENYLIST secret (Actions and Dependabot). The log shows counts only.
+  privacy:
+    name: Privacy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Test the scan
+        run: shellcheck -x .github/scripts/privacy-scan.sh .github/scripts/test-privacy-scan.sh && bash .github/scripts/test-privacy-scan.sh
+      # The merge commit's parents are the base branch and the PR head. The scan runs the base
+      # branch's copy of the script, so a PR's edits to it never run next to the real denylist;
+      # only a base without the script runs the PR's copy.
+      - name: Scan the PR
+        env:
+          PRIVACY_DENYLIST: ${{ secrets.PRIVACY_DENYLIST }}
+          FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          if [[ -z $PRIVACY_DENYLIST && $FORK == true ]]; then
+            echo "::error::A fork PR gets no secrets, so it can't be scanned here. Push it to a branch of this repository to scan it."
+            exit 1
+          fi
+          script=.github/scripts/privacy-scan.sh
+          if git cat-file -e "HEAD^1:$script" 2>/dev/null; then
+            git show "HEAD^1:$script" >"$RUNNER_TEMP/privacy-scan.sh"
+            script=$RUNNER_TEMP/privacy-scan.sh
+          fi
+          bash "$script" "$(git rev-parse HEAD^1)" "$(git rev-parse HEAD^2)" "$BRANCH"
+
   build:
     name: Build & typecheck
     runs-on: ubuntu-24.04
@@ -417,7 +452,8 @@ jobs:
     name: CI
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    needs: [changes, lint-format, build, unit, server-e2e, playwright, pwa, ops, image, publish]
+    needs:
+      [changes, lint-format, privacy, build, unit, server-e2e, playwright, pwa, ops, image, publish]
     if: ${{ always() }}
     steps:
       - name: Require every needed job to pass or be skipped
