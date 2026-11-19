@@ -14,7 +14,7 @@ npm --prefix apps/web run dev
 
 Open http://127.0.0.1:5188. An ordinary installation starts empty. `/?demo=1` is an explicit synthetic demo for development and the e2e build; production builds ignore it. Do not synchronize demo profiles with personal history.
 
-Vite proxies same-origin `/api/v1` to the API on loopback port 5190; run the API as `apps/api/README.md` (root) describes. Development and tests use the `ember_dev` database on loopback port 55439; test databases are created from it. The live app alone uses the `ember` database and port 5191; never point development at it.
+Vite proxies same-origin `/api/v1` to the API on loopback port 5190; run the API as `apps/api/README.md` (root) describes. Databases and ports: the root `AGENTS.md`.
 
 ## Checks
 

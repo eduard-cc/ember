@@ -1,6 +1,6 @@
 # Sync, outbox and history data
 
-Read before changing the sync feed or outbox, local persistence, recovery export/restore, imported history, history editors, or per-session aggregates. Protocol rules (record kinds, extending the feed, retiring a stored field) are in `packages/contracts/README.md`; wiping server data in `apps/api/docs/sync.md`.
+Read before changing the sync feed or outbox, local persistence, recovery export/restore, imported history, history editors, or per-session aggregates. Protocol rules (record kinds, extending the feed, retiring a stored field) are in `packages/contracts/README.md`; wiping server data in `apps/api/AGENTS.md`.
 
 ## Invariants
 
@@ -8,7 +8,7 @@ Read before changing the sync feed or outbox, local persistence, recovery export
 - One writer tab per installation holds the Web Lock `ember:installation:writer` (`apps/web/src/storage/draft-lock.ts`). Active workouts stay on the installation that started them and never enter server sync. Finish saves completed history, queues its operation and removes the draft in one transaction.
 - Outbox retries keep the operation's immutable identity. Revision conflicts and rejections stay visible and retained; never silently overwrite peer data.
 - Sessions use HttpOnly cookies and a memory-only CSRF token (`X-CSRF-Token`). Production uses Tailscale identity auth (`EMBER_AUTH_MODE=tailscale`, exact owner login in external config); password mode exists for local development and tests.
-- Strong import is retired; Ember is the source of truth. History imported earlier stays: it syncs with its own `putImportedWorkout` / `deleteImportedWorkout` kinds (never mixed with native `putWorkout`), lives under `imported:<id>` in `importSources` once synchronized (`current-dataset` before), and keeps each set's raw `original` cells and the original export bytes (`hash:<sha256>` sources, also in recovery archives). Keep all of these readable for existing installs and archives; the server's `resetDataset` (`apps/api/src/sync/reset.ts`) reseeds imported history for recovery.
+- Ember is the source of truth and has no import flow. Imported history syncs with its own `putImportedWorkout` / `deleteImportedWorkout` kinds (never mixed with native `putWorkout`), lives under `imported:<id>` in `importSources` once synchronized (`current-dataset` before), and keeps each set's raw `original` cells and the original export bytes (`hash:<sha256>` sources, also in recovery archives). Keep all of these readable for existing installs and archives; the server's `resetDataset` (`apps/api/src/sync/reset.ts`) reseeds imported history for recovery.
 - Recovery export is validated, versioned JSON with source evidence, owner/revision provenance and local drafts, without session secrets. Restore pauses edits and sync, requires confirmation, and rebuilds create-only operations rather than replaying acknowledgements.
 
 ## Saving and sync guarantees

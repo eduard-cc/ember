@@ -18,13 +18,13 @@ Replace Strong's daily logging workflow without template or analytics paywalls: 
 
 ## Operating Context
 
-Start a template or repeat a historical workout. Adjust prefilled weight/repetition targets and explicitly confirm completed sets. Training splits vary: never encode a fixed program. Best comparable historical performance is the preferred reference. Dumbbells are recorded per dumbbell, barbells include the bar, and assisted-machine values mean assistance. Loads on different machines are not comparable, which limits longitudinal comparison.
+Start a template or repeat a historical workout. Adjust prefilled weight/repetition targets and explicitly confirm completed sets. Training splits vary: never encode a fixed program. Best comparable historical performance is the preferred reference. Dumbbells are recorded per dumbbell, barbells include the bar, and assisted-machine values mean assistance.
 
 ## Capabilities and Constraints
 
 Weighted, assisted, bodyweight, duration and cardio exercise rows are supported; broader cardio workflows remain future scope.
 
-Excluded unless the owner changes it: rest timers, alerts, notifications required for core use, nutrition, body-part measurements, social features, watch support, streaks and milestone counts, manual Sync Now, a Backup & Recovery panel, a user-facing export flow, and in-app flagging, exclusion or data-cleanup controls.
+Excluded unless the owner changes it: rest timers, alerts, notifications required for core use, nutrition, body-part measurements, social features, streaks and milestone counts, manual Sync Now, a Backup & Recovery panel, a user-facing export flow, and in-app flagging, exclusion or data-cleanup controls.
 
 Active-workout notification: silent ("Workout active", the start time, "Tap to resume"; never exercise names or loads), on by default where the browser supports service-worker notifications (Android Chrome; iPhone and iPad on iOS 16.4+ once added to the Home Screen). The OS permission is asked once, from the first Start workout tap; logging never waits on it. A swiped-away notification stays away while Ember is in the background and returns when Ember is opened or brought back; it clears on finish, discard, replacement or switching it off, and a tap opens the logger. It is an ordinary notification: never promise a live timer, Live Activity or guaranteed ongoing panel.
 
@@ -42,7 +42,7 @@ The main navigation is **Profile / History / Workout / Exercises**, Profile firs
 - **Workout:** templates show what Start will prefill (the latest matching sets, else the template's values), a rough length from the owner's minutes per set and when last done. Exercises come only from the catalog or recorded names; adding or replacing with one already in the workout is refused with an explanation, and imported repeated blocks are preserved. Prefilled numbers are targets and stay unchecked until completed; editing clears completion, and Finish saves only completed, valid sets. After a save, a celebration shows duration, sets, volume, the records set against all earlier history (heaviest weight, session volume and estimated 1RM for weighted work, most reps for bodyweight; never for assisted or timed work or a first session) and its exercises.
 - **Exercises:** catalog and exact recorded names with body-part filters and a Most done / A–Z sort. Details have **Charts / History / Records / About**: drawings, equipment and muscles, actual sets, inspectable charts with exact-value session lists opening source workouts, and source-linked records.
 
-Weighted charts default to Heaviest weight, with Best reps, Volume and Epley estimates (weighted sets of 1–10 reps; a single rep uses the recorded load); bodyweight work has rep trends; assistance uses least assistance and reps, not resistance formulas. Best reps/load may come from different weights/rep counts and are not automatically comparable strength gains. Records include estimated 1RM, heaviest weight, best set and session volume, least assistance, most reps, and heaviest weight by exact rep count. Every recorded set counts toward records, charts, set evidence and targets. When a chosen weight has no history, set evidence shows the nearest actual lighter and heavier recorded sets, never a converted equivalent. Duration/distance-specific charts are not implemented. Weight is normalized to kg and distance to km, keeping the source values.
+Weighted charts default to Heaviest weight, with Best reps, Volume and Epley estimates (weighted sets of 1–10 reps; a single rep uses the recorded load); bodyweight work has rep trends; assistance uses least assistance and reps. Best reps/load may come from different weights/rep counts and are not automatically comparable strength gains. Records include estimated 1RM, heaviest weight, best set and session volume, least assistance, most reps, and heaviest weight by exact rep count. Every recorded set counts toward records, charts, set evidence and targets. When a chosen weight has no history, set evidence shows the nearest actual lighter and heavier recorded sets, never a converted equivalent. Duration/distance-specific charts are not implemented. Weight is normalized to kg and distance to km, keeping the source values.
 
 Catalog content and licensing: `docs/catalog.md`. About shows drawings, equipment and muscles only, without credit text; AI-assisted drawings are never credited as Everkinetic/wger work. Preserve original licenses and attribution/share-alike obligations; they are not a license for the app. A custom exercise outside the catalog keeps its history and analytics.
 
@@ -64,7 +64,7 @@ Production holds the owner's real history, including Strong imports (no template
 
 ## Open Decisions
 
-Conflict-resolution UX; future watch or health integration (`docs/product-decisions.md`). Amber is the only accent.
+Conflict-resolution UX; watch or health integration. Nothing of the latter is built; if it is, it must be fully automatic after setup and never duplicate sessions or overwrite recorded sets.
 
 ## Remaining Release Gates
 

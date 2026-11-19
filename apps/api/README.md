@@ -20,26 +20,14 @@ npm --prefix apps/api run migration
 npm --prefix apps/api run dev
 ```
 
-Development API binds **127.0.0.1:5190 only** and uses the `ember_dev` database; the live
-app (`ember.service`) uses port 5191 and the `ember` database from external config. Origin is `http://127.0.0.1:5188`;
-frontend must proxy `/api/v1` to the API or access it same-origin. No CORS is enabled.
-Compose project `ember-local`; container `ember-postgres`;
-image pinned in `ops/compose.local.yml`; port `127.0.0.1:55439`; named volume
-`ember-data`; independent project network `ember-local_default`; all inside Ember's own
-rootless Docker daemon (`ember-docker.service`, reached through `ops/docker.sh`).
+Percent-encode reserved characters in the role password when writing the URL. The
+container, its port and the development and live endpoints are in `ops/compose.local.yml`
+and the root `AGENTS.md`. The development origin is `http://127.0.0.1:5188`; the frontend
+proxies `/api/v1` to the API or reaches it same-origin. No CORS is enabled.
 
-```sh
-npm --prefix apps/api run test:e2e
-npm --prefix apps/api run test:e2e -- test/auth.e2e.test.ts
-npm --prefix apps/api run test:e2e -- test/sync.e2e.test.ts
-npm --prefix apps/api run test:e2e -- test/process.e2e.test.ts
-npm --prefix apps/api run lint:check
-npm --prefix apps/api run typecheck
-npm --prefix apps/api run build
-```
-
-Tests compile first, enumerate actual test files, and fail on a missing file.
-Each database integration test file creates and destroys its own
+`test:e2e` builds the API (the process test starts the compiled server), then runs every
+`test/*.e2e.test.ts` through `tsx`, or only the files passed after `--`.
+Each database test file creates and destroys its own
 `ember_test_<pid>` database inside the task-owned container, administered through
 `ember_dev`. Test setup refuses any other configured database, including live `ember`. Fault/delay triggers
 never touch the ordinary database. HTTP requests are real loopback requests;
@@ -49,9 +37,6 @@ Development and tests connect as the `ember_dev` role: it owns `ember_dev`, may 
 and drop its own test databases, is not a superuser and cannot connect to live `ember`.
 Only the backup/restore scripts, and the backup test's cleanup of their validation copy, use
 the Compose superuser, through `ops/docker.sh exec`. CI creates the same unprivileged role.
-An existing setup with a superuser-owned `ember_dev` needs `createuser` plus
-`ALTER DATABASE ember_dev OWNER TO ember_dev` instead of `createdb`. Percent-encode
-reserved characters in the role password when writing the URL.
 
 ## Secret provisioning
 
@@ -59,23 +44,22 @@ reserved characters in the role password when writing the URL.
 database URL and externally provisioned encoded Argon2id hash; it never holds the superuser
 password. `apps/api/.postgres.env` contains only
 `POSTGRES_USER=ember`, `POSTGRES_DB=ember`, and the generated database password.
-Both are ignored and mode 0600. No plaintext owner password is stored.
-The initial local hash was generated from a discarded random synthetic password;
-there is intentionally no recoverable default login. Tests generate random passwords
+Both are ignored and mode 0600. No plaintext owner password is stored, and there is no
+recoverable default login. Tests generate random passwords
 in process memory and supply their hashes via environment variables.
 Before interactive use, provision a new owner hash using a secure local terminal/UI
 workflow; never paste credentials in chat or commit them. Existing sessions should be
 revoked explicitly when changing owner credentials (no automatic password-rotation API).
 
-Startup restricts host to loopback and database URLs to PostgreSQL on
-`127.0.0.1:55439` with `ember` or `ember_*` database names. Insecure-cookie mode
+Startup restricts the listener to loopback and the database to the Ember endpoints
+(`apps/api/AGENTS.md`, Traps). Insecure-cookie mode
 requires an exact HTTP loopback origin. HTTPS mode sets Secure.
 The stable synthetic single-owner identifier is `owner`, always derived server-side.
 
 ## Passwordless private Tailscale owner mode
 
-Authentication defaults to `EMBER_AUTH_MODE=password`, preserving the existing
-Argon2id login path. Explicitly opt in with `EMBER_AUTH_MODE=tailscale` and set
+Authentication defaults to `EMBER_AUTH_MODE=password`, the Argon2id login path.
+Explicitly opt in with `EMBER_AUTH_MODE=tailscale` and set
 `EMBER_TAILSCALE_USER_LOGIN` to the exact owner login supplied by Tailscale Serve
 (no trimming or case folding). In this mode no owner password hash is required.
 Non-loopback origins must be exact HTTPS origins on a `.ts.net` hostname with
@@ -92,17 +76,10 @@ No client IP, `X-Forwarded-For`, or Express trust-proxy setting grants access.
 Trusted local processes that can reach the loopback listener can spoof this
 header; loopback is a trust boundary, not protection against hostile local code.
 
-`POST /api/v1/session` with `{}` and the verified owner header returns HTTP 201
-`{ownerId:"owner",csrfToken}` and a fresh opaque session cookie. The identity is
-forwarded by Serve, never supplied by the browser. `GET /api/v1/session` with the
-cookie and owner header returns the same owner and CSRF token while the session
-is valid. Every session and sync request in this mode also checks owner identity;
-a stolen cookie alone cannot bypass it. Missing/wrong identity returns 401.
-Bootstrap keeps exact Origin protection; sync mutations and logout additionally
-require the session CSRF token. Cookie hashing, expiration, HttpOnly,
-SameSite=Strict, `/api/v1` scope and configured Secure behavior are unchanged.
-Changing the configured owner does not revoke stored sessions automatically;
-explicitly revoke existing sessions when transferring ownership.
+The identity is forwarded by Serve, never supplied by the browser. Every session and sync
+request in this mode checks it, so a stolen cookie alone cannot bypass it; missing or wrong
+identity returns 401. Changing the configured owner does not revoke stored sessions
+automatically; explicitly revoke existing sessions when transferring ownership.
 
 Tests synthesize proxy identity only on real loopback HTTP requests against
 migrated disposable PostgreSQL databases. To avoid a fixed-port process test and

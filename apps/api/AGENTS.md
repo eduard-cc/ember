@@ -5,7 +5,7 @@ Paths are relative to `apps/api` unless they start at the repository root.
 ## Read before touching
 
 - `README.md`: local setup, secrets and Tailscale owner mode.
-- The API contract, sync feed, opt-in kinds and retired fields: `packages/contracts/README.md` (root). Wiping server data and PostgreSQL test traps: `docs/sync.md`.
+- The API contract, sync feed, opt-in kinds and retired fields: `packages/contracts/README.md` (root).
 - Deploys, static files, backups and the PostgreSQL pin: `ops/README.md` (root).
 
 ## Commands
@@ -19,3 +19,7 @@ Paths are relative to `apps/api` unless they start at the repository root.
 
 - Startup refuses any database host but `127.0.0.1` and any database outside the Ember endpoints: on port 55439 `ember` or `ember_<name>`, on the live port 55438 only `ember`. Inside the image (`EMBER_CONTAINER=1`) it accepts only `ember-postgres:5432` and listens on `EMBER_HOST=0.0.0.0`.
 - Production runs the image (`Dockerfile`), which sets `EMBER_WEB_ROOT=/app/web`; never rely on the default web root in production.
+- Wipe synced server data only through `resetDataset` (`src/sync/reset.ts`): it rotates the dataset epoch, so installs on the old epoch get 409 `DATASET_RESET` and drop their synced copies. A raw delete lets clients push their old records straight back.
+- TypeORM's raw `query()` returns `[rows, count]` for an `UPDATE ... RETURNING`. Wrap it as `WITH updated AS (UPDATE ... RETURNING ...) SELECT ...` to get plain rows.
+- Test lock contention with a trigger that delays the first write, and poll `pg_stat_activity` for its `PgSleep` wait before sending the second request, never a fixed sleep (`test/sync.e2e.test.ts`).
+- Supertest's implicit `listen(0)` binds every interface; `test/helpers.ts` binds the app to 127.0.0.1 explicitly.
