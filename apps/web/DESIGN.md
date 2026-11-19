@@ -103,6 +103,7 @@ Events get toasts; conditions stay on the page. Toasts are few and never block:
 - No toast when the screen already shows the result (deletes, saved edits, Finish, set changes). An Undo path gets a neutral Undo toast; a result that lands off-screen gets a success toast (Save as template).
 - A failed one-off action gets a Retry toast that stays until used; a refused tap with nothing to retry gets a brief error toast. Errors inside an open dialog or editor stay inline, never repeated as toasts.
 - While a workout runs only failures toast, plus body weight's Undo and Save as template's confirmation (the logger covers the new card).
+- Toasts show one at a time, in 14px Inter with card radius and 44px buttons.
 
 Conditions come in three tiers (`src/components/Conditions.tsx`). Each shows in exactly one place (the open logger or editor, else the page or open Settings) with one details drawer. Nothing shows when all is well; healthy sync and brief pending work stay quiet.
 

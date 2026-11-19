@@ -26,7 +26,7 @@ export function EmberToaster({id}: {id?: string}) {
 }
 
 // Sonner's 24px buttons are below the 44px hit target; its unlayered styles need `!`.
-const button = 'h-11! px-3.5! text-[13px]!';
+const button = 'h-11! px-3.5! text-sm! rounded-md!';
 // Dismiss is quieter than the outlined action beside it.
 const classNames = {
   actionButton: button,

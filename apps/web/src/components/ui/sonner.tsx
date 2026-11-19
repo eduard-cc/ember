@@ -24,8 +24,9 @@ const Toaster = ({...props}: ToasterProps) => {
           // Utilities are layered in Tailwind v4, so sonner's injected (unlayered) defaults win unless
           // these are !important; type-specific classes add data-[type] so they outrank the base toast.
           toast:
-            'group toast group-[.toaster]:bg-background! group-[.toaster]:text-foreground! group-[.toaster]:border-border! group-[.toaster]:shadow-lg!',
-          description: 'group-[.toast]:text-muted-foreground!',
+            'group toast font-sans! text-sm! rounded-card! group-[.toaster]:bg-background! group-[.toaster]:text-foreground! group-[.toaster]:border-border! group-[.toaster]:shadow-lg!',
+          title: 'font-medium!',
+          description: 'text-sm! group-[.toast]:text-muted-foreground!',
           // An outlined action in the toast's own colour fits every tint; a primary fill clashes on green.
           actionButton:
             'group-[.toast]:bg-transparent! group-[.toast]:text-current! group-[.toast]:border! group-[.toast]:border-current/40! hover:group-[.toast]:bg-current/10! font-semibold',
