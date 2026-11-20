@@ -61,6 +61,7 @@ Reduced motion removes movement, smooth scrolling, transitions, the live ping an
 - Add/Replace use the shared full-screen picker of catalog and recorded names. Selecting adds/replaces and closes; Back/Escape/back gesture changes nothing. Rows already in the workout say so before selection, and tapping one shows a short error toast, leaving the query alone. Changing filters returns results to the top. No custom creation or type selector.
 - A left swipe reveals an explicit Delete; dragging alone never completes or deletes. Preserve `pan-y`, pointer identity/cancel, containment for portaled events and post-swipe click suppression. The set-number action is the accessible alternative. Deletion has no alert or undo banner and preserves the other sets.
 - Hold a heading or its ⋯ 400ms to reorder; a tap on ⋯ still opens its menu. The compact list lifts under the finger, auto-scrolls near edges and ticks per slot. Release keeps exercise identity, sets and checks; Escape, cancel or a refused edit restores the order. Each ⋯ also has Move up/down with a polite position announcement portaled outside the logger or editor.
+- Template cards reorder the same way: hold a card or its ⋯, drag the compact row, or use ⋯ Move up/down. The order is kept per device and does not sync.
 - Replacing an existing draft, discarding and Finish need explicit confirmation. Finish states completed/unchecked counts and calls the real atomic transaction; errors keep the draft and stay visible, and the celebration opens only after commit.
 
 ## Editors, history and exercise rows

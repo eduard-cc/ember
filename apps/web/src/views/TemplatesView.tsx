@@ -1,7 +1,19 @@
-import {ClipboardList, Clock, Layers, Pencil, Play, Plus, Trash} from 'lucide-react';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ClipboardList,
+  Clock,
+  Layers,
+  Pencil,
+  Play,
+  Plus,
+  Trash,
+} from 'lucide-react';
+import {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import {createPortal} from 'react-dom';
 
 import {OptionsMenu} from '../components/ExerciseMenu';
+import {ReorderList, type ReorderStart, scrollParent, useHold} from '../components/ExerciseReorder';
 import {TemplateEditor} from '../components/TemplateEditor';
 import {ExerciseLine, Stat} from '../components/exercise-line';
 import {Button} from '../components/ui/button';
@@ -19,6 +31,7 @@ import {
 } from '../components/ui/responsive-dialog';
 import {SectionHeading} from '../components/ui/section-heading';
 import {routineTargets} from '../components/workout-targets';
+import {moveItem} from '../domain/reorder';
 import type {Dataset, Workout} from '../domain/types';
 import {estimatedMinutes} from '../domain/workout-duration';
 import {useBackLayer} from '../state/back';
@@ -32,6 +45,8 @@ const CARD_LINES = 5;
 function lastPerformed(dataset: Dataset, name: string): string | undefined {
   return dataset.workouts.find((w) => w.name === name)?.date;
 }
+
+const ids = (templates: Workout[]) => templates.map((t) => t.id).join('\n');
 
 const setsIn = (workout: Workout) =>
   workout.exercises.reduce((n, exercise) => n + exercise.sets.length, 0);
@@ -109,6 +124,64 @@ export function TemplatesView({
     if (id) cards.current.get(id)?.focus({preventScroll: true});
     else createButton.current?.focus({preventScroll: true});
   };
+  // Press and hold a card: the cards become compact rows and the held one follows the finger,
+  // as exercises do in the logger. The order is this device's own; it doesn't sync.
+  const [reordering, setReordering] = useState<ReorderStart | null>(null);
+  // The templates as they were when the card lifted; the compact list shows these. A sync that
+  // changes them mid-drag makes the drop slot meaningless, so that drop puts the card back.
+  const [lifted, setLifted] = useState<Workout[]>([]);
+  // Set on drop/cancel: the card to put where its compact row was once the cards are back.
+  const landing = useRef<{id: string; top: number; moved: boolean} | null>(null);
+  const items = useRef(new Map<string, HTMLLIElement>());
+  const [announcement, setAnnouncement] = useState('');
+  const hold = useHold((start) => {
+    if (disabled || templates.length < 2) return false;
+    setLifted(templates);
+    setReordering(start);
+  });
+  const endReorder = (id: string, top: number, moved: boolean) => {
+    landing.current = {id, top, moved};
+    hold.release();
+    setReordering(null);
+  };
+  const move = (id: string, to: number) => {
+    const from = templates.findIndex((t) => t.id === id);
+    if (from < 0 || to < 0 || to >= templates.length || from === to) return false;
+    void onChange(moveItem(templates, from, to));
+    setAnnouncement(`Moved ${templates[from].name} to position ${to + 1} of ${templates.length}`);
+    return true;
+  };
+  // A brief tint marks where a moved template landed.
+  const flash = (card: HTMLElement) => {
+    delete card.dataset.dropped;
+    void card.offsetWidth;
+    card.dataset.dropped = '';
+    card.addEventListener('animationend', () => delete card.dataset.dropped, {once: true});
+  };
+  // Before paint: put the dropped card's top where its compact row was, then mark it.
+  useLayoutEffect(() => {
+    const land = landing.current;
+    if (reordering || !land) return;
+    landing.current = null;
+    const card = items.current.get(land.id);
+    if (!card) return;
+    const scroller = scrollParent(card);
+    if (scroller) scroller.scrollTop += card.getBoundingClientRect().top - land.top;
+    if (land.moved) flash(card);
+  }, [reordering]);
+  // The ⋯ menu's Move up/down: the keyboard and screen-reader path to the same result.
+  const step = (id: string, by: number) => {
+    const at = templates.findIndex((t) => t.id === id);
+    if (!move(id, at + by)) return;
+    requestAnimationFrame(() => {
+      const card = items.current.get(id);
+      card
+        ?.querySelector<HTMLButtonElement>('.exercise-menu > button')
+        ?.focus({preventScroll: true});
+      card?.scrollIntoView({block: 'nearest'});
+      if (card) flash(card);
+    });
+  };
   const edit = (template: Workout) => {
     returnTo.current = template.id;
     setEditingBase(structuredClone(template));
@@ -116,6 +189,13 @@ export function TemplatesView({
   };
   return (
     <div className='templates-view'>
+      {/* Portaled to <body>, like the logger's: modal dialogs keep live regions exposed. */}
+      {createPortal(
+        <div className='sr-only' aria-live='polite' data-template-announcement=''>
+          {announcement}
+        </div>,
+        document.body,
+      )}
       <SectionHeading className='templates-heading mt-7'>
         <h2>Templates</h2>
         <Button
@@ -124,6 +204,7 @@ export function TemplatesView({
           ref={createButton}
           aria-label='Create template'
           onClick={() => {
+            if (reordering) endReorder(reordering.id, 0, false);
             setEditingBase(undefined);
             setEditing(newWorkout());
           }}
@@ -133,13 +214,52 @@ export function TemplatesView({
       </SectionHeading>
       {!editing && (
         <>
+          {reordering && (
+            <ReorderList
+              key={reordering.id}
+              items={lifted}
+              identity={(t) => t.id}
+              label='Reorder templates'
+              row={(t) => ({name: t.name, detail: plural(t.exercises.length, 'exercise')})}
+              start={reordering}
+              onDrop={(to, top) => {
+                // A sync refresh rebuilds the array; only a changed set or order of templates refuses.
+                const same = ids(lifted) === ids(templates);
+                const moved = same && move(reordering.id, to);
+                endReorder(reordering.id, top, moved);
+                // The card stays in its old slot; don't scroll it to where the finger let go.
+                if (!same) landing.current = null;
+              }}
+              onCancel={(top) => endReorder(reordering.id, top, false)}
+            />
+          )}
           {!!templates.length && (
-            <ul className='template-grid grid grid-cols-1 gap-3 desk:grid-cols-2 desk:logger-open:grid-cols-1'>
-              {templates.map((template) => {
+            <ul
+              hidden={!!reordering}
+              className='template-grid grid grid-cols-1 gap-3 desk:grid-cols-2 desk:logger-open:grid-cols-1'
+            >
+              {templates.map((template, index) => {
                 const plan = planFor(template);
                 return (
                   <li
-                    className='template-card pressable relative flex min-w-0 flex-col rounded-card border border-border bg-card hover:bg-accent/60 has-[.template-open:focus-visible]:outline-2 has-[.template-open:focus-visible]:outline-offset-2 has-[.template-open:focus-visible]:outline-ring'
+                    ref={(node) => {
+                      if (node) items.current.set(template.id, node);
+                      else items.current.delete(template.id);
+                    }}
+                    onPointerDown={(event) => {
+                      // Presses inside the ⋯ drawer bubble here through React's portal tree.
+                      if (!event.currentTarget.contains(event.target as Node)) return;
+                      // Holding ⋯ lifts the card too; its open desktop list keeps its presses.
+                      const target = event.target as HTMLElement;
+                      if (
+                        target.closest('.exercise-menu') &&
+                        !target.closest('.exercise-menu > button')
+                      )
+                        return;
+                      if (disabled || templates.length < 2) return;
+                      hold.begin(event, template.id, event.currentTarget);
+                    }}
+                    className='template-card pressable relative flex min-w-0 flex-col rounded-card border border-border bg-card select-none [-webkit-touch-callout:none] hover:bg-accent/60 has-[.template-open:focus-visible]:outline-2 has-[.template-open:focus-visible]:outline-offset-2 has-[.template-open:focus-visible]:outline-ring'
                     key={template.id}
                     data-landed={landed === template.id ? '' : undefined}
                   >
@@ -177,6 +297,24 @@ export function TemplatesView({
                       title={template.name}
                       items={[
                         {label: 'Edit template', icon: Pencil, onSelect: () => edit(template)},
+                        ...(index > 0 && !disabled
+                          ? [
+                              {
+                                label: 'Move up',
+                                icon: ArrowUp,
+                                onSelect: () => step(template.id, -1),
+                              },
+                            ]
+                          : []),
+                        ...(index < templates.length - 1 && !disabled
+                          ? [
+                              {
+                                label: 'Move down',
+                                icon: ArrowDown,
+                                onSelect: () => step(template.id, 1),
+                              },
+                            ]
+                          : []),
                         {
                           label: 'Delete template',
                           icon: Trash,
