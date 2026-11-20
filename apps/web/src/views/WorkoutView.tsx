@@ -334,8 +334,17 @@ export function WorkoutView({
       {reordering && (
         <ReorderList
           key={reordering.id}
-          exercises={workout.exercises}
+          items={workout.exercises}
           identity={identity}
+          label='Reorder exercises'
+          row={(ex) => ({
+            name: ex.name,
+            thumb: <ExerciseThumb name={ex.name} className='size-10' />,
+            // Completed of total, like the card's status line; validity is the card's rule.
+            detail: targetsOnly
+              ? plural(ex.sets.length, 'set')
+              : `${countedSets(ex).length} / ${plural(ex.sets.length, 'set')}`,
+          })}
           start={reordering}
           onDrop={(to, top) => {
             const from = workout.exercises.findIndex((ex) => identity(ex) === reordering.id);
@@ -344,14 +353,6 @@ export function WorkoutView({
             endReorder(reordering.id, top, from !== to);
           }}
           onCancel={(top) => endReorder(reordering.id, top, false)}
-          progress={
-            targetsOnly
-              ? undefined
-              : (ex) => {
-                  const done = countedSets(ex);
-                  return `${done.length} / ${plural(ex.sets.length, 'set')}`;
-                }
-          }
         />
       )}
       {/* eslint-disable-next-line react-hooks/refs -- identity() reads a render-stable WeakMap cache of React keys; no React Compiler is in use. */}

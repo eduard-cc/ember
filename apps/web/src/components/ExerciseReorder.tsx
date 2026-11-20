@@ -1,15 +1,22 @@
 import {GripVertical} from 'lucide-react';
-import {type PointerEvent as ReactPointerEvent, useEffect, useLayoutEffect, useRef} from 'react';
+import {
+  type ReactNode,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 
 import {reorderShift, reorderTarget} from '../domain/reorder';
-import type {ExerciseLog} from '../domain/types';
 import {selectionHaptic} from '../feedback';
 import {reducedMotion} from '../utils/motion';
-import {plural} from '../utils/plural';
-import {ExerciseThumb} from './ExerciseThumb';
 
-/** Completed of total, like the card's status line; validity is the card's rule. */
-type SetProgress = (exercise: ExerciseLog) => string;
+/** What a compact row shows for an item: its name, a short count and an optional thumbnail. */
+export interface ReorderRow {
+  name: string;
+  detail: string;
+  thumb?: ReactNode;
+}
 
 /** How long a header must be held before it lifts. Shorter than Android's context-menu press. */
 const HOLD_MS = 400;
@@ -23,7 +30,7 @@ const SETTLE_MS = 180;
 const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
 
 export interface ReorderStart {
-  /** Transient identity of the held exercise. */
+  /** Transient identity of the held item. */
   id: string;
   pointerId: number;
   /** Finger position when the hold completed. */
@@ -46,7 +53,7 @@ export function scrollParent(node: Element | null): HTMLElement | null {
 }
 
 /**
- * Press-and-hold detection for exercise headers. A tap still clicks (opens details), and
+ * Press-and-hold detection for exercise headers and template cards. A tap still clicks, and
  * moving before the hold completes is left to native scrolling. Only a still hold lifts.
  * `onHold` may return false to refuse the lift (the card then stays as it was).
  */
@@ -201,22 +208,25 @@ function swallowNextClick(pointerId: number) {
 }
 
 /**
- * The compact list shown while an exercise is held: one row per exercise, the held one under
- * the finger, the others sliding aside. Release drops it; Escape, a cancelled pointer or
+ * The compact list shown while an exercise or template is held: one row per item, the held one
+ * under the finger, the others sliding aside. Release drops it; Escape, a cancelled pointer or
  * leaving the window puts it back. Transforms are written directly, so dragging never
  * re-renders.
  */
-export function ReorderList({
-  exercises,
+export function ReorderList<T>({
+  items,
   identity,
+  row,
+  label,
   start,
   onDrop,
   onCancel,
-  progress = (ex) => plural(ex.sets.length, 'set'),
 }: {
-  exercises: ExerciseLog[];
-  progress?: SetProgress;
-  identity: (exercise: ExerciseLog) => string;
+  items: T[];
+  identity: (item: T) => string;
+  row: (item: T) => ReorderRow;
+  /** Accessible name of the list, like "Reorder exercises". */
+  label: string;
   start: ReorderStart;
   /** Target slot, and the held row's viewport top where it settled. */
   onDrop: (to: number, top: number) => void;
@@ -228,7 +238,7 @@ export function ReorderList({
   useLayoutEffect(() => {
     callbacks.current = {onDrop, onCancel};
   }, [onDrop, onCancel]);
-  const from = exercises.findIndex((ex) => identity(ex) === start.id);
+  const from = items.findIndex((item) => identity(item) === start.id);
 
   // Before paint: scroll so the held row sits under the finger, as if its card shrank around it.
   // The compact list is often shorter than the screen and can't scroll that far; temporary
@@ -402,25 +412,28 @@ export function ReorderList({
 
   return (
     <ol
-      className='reorder-list relative m-0 flex touch-none list-none flex-col gap-1.5 px-4 py-3 select-none narrow:px-3 [.workout-sheet_&]:desk:px-6 [.workout-sheet_&]:desk:py-[14px]'
+      className='reorder-list relative m-0 flex touch-none list-none flex-col gap-1.5 px-4 py-3 select-none narrow:px-3 [.templates-view_&]:px-0 [.workout-sheet_&]:desk:px-6 [.workout-sheet_&]:desk:py-[14px]'
       ref={list}
-      aria-label='Reorder exercises'
+      aria-label={label}
     >
-      {exercises.map((ex, i) => (
-        <li
-          key={identity(ex)}
-          className='reorder-row grid min-h-14 grid-cols-[40px_minmax(0,1fr)_auto_18px] items-center gap-3 rounded-md border py-0 pr-3 pl-2 [-webkit-tap-highlight-color:transparent]'
-          data-held={i === from || undefined}
-          aria-current={i === from || undefined}
-        >
-          <ExerciseThumb name={ex.name} className='size-10' />
-          <span className='reorder-name truncate text-[16px] font-semibold text-foreground'>
-            {ex.name}
-          </span>
-          <span className='reorder-count text-[12px] tabular-nums'>{progress(ex)}</span>
-          <GripVertical size={18} aria-hidden='true' />
-        </li>
-      ))}
+      {items.map((item, i) => {
+        const {name, detail, thumb} = row(item);
+        return (
+          <li
+            key={identity(item)}
+            className={`reorder-row grid min-h-14 items-center gap-3 rounded-md border py-0 pr-3 [-webkit-tap-highlight-color:transparent] ${thumb ? 'grid-cols-[40px_minmax(0,1fr)_auto_18px] pl-2' : 'grid-cols-[minmax(0,1fr)_auto_18px] pl-4'}`}
+            data-held={i === from || undefined}
+            aria-current={i === from || undefined}
+          >
+            {thumb}
+            <span className='reorder-name truncate text-[16px] font-semibold text-foreground'>
+              {name}
+            </span>
+            <span className='reorder-count text-[12px] tabular-nums'>{detail}</span>
+            <GripVertical size={18} aria-hidden='true' />
+          </li>
+        );
+      })}
     </ol>
   );
 }
