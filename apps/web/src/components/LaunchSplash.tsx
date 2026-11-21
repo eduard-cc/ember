@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 
-import {EmberHeart} from './EmberHeart';
+import {EmberMark} from './EmberMark';
 
 /** After this long without an answer, the launch hands over to the connection notice. */
 const LAUNCH_SPLASH_MS = 5000;
@@ -20,7 +20,7 @@ export function useLaunchSplash(waiting: boolean) {
   return launching && waiting;
 }
 
-/** The launch screen: the Ember heart slowly lighting up while the app gets ready. */
+/** The launch screen: the Ember mark slowly lighting up while the app gets ready. */
 export function LaunchSplash() {
   return (
     <div
@@ -30,7 +30,7 @@ export function LaunchSplash() {
     >
       <div className='relative grid place-items-center' aria-hidden='true'>
         <div className='launch-glow absolute size-40 rounded-full bg-[radial-gradient(closest-side,rgb(245_177_61/0.28),transparent)]' />
-        <EmberHeart className='launch-heart relative size-16' />
+        <EmberMark className='launch-mark relative size-16' />
       </div>
     </div>
   );
