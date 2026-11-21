@@ -219,7 +219,7 @@ test('restored owner trust reconnects automatically on wake and on launch @dev-s
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(page.locator('main')).toBeVisible();
   expect(sessions).toBe(2);
-  // Launching while the server is slow shows the Ember heart, then the connection notice.
+  // Launching while the server is slow shows the Ember mark, then the connection notice.
   held = new Promise<void>((resolve) => (release = resolve));
   await revokeTrust();
   await page.reload();

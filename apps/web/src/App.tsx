@@ -445,7 +445,7 @@ export default function App() {
       setConfirmReset(true);
     },
   });
-  // Launch shows the Ember heart while the app opens; a failed connection or a condition that
+  // Launch shows the Ember mark while the app opens; a failed connection or a condition that
   // needs the owner shows the locked page instead.
   const launching = useLaunchSplash(sync.locked && !sync.lastAttemptFailed && !conditions.length);
   const pageConditions = !showSheet && !sync.locked && !settingsOpen;

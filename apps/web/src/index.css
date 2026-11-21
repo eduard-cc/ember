@@ -21,6 +21,8 @@
   --primary: 33 100% 31%;
   --primary-foreground: 38.6 43.8% 93.7%;
   --primary-tint: 38 60% 90%;
+  --mark: 31.6 100% 39.4%;
+  --mark-strike: 29.1 100% 27.1%;
   --secondary: 34.3 38.2% 89.2%;
   --secondary-foreground: 33 100% 31%;
   --muted: 37.9 20% 81.4%;
@@ -55,6 +57,8 @@
   --primary: 38 90% 60%;
   --primary-foreground: 252 10.2% 9.6%;
   --primary-tint: 36 25% 16%;
+  --mark: 35.2 92.1% 49.4%;
+  --mark-strike: 39.7 100% 64.7%;
   --secondary: 265.7 8.2% 16.7%;
   --secondary-foreground: 38 90% 60%;
   --muted: 266.7 8.7% 20.2%;
@@ -89,6 +93,8 @@
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-primary-tint: hsl(var(--primary-tint));
+  --color-mark: hsl(var(--mark));
+  --color-mark-strike: hsl(var(--mark-strike));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));
@@ -203,12 +209,12 @@
     /* The finish celebration keeps its fades (no rise, glow growth, sparks or counting). The
        class selector out-ranks the universal one above. */
     .celebrate-rise,
-    .celebrate-heart,
+    .celebrate-mark,
     .celebrate-glow {
       animation: celebrate-fade 200ms ease both !important;
     }
-    /* The launch heart keeps a delayed plain fade, so a quick launch shows no flash. */
-    .launch-heart,
+    /* The launch mark keeps a delayed plain fade, so a quick launch shows no flash. */
+    .launch-mark,
     .launch-glow {
       animation: celebrate-fade 600ms ease 400ms both !important;
     }
@@ -616,7 +622,7 @@
     box-shadow: none;
   }
 
-  /* Finish celebration: the heart lights once, sparks rise from its flame, and the content rises
+  /* Finish celebration: the mark lights once, sparks rise from its strike, and the content rises
      in a stagger (each element sets its own animation-delay). */
   .celebrate-rise {
     animation: celebrate-rise 420ms var(--ease-out) both;
@@ -627,10 +633,10 @@
       transform: translateY(12px);
     }
   }
-  .celebrate-heart {
-    animation: celebrate-heart 700ms cubic-bezier(0.34, 1.4, 0.64, 1) 80ms both;
+  .celebrate-mark {
+    animation: celebrate-mark 700ms cubic-bezier(0.34, 1.4, 0.64, 1) 80ms both;
   }
-  @keyframes celebrate-heart {
+  @keyframes celebrate-mark {
     from {
       opacity: 0;
       transform: scale(0.82) translateY(10px);
@@ -675,12 +681,12 @@
     }
   }
 
-  /* Launch: the Ember heart slowly lights up and grows while the app opens. The delay keeps a
+  /* Launch: the Ember mark slowly lights up and grows while the app opens. The delay keeps a
      quick launch from flashing it. */
-  .launch-heart {
-    animation: launch-heart 3s var(--ease-out) 400ms both;
+  .launch-mark {
+    animation: launch-mark 3s var(--ease-out) 400ms both;
   }
-  @keyframes launch-heart {
+  @keyframes launch-mark {
     from {
       opacity: 0;
       transform: scale(0.9);

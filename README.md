@@ -1,4 +1,9 @@
-# Ember
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/ember-dark.png" />
+    <img src="docs/brand/ember-light.png" alt="Ember" width="193" height="49" />
+  </picture>
+</h1>
 
 A local-first mobile workout tracker with inspectable history, editable templates, and a separate privately hosted API. It keeps history imported from Strong exports with its source cells; the app itself has no import flow.
 

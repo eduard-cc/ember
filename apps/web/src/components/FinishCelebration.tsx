@@ -12,7 +12,7 @@ import {
 import type {Workout} from '../domain/types';
 import {cue} from '../feedback';
 import {reducedMotion} from '../utils/motion';
-import {EmberHeart} from './EmberHeart';
+import {EmberMark} from './EmberMark';
 import {ExerciseLine} from './exercise-line';
 import {Button} from './ui/button';
 import {RollingNumber} from './ui/rolling-number';
@@ -22,7 +22,7 @@ export interface Celebration {
   records: PersonalRecord[];
 }
 
-// Sparks rise from the flame tip: [dx, dy, delay, duration, size], fixed so it plays the same.
+// Sparks rise from the tip of the strike: [dx, dy, delay, duration, size], fixed so it plays the same.
 const SPARKS = [
   [-34, -92, 0, 1300, 6],
   [22, -120, 90, 1500, 8],
@@ -38,8 +38,8 @@ const SPARKS = [
   [-4, -80, 1100, 1300, 6],
 ] as const;
 
-/** The Ember heart, lit once: the one place the app spends its delight budget. */
-function LitHeart({still}: {still: boolean}) {
+/** The Ember mark, lit once: the one place the app spends its delight budget. */
+function LitMark({still}: {still: boolean}) {
   return (
     <div className='relative grid size-32 place-items-center short:size-20' aria-hidden='true'>
       <div className='celebrate-glow absolute inset-[-40%] rounded-full bg-[radial-gradient(closest-side,rgb(245_177_61/0.32),transparent)]' />
@@ -47,7 +47,7 @@ function LitHeart({still}: {still: boolean}) {
         SPARKS.map(([dx, dy, delay, duration, size], i) => (
           <span
             key={i}
-            className='celebrate-spark absolute top-[7%] left-[78%] rounded-full bg-[#f5b13d] shadow-[0_0_8px_rgb(245_177_61/0.8)]'
+            className='celebrate-spark absolute top-[24%] left-[89%] rounded-full bg-[#f5b13d] shadow-[0_0_8px_rgb(245_177_61/0.8)]'
             style={
               {
                 width: size,
@@ -60,7 +60,7 @@ function LitHeart({still}: {still: boolean}) {
             }
           />
         ))}
-      <EmberHeart className='celebrate-heart relative size-28 drop-shadow-[0_8px_24px_rgb(245_177_61/0.35)] short:size-16' />
+      <EmberMark className='celebrate-mark relative size-28 drop-shadow-[0_8px_24px_rgb(245_177_61/0.35)] short:size-16' />
     </div>
   );
 }
@@ -109,7 +109,7 @@ function RecordRow({records, delay}: {records: PersonalRecord[]; delay: number})
 const stagger = 180;
 
 /**
- * The finish moment, shown only after the finish transaction committed: the lit heart, the
+ * The finish moment, shown only after the finish transaction committed: the lit mark, the
  * session's duration, sets and volume, the personal records it set and its exercises. Done, Escape
  * and the back gesture all close it onto History.
  */
@@ -190,7 +190,7 @@ function CelebrationContent({celebration: {workout, records}}: {celebration: Cel
       <div className='min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-[calc(2.5rem+env(safe-area-inset-top))] pb-6 short:pt-4'>
         <div className='mx-auto max-w-[560px]'>
           <div className='grid justify-items-center text-center'>
-            <LitHeart still={still} />
+            <LitMark still={still} />
             <DialogPrimitive.Title
               className='celebrate-rise mt-2 text-page-title text-foreground'
               style={{animationDelay: '250ms'}}
